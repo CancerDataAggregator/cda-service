@@ -21,7 +21,7 @@ Brew will give instructions for how to start things as a service if needed.
 
 ### Initialize the database
 
-This is the Mac specific path. If you used brew to install postgres, `psql` should already be on your path.
+If you used brew to install postgres, `psql` should already be on your path.
 
 ```bash
 psql postgres -c "create user manager password 'password';"
