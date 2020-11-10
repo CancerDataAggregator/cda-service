@@ -1,14 +1,22 @@
 openapi: 3.0.0
 info:
+  description: API definition for the CDA
+  version: 1.0.0-rc.1
   title: CDA API
-  description: |
-    CDA REST API
-  version: 0.0.1
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
 
 servers:
   # When developing locally/with Skaffold, add local entry with url prefix here:
   # E.g. url: /env-cda
   - url: http://localhost:8080
+
+tags:
+  - name: query
+    description: Retrieve the data stored in the CDA.
+  - name: meta
+    description: Retrieve meta information about CDA data or CDA itself
 
 paths:
   '/status':
@@ -17,7 +25,7 @@ paths:
         Returns the operational status of the service
       operationId: serviceStatus
       tags:
-        - unauthenticated
+        - meta
       responses:
         200:
           description: Service is functional
@@ -26,13 +34,153 @@ paths:
           description: Service is broken
           $ref: '#/components/responses/StatusResponse'
 
+  /current-data-model:
+    get:
+      tags:
+        - meta
+      summary: Current data model
+      description: Return current data model used by the CDA as a dictionary
+      operationId: currentDataModel
+      responses:
+        '200':
+          description: Data model dictionary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/model'
+
+  /all-data-models:
+    get:
+      tags:
+        - meta
+      summary: List all data models
+      description: Return a list of all data models used by the CDA
+      operationId: allDataModels
+      responses:
+        '200':
+          description: Data model dictionary list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:                  
+                  $ref: '#/components/schemas/model'
+
+  /latest-release-notes:
+    get:
+      tags:
+        - meta
+      summary: Release notes
+      description: Return latest release notes
+      operationId: latestReleaseNotes
+      responses:
+        '200':
+          description: Release notes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/release-notes'
+
+  /all-release-notes:
+    get:
+      tags:
+        - meta
+      summary: All release notes
+      description: Return all release notes
+      operationId: allReleaseNotes
+      responses:
+        '200':
+          description: Release notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/release-notes'
+
+  /bulk-data/{table}:
+    get:
+      tags:
+        - query
+      summary: Return all data in CDA 
+      description: Return all data in CDA
+      operationId: bulkData
+      parameters:
+        - in: path
+          name: table
+          required: true
+          schema:
+            type: string
+          description: Name of table
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: The number of entries to skip
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: The numbers of entries to return          
+
+      responses:
+        '200':
+          description: Table
+          content:
+            application/json:
+              schema:
+                type: object
+
+
+  /boolean-query:
+    post:
+      tags:
+        - query
+      summary: Execute boolean query 
+      operationId: booleanQuery
+      description: |
+        Execute a query composed of conditions on columns combined with boolean operators 
+
+      parameters:
+
+        - in: query
+          name: cdaVersion
+          required: true
+          schema:
+            type: string
+
+        - in: query
+          name: resultParams
+          required: true
+          schema:
+            $ref: '#/components/schemas/ResultParams'
+
+      requestBody:
+        description: |
+          The query S-expression and any pagination instructions
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Query'
+                    
+      responses:
+        '200':
+          description: Results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+
+
+
   '/api/cda/v1/ping':
     post:
       description: |
         Send a message and get it back in the response
       operationId: ping
       tags:
-        - cda
+        - meta
       parameters:
         - in: query
           name: message
@@ -79,6 +227,165 @@ components:
                 type: array
                 items:
                   type: string
+
+    model:
+      type: object
+      properties:
+        version:
+          type: string
+        date:
+          type: string
+          format: date-time
+        model:
+          type: object
+          properties: {}
+
+    release-notes:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        cda-version:
+          type: string
+        datasets:
+          type: array
+          items:
+            type: object
+            properties:
+              source:
+                type: string
+              version:
+                type: string
+
+
+    dataset-meta:
+      type: object
+      properties:
+        name: 
+          type: string
+        version:
+          type: string
+        lastUpdate:
+          type: string
+          format: date-time
+
+    columns-meta:
+      type: object
+      properties:
+        version:
+          type: string
+        description:
+          type: string
+        lastUpdate:
+          type: string
+          format: date-time
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              name: 
+                type: string
+              description:
+                type: string
+
+    Query:
+      $ref: '#/components/schemas/QueryNode'  
+      # type: object
+      # required:
+      #   - format
+      # properties:
+      #   format:
+      #     $ref: '#/components/schemas/query-format'
+      #   query:
+      #     oneOf:
+      #       - $ref: '#/components/schemas/QueryNode'
+      #       - $ref: '#/components/schemas/FHIRQuery'
+
+    query-format:
+      description: Query format
+      type: string
+      enum: [fhir, sql]
+
+    QueryNode:
+      type: object
+      properties:
+        operator:
+          type: string
+          enum: ["<", ">", "=", "~", "AND", "OR", "NOT", "LIMIT"]
+        sort:
+          $ref: '#/components/schemas/QuerySort'
+        l:
+          $ref: '#/components/schemas/QueryLeaf' 
+        r:
+          $ref: '#/components/schemas/QueryLeaf' 
+
+    QueryLeaf:
+      oneOf:
+        - type: string
+        - type: integer
+        - type: number
+        - $ref: '#/components/schemas/QueryColumn' 
+        - $ref: '#/components/schemas/QueryNode'
+
+
+    QueryColumn:
+      type: object
+      properties:
+        namespace:
+          type: string
+        table:
+          type: string
+        column:
+          type: string
+
+    FHIRQuery:
+      type: object
+      
+    QuerySort:
+      type: object
+      properties:
+        column:
+          $ref: '#/components/schemas/QueryColumn'
+        order:
+          type: string
+          enum: [asc, desc]
+
+    ResultParams:
+      type: object
+      properties:
+        format:
+          description: |
+            Format of returned rows:              
+            - bigquery: return as bigquery tables 
+            - json: return as JSON
+            - tsv: return as a table in TSV
+          type: string
+          enum: [bigquery, json, tsv]
+        offset:
+          description: Pagination offset
+          type: integer
+        limit:
+          description: Pagination size
+          type: integer
+        previous_url:
+          type: string
+        next_url:
+          type: string
+
+    Result:
+      type: object
+      properties:
+        result:
+          type: object
+
+    ResultSummary:
+      type: object
+
+    QueryAnalysis:
+      type: object
+
 
   responses:
     ErrorResponse:
