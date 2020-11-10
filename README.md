@@ -1,14 +1,15 @@
 # cda-service
 This repository started as a clone of the [kernel-service-poc](https://github.com/DataBiosphere/kernel-service-poc) project.
 
-## Getting Started
+## Getting Started (macOS)
 
-Building and running locally requires JDK 8 or later and gradle. On a Mac, you can use [brew](https://brew.sh/)
-to install these.
+Building and running locally requires JDK 8, gradle and postgres. On a Mac, you can use [brew](https://brew.sh/)
+to install these. 
 
 ```bash
-$ brew install openjdk@8
-$ brew install gradle
+brew install openjdk@8
+brew install gradle
+brew install postgres
 ```
 
 ### Set up local postgres database
@@ -16,20 +17,21 @@ $ brew install gradle
 Install Postgres, using brew or an installer. 
 The MacOS installer for version 12 is [here](https://github.com/PostgresApp/PostgresApp/releases/download/v2.3.5/Postgres-2.3.5-12.dmg).
 Once it's running, create and start a new server if one doesn't already exist.
+Brew will give instructions for how to start things as a service if needed.
 
 ### Initialize the database
 
 This is the Mac specific path. If you used brew to install postgres, `psql` should already be on your path.
 
 ```bash
-$ /Applications/Postgres.app/Contents/Versions/latest/bin/psql -c "create user manager password 'password';"
-$ /Applications/Postgres.app/Contents/Versions/latest/bin/psql -c "create database cda with owner = manager;"
+psql postgres -c "create user manager password 'password';"
+psql postgres -c "create database cda with owner = manager;"
 ```
 
 ### Build and run tests
 
 ```bash
-$ ./gradlew test
+./gradlew test
 ```
 
 The end of the test output should read something like:
@@ -43,7 +45,7 @@ BUILD SUCCESSFUL in 8s
 Running the server locally requires three environment variables. These can be set on the command line:
 
 ```bash
-$ DATABASE_USER=manager DATABASE_PASSWORD=password DATABASE_NAME=cda ./gradlew bootRun
+DATABASE_USER=manager DATABASE_PASSWORD=password DATABASE_NAME=cda ./gradlew bootRun
 ```
 
 ### Testing the server
@@ -53,11 +55,14 @@ server is running on port 8080 locally. The swagger page is at http://localhost:
 You can test out the two endpoints using `curl`:
 
 ```bash
-$ curl http://localhost:8080/status
-$ curl -X POST http://localhost:8080/api/cda/v1/ping?message=hello
+curl http://localhost:8080/status
+curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
 ```
 
-## OpenAPI V3 - formerly swagger
+## OpenAPI V3
+
+The API specification in OpenAPI V3 is at src/main/resources/api/service_openapi.yaml
+
 The template provides a simple OpenAPI V3 yaml document that includes a /status
 endpoint and a /api/template/v1/ping endpoint. The ping endpoint is there to
 show the full plumbing for an endpoint that uses the common exception handler to 
