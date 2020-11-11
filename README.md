@@ -12,6 +12,9 @@ brew install gradle
 brew install postgres
 ```
 
+After this add the path to `openjdk@8` into your login script e.g. `export PATH="/usr/local/opt/openjdk@8/bin:$PATH"`
+
+
 ### Set up local postgres database
 
 Install Postgres, using brew or an installer. 
