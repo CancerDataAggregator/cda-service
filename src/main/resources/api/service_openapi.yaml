@@ -235,7 +235,7 @@ components:
         cda-version:
           type: string
         cda-model:
-          $ref: '#/components/responses/Model'
+          $ref: '#/components/schemas/Model'
         notes:
           type: string
         datasets:
