@@ -148,7 +148,7 @@ paths:
         Send a message and get it back in the response
       operationId: ping
       tags:
-        - meta
+        - query
       parameters:
         - in: query
           name: message
