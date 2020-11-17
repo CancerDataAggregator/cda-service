@@ -9,7 +9,9 @@ jobs:
     services:
       postgres:
         image: postgres:latest
-        # env:
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
         #   DATABASE_USER: manager 
         #   DATABASE_PASSWORD: password 
         #   DATABASE_NAME: cda
