@@ -10,7 +10,7 @@ plugins {
 	id 'org.springframework.boot' version '2.2.2.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 	id 'com.google.cloud.tools.jib' version '1.8.0'
-	id 'org.openapi.generator' version '4.2.3'
+	id 'org.openapi.generator' version '4.3.1'
 	id 'com.diffplug.gradle.spotless' version '3.27.2'
 }
 
@@ -57,6 +57,7 @@ configurations.all {
 
 def openapiSourceFile = "${projectDir}/src/main/resources/api/service_openapi.yaml"
 def openapiTargetDir = "${buildDir}/generated"
+def openapiClientTargetDir = "${buildDir}/generated-client"
 
 openApiGenerate {
 	generatorName = "spring"
@@ -75,6 +76,12 @@ openApiGenerate {
 			generateModelTests : "false",
 			generateModelDocumentation : "false",
 	]
+}
+
+openApiGenerate {
+	generatorName = "python"
+	inputSpec = "${openapiSourceFile}".toString()
+	outputDir = "${openapiClientTargetDir}".toString()
 }
 
 openApiValidate {
