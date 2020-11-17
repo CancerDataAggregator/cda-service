@@ -10,11 +10,14 @@ jobs:
       postgres:
         image: postgres:latest
         # env:
-        #   POSTGRES_DB: postgres        
+        #   DATABASE_USER: manager 
+        #   DATABASE_PASSWORD: password 
+        #   DATABASE_NAME: cda
+        #   POSTGRES_DB: postgres
         #   POSTGRES_PASSWORD: postgres
         #   POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
+        # ports:
+        #   - 5432:5432
 
     steps:
     - uses: actions/checkout@v2
@@ -25,12 +28,12 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build
-      run: ./gradlew build
-    - name: Run test
       run: |
         psql postgres -c "create user manager password 'password';"
         psql postgres -c "create database cda with owner = manager;"
-
+        ./gradlew build
+    - name: Run test
+      run: |
         ./gradlew test
     - name: Run check
       run: ./gradlew check
