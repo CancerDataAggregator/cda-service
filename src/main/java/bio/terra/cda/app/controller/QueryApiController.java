@@ -1,12 +1,17 @@
 package bio.terra.cda.app.controller;
 
+import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.generated.controller.QueryApi;
+import bio.terra.cda.generated.model.InlineResponse200;
+import bio.terra.cda.generated.model.QueryNode;
 import bio.terra.cda.service.ping.PingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.validation.Valid;
 
 @Controller
 public class QueryApiController implements QueryApi {
@@ -22,5 +27,12 @@ public class QueryApiController implements QueryApi {
       @RequestParam(value = "message", required = false) String message) {
     String result = pingService.computePing(message);
     return new ResponseEntity<>(result, HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<InlineResponse200> booleanQuery(String version, @Valid QueryNode body, @Valid Integer offset, @Valid Integer limit) {
+    QueryService service = new QueryService();
+    // ... provide body to service and get a response ...
+    return null;
   }
 }
