@@ -41,9 +41,7 @@ public class PingRestTest {
   @Test
   public void testRestPong() throws Exception {
     MvcResult result =
-        mvc.perform(post("/api/cda/v1/ping?message=hello"))
-            .andExpect(status().isOk())
-            .andReturn();
+        mvc.perform(post("/api/cda/v1/ping?message=hello")).andExpect(status().isOk()).andReturn();
     MockHttpServletResponse response = result.getResponse();
     String output = response.getContentAsString();
     assertThat("Result starts with pong", output, startsWith("pong:"));
