@@ -1,6 +1,6 @@
 package bio.terra.cda.app.controller;
 
-import bio.terra.cda.generated.controller.UnauthenticatedApi;
+import bio.terra.cda.generated.controller.MetaApi;
 import bio.terra.cda.generated.model.SystemStatus;
 import bio.terra.cda.generated.model.SystemStatusSystems;
 import org.springframework.http.HttpStatus;
@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 
 @Controller
-public class UnauthenticatedApiController implements UnauthenticatedApi {
+public class MetaApiController implements MetaApi {
   private int statusCount;
 
   @Override
