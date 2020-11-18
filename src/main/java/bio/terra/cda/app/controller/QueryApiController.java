@@ -12,6 +12,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 public class QueryApiController implements QueryApi {
@@ -32,7 +34,10 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<InlineResponse200> booleanQuery(String version, @Valid QueryNode body, @Valid Integer offset, @Valid Integer limit) {
     QueryService service = new QueryService();
-    // ... provide body to service and get a response ...
-    return null;
+    final List<String> jsonData = service.runQuery(body);
+
+    var response = new InlineResponse200();
+    response.setResult(new ArrayList<>(jsonData));
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 }
