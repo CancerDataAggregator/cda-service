@@ -17,7 +17,7 @@ jobs:
       run: chmod +x gradlew
     - name: Build
       run: |
-        service postgresql start
+        sudo systemctl start postgresql.service
         psql postgres -c "create user manager password 'password';"
         psql postgres -c "create database cda with owner = manager;"
         ./gradlew build
