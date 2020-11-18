@@ -288,14 +288,7 @@ components:
         - $ref: '#/components/schemas/QueryNode'
 
     QueryColumn:
-      type: object
-      properties:
-        namespace:
-          type: string
-        table:
-          type: string
-        column:
-          type: string
+      type: string
       
     QuerySort:
       type: object
