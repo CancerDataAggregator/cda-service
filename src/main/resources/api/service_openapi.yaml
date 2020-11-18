@@ -142,7 +142,7 @@ paths:
           $ref: '#/components/responses/JSONResult'
 
 
-  '/api/cda/v1/ping':
+  /api/v1/ping:
     post:
       description: |
         Send a message and get it back in the response
@@ -195,7 +195,13 @@ components:
         type: integer
       description: The numbers of entries to return          
 
+
   schemas:
+
+    DateType:
+      type: string
+      format: date-time
+
     ErrorReport:
       type: object
       properties:
@@ -230,8 +236,7 @@ components:
       type: object
       properties:
         release-date:
-          type: string
-          format: date-time
+          $ref: DateType
         cda-version:
           type: string
         cda-model:
@@ -241,15 +246,18 @@ components:
         datasets:
           type: array
           items:
-            type: object
-            properties:
-              source:
-                type: string
-              version:
-                type: string
-              date:
-                type: string
-                format: date-time
+            $ref: '#/components/schemas/DatasetInfo'
+
+    DatasetInfo:
+      type: object
+      properties:
+        source:
+          type: string
+        version:
+          type: string
+        date:
+          type: string
+          format: date-time
 
     Model:
       type: object
@@ -289,7 +297,7 @@ components:
 
     QueryColumn:
       type: string
-      
+
     QuerySort:
       type: object
       properties:
@@ -301,6 +309,7 @@ components:
 
 
   responses:
+  
     ErrorResponse:
       description: common error response
       content:
