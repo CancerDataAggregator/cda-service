@@ -34,6 +34,7 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<InlineResponse200> booleanQuery(String version, @Valid QueryNode body, @Valid Integer offset, @Valid Integer limit) {
     QueryService service = new QueryService();
+    // FIXME: need try/catch for error handling.
     final List<String> jsonData = service.runQuery(body);
 
     var response = new InlineResponse200();

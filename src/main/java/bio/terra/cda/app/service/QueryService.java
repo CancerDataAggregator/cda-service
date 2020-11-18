@@ -180,21 +180,7 @@ public class QueryService {
         return queryJob;
     }
 
-    public List<String> runQuery(QueryNode queryNode) {
-        String query = createQueryFromNode(queryNode);
-        // Wrap query so it returns JSON
-        String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", query);
-        QueryJobConfiguration queryConfig =
-                QueryJobConfiguration.newBuilder(jsonQuery)
-                        .setUseLegacySql(true)
-                        .build();
-
-        // Create a job ID so that we can safely retry.
-        JobId jobId = JobId.of(UUID.randomUUID().toString());
-        Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
-
-        queryJob = runJob(queryJob);
-
+    private List<String> getJobResults(Job queryJob) {
         try {
             // Get the results.
             TableResult result = queryJob.getQueryResults();
@@ -210,6 +196,24 @@ public class QueryService {
         } catch (InterruptedException e) {
             throw new RuntimeException("Error while getting query results", e);
         }
+    }
+
+    public List<String> runQuery(QueryNode queryNode) {
+        String query = createQueryFromNode(queryNode);
+        // Wrap query so it returns JSON
+        String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", query);
+        QueryJobConfiguration queryConfig =
+                QueryJobConfiguration.newBuilder(jsonQuery)
+                        .setUseLegacySql(true)
+                        .build();
+
+        // Create a job ID so that we can safely retry.
+        JobId jobId = JobId.of(UUID.randomUUID().toString());
+        Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
+
+        queryJob = runJob(queryJob);
+
+        return getJobResults(queryJob);
     }
 
     private String createQueryFromNode(QueryNode queryNode) {
