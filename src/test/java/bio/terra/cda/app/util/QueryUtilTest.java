@@ -7,34 +7,19 @@ import org.junit.jupiter.api.Test;
 
 class QueryUtilTest {
 
+  static final String EXPECTED_SQL = "SELECT * FROM gdc-bq-sample.gdc_metadata.r26_clinical, UNNEST(demographic) AS _demographic, " +
+          "UNNEST(project) AS _project, UNNEST(diagnoses) AS _diagnoses " +
+          "WHERE (((_demographic.age_at_index >= 50) AND (_project.project_id = 'TCGA-OV')) AND (_diagnoses.figo_stage = 'Stage IIIC'))";
+
   @Test
   public void testQuery() throws Exception {
-    var unnestDict =
-        QueryUtil.makeUnnestDictionary(Path.of("src/test/resources/queryt/schema.json"));
+    var c1 = new QueryUtil.Condition("demographic.age_at_index", ">=", 50);
+    var c2 = new QueryUtil.Condition("project.project_id", "=", "TCGA-OV");
+    var c3 = new QueryUtil.Condition("diagnoses.figo_stage", "=", "Stage IIIC");
 
-    var w1 =
-        new QueryUtil.Where(new QueryUtil.Column("age_at_index"), ">=", new QueryUtil.Value(50));
-    var w2 =
-        new QueryUtil.Where(
-            new QueryUtil.Column("project_id"), "like", new QueryUtil.Value("TCGA%"));
-    var w3 =
-        new QueryUtil.Where(
-            new QueryUtil.Column("figo_stage"), "=", new QueryUtil.Value("Stage IIIC"));
+    var c = c1.And(c2).And(c3);
 
-    var w4 = new QueryUtil.Where(w1, "and", w2);
-    var w5 = new QueryUtil.Where(w4, "and", w3);
-
-    var s =
-        new QueryUtil.Select(
-            "case_id", "age_at_index", "gender", "race", "project_id", "figo_stage");
-
-    var q = new QueryUtil.Query("gdc-bq-sample.gdc_metadata.r24_clinical", s, w5);
-
-    assertEquals(
-        "SELECT case_id, age_at_index, gender, race, project_id, figo_stage "
-            + "FROM gdc-bq-sample.gdc_metadata.r24_clinical, "
-            + "unnest(demographic), unnest(project), unnest(diagnoses) "
-            + "WHERE (((age_at_index >= 50) and (project_id like 'TCGA%')) and (figo_stage = 'Stage IIIC'))",
-        q.translate(unnestDict));
+    var dataset = new QueryUtil.Dataset("gdc-bq-sample.gdc_metadata.r26_clinical", c);
+    assertEquals(EXPECTED_SQL, dataset.sql());
   }
 }

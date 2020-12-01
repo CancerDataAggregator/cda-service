@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,60 +18,79 @@ public enum QueryUtil {
   _UNUSED;
 
   interface Node {
-    Collection<String> columns();
   }
-
   static class Column implements Node {
     public final String name;
-
     Column(String name) {
       this.name = name;
     }
-
-    public Collection<String> columns() {
-      return Collections.singleton(this.name);
-    }
-
     public String toString() {
+      if (parent() != null) {
+        return "_" + name;
+      }
       return name;
     }
+    public String parent() {
+      var parts = name.split("\\.");
+      if (parts.length > 1) {
+        return parts[0];
+      }
+      return null;
+    }
   }
-
   static class Value implements Node {
     public final Object value;
-
     Value(Object value) {
       this.value = value;
-    }
-
-    public Collection<String> columns() {
-      return Collections.emptySet();
     }
 
     public String toString() {
       if (value instanceof String) {
         return String.format("'%s'", value);
+      } else if (value == null) {
+        return "NULL";
       }
       return value.toString();
     }
   }
-
-  static class Where implements Node {
+  static class Condition implements Node {
     public final Node left;
     public final String operator;
     public final Node right;
 
-    public Where(Node left, String operator, Node right) {
-      this.left = left;
+    public Condition(Node column, String operator, Node value) {
+      this.left = column;
       this.operator = operator;
-      this.right = right;
+      this.right = value;
     }
 
-    public Collection<String> columns() {
-      var cols = new ArrayList<String>();
-      cols.addAll(left.columns());
-      cols.addAll(right.columns());
-      return cols;
+    public Condition(String column, String operator, int value) {
+      this(new Column(column), operator, new Value(value));
+    }
+
+    public Condition(String column, String operator, String value) {
+      this(new Column(column), operator, new Value(value));
+    }
+
+    Condition And(Condition right) {
+      return new Condition(this, "AND", right);
+    }
+
+    Condition Or(Condition right) {
+      return new Condition(this, "OR", right);
+    }
+
+    private Stream<String> unnestRecurse(Node node) {
+      if (node instanceof Column) {
+        return Stream.of(((Column) node).parent());
+      } else if (node instanceof Condition) {
+        return ((Condition) node).columnsToUnnest();
+      }
+      return Stream.empty();
+    }
+
+    Stream<String> columnsToUnnest() {
+      return Stream.concat(unnestRecurse(left), unnestRecurse(right));
     }
 
     @Override
@@ -79,72 +99,25 @@ public enum QueryUtil {
     }
   }
 
-  static class Select {
-    public final Collection<String> columns;
-
-    Select(String... columns) {
-      this.columns = Arrays.asList(columns);
-    }
-
-    public String toString() {
-      return String.join(", ", columns);
-    }
-  }
-
-  static class Field {
-    public String description;
-    public String mode;
-    public String name;
-    public String type;
-    public Field[] fields;
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  static class Schema {
-    public Field[] fields;
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  static class SchemaRoot {
-    public Schema schema;
-  }
-
-  static Map<String, String> makeUnnestDictionary(Path schemaFile) throws IOException {
-    var root = new ObjectMapper().readValue(schemaFile.toFile(), SchemaRoot.class);
-    var unnestDictionary = new HashMap<String, String>();
-    for (Field v : root.schema.fields) {
-      if (v.type.equals("RECORD")) {
-        for (Field field : v.fields) {
-          unnestDictionary.put(field.name, v.name);
-        }
-      }
-    }
-    return unnestDictionary;
-  }
-
-  static class Query {
+  static class Dataset {
     public final String table;
-    public final Select select;
-    public final Where where;
+    public final Condition condition;
 
-    public Query(String table, Select select, Where where) {
+    public Dataset(String table, Condition condition) {
       this.table = table;
-      this.select = select;
-      this.where = where;
+      this.condition = condition;
     }
 
-    String translate(Map<String, String> unnestDict) {
+    String sql() {
       var fromClause =
-          Stream.concat(
-                  Stream.of(table),
-                  Stream.concat(select.columns.stream(), where.columns().stream())
-                      .filter(unnestDict::containsKey)
-                      .map(unnestDict::get)
-                      .distinct()
-                      .map(s -> String.format("unnest(%s)", s)))
-              .collect(Collectors.joining(", "));
+              Stream.concat(Stream.of(table),
+                      condition.columnsToUnnest()
+                              .filter(Objects::nonNull)
+                              .distinct()
+                              .map(s -> String.format("UNNEST(%1$s) AS _%1$s", s)))
+                      .collect(Collectors.joining(", "));
 
-      return String.format("SELECT %s FROM %s WHERE %s", select, fromClause, where);
+      return String.format("SELECT * FROM %s WHERE %s", fromClause, condition);
     }
   }
 }
