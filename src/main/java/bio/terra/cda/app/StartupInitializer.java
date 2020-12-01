@@ -12,15 +12,15 @@ public final class StartupInitializer {
 
   public static void initialize(ApplicationContext applicationContext) {
     // Initialize or upgrade the database depending on the configuration
-    ApplicationConfiguration appConfig =
-        (ApplicationConfiguration) applicationContext.getBean("applicationConfiguration");
-    MigrateService migrateService = (MigrateService) applicationContext.getBean("migrateService");
-
-    if (appConfig.isDbInitializeOnStart()) {
-      migrateService.initialize(changelogPath, appConfig.getDataSource());
-    } else if (appConfig.isDbUpgradeOnStart()) {
-      migrateService.upgrade(changelogPath, appConfig.getDataSource());
-    }
+//    ApplicationConfiguration appConfig =
+//        (ApplicationConfiguration) applicationContext.getBean("applicationConfiguration");
+//    MigrateService migrateService = (MigrateService) applicationContext.getBean("migrateService");
+//
+//    if (appConfig.isDbInitializeOnStart()) {
+//      migrateService.initialize(changelogPath, appConfig.getDataSource());
+//    } else if (appConfig.isDbUpgradeOnStart()) {
+//      migrateService.upgrade(changelogPath, appConfig.getDataSource());
+//    }
 
     // TODO: TEMPLATE: Fill in this method with any other initialization that needs to happen
     //  between the point of having the entire application initialized and
