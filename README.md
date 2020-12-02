@@ -3,33 +3,15 @@ This repository started as a clone of the [kernel-service-poc](https://github.co
 
 ## Getting Started (macOS)
 
-Building and running locally requires JDK 8, gradle and postgres. On a Mac, you can use [brew](https://brew.sh/)
+Building and running locally requires JDK 8 and gradle. On a Mac, you can use [brew](https://brew.sh/)
 to install these. 
 
 ```bash
 brew install openjdk@8
 brew install gradle
-brew install postgres
 ```
 
 After this add the path to `openjdk@8` into your login script e.g. `export PATH="/usr/local/opt/openjdk@8/bin:$PATH"`
-
-
-### Set up local postgres database
-
-Install Postgres, using brew or an installer. 
-The MacOS installer for version 12 is [here](https://github.com/PostgresApp/PostgresApp/releases/download/v2.3.5/Postgres-2.3.5-12.dmg).
-Once it's running, create and start a new server if one doesn't already exist.
-Brew will give instructions for how to start things as a service if needed.
-
-### Initialize the database
-
-If you used brew to install postgres, `psql` should already be on your path.
-
-```bash
-psql postgres -c "create user manager password 'password';"
-psql postgres -c "create database cda with owner = manager;"
-```
 
 ### Build and run tests
 
@@ -48,7 +30,7 @@ BUILD SUCCESSFUL in 8s
 Running the server locally requires three environment variables. These can be set on the command line:
 
 ```bash
-DATABASE_USER=manager DATABASE_PASSWORD=password DATABASE_NAME=cda ./gradlew bootRun
+./gradlew bootRun
 ```
 
 ### Testing the server
