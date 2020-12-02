@@ -198,10 +198,6 @@ components:
 
   schemas:
 
-    DateType:
-      type: string
-      format: date-time
-
     ErrorReport:
       type: object
       properties:
@@ -248,6 +244,10 @@ components:
           items:
             $ref: '#/components/schemas/DatasetInfo'
 
+    DateType:
+      type: string
+      format: date-time
+
     DatasetInfo:
       type: object
       properties:
@@ -256,8 +256,7 @@ components:
         version:
           type: string
         date:
-          type: string
-          format: date-time
+          $ref: DateType
 
     Model:
       type: object
@@ -265,8 +264,7 @@ components:
         version:
           type: string
         date:
-          type: string
-          format: date-time
+          $ref: DateType
         model:
           type: object
           properties: {}
@@ -292,7 +290,7 @@ components:
         - type: string
         - type: integer
         - type: number
-        - $ref: '#/components/schemas/QueryColumn' 
+#        - $ref: '#/components/schemas/QueryColumn' 
         - $ref: '#/components/schemas/QueryNode'
 
     QueryColumn:
