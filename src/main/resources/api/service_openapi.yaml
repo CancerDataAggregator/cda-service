@@ -270,41 +270,26 @@ components:
           properties: {}
 
     Query:
-      $ref: '#/components/schemas/QueryNode'  
-
-    QueryNode:
       type: object
       properties:
         operator:
           type: string
           enum: ["<", ">", "=", "~", "AND", "OR", "NOT", "LIMIT"]
-        sort:
-          $ref: '#/components/schemas/QuerySort'
         l:
           $ref: '#/components/schemas/QueryLeaf' 
         r:
           $ref: '#/components/schemas/QueryLeaf' 
 
     QueryLeaf:
-      oneOf:
-        - type: string
-        - type: integer
-        - type: number
-#        - $ref: '#/components/schemas/QueryColumn' 
-        - $ref: '#/components/schemas/QueryNode'
-
-    QueryColumn:
-      type: string
-
-    QuerySort:
       type: object
+      description: |
+        This can be a column, a value to test or another query
       properties:
-        column:
-          $ref: '#/components/schemas/QueryColumn'
-        order:
+        mode:
           type: string
-          enum: [asc, desc]
-
+          enum: ["column", "value", "query"]
+        content:
+          type: object
 
   responses:
   
@@ -329,6 +314,8 @@ components:
           schema:
             type: object
             properties:
+              query_sql:
+                type: string
               result:
                 type: array
                 items: 
