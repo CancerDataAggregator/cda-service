@@ -9,26 +9,16 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class MetaApiController implements MetaApi {
-  private int statusCount;
 
   @Override
   public ResponseEntity<SystemStatus> serviceStatus() {
-    // TODO: TEMPLATE: Replace this
-    statusCount++;
-    boolean status = (statusCount % 2 == 1);
-    String reliable = "reliable";
     HttpStatus httpStatus = HttpStatus.OK;
 
-    if (!status) {
-      reliable = "unreliable";
-      httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-    }
-
     SystemStatusSystems otherSystemStatus =
-        new SystemStatusSystems().ok(status).addMessagesItem("other systems are SO " + reliable);
+        new SystemStatusSystems().ok(true).addMessagesItem("everything is fine");
 
     SystemStatus systemStatus =
-        new SystemStatus().ok(status).putSystemsItem("otherSystem", otherSystemStatus);
+        new SystemStatus().ok(true).putSystemsItem("BigQuery", otherSystemStatus);
 
     return new ResponseEntity<>(systemStatus, httpStatus);
   }
