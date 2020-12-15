@@ -271,25 +271,32 @@ components:
 
     Query:
       type: object
-      properties:
-        operator:
-          type: string
-          enum: ["<", ">", "=", "~", "AND", "OR", "NOT", "LIMIT"]
-        l:
-          $ref: '#/components/schemas/QueryLeaf' 
-        r:
-          $ref: '#/components/schemas/QueryLeaf' 
-
-    QueryLeaf:
-      type: object
       description: |
-        This can be a column, a value to test or another query
+        Queries are built up of operators flanked by columns, values or further
+        queries.
+        
+        For example, the query age < 50 (age being a column name and not a
+        value) is expressed as:
+
+          node_type: "<",
+          l:
+            node_type: column
+            value: age
+          r:
+            node_type: value
+            value: 50
+
       properties:
-        mode:
+        node_type:
           type: string
-          enum: ["column", "value", "query"]
-        content:
-          type: object
+          enum: ["column", "value", "<", ">", "=", "~", "AND", "OR", "NOT",
+          "LIMIT"]
+        value:
+          type: string
+        l:
+          $ref: '#/components/schemas/Query' 
+        r:
+          $ref: '#/components/schemas/Query' 
 
   responses:
   
