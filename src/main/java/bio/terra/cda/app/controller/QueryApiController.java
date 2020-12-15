@@ -3,7 +3,7 @@ package bio.terra.cda.app.controller;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.InlineResponse200;
-import bio.terra.cda.generated.model.QueryNode;
+import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.service.ping.PingService;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public class QueryApiController implements QueryApi {
 
   @Override
   public ResponseEntity<InlineResponse200> booleanQuery(
-      String version, @Valid QueryNode body, @Valid Integer offset, @Valid Integer limit) {
+      String version, @Valid Query body, @Valid Integer offset, @Valid Integer limit) {
     QueryService service = new QueryService();
     // FIXME: need try/catch for error handling.
     final List<String> jsonData = service.runQuery(body);

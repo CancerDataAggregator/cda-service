@@ -1,6 +1,6 @@
 package bio.terra.cda.app.service;
 
-import bio.terra.cda.generated.model.QueryNode;
+import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldValueList;
@@ -54,10 +54,10 @@ public class QueryService {
     }
   }
 
-  public List<String> runQuery(QueryNode queryNode) {
-    String query = createQueryFromNode(queryNode);
+  public List<String> runQuery(Query query) {
+    String queryString = generateQueryClause(query);
     // Wrap query so it returns JSON
-    String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", query);
+    String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryString);
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(true).build();
 
@@ -70,7 +70,7 @@ public class QueryService {
     return getJobResults(queryJob);
   }
 
-  private String createQueryFromNode(QueryNode queryNode) {
+  private String generateQueryClause(Query query) {
     // FIXME need to implement
     return "SELECT X from Y WHERE Z";
   }
