@@ -142,7 +142,7 @@ paths:
           $ref: '#/components/responses/JSONResult'
 
 
-  '/api/cda/v1/ping':
+  /api/v1/ping:
     post:
       description: |
         Send a message and get it back in the response
@@ -195,7 +195,9 @@ components:
         type: integer
       description: The numbers of entries to return          
 
+
   schemas:
+
     ErrorReport:
       type: object
       properties:
@@ -230,8 +232,7 @@ components:
       type: object
       properties:
         release-date:
-          type: string
-          format: date-time
+          $ref: DateType
         cda-version:
           type: string
         cda-model:
@@ -241,15 +242,21 @@ components:
         datasets:
           type: array
           items:
-            type: object
-            properties:
-              source:
-                type: string
-              version:
-                type: string
-              date:
-                type: string
-                format: date-time
+            $ref: '#/components/schemas/DatasetInfo'
+
+    DateType:
+      type: string
+      format: date-time
+
+    DatasetInfo:
+      type: object
+      properties:
+        source:
+          type: string
+        version:
+          type: string
+        date:
+          $ref: DateType
 
     Model:
       type: object
@@ -257,57 +264,44 @@ components:
         version:
           type: string
         date:
-          type: string
-          format: date-time
+          $ref: DateType
         model:
           type: object
           properties: {}
 
     Query:
-      $ref: '#/components/schemas/QueryNode'  
-
-    QueryNode:
       type: object
+      description: |
+        Queries are built up of operators flanked by columns, values or further
+        queries.
+        
+        For example, the query "age < 50" (where age is a column name and not a
+        value) is expressed as:
+
+          ```
+          node_type: "<",
+          l:
+            node_type: column
+            value: age
+          r:
+            node_type: value
+            value: 50
+          ```
+
       properties:
-        operator:
+        node_type:
           type: string
-          enum: ["<", ">", "=", "~", "AND", "OR", "NOT", "LIMIT"]
-        sort:
-          $ref: '#/components/schemas/QuerySort'
+          enum: ["column", "value", "<", ">", "=", "~", "AND", "OR", "NOT",
+          "LIMIT"]
+        value:
+          type: string
         l:
-          $ref: '#/components/schemas/QueryLeaf' 
+          $ref: '#/components/schemas/Query' 
         r:
-          $ref: '#/components/schemas/QueryLeaf' 
-
-    QueryLeaf:
-      oneOf:
-        - type: string
-        - type: integer
-        - type: number
-        - $ref: '#/components/schemas/QueryColumn' 
-        - $ref: '#/components/schemas/QueryNode'
-
-    QueryColumn:
-      type: object
-      properties:
-        namespace:
-          type: string
-        table:
-          type: string
-        column:
-          type: string
-      
-    QuerySort:
-      type: object
-      properties:
-        column:
-          $ref: '#/components/schemas/QueryColumn'
-        order:
-          type: string
-          enum: [asc, desc]
-
+          $ref: '#/components/schemas/Query' 
 
   responses:
+  
     ErrorResponse:
       description: common error response
       content:
@@ -329,6 +323,8 @@ components:
           schema:
             type: object
             properties:
+              query_sql:
+                type: string
               result:
                 type: array
                 items: 
