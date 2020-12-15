@@ -3,15 +3,15 @@ This repository started as a clone of the [kernel-service-poc](https://github.co
 
 ## Getting Started (macOS)
 
-Building and running locally requires JDK 8 and gradle. On a Mac, you can use [brew](https://brew.sh/)
+Building and running locally requires JDK 11 and gradle. On a Mac, you can use [brew](https://brew.sh/)
 to install these. 
 
 ```bash
-brew install openjdk@8
+brew install openjdk@11
 brew install gradle
 ```
 
-After this add the path to `openjdk@8` into your login script e.g. `export PATH="/usr/local/opt/openjdk@8/bin:$PATH"`
+After this add the path to `openjdk@11` into your login script e.g. `export PATH="/usr/local/opt/openjdk@11/bin:$PATH"`
 
 ### Build and run tests
 
