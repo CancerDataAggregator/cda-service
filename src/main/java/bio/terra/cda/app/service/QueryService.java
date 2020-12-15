@@ -1,6 +1,8 @@
 package bio.terra.cda.app.service;
 
 import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.app.util.QueryTranslator;
+
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldValueList;
@@ -55,11 +57,11 @@ public class QueryService {
   }
 
   public List<String> runQuery(Query query) {
-    String queryString = generateQueryClause(query);
+    String queryString = (new QueryTranslator("gdc-bq-sample.gdc_metadata.r26_clinical_and_file", query)).sql();
     // Wrap query so it returns JSON
     String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryString);
     QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(true).build();
+        QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
@@ -68,10 +70,5 @@ public class QueryService {
     queryJob = runJob(queryJob);
 
     return getJobResults(queryJob);
-  }
-
-  private String generateQueryClause(Query query) {
-    // FIXME need to implement
-    return "SELECT X from Y WHERE Z";
   }
 }
