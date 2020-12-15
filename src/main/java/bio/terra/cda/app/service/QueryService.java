@@ -1,8 +1,7 @@
 package bio.terra.cda.app.service;
 
-import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.app.util.QueryTranslator;
-
+import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldValueList;
@@ -57,7 +56,8 @@ public class QueryService {
   }
 
   public List<String> runQuery(Query query) {
-    String queryString = (new QueryTranslator("gdc-bq-sample.gdc_metadata.r26_clinical_and_file", query)).sql();
+    String queryString =
+        (new QueryTranslator("gdc-bq-sample.gdc_metadata.r26_clinical_and_file", query)).sql();
     // Wrap query so it returns JSON
     String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryString);
     QueryJobConfiguration queryConfig =
