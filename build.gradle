@@ -1,3 +1,5 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 buildscript {
 	repositories {
 		mavenCentral()
@@ -80,8 +82,9 @@ openApiGenerate {
 	]
 }
 
-openApiGenerate {
+task buildPythonSdk(type: GenerateTask){
 	generatorName = "python"
+	packageName = "cda_client"
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
 }
