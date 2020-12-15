@@ -44,6 +44,61 @@ curl http://localhost:8080/status
 curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
 ```
 
+
+### Example query
+
+> Select data from TCGA-OV project, with donors over age 50 with Stage IIIC cancer
+
+#### Request body
+
+```
+{
+  "node_type": "AND",
+  "l": {
+    "node_type": "AND",
+    "l": {
+      "node_type": ">=",
+      "l": {
+        "node_type": "column",
+        "value": "demographic.age_at_index"
+      },
+      "r": {
+        "node_type": "value",
+        "value": "50"
+      }
+    },
+    "r": {
+      "node_type": "=",
+      "l": {
+        "node_type": "column",
+        "value": "project.project_id"
+      },
+      "r": {
+        "node_type": "value",
+        "value": "TCGA-OV"
+      }
+    }
+  },
+  "r": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "diagnoses.figo_stage"
+    },
+    "r": {
+      "node_type": "value",
+      "value": "Stage IIIC"
+    }
+  }
+}
+```
+
+Curl line
+```
+curl -X POST "http://localhost:8080/api/v1/boolean-query/1" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"node_type\":\"AND\",\"l\":{\"node_type\":\"AND\",\"l\":{\"node_type\":\">=\",\"l\":{\"node_type\":\"column\",\"value\":\"demographic.age_at_index\"},\"r\":{\"node_type\":\"value\",\"value\":\"50\"}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"project.project_id\"},\"r\":{\"node_type\":\"value\",\"value\":\"TCGA-OV\"}}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"diagnoses.figo_stage\"},\"r\":{\"node_type\":\"value\",\"value\":\"Stage IIIC\"}}}"
+```
+
+
 ## OpenAPI V3
 
 The API specification in OpenAPI V3 is at src/main/resources/api/service_openapi.yaml
