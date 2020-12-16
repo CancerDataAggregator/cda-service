@@ -63,7 +63,7 @@ curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
         "value": "demographic.age_at_index"
       },
       "r": {
-        "node_type": "value",
+        "node_type": "unquoted",
         "value": "50"
       }
     },
@@ -74,7 +74,7 @@ curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
         "value": "project.project_id"
       },
       "r": {
-        "node_type": "value",
+        "node_type": "quoted",
         "value": "TCGA-OV"
       }
     }
@@ -86,7 +86,7 @@ curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
       "value": "diagnoses.figo_stage"
     },
     "r": {
-      "node_type": "value",
+      "node_type": "quoted",
       "value": "Stage IIIC"
     }
   }

@@ -29,7 +29,11 @@ public class QueryTranslator {
   }
 
   private Stream<String> getUnnestColumns(Query query) {
-    if (query.getNodeType() == Query.NodeTypeEnum.VALUE) {
+    if (query.getNodeType() == Query.NodeTypeEnum.QUOTED) {
+      return Stream.empty();
+    }
+
+    if (query.getNodeType() == Query.NodeTypeEnum.UNQUOTED) {
       return Stream.empty();
     }
 
@@ -48,25 +52,13 @@ public class QueryTranslator {
     return null;
   }
 
-  public static boolean isNumeric(String str) {
-    try {
-      Double.parseDouble(str);
-      return true;
-    } catch (NumberFormatException e) {
-      return false;
-    }
-    // return str.matches("-?\\d+(\\.\\d+)?"); // match a number with optional '-' and decimal.
-    // return str.chars().allMatch( Character::isDigit );
-  }
-
   private String queryString(Query query) {
-    if (query.getNodeType() == Query.NodeTypeEnum.VALUE) {
-      String val = query.getValue();
-      if (isNumeric(val)) {
-        return String.format("%s", val);
-      } else {
-        return String.format("'%s'", val);
-      }
+    if (query.getNodeType() == Query.NodeTypeEnum.QUOTED) {
+      return String.format("'%s'", query.getValue());
+    }
+
+    if (query.getNodeType() == Query.NodeTypeEnum.UNQUOTED) {
+      return String.format("%s", query.getValue());
     }
 
     if (query.getNodeType() == Query.NodeTypeEnum.COLUMN) {
