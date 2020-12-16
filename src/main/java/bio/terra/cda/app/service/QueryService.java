@@ -1,5 +1,6 @@
 package bio.terra.cda.app.service;
 
+import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.BigQuery;
@@ -15,6 +16,17 @@ import java.util.List;
 import java.util.UUID;
 
 public class QueryService {
+
+  public class QueryResult {
+
+    public final String query_sql;
+    public final List<String> result;
+
+    public QueryResult(String query_sql, List<String> result) {
+      this.query_sql = query_sql;
+      this.result = result;
+    }
+  }
 
   final BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
 
@@ -46,7 +58,7 @@ public class QueryService {
 
       // Print all pages of the results.
       for (FieldValueList row : result.iterateAll()) {
-        jsonData.add(row.get("value").getStringValue());
+        jsonData.add(row.get(0).getStringValue());
       }
 
       return jsonData;
@@ -55,20 +67,24 @@ public class QueryService {
     }
   }
 
-  public List<String> runQuery(Query query) {
+  public QueryResult runQuery(Query query, Integer limit) {
     String queryString =
         (new QueryTranslator("gdc-bq-sample.gdc_metadata.r26_clinical_and_file", query)).sql();
     // Wrap query so it returns JSON
-    String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryString);
+    String jsonQuery =
+        String.format("SELECT TO_JSON_STRING(t,true) from (%s LIMIT %s) as t", queryString, limit);
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
-    Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
 
-    queryJob = runJob(queryJob);
-
-    return getJobResults(queryJob);
+    try {
+      Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
+      queryJob = runJob(queryJob);
+      return new QueryResult(jsonQuery, getJobResults(queryJob));
+    } catch (Throwable t) {
+      throw new BadQueryException(String.format("SQL: %s", jsonQuery), t);
+    }
   }
 }
