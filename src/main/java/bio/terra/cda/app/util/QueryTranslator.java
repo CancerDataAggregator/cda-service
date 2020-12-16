@@ -9,29 +9,6 @@ public class QueryTranslator {
   public final String table;
   public final Query query;
 
-  static class Column {
-    public final String name;
-
-    Column(String name) {
-      this.name = name;
-    }
-
-    public String toString() {
-      if (parent() != null) {
-        return "_" + name;
-      }
-      return name;
-    }
-
-    public String parent() {
-      var parts = name.split("\\.");
-      if (parts.length > 1) {
-        return parts[0];
-      }
-      return null;
-    }
-  }
-
   public QueryTranslator(String table, Query query) {
     this.table = table;
     this.query = query;
@@ -57,10 +34,18 @@ public class QueryTranslator {
     }
 
     if (query.getNodeType() == Query.NodeTypeEnum.COLUMN) {
-      return Stream.of((new Column(query.getValue())).parent());
+      return Stream.of(getColumnParent(query.getValue()));
     }
 
     return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
+  }
+
+  public static String getColumnParent(String column) {
+    var parts = column.split("\\.");
+    if (parts.length > 1) {
+      return parts[0];
+    }
+    return null;
   }
 
   public static boolean isNumeric(String str) {
