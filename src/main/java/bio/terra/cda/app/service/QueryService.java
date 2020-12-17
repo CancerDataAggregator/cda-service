@@ -29,7 +29,7 @@ public class QueryService {
   }
 
   final BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
-  private String table;
+  final private String table;
 
   public QueryService(String table) {
     this.table = table;
@@ -72,7 +72,7 @@ public class QueryService {
     }
   }
 
-  private Integer defaultValue(Integer val, Integer def) {
+  private int defaultValue(Integer val, int def) {
     if (val != null) {
       return val;
     } else {
@@ -83,11 +83,11 @@ public class QueryService {
   public QueryResult runQuery(Query query, Integer offset, Integer limit) {
 
 
-    String queryString = (new QueryTranslator(this.table, query)).sql();
+    String queryString = new QueryTranslator(this.table, query).sql();
 
     // Wrap query so it returns JSON
-    offset = defaultValue(offset, 0);
-    limit = defaultValue(limit, 100);
+    offset = Objects.requireNonNullElse(offset, 0);
+    limit = Objects.requireNonNullElse(limit, 100);
     String jsonQuery =
         String.format(
             "SELECT TO_JSON_STRING(t,true) from (%s LIMIT %s OFFSET %s) as t",
