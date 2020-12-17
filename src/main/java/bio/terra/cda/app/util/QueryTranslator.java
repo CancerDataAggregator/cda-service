@@ -1,7 +1,6 @@
 package bio.terra.cda.app.util;
 
 import bio.terra.cda.generated.model.Query;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,7 +18,6 @@ public class QueryTranslator {
         Stream.concat(
                 Stream.of(this.table),
                 getUnnestColumns(this.query)
-                    .filter(Objects::nonNull)
                     .distinct()
                     .map(s -> String.format("UNNEST(%1$s) AS _%1$s", s)))
             .collect(Collectors.joining(", "));
@@ -28,24 +26,27 @@ public class QueryTranslator {
     return String.format("SELECT * FROM %s WHERE %s", fromClause, condition);
   }
 
-  private Stream<String> getUnnestColumns(Query query) {
-    if (query.getNodeType() == Query.NodeTypeEnum.QUOTED) {
-      return Stream.empty();
+  private static Stream<String> getUnnestColumns(Query query) {
+    switch (query.getNodeType()) {
+      case QUOTED:
+      case UNQUOTED:
+        return Stream.empty();
+      case COLUMN:
+        if (hasColumnParent(query)) {
+          return Stream.of(getColumnParent(query));
+        }
+        return Stream.empty();
+      default:
+        return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
     }
-
-    if (query.getNodeType() == Query.NodeTypeEnum.UNQUOTED) {
-      return Stream.empty();
-    }
-
-    if (query.getNodeType() == Query.NodeTypeEnum.COLUMN) {
-      return Stream.of(getColumnParent(query.getValue()));
-    }
-
-    return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
   }
 
-  public static String getColumnParent(String column) {
-    var parts = column.split("\\.");
+  public static boolean hasColumnParent(Query query) {
+    return query.getNodeType() == Query.NodeTypeEnum.COLUMN && query.getValue().indexOf('.') != -1;
+  }
+
+  public static String getColumnParent(Query query) {
+    var parts = query.getValue().split("\\.");
     if (parts.length > 1) {
       return parts[0];
     }
@@ -53,19 +54,18 @@ public class QueryTranslator {
   }
 
   private String queryString(Query query) {
-    if (query.getNodeType() == Query.NodeTypeEnum.QUOTED) {
-      return String.format("'%s'", query.getValue());
+    switch (query.getNodeType()) {
+      case QUOTED:
+        return String.format("'%s'", query.getValue());
+      case UNQUOTED:
+        return String.format("%s", query.getValue());
+      case COLUMN:
+        var prefix = hasColumnParent(query) ? "_" : "";
+        return String.format("%s%s", prefix, query.getValue());
+      default:
+        return String.format(
+            "(%s %s %s)",
+            queryString(query.getL()), query.getNodeType(), queryString(query.getR()));
     }
-
-    if (query.getNodeType() == Query.NodeTypeEnum.UNQUOTED) {
-      return String.format("%s", query.getValue());
-    }
-
-    if (query.getNodeType() == Query.NodeTypeEnum.COLUMN) {
-      return String.format("_%s", query.getValue());
-    }
-
-    return String.format(
-        "(%s %s %s)", queryString(query.getL()), query.getNodeType(), queryString(query.getR()));
   }
 }

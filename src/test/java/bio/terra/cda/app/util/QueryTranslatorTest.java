@@ -4,45 +4,44 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import bio.terra.cda.generated.model.Query;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.jupiter.api.Test;
 
 class QueryTranslatorTest {
 
-  static final String jsonQueryBasePath = "src/test/java/bio/terra/cda/app/util/";
+  static final Path TEST_FILES = Paths.get("src/test/resources/query");
+
+  public static final String TABLE = "TABLE";
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Test
   public void testQuerySimple() throws Exception {
-    String table = "gdc-bq-sample.gdc_metadata.r26_clinical";
-    String jsonQueryPath = jsonQueryBasePath + "query1.json";
-    String jsonQuery = Files.readString(Paths.get(jsonQueryPath), StandardCharsets.US_ASCII);
+    String jsonQuery = Files.readString(TEST_FILES.resolve("query1.json"));
 
-    String EXPECTED_SQL =
-        String.format(
-            "SELECT * FROM %s, UNNEST(project) AS _project WHERE (_project.project_id = 'TCGA-OV')",
-            table);
+    String expectedSql = String.format("SELECT * FROM %s WHERE (project_id = 'TCGA-OV')", TABLE);
 
-    Query query = new ObjectMapper().readValue(jsonQuery, Query.class);
-    String translatedQuery = (new QueryTranslator(table, query)).sql();
+    Query query = objectMapper.readValue(jsonQuery, Query.class);
+    String translatedQuery = new QueryTranslator(TABLE, query).sql();
 
-    assertEquals(EXPECTED_SQL, translatedQuery);
+    assertEquals(expectedSql, translatedQuery);
   }
 
   @Test
   public void testQueryComplex() throws Exception {
-    String table = "gdc-bq-sample.gdc_metadata.r26_clinical";
-    String jsonQueryPath = jsonQueryBasePath + "query2.json";
-    String jsonQuery = Files.readString(Paths.get(jsonQueryPath), StandardCharsets.US_ASCII);
+    String jsonQuery = Files.readString(TEST_FILES.resolve("query2.json"));
 
     String EXPECTED_SQL =
         String.format(
-            "SELECT * FROM %s, UNNEST(demographic) AS _demographic, UNNEST(project) AS _project, UNNEST(diagnoses) AS _diagnoses WHERE (((_demographic.age_at_index >= 50) AND (_project.project_id = 'TCGA-OV')) AND (_diagnoses.figo_stage = 'Stage IIIC'))",
-            table);
+            "SELECT * FROM %s, UNNEST(demographic) AS _demographic, UNNEST(project) AS _project, "
+                + "UNNEST(diagnoses) AS _diagnoses WHERE (((_demographic.age_at_index >= 50) AND "
+                + "(_project.project_id = 'TCGA-OV')) AND (_diagnoses.figo_stage = 'Stage IIIC'))",
+            TABLE);
 
-    Query query = new ObjectMapper().readValue(jsonQuery, Query.class);
-    String translatedQuery = (new QueryTranslator(table, query)).sql();
+    Query query = objectMapper.readValue(jsonQuery, Query.class);
+    String translatedQuery = new QueryTranslator(TABLE, query).sql();
 
     assertEquals(EXPECTED_SQL, translatedQuery);
   }
