@@ -103,7 +103,7 @@ public class QueryService {
       queryJob = runJob(queryJob);
       return new QueryResult(jsonQuery, getJobResults(queryJob));
     } catch (Throwable t) {
-      throw new BadQueryException(String.format("SQL: %s", jsonQuery), t);
+      throw new BadQueryException(String.format("Error calling BigQuery: '%s'", jsonQuery), t);
     }
   }
 }
