@@ -86,7 +86,7 @@ public class QueryService {
       queryJob = runJob(queryJob);
       return new QueryResult(queryString, getJobResults(queryJob));
     } catch (Throwable t) {
-      throw new BadQueryException(String.format("SQL: %s", queryString), t);
+      throw new BadQueryException(String.format("Error calling BigQuery: '%s'", queryString), t);
     }
   }
 }
