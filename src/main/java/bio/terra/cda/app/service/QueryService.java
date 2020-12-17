@@ -72,25 +72,38 @@ public class QueryService {
     }
   }
 
-  public QueryResult runQuery(Query query, Integer limit) {
-    String queryString = (new QueryTranslator(this.table, query)).sql();
-    if (limit != null) {
-      queryString += " LIMIT " + limit;
+  private Integer defaultValue(Integer val, Integer def) {
+    if (val != null) {
+      return val;
+    } else {
+      return def;
     }
+  }
+
+  public QueryResult runQuery(Query query, Integer offset, Integer limit) {
+
+
+    String queryString = (new QueryTranslator(this.table, query)).sql();
+
     // Wrap query so it returns JSON
-    String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryString);
+    offset = defaultValue(offset, 0);
+    limit = defaultValue(limit, 100);
+    String jsonQuery =
+        String.format(
+            "SELECT TO_JSON_STRING(t,true) from (%s LIMIT %s OFFSET %s) as t",
+            queryString, limit, offset);
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
 
     // Create a job ID so that we can safely retry.
-    JobId jobId = JobId.of("gdc-bq-sample", UUID.randomUUID().toString());
+    JobId jobId = JobId.of(UUID.randomUUID().toString());
 
     try {
       Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
       queryJob = runJob(queryJob);
-      return new QueryResult(queryString, getJobResults(queryJob));
+      return new QueryResult(jsonQuery, getJobResults(queryJob));
     } catch (Throwable t) {
-      throw new BadQueryException(String.format("SQL: %s", queryString), t);
+      throw new BadQueryException(String.format("SQL: %s", jsonQuery), t);
     }
   }
 }

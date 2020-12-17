@@ -36,7 +36,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<InlineResponse200> booleanQuery(
       String version, @Valid Query body, @Valid Integer offset, @Valid Integer limit) {
     QueryService service = new QueryService(CLINICAL_TABLE);
-    final QueryResult result = service.runQuery(body, limit);
+    final QueryResult result = service.runQuery(body, offset, limit);
     var response = new InlineResponse200();
     response.setResult(new ArrayList<>(result.result));
     response.setQuerySql(result.querySql);
