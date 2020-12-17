@@ -1,0 +1,11 @@
+{
+  "node_type": "=",
+  "l": {
+    "node_type": "column",
+    "value": "project.project_id"
+  },
+  "r": {
+    "node_type": "quoted",
+    "value": "TCGA-OV"
+  }
+}
