@@ -11,7 +11,6 @@ import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -75,8 +74,7 @@ public class QueryService {
       queryString += " LIMIT " + limit;
     }
     // Wrap query so it returns JSON
-    String jsonQuery =
-        String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryString);
+    String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryString);
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
 
