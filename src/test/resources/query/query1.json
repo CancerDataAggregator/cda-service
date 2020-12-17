@@ -2,7 +2,7 @@
   "node_type": "=",
   "l": {
     "node_type": "column",
-    "value": "project.project_id"
+    "value": "project_id"
   },
   "r": {
     "node_type": "quoted",
