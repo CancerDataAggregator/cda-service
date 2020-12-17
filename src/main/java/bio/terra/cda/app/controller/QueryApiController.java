@@ -37,7 +37,7 @@ public class QueryApiController implements QueryApi {
     final QueryResult result = service.runQuery(body, limit);
     var response = new InlineResponse200();
     response.setResult(new ArrayList<>(result.result));
-    response.setQuerySql(result.query_sql);
+    response.setQuerySql(result.querySql);
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 }

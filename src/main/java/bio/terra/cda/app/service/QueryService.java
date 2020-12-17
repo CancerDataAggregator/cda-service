@@ -17,13 +17,13 @@ import java.util.UUID;
 
 public class QueryService {
 
-  public class QueryResult {
+  public static class QueryResult {
 
-    public final String query_sql;
+    public final String querySql;
     public final List<String> result;
 
-    public QueryResult(String query_sql, List<String> result) {
-      this.query_sql = query_sql;
+    public QueryResult(String querySql, List<String> result) {
+      this.querySql = querySql;
       this.result = result;
     }
   }
@@ -70,21 +70,23 @@ public class QueryService {
   public QueryResult runQuery(Query query, Integer limit) {
     String queryString =
         (new QueryTranslator("gdc-bq-sample.gdc_metadata.r26_clinical_and_file", query)).sql();
+    if (limit != null) {
+      queryString += " LIMIT " + limit;
+    }
     // Wrap query so it returns JSON
-    String jsonQuery =
-        String.format("SELECT TO_JSON_STRING(t,true) from (%s LIMIT %s) as t", queryString, limit);
+    String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryString);
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
 
     // Create a job ID so that we can safely retry.
-    JobId jobId = JobId.of(UUID.randomUUID().toString());
+    JobId jobId = JobId.of("gdc-bq-sample", UUID.randomUUID().toString());
 
     try {
       Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
       queryJob = runJob(queryJob);
-      return new QueryResult(jsonQuery, getJobResults(queryJob));
+      return new QueryResult(queryString, getJobResults(queryJob));
     } catch (Throwable t) {
-      throw new BadQueryException(String.format("SQL: %s", jsonQuery), t);
+      throw new BadQueryException(String.format("SQL: %s", queryString), t);
     }
   }
 }
