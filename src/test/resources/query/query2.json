@@ -1,0 +1,39 @@
+{
+  "node_type": "AND",
+  "l": {
+    "node_type": "AND",
+    "l": {
+      "node_type": ">=",
+      "l": {
+        "node_type": "column",
+        "value": "demographic.age_at_index"
+      },
+      "r": {
+        "node_type": "unquoted",
+        "value": "50"
+      }
+    },
+    "r": {
+      "node_type": "=",
+      "l": {
+        "node_type": "column",
+        "value": "project.project_id"
+      },
+      "r": {
+        "node_type": "quoted",
+        "value": "TCGA-OV"
+      }
+    }
+  },
+  "r": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "diagnoses.figo_stage"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "Stage IIIC"
+    }
+  }
+}

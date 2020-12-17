@@ -2,6 +2,7 @@ package bio.terra.cda.app.controller;
 
 import bio.terra.cda.common.exception.ErrorReportException;
 import bio.terra.cda.generated.model.ErrorReport;
+import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +47,15 @@ public class GlobalExceptionHandler {
   private ResponseEntity<ErrorReport> buildErrorReport(
       Throwable ex, HttpStatus statusCode, List<String> causes) {
     logger.error("Global exception handler: catch stack", ex);
+
+    List<String> collectCauses = new ArrayList<>();
     for (Throwable cause = ex; cause != null; cause = cause.getCause()) {
       logger.error("   cause: " + cause.toString());
+      collectCauses.add(cause.getMessage());
+    }
+
+    if (causes == null) {
+      causes = collectCauses;
     }
     ErrorReport errorReport =
         new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);

@@ -1,12 +1,12 @@
 package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.service.QueryService;
+import bio.terra.cda.app.service.QueryService.QueryResult;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.InlineResponse200;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.service.ping.PingService;
 import java.util.ArrayList;
-import java.util.List;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class QueryApiController implements QueryApi {
   private final PingService pingService;
+
+  public static final String CLINICAL_TABLE = "gdc-bq-sample.gdc_metadata.r26_clinical_and_file";
 
   @Autowired
   public QueryApiController(PingService pingService) {
@@ -33,12 +35,11 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<InlineResponse200> booleanQuery(
       String version, @Valid Query body, @Valid Integer offset, @Valid Integer limit) {
-    QueryService service = new QueryService();
-    // FIXME: need try/catch for error handling.
-    final List<String> jsonData = service.runQuery(body);
-
+    QueryService service = new QueryService(CLINICAL_TABLE);
+    final QueryResult result = service.runQuery(body, offset, limit);
     var response = new InlineResponse200();
-    response.setResult(new ArrayList<>(jsonData));
+    response.setResult(new ArrayList<>(result.result));
+    response.setQuerySql(result.querySql);
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 }
