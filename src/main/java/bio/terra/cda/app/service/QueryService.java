@@ -13,6 +13,7 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class QueryService {
@@ -29,7 +30,7 @@ public class QueryService {
   }
 
   final BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
-  final private String table;
+  private final String table;
 
   public QueryService(String table) {
     this.table = table;
@@ -72,26 +73,17 @@ public class QueryService {
     }
   }
 
-  private int defaultValue(Integer val, int def) {
-    if (val != null) {
-      return val;
-    } else {
-      return def;
-    }
-  }
-
   public QueryResult runQuery(Query query, Integer offset, Integer limit) {
 
-
     String queryString = new QueryTranslator(this.table, query).sql();
-
-    // Wrap query so it returns JSON
     offset = Objects.requireNonNullElse(offset, 0);
     limit = Objects.requireNonNullElse(limit, 100);
+    String queryStringWithPagination =
+        String.format("%s LIMIT %s OFFSET %s", queryString, limit, offset);
+
+    // Wrap query so it returns JSON
     String jsonQuery =
-        String.format(
-            "SELECT TO_JSON_STRING(t,true) from (%s LIMIT %s OFFSET %s) as t",
-            queryString, limit, offset);
+        String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryStringWithPagination);
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
 
@@ -101,9 +93,10 @@ public class QueryService {
     try {
       Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
       queryJob = runJob(queryJob);
-      return new QueryResult(jsonQuery, getJobResults(queryJob));
+      return new QueryResult(queryStringWithPagination, getJobResults(queryJob));
     } catch (Throwable t) {
-      throw new BadQueryException(String.format("Error calling BigQuery: '%s'", jsonQuery), t);
+      throw new BadQueryException(
+          String.format("Error calling BigQuery: '%s'", queryStringWithPagination), t);
     }
   }
 }
