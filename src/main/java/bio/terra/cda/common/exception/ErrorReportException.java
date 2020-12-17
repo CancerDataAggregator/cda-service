@@ -20,7 +20,7 @@ public abstract class ErrorReportException extends RuntimeException {
 
   public ErrorReportException(String message, Throwable cause) {
     super(message, cause);
-    this.causes = List.of(cause.toString());
+    this.causes = null;
     this.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
   }
 
