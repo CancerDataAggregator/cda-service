@@ -29,6 +29,11 @@ public class QueryService {
   }
 
   final BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
+  private String table;
+
+  public QueryService(String table) {
+    this.table = table;
+  }
 
   private Job runJob(Job queryJob) {
     try {
@@ -68,8 +73,7 @@ public class QueryService {
   }
 
   public QueryResult runQuery(Query query, Integer limit) {
-    String queryString =
-        (new QueryTranslator("gdc-bq-sample.gdc_metadata.r26_clinical_and_file", query)).sql();
+    String queryString = (new QueryTranslator(this.table, query)).sql();
     if (limit != null) {
       queryString += " LIMIT " + limit;
     }
