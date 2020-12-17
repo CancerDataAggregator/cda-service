@@ -291,7 +291,7 @@ components:
       properties:
         node_type:
           type: string
-          enum: ["column", "value", "<", ">", "=", "~", "AND", "OR", "NOT",
+          enum: ["column", "quoted", "unquoted", ">=", "<=", "<", ">", "=", "~", "AND", "OR", "NOT",
           "LIMIT"]
         value:
           type: string
