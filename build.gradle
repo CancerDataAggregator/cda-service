@@ -17,7 +17,7 @@ plugins {
 }
 
 group = 'bio.terra.cda'
-version = '0.0.3-SNAPSHOT'
+version = '0.0.4-SNAPSHOT'
 sourceCompatibility = '1.11'
 
 repositories {
