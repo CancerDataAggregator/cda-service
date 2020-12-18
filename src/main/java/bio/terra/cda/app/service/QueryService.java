@@ -20,10 +20,12 @@ public class QueryService {
 
   public static class QueryResult {
 
+    public final Query query;
     public final String querySql;
     public final List<String> result;
 
-    public QueryResult(String querySql, List<String> result) {
+    public QueryResult(Query query, String querySql, List<String> result) {
+      this.query = query;
       this.querySql = querySql;
       this.result = result;
     }
@@ -93,7 +95,7 @@ public class QueryService {
     try {
       Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
       queryJob = runJob(queryJob);
-      return new QueryResult(queryStringWithPagination, getJobResults(queryJob));
+      return new QueryResult(query, queryStringWithPagination, getJobResults(queryJob));
     } catch (Throwable t) {
       throw new BadQueryException(
           String.format("Error calling BigQuery: '%s'", queryStringWithPagination), t);

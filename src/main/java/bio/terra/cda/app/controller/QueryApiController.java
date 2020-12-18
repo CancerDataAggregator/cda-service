@@ -38,6 +38,7 @@ public class QueryApiController implements QueryApi {
     QueryService service = new QueryService(CLINICAL_TABLE);
     final QueryResult result = service.runQuery(body, offset, limit);
     var response = new InlineResponse200();
+    response.setQuery(body);
     response.setResult(new ArrayList<>(result.result));
     response.setQuerySql(result.querySql);
     return new ResponseEntity<>(response, HttpStatus.OK);
