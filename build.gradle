@@ -1,3 +1,5 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 buildscript {
 	repositories {
 		mavenCentral()
@@ -10,7 +12,7 @@ plugins {
 	id 'org.springframework.boot' version '2.2.2.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 	id 'com.google.cloud.tools.jib' version '1.8.0'
-	id 'org.openapi.generator' version '4.2.3'
+	id 'org.openapi.generator' version '4.3.1'
 	id 'com.diffplug.gradle.spotless' version '3.27.2'
 }
 
@@ -59,6 +61,7 @@ configurations.all {
 
 def openapiSourceFile = "${projectDir}/src/main/resources/api/service_openapi.yaml"
 def openapiTargetDir = "${buildDir}/generated"
+def openapiClientTargetDir = "${buildDir}/generated-client"
 
 openApiGenerate {
 	generatorName = "spring"
@@ -79,12 +82,19 @@ openApiGenerate {
 	]
 }
 
+task buildPythonSdk(type: GenerateTask){
+	generatorName = "python"
+	packageName = "cda_client"
+	inputSpec = "${openapiSourceFile}".toString()
+	outputDir = "${openapiClientTargetDir}".toString()
+}
+
 openApiValidate {
 	inputSpec = "${openapiSourceFile}".toString()
 }
 
 task patchGeneratedJava(type: Exec) {
-	commandLine "patch", "-p0", "-i", "InlineResponse200.java.patch"
+	commandLine "patch", "-p0", "-i", "misc/InlineResponse200.java.patch"
 } dependsOn(tasks.openApiGenerate)
 
 compileJava.dependsOn tasks.patchGeneratedJava

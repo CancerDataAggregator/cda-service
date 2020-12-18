@@ -98,6 +98,22 @@ Curl line
 curl -X POST "http://localhost:8080/api/v1/boolean-query/1?limit=1" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"node_type\":\"AND\",\"l\":{\"node_type\":\"AND\",\"l\":{\"node_type\":\">=\",\"l\":{\"node_type\":\"column\",\"value\":\"demographic.age_at_index\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"50\"}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"project.project_id\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"TCGA-OV\"}}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"diagnoses.figo_stage\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"Stage IIIC\"}}}"
 ```
 
+### Generating Python Client APIs
+
+The OpenAPI YAML can be used to generate python client code. To do this, run the gradle 
+task `buildPythonSdk`:
+
+```shell
+./gradlew buildPythonSdk
+```
+
+To push the generated code to the client code repo [cda-service-python-client](https://github.com/CancerDataAggregator/cda-service-python-client), run
+the git-push script:
+```shell
+./misc/git-push.sh "Comment describing the change" 
+```
+
+Note that will completely overwrite the previous code with the newly generated code.
 
 ## OpenAPI V3
 
