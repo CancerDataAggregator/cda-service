@@ -100,12 +100,20 @@ curl -X POST "http://localhost:8080/api/v1/boolean-query/1?limit=1" -H "accept: 
 
 ### Generating Python Client APIs
 
-The OpenAPI YAML can be used to generate python client code. Currently this requires running
-the gradle build command:
+The OpenAPI YAML can be used to generate python client code. To do this, run the gradle 
+task `buildPythonSdk`:
 
 ```shell
 ./gradlew buildPythonSdk
 ```
+
+To push the generated code to the client code repo [cda-service-python-client](https://github.com/CancerDataAggregator/cda-service-python-client), run
+the git-push script:
+```shell
+./misc/git-push.sh "Comment describing the change" 
+```
+
+Note that will completely overwrite the previous code with the newly generated code.
 
 ## OpenAPI V3
 
