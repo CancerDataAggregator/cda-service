@@ -98,6 +98,14 @@ Curl line
 curl -X POST "http://localhost:8080/api/v1/boolean-query/1?limit=1" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"node_type\":\"AND\",\"l\":{\"node_type\":\"AND\",\"l\":{\"node_type\":\">=\",\"l\":{\"node_type\":\"column\",\"value\":\"demographic.age_at_index\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"50\"}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"project.project_id\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"TCGA-OV\"}}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"diagnoses.figo_stage\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"Stage IIIC\"}}}"
 ```
 
+### Generating Python Client APIs
+
+The OpenAPI YAML can be used to generate python client code. Currently this requires running
+the gradle build command:
+
+```shell
+./gradlew buildPythonSdk
+```
 
 ## OpenAPI V3
 
