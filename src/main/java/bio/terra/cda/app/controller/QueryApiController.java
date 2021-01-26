@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class QueryApiController implements QueryApi {
   private final PingService pingService;
 
-  public static final String CLINICAL_TABLE = "gdc-bq-sample.gdc_metadata.r26_clinical_and_file";
+  public static final String CDA_TABLE = "gdc-bq-sample.cda_mvp";
 
   @Autowired
   public QueryApiController(PingService pingService) {
@@ -35,7 +35,7 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<InlineResponse200> booleanQuery(
       String version, @Valid Query body, @Valid Integer offset, @Valid Integer limit) {
-    QueryService service = new QueryService(CLINICAL_TABLE);
+    QueryService service = new QueryService(CDA_TABLE + "." + version);
     final QueryResult result = service.runQuery(body, offset, limit);
     var response = new InlineResponse200();
     response.setResult(new ArrayList<>(result.result));
