@@ -279,7 +279,7 @@ components:
             node_type: column
             value: age
           r:
-            node_type: value
+            node_type: unquoted
             value: 50
           ```
 
