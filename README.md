@@ -60,7 +60,7 @@ curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
       "node_type": ">=",
       "l": {
         "node_type": "column",
-        "value": "demographic.age_at_index"
+        "value": "Diagnosis.age_at_diagnosis"
       },
       "r": {
         "node_type": "unquoted",
@@ -71,7 +71,7 @@ curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
       "node_type": "=",
       "l": {
         "node_type": "column",
-        "value": "project.project_id"
+        "value": "Specimen.associated_project"
       },
       "r": {
         "node_type": "quoted",
@@ -83,7 +83,7 @@ curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "diagnoses.figo_stage"
+      "value": "Diagnosis.tumor_stage"
     },
     "r": {
       "node_type": "quoted",
@@ -95,7 +95,7 @@ curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
 
 Curl line
 ```
-curl -X POST "http://localhost:8080/api/v1/boolean-query/1?limit=1" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"node_type\":\"AND\",\"l\":{\"node_type\":\"AND\",\"l\":{\"node_type\":\">=\",\"l\":{\"node_type\":\"column\",\"value\":\"demographic.age_at_index\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"50\"}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"project.project_id\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"TCGA-OV\"}}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"diagnoses.figo_stage\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"Stage IIIC\"}}}"
+curl -X POST "http://localhost:8080/api/v1/boolean-query/v0" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"node_type\":\"AND\",\"l\":{\"node_type\":\"AND\",\"l\":{\"node_type\":\">=\",\"l\":{\"node_type\":\"column\",\"value\":\"Diagnosis.age_at_diagnosis\"},\"r\":{\"node_type\":\"unquoted\",\"value\":\"50\"}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"Specimen.associated_project\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"TCGA-OV\"}}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"Diagnosis.tumor_stage\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"Stage IIIC\"}}}"
 ```
 
 ### Generating Python Client APIs
