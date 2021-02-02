@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import bio.terra.cda.app.Main;
+import bio.terra.cda.app.service.PingService;
 import bio.terra.cda.generated.model.ErrorReport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Tag;

@@ -1,4 +1,4 @@
-package bio.terra.cda.service.ping.exception;
+package bio.terra.cda.app.service.exception;
 
 import bio.terra.cda.common.exception.BadRequestException;
 import java.util.List;

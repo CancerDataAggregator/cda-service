@@ -9,7 +9,8 @@ package bio.terra.cda.service.ping;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 
-import bio.terra.cda.service.ping.exception.BadPingException;
+import bio.terra.cda.app.service.PingService;
+import bio.terra.cda.app.service.exception.BadPingException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;

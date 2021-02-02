@@ -5,7 +5,7 @@ import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.InlineResponse200;
 import bio.terra.cda.generated.model.Query;
-import bio.terra.cda.service.ping.PingService;
+import bio.terra.cda.app.service.PingService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
