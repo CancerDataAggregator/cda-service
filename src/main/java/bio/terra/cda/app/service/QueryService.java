@@ -1,8 +1,6 @@
 package bio.terra.cda.app.service;
 
 import bio.terra.cda.app.service.exception.BadQueryException;
-import bio.terra.cda.app.util.QueryTranslator;
-import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldValueList;
@@ -13,28 +11,13 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
+import org.springframework.stereotype.Component;
 
+@Component
 public class QueryService {
 
-  public static class QueryResult {
-
-    public final String querySql;
-    public final List<String> result;
-
-    public QueryResult(String querySql, List<String> result) {
-      this.querySql = querySql;
-      this.result = result;
-    }
-  }
-
   final BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
-  private final String table;
-
-  public QueryService(String table) {
-    this.table = table;
-  }
 
   private Job runJob(Job queryJob) {
     try {
@@ -73,17 +56,10 @@ public class QueryService {
     }
   }
 
-  public QueryResult runQuery(Query query, Integer offset, Integer limit) {
-
-    String queryString = new QueryTranslator(this.table, query).sql();
-    offset = Objects.requireNonNullElse(offset, 0);
-    limit = Objects.requireNonNullElse(limit, 100);
-    String queryStringWithPagination =
-        String.format("%s LIMIT %s OFFSET %s", queryString, limit, offset);
+  public List<String> runQuery(String query) {
 
     // Wrap query so it returns JSON
-    String jsonQuery =
-        String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", queryStringWithPagination);
+    String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", query);
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
 
@@ -93,10 +69,9 @@ public class QueryService {
     try {
       Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
       queryJob = runJob(queryJob);
-      return new QueryResult(queryStringWithPagination, getJobResults(queryJob));
+      return getJobResults(queryJob);
     } catch (Throwable t) {
-      throw new BadQueryException(
-          String.format("Error calling BigQuery: '%s'", queryStringWithPagination), t);
+      throw new BadQueryException(String.format("Error calling BigQuery: '%s'", query), t);
     }
   }
 }
