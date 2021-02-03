@@ -103,7 +103,7 @@ paths:
           name: dryRun
           schema:
             type: boolean
-          allowEmptyValue: true
+            default: false
 
       requestBody:
         description: The boolean query
