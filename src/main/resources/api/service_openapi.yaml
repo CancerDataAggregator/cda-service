@@ -98,6 +98,12 @@ paths:
         - $ref: '#/components/parameters/DatasetVersion'
         - $ref: '#/components/parameters/ResultOffset'
         - $ref: '#/components/parameters/ResultLimit'
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
 
       requestBody:
         description: The boolean query
@@ -227,7 +233,7 @@ components:
       type: object
       properties:
         release-date:
-          $ref: DateType
+          $ref: '#/components/schemas/DateType'
         cda-version:
           type: string
         cda-model:
@@ -251,7 +257,7 @@ components:
         version:
           type: string
         date:
-          $ref: DateType
+          $ref: '#/components/schemas/DateType'
 
     Model:
       type: object
@@ -259,7 +265,7 @@ components:
         version:
           type: string
         date:
-          $ref: DateType
+          $ref: '#/components/schemas/DateType'
         model:
           type: object
           properties: {}

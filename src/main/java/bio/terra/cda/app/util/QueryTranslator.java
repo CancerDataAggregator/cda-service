@@ -5,19 +5,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class QueryTranslator {
-  public final String table;
-  public final Query query;
 
-  public QueryTranslator(String table, Query query) {
-    this.table = table;
-    this.query = query;
-  }
-
-  public String sql() {
+  public static String sql(String table, Query query) {
     var fromClause =
         Stream.concat(
-                Stream.of(this.table),
-                getUnnestColumns(this.query)
+                Stream.of(table),
+                getUnnestColumns(query)
                     .distinct()
                     .map(s -> String.format("UNNEST(%1$s) AS _%1$s", s)))
             .collect(Collectors.joining(", "));
@@ -53,7 +46,7 @@ public class QueryTranslator {
     return null;
   }
 
-  private String queryString(Query query) {
+  private static String queryString(Query query) {
     switch (query.getNodeType()) {
       case QUOTED:
         return String.format("'%s'", query.getValue());

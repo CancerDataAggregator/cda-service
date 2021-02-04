@@ -1,6 +1,6 @@
-package bio.terra.cda.service.ping;
+package bio.terra.cda.app.service;
 
-import bio.terra.cda.service.ping.exception.BadPingException;
+import bio.terra.cda.app.service.exception.BadPingException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 

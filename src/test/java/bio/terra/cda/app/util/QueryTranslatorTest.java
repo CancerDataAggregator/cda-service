@@ -24,7 +24,7 @@ class QueryTranslatorTest {
     String expectedSql = String.format("SELECT * FROM %s WHERE (project_id = 'TCGA-OV')", TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery = new QueryTranslator(TABLE, query).sql();
+    String translatedQuery = QueryTranslator.sql(TABLE, query);
 
     assertEquals(expectedSql, translatedQuery);
   }
@@ -41,7 +41,7 @@ class QueryTranslatorTest {
             TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery = new QueryTranslator(TABLE, query).sql();
+    String translatedQuery = QueryTranslator.sql(TABLE, query);
 
     assertEquals(EXPECTED_SQL, translatedQuery);
   }

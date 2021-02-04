@@ -11,6 +11,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import bio.terra.cda.app.Main;
+import bio.terra.cda.app.service.PingService;
+import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.generated.model.ErrorReport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Tag;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -37,6 +40,8 @@ public class PingRestTest {
   @Autowired private ObjectMapper objectMapper;
 
   @Autowired private PingService pingService;
+
+  @MockBean private QueryService queryService;
 
   @Test
   public void testRestPong() throws Exception {
