@@ -41,7 +41,6 @@ You can test out the two endpoints using `curl`:
 
 ```bash
 curl http://localhost:8080/status
-curl -X POST "http://localhost:8080/api/cda/v1/ping?message=hello"
 ```
 
 
@@ -118,18 +117,6 @@ Note that will completely overwrite the previous code with the newly generated c
 ## OpenAPI V3
 
 The API specification in OpenAPI V3 is at src/main/resources/api/service_openapi.yaml
-
-The template provides a simple OpenAPI V3 yaml document that includes a /status
-endpoint and a /api/template/v1/ping endpoint. The ping endpoint is there to
-show the full plumbing for an endpoint that uses the common exception handler to 
-return an ErrorReport.
-
-The OpenAPI document also contains two components that we would like to have common
-across all of our APIs:
-<ul>
-<li>ErrorReport - a common error return structure</li>
-<li>SystemStatus - a common response to the /status endpoint</li>
-</ul>
 
 A swagger-ui page is available at /api/swagger-ui.html on any running instance. 
 TEMPLATE: Once a service has a stable dev/alpha instance, a link to its 
@@ -237,7 +224,6 @@ This section explains the code structure of the template. Here is the directory 
         /common
           /exception
         /service
-          /ping
     /resources
 ```
 <ul>
@@ -253,12 +239,15 @@ used HTTP status responses. They are all based on the ErrorReportException that 
 explicit HTTP status and "causes" information for our standard ErrorReport model.</li>
 <li><code>/service</code> Each service gets a package within. We handle cloud-platform specializations
 within each service.</li>
-<li><code>/service/ping</code> The example service; please delete.</li>
 <li><code>/resources</code> Properties definitions, database schema definitions, and the REST API definition</li>
 </ul>
 
 ## Test Structure
-There are sample tests for the ping service to illustrate two styles of unit testing.
+Test methods are currently one of two kinds of tests. A unit test, which tests an individual
+method in a class, or a Mock MVC test, which uses mocked services to test a specific endpoint.
+
+Future tests could include integration tests, which would use endpoints to call into real 
+(not mocked) services.
 
 ## Deployment
 ### On commit to master

@@ -5,7 +5,6 @@ import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.InlineResponse200;
 import bio.terra.cda.generated.model.Query;
-import bio.terra.cda.app.service.PingService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
@@ -14,26 +13,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class QueryApiController implements QueryApi {
-  private final PingService pingService;
   private final QueryService queryService;
 
   public static final String CDA_TABLE = "gdc-bq-sample.cda_mvp";
 
   @Autowired
-  public QueryApiController(PingService pingService, QueryService queryService) {
-    this.pingService = pingService;
+  public QueryApiController(QueryService queryService) {
     this.queryService = queryService;
-  }
-
-  @Override
-  public ResponseEntity<String> ping(
-      @RequestParam(value = "message", required = false) String message) {
-    String result = pingService.computePing(message);
-    return new ResponseEntity<>(result, HttpStatus.OK);
   }
 
   @Override

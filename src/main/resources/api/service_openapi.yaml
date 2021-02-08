@@ -143,29 +143,6 @@ paths:
           $ref: '#/components/responses/JSONResult'
 
 
-  /api/v1/ping:
-    post:
-      description: |
-        Send a message and get it back in the response
-      operationId: ping
-      tags:
-        - query
-      parameters:
-        - in: query
-          name: message
-          schema:
-            type: string
-      responses:
-        200:
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
-        500:
-          $ref: '#/components/responses/ErrorResponse'
-
-
 components:
 
   parameters:
@@ -302,13 +279,6 @@ components:
           $ref: '#/components/schemas/Query' 
 
   responses:
-  
-    ErrorResponse:
-      description: common error response
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorReport'
 
     StatusResponse:
       description: common status response
