@@ -1,5 +1,6 @@
 package bio.terra.cda.app.controller;
 
+import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
@@ -17,12 +18,13 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class QueryApiController implements QueryApi {
   private final QueryService queryService;
-
-  public static final String CDA_TABLE = "gdc-bq-sample.cda_mvp";
+  private final ApplicationConfiguration applicationConfiguration;
 
   @Autowired
-  public QueryApiController(QueryService queryService) {
+  public QueryApiController(
+      QueryService queryService, ApplicationConfiguration applicationConfiguration) {
     this.queryService = queryService;
+    this.applicationConfiguration = applicationConfiguration;
   }
 
   @Override
@@ -33,7 +35,8 @@ public class QueryApiController implements QueryApi {
       @Valid Integer limit,
       @Valid Boolean dryRun) {
 
-    String querySql = QueryTranslator.sql(CDA_TABLE + "." + version, body);
+    String querySql =
+        QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);
     String queryStringWithPagination =
         String.format(
             "%s LIMIT %s OFFSET %s",
