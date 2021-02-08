@@ -176,6 +176,18 @@ components:
 
   schemas:
 
+    ErrorReport:
+      type: object
+      properties:
+        message:
+          type: string
+        statusCode:
+          type: integer
+        causes:
+          type: array
+          items:
+            type: string
+
     SystemStatus:
       type: object
       properties:
