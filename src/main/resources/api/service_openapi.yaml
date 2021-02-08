@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   description: API definition for the CDA
   version: 1.0.0-rc.1
@@ -8,9 +8,8 @@ info:
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
 
 servers:
-  # When developing locally/with Skaffold, add local entry with url prefix here:
-  # E.g. url: /env-cda
   - url: http://localhost:8080
+  - url: https://cda.cda-dev.broadinstitute.org
 
 tags:
   - name: query
