@@ -1,6 +1,5 @@
 package bio.terra.cda.app.controller;
 
-import bio.terra.cda.app.service.PingService;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.generated.model.InlineResponse200;
 import bio.terra.cda.generated.model.Query;
@@ -34,9 +33,6 @@ class QueryApiControllerTest {
 
   @Autowired
   private ObjectMapper objectMapper;
-
-  @MockBean
-  private PingService pingService;
 
   @MockBean
   private QueryService queryService;
