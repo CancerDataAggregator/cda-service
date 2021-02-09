@@ -21,6 +21,16 @@ public class ApplicationConfiguration {
 
   // Configurable properties
 
+  private String bqTable;
+
+  public String getBqTable() {
+    return bqTable;
+  }
+
+  public void setBqTable(String bqTable) {
+    this.bqTable = bqTable;
+  }
+
   @Bean("objectMapper")
   public ObjectMapper objectMapper() {
     return new ObjectMapper()
