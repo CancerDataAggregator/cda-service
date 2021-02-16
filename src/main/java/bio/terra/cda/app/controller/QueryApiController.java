@@ -24,7 +24,6 @@ public class QueryApiController implements QueryApi {
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
 
-
   @Autowired
   public QueryApiController(
       QueryService queryService, ApplicationConfiguration applicationConfiguration) {
@@ -32,7 +31,7 @@ public class QueryApiController implements QueryApi {
     this.applicationConfiguration = applicationConfiguration;
   }
 
-  private ResponseEntity<InlineResponse200> sendQuery(
+  private ResponseEntity<QueryResponseData> sendQuery(
       @Valid String querySql, @Valid Integer offset, @Valid Integer limit, boolean dryRun) {
     String queryStringWithPagination =
         String.format(
@@ -43,19 +42,19 @@ public class QueryApiController implements QueryApi {
 
     var result =
         dryRun ? Collections.emptyList() : queryService.runQuery(queryStringWithPagination);
-    var response = new InlineResponse200().result(new ArrayList<>(result)).querySql(querySql);
+    var response = new QueryResponseData().result(new ArrayList<>(result)).querySql(querySql);
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<InlineResponse200> bulkData(
+  public ResponseEntity<QueryResponseData> bulkData(
       String version, @Valid Integer offset, @Valid Integer limit) {
     String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
     return sendQuery(querySql, offset, limit, false);
   }
 
   @Override
-  public ResponseEntity<InlineResponse200> sqlQuery(
+  public ResponseEntity<QueryResponseData> sqlQuery(
       String version, @Valid String querySql, @Valid Integer offset, @Valid Integer limit) {
     return sendQuery(querySql, offset, limit, false);
   }
