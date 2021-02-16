@@ -17,14 +17,47 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class QueryApiController implements QueryApi {
+
+  public static final int DEFAULT_LIMIT = 100;
+  public static final int DEFAULT_OFFSET = 0;
+
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
+
 
   @Autowired
   public QueryApiController(
       QueryService queryService, ApplicationConfiguration applicationConfiguration) {
     this.queryService = queryService;
     this.applicationConfiguration = applicationConfiguration;
+  }
+
+  private ResponseEntity<InlineResponse200> sendQuery(
+      @Valid String querySql, @Valid Integer offset, @Valid Integer limit, boolean dryRun) {
+    String queryStringWithPagination =
+        String.format(
+            "%s LIMIT %d OFFSET %d",
+            querySql,
+            Objects.requireNonNullElse(limit, DEFAULT_LIMIT),
+            Objects.requireNonNullElse(offset, DEFAULT_OFFSET));
+
+    var result =
+        dryRun ? Collections.emptyList() : queryService.runQuery(queryStringWithPagination);
+    var response = new InlineResponse200().result(new ArrayList<>(result)).querySql(querySql);
+    return new ResponseEntity<>(response, HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<InlineResponse200> bulkData(
+      String version, @Valid Integer offset, @Valid Integer limit) {
+    String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
+    return sendQuery(querySql, offset, limit, false);
+  }
+
+  @Override
+  public ResponseEntity<InlineResponse200> sqlQuery(
+      String version, @Valid String querySql, @Valid Integer offset, @Valid Integer limit) {
+    return sendQuery(querySql, offset, limit, false);
   }
 
   @Override
@@ -37,16 +70,7 @@ public class QueryApiController implements QueryApi {
 
     String querySql =
         QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);
-    String queryStringWithPagination =
-        String.format(
-            "%s LIMIT %s OFFSET %s",
-            querySql,
-            Objects.requireNonNullElse(limit, 100),
-            Objects.requireNonNullElse(offset, 0));
 
-    var result =
-        dryRun ? Collections.emptyList() : queryService.runQuery(queryStringWithPagination);
-    var response = new InlineResponse200().result(new ArrayList<>(result)).querySql(querySql);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return sendQuery(querySql, offset, limit, dryRun);
   }
 }

@@ -67,19 +67,18 @@ paths:
                   $ref: '#/components/schemas/DatasetDescription'
 
 
-  /api/v1/bulk-data/{version}/{table}:
+  /api/v1/bulk-data/{version}:
     get:
-      summary: Return all data in CDA 
+      summary: Return all data in CDA
       description: Return all data in CDA
       operationId: bulkData
       tags:
         - query
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
-        - $ref: '#/components/parameters/DatasetTable'
         - $ref: '#/components/parameters/ResultOffset'
         - $ref: '#/components/parameters/ResultLimit'
-     
+
       responses:
         200:
           $ref: '#/components/responses/JSONResult'
@@ -153,13 +152,6 @@ components:
       schema:
         type: string
       description: Dataset version
-    DatasetTable:
-      in: path
-      name: table
-      required: true
-      schema:
-        type: string
-      description: Name of table
     ResultOffset:
       in: query
       name: offset
