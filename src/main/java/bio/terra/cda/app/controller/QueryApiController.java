@@ -4,8 +4,8 @@ import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
-import bio.terra.cda.generated.model.InlineResponse200;
 import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.generated.model.QueryResponseData;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
@@ -28,7 +28,7 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<InlineResponse200> booleanQuery(
+  public ResponseEntity<QueryResponseData> booleanQuery(
       String version,
       @Valid Query body,
       @Valid Integer offset,
@@ -46,7 +46,7 @@ public class QueryApiController implements QueryApi {
 
     var result =
         dryRun ? Collections.emptyList() : queryService.runQuery(queryStringWithPagination);
-    var response = new InlineResponse200().result(new ArrayList<>(result)).querySql(querySql);
+    var response = new QueryResponseData().result(new ArrayList<>(result)).querySql(querySql);
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 }
