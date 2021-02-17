@@ -66,19 +66,18 @@ paths:
                   $ref: '#/components/schemas/DatasetDescription'
 
 
-  /api/v1/bulk-data/{version}/{table}:
+  /api/v1/bulk-data/{version}:
     get:
-      summary: Return all data in CDA 
+      summary: Return all data in CDA
       description: Return all data in CDA
       operationId: bulkData
       tags:
         - query
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
-        - $ref: '#/components/parameters/DatasetTable'
         - $ref: '#/components/parameters/ResultOffset'
         - $ref: '#/components/parameters/ResultLimit'
-     
+
       responses:
         200:
           $ref: '#/components/responses/JSONResult'
@@ -142,29 +141,6 @@ paths:
           $ref: '#/components/responses/JSONResult'
 
 
-  /api/v1/ping:
-    post:
-      description: |
-        Send a message and get it back in the response
-      operationId: ping
-      tags:
-        - query
-      parameters:
-        - in: query
-          name: message
-          schema:
-            type: string
-      responses:
-        200:
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
-        500:
-          $ref: '#/components/responses/ErrorResponse'
-
-
 components:
 
   parameters:
@@ -175,13 +151,6 @@ components:
       schema:
         type: string
       description: Dataset version
-    DatasetTable:
-      in: path
-      name: table
-      required: true
-      schema:
-        type: string
-      description: Name of table
     ResultOffset:
       in: query
       name: offset
@@ -301,13 +270,6 @@ components:
           $ref: '#/components/schemas/Query' 
 
   responses:
-  
-    ErrorResponse:
-      description: common error response
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorReport'
 
     StatusResponse:
       description: common status response

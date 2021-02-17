@@ -1,11 +1,11 @@
 package bio.terra.cda.app.controller;
 
+import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.InlineResponse200;
 import bio.terra.cda.generated.model.Query;
-import bio.terra.cda.app.service.PingService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
@@ -14,26 +14,50 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class QueryApiController implements QueryApi {
-  private final PingService pingService;
-  private final QueryService queryService;
 
-  public static final String CDA_TABLE = "gdc-bq-sample.cda_mvp";
+  public static final int DEFAULT_LIMIT = 100;
+  public static final int DEFAULT_OFFSET = 0;
+
+  private final QueryService queryService;
+  private final ApplicationConfiguration applicationConfiguration;
+
 
   @Autowired
-  public QueryApiController(PingService pingService, QueryService queryService) {
-    this.pingService = pingService;
+  public QueryApiController(
+      QueryService queryService, ApplicationConfiguration applicationConfiguration) {
     this.queryService = queryService;
+    this.applicationConfiguration = applicationConfiguration;
+  }
+
+  private ResponseEntity<InlineResponse200> sendQuery(
+      @Valid String querySql, @Valid Integer offset, @Valid Integer limit, boolean dryRun) {
+    String queryStringWithPagination =
+        String.format(
+            "%s LIMIT %d OFFSET %d",
+            querySql,
+            Objects.requireNonNullElse(limit, DEFAULT_LIMIT),
+            Objects.requireNonNullElse(offset, DEFAULT_OFFSET));
+
+    var result =
+        dryRun ? Collections.emptyList() : queryService.runQuery(queryStringWithPagination);
+    var response = new InlineResponse200().result(new ArrayList<>(result)).querySql(querySql);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<String> ping(
-      @RequestParam(value = "message", required = false) String message) {
-    String result = pingService.computePing(message);
-    return new ResponseEntity<>(result, HttpStatus.OK);
+  public ResponseEntity<InlineResponse200> bulkData(
+      String version, @Valid Integer offset, @Valid Integer limit) {
+    String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
+    return sendQuery(querySql, offset, limit, false);
+  }
+
+  @Override
+  public ResponseEntity<InlineResponse200> sqlQuery(
+      String version, @Valid String querySql, @Valid Integer offset, @Valid Integer limit) {
+    return sendQuery(querySql, offset, limit, false);
   }
 
   @Override
@@ -44,17 +68,9 @@ public class QueryApiController implements QueryApi {
       @Valid Integer limit,
       @Valid Boolean dryRun) {
 
-    String querySql = QueryTranslator.sql(CDA_TABLE + "." + version, body);
-    String queryStringWithPagination =
-        String.format(
-            "%s LIMIT %s OFFSET %s",
-            querySql,
-            Objects.requireNonNullElse(limit, 100),
-            Objects.requireNonNullElse(offset, 0));
+    String querySql =
+        QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);
 
-    var result =
-        dryRun ? Collections.emptyList() : queryService.runQuery(queryStringWithPagination);
-    var response = new InlineResponse200().result(new ArrayList<>(result)).querySql(querySql);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return sendQuery(querySql, offset, limit, dryRun);
   }
 }
