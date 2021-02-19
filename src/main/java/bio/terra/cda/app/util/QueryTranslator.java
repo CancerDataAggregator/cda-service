@@ -1,8 +1,6 @@
 package bio.terra.cda.app.util;
 
 import bio.terra.cda.generated.model.Query;
-
-import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -25,10 +23,12 @@ public class QueryTranslator {
         return Stream.empty();
       case COLUMN:
         var parts = query.getValue().split("\\.");
-        return IntStream.range(0, parts.length - 1).mapToObj(
-                i -> i == 0 ? String.format("UNNEST(%1$s) AS _%1$s", parts[i])
-                        : String.format("UNNEST(_%1$s.%2$s) AS _%2$s", parts[i - 1], parts[i])
-        );
+        return IntStream.range(0, parts.length - 1)
+            .mapToObj(
+                i ->
+                    i == 0
+                        ? String.format("UNNEST(%1$s) AS _%1$s", parts[i])
+                        : String.format("UNNEST(_%1$s.%2$s) AS _%2$s", parts[i - 1], parts[i]));
       default:
         return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
     }

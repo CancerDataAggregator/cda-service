@@ -50,8 +50,11 @@ class QueryTranslatorTest {
   public void testQueryNested() throws Exception {
     String jsonQuery = Files.readString(TEST_FILES.resolve("query3.json"));
 
-    String expectedSql = String.format("SELECT * FROM %s, UNNEST(A) AS _A, UNNEST(_A.B) AS _B, " +
-            "UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D WHERE (_D.column = value)", TABLE);
+    String expectedSql =
+        String.format(
+            "SELECT * FROM %s, UNNEST(A) AS _A, UNNEST(_A.B) AS _B, "
+                + "UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D WHERE (_D.column = value)",
+            TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
     String translatedQuery = QueryTranslator.sql(TABLE, query);
