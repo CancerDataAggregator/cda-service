@@ -80,7 +80,7 @@ paths:
 
       responses:
         200:
-          $ref: '#/components/responses/JSONResult'
+          $ref: '#/components/responses/QueryResponse'
 
 
   /api/v1/boolean-query/{version}:
@@ -113,7 +113,7 @@ paths:
                     
       responses:
         200:
-          $ref: '#/components/responses/JSONResult'
+          $ref: '#/components/responses/QueryResponse'
 
 
   /api/v1/sql-query/{version}:
@@ -138,7 +138,7 @@ paths:
                     
       responses:
         200:
-          $ref: '#/components/responses/JSONResult'
+          $ref: '#/components/responses/QueryResponse'
 
 
 components:
@@ -196,6 +196,20 @@ components:
                 type: array
                 items:
                   type: string
+
+    QueryResponseData:
+      type: object
+      properties:
+        query_sql:
+          type: string
+        result:
+          type: array
+          items:
+            type: object
+        previous_url:
+          type: string
+        next_url:
+          type: string
 
     DatasetDescription:
       type: object
@@ -278,20 +292,9 @@ components:
           schema:
             $ref: '#/components/schemas/SystemStatus'
 
-    JSONResult:
-      description: common result response
+    QueryResponse:
+      description: common query response
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              query_sql:
-                type: string
-              result:
-                type: array
-                items: 
-                  type: object
-              previous_url:
-                type: string
-              next_url:
-                type: string
+            $ref: '#/components/schemas/QueryResponseData'

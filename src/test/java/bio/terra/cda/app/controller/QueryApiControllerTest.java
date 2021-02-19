@@ -11,8 +11,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import bio.terra.cda.app.service.QueryService;
-import bio.terra.cda.generated.model.InlineResponse200;
 import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.generated.model.QueryResponseData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class QueryApiControllerTest {
             .contentType(MediaType.APPLICATION_JSON);
     var result = mvc.perform(post).andExpect(status().isOk()).andReturn();
     var response =
-        objectMapper.readValue(result.getResponse().getContentAsString(), InlineResponse200.class);
+        objectMapper.readValue(result.getResponse().getContentAsString(), QueryResponseData.class);
     assertThat(response.getQuerySql(), equalTo(expected));
   }
 
