@@ -1,5 +1,5 @@
---- build/generated/src/main/java/bio/terra/cda/generated/model/InlineResponse200.java.orig	2020-12-17 09:42:40.000000000 -0500
-+++ build/generated/src/main/java/bio/terra/cda/generated/model/InlineResponse200.java	2020-12-17 09:42:23.000000000 -0500
+--- build/generated/src/main/java/bio/terra/cda/generated/model/QueryResponseData.java.orig	2020-12-17 09:42:40.000000000 -0500
++++ build/generated/src/main/java/bio/terra/cda/generated/model/QueryResponseData.java	2020-12-17 09:42:23.000000000 -0500
 @@ -3,6 +3,7 @@
  import java.util.Objects;
  import com.fasterxml.jackson.annotation.JsonProperty;
