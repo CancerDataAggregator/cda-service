@@ -24,7 +24,6 @@ public class QueryApiController implements QueryApi {
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
 
-
   @Autowired
   public QueryApiController(
       QueryService queryService, ApplicationConfiguration applicationConfiguration) {
