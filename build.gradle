@@ -94,7 +94,7 @@ openApiValidate {
 }
 
 task patchGeneratedJava(type: Exec) {
-	commandLine "patch", "-p0", "-i", "misc/InlineResponse200.java.patch"
+	commandLine "patch", "-p0", "-i", "misc/QueryResponseData.java.patch"
 } dependsOn(tasks.openApiGenerate)
 
 compileJava.dependsOn tasks.patchGeneratedJava
