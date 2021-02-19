@@ -1,18 +1,17 @@
 package bio.terra.cda.app.util;
 
 import bio.terra.cda.generated.model.Query;
+
+import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class QueryTranslator {
 
   public static String sql(String table, Query query) {
     var fromClause =
-        Stream.concat(
-                Stream.of(table),
-                getUnnestColumns(query)
-                    .distinct()
-                    .map(s -> String.format("UNNEST(%1$s) AS _%1$s", s)))
+        Stream.concat(Stream.of(table), getUnnestColumns(query).distinct())
             .collect(Collectors.joining(", "));
 
     var condition = queryString(query);
@@ -25,25 +24,14 @@ public class QueryTranslator {
       case UNQUOTED:
         return Stream.empty();
       case COLUMN:
-        if (hasColumnParent(query)) {
-          return Stream.of(getColumnParent(query));
-        }
-        return Stream.empty();
+        var parts = query.getValue().split("\\.");
+        return IntStream.range(0, parts.length - 1).mapToObj(
+                i -> i == 0 ? String.format("UNNEST(%1$s) AS _%1$s", parts[i])
+                        : String.format("UNNEST(_%1$s.%2$s) AS _%2$s", parts[i - 1], parts[i])
+        );
       default:
         return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
     }
-  }
-
-  public static boolean hasColumnParent(Query query) {
-    return query.getNodeType() == Query.NodeTypeEnum.COLUMN && query.getValue().indexOf('.') != -1;
-  }
-
-  public static String getColumnParent(Query query) {
-    var parts = query.getValue().split("\\.");
-    if (parts.length > 1) {
-      return parts[0];
-    }
-    return null;
   }
 
   private static String queryString(Query query) {
@@ -53,8 +41,11 @@ public class QueryTranslator {
       case UNQUOTED:
         return String.format("%s", query.getValue());
       case COLUMN:
-        var prefix = hasColumnParent(query) ? "_" : "";
-        return String.format("%s%s", prefix, query.getValue());
+        var parts = query.getValue().split("\\.");
+        if (parts.length > 1) {
+          return String.format("_%s.%s", parts[parts.length - 2], parts[parts.length - 1]);
+        }
+        return query.getValue();
       default:
         return String.format(
             "(%s %s %s)",
