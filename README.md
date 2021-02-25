@@ -33,6 +33,14 @@ Running the server locally requires three environment variables. These can be se
 ./gradlew bootRun
 ```
 
+Accessing BigQuery requires credentials. If the credentals are stored in a file called 
+`bq-credentials.json`, you can start the service as follows:
+
+```bash
+GOOGLE_APPLICATION_CREDENTIALS=bq-credentials.json ./gradlew bootRun
+```
+
+
 ### Testing the server
 
 If the `bootRun` command was successful, you should see `EXECUTING` in the output. At this point the
