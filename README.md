@@ -120,7 +120,10 @@ the git-push script:
 ./misc/git-push.sh "Comment describing the change" 
 ```
 
-Note that will completely overwrite the previous code with the newly generated code.
+Notes
+- This will completely overwrite the previous code with the newly generated code.
+- The python package version uses the openapi version (property `info.version`). Be sure to update the openapi yaml
+version before generating a new python client, or the new client will have the same version.
 
 ## OpenAPI V3
 
