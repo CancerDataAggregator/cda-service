@@ -1,0 +1,14 @@
+{
+  "node_type": "NOT",
+  "l": {
+    "node_type": "=",
+    "l": {
+      "node_type": "unquoted",
+      "value": "1"
+    },
+    "r": {
+      "node_type": "unquoted",
+      "value": "2"
+    }
+  }
+}

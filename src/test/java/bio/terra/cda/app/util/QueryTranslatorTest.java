@@ -61,4 +61,36 @@ class QueryTranslatorTest {
 
     assertEquals(expectedSql, translatedQuery);
   }
+
+  @Test
+  public void testQueryFrom() throws Exception {
+    String jsonQuery = Files.readString(TEST_FILES.resolve("query-subquery.json"));
+
+    String expectedSql =
+        String.format(
+            "SELECT * FROM "
+                + "(SELECT * FROM %s, UNNEST(ResearchSubject) AS _ResearchSubject, "
+                + "UNNEST(_ResearchSubject.identifier) AS _identifier "
+                + "WHERE (_identifier.system = 'PDC')),"
+                + " UNNEST(ResearchSubject) AS _ResearchSubject, "
+                + "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (_identifier.system = 'GDC')",
+            TABLE);
+
+    Query query = objectMapper.readValue(jsonQuery, Query.class);
+    String translatedQuery = QueryTranslator.sql(TABLE, query);
+
+    assertEquals(expectedSql, translatedQuery);
+  }
+
+  @Test
+  public void testQueryNot() throws Exception {
+    String jsonQuery = Files.readString(TEST_FILES.resolve("query-not.json"));
+
+    String expectedSql = String.format("SELECT * FROM %s WHERE (NOT (1 = 2))", TABLE);
+
+    Query query = objectMapper.readValue(jsonQuery, Query.class);
+    String translatedQuery = QueryTranslator.sql(TABLE, query);
+
+    assertEquals(expectedSql, translatedQuery);
+  }
 }
