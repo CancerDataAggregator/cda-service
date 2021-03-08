@@ -68,12 +68,12 @@ class QueryTranslatorTest {
 
     String expectedSql =
         String.format(
-            "SELECT * FROM " +
-                    "(SELECT * FROM %s, UNNEST(ResearchSubject) AS _ResearchSubject, " +
-                    "UNNEST(_ResearchSubject.identifier) AS _identifier " +
-                    "WHERE (_identifier.system = 'GDC'))," +
-                    " UNNEST(ResearchSubject) AS _ResearchSubject, " +
-                    "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (_identifier.system = 'PDC')",
+            "SELECT * FROM "
+                + "(SELECT * FROM %s, UNNEST(ResearchSubject) AS _ResearchSubject, "
+                + "UNNEST(_ResearchSubject.identifier) AS _identifier "
+                + "WHERE (_identifier.system = 'PDC')),"
+                + " UNNEST(ResearchSubject) AS _ResearchSubject, "
+                + "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (_identifier.system = 'GDC')",
             TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);

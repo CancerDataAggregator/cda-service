@@ -5,9 +5,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-/**
- * Class to translate the endpoint Query object to a Big Query query string.
- */
+/** Class to translate the endpoint Query object to a Big Query query string. */
 public class QueryTranslator {
 
   /**
