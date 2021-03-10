@@ -150,6 +150,7 @@ components:
       required: true
       schema:
         type: string
+        default: v2
       description: Dataset version
     ResultOffset:
       in: query
@@ -229,7 +230,6 @@ components:
 
     DateType:
       type: string
-      format: date-time
 
     DatasetInfo:
       type: object
