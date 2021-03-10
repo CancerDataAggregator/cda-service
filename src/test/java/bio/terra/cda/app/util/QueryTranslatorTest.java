@@ -14,6 +14,7 @@ class QueryTranslatorTest {
   static final Path TEST_FILES = Paths.get("src/test/resources/query");
 
   public static final String TABLE = "TABLE";
+  public static final String QUALIFIED_TABLE = "GROUP." + TABLE;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -21,10 +22,11 @@ class QueryTranslatorTest {
   public void testQuerySimple() throws Exception {
     String jsonQuery = Files.readString(TEST_FILES.resolve("query1.json"));
 
-    String expectedSql = String.format("SELECT * FROM %s WHERE (project_id = 'TCGA-OV')", TABLE);
+    String expectedSql =
+        String.format("SELECT * FROM %s WHERE (%s.project_id = 'TCGA-OV')", QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery = QueryTranslator.sql(TABLE, query);
+    String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
 
     assertEquals(expectedSql, translatedQuery);
   }
@@ -38,10 +40,10 @@ class QueryTranslatorTest {
             "SELECT * FROM %s, UNNEST(demographic) AS _demographic, UNNEST(project) AS _project, "
                 + "UNNEST(diagnoses) AS _diagnoses WHERE (((_demographic.age_at_index >= 50) AND "
                 + "(_project.project_id = 'TCGA-OV')) AND (_diagnoses.figo_stage = 'Stage IIIC'))",
-            TABLE);
+            QUALIFIED_TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery = QueryTranslator.sql(TABLE, query);
+    String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
 
     assertEquals(EXPECTED_SQL, translatedQuery);
   }
@@ -54,10 +56,10 @@ class QueryTranslatorTest {
         String.format(
             "SELECT * FROM %s, UNNEST(A) AS _A, UNNEST(_A.B) AS _B, "
                 + "UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D WHERE (_D.column = value)",
-            TABLE);
+            QUALIFIED_TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery = QueryTranslator.sql(TABLE, query);
+    String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
 
     assertEquals(expectedSql, translatedQuery);
   }
@@ -74,10 +76,10 @@ class QueryTranslatorTest {
                 + "WHERE (_identifier.system = 'PDC')),"
                 + " UNNEST(ResearchSubject) AS _ResearchSubject, "
                 + "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (_identifier.system = 'GDC')",
-            TABLE);
+            QUALIFIED_TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery = QueryTranslator.sql(TABLE, query);
+    String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
 
     assertEquals(expectedSql, translatedQuery);
   }
@@ -86,10 +88,25 @@ class QueryTranslatorTest {
   public void testQueryNot() throws Exception {
     String jsonQuery = Files.readString(TEST_FILES.resolve("query-not.json"));
 
-    String expectedSql = String.format("SELECT * FROM %s WHERE (NOT (1 = 2))", TABLE);
+    String expectedSql = String.format("SELECT * FROM %s WHERE (NOT (1 = 2))", QUALIFIED_TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery = QueryTranslator.sql(TABLE, query);
+    String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
+
+    assertEquals(expectedSql, translatedQuery);
+  }
+
+  @Test
+  public void testQueryAmbiguous() throws Exception {
+    String jsonQuery = Files.readString(TEST_FILES.resolve("query-ambiguous.json"));
+
+    String expectedSql =
+        String.format(
+            "SELECT * FROM (SELECT * FROM %1$s WHERE (%2$s.id = 'that')) WHERE (%2$s.id = 'this')",
+            QUALIFIED_TABLE, TABLE);
+
+    Query query = objectMapper.readValue(jsonQuery, Query.class);
+    String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
 
     assertEquals(expectedSql, translatedQuery);
   }

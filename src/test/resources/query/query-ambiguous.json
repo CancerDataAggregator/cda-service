@@ -1,0 +1,25 @@
+{
+  "node_type": "SUBQUERY",
+  "l": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "id"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "this"
+    }
+  },
+  "r": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "id"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "that"
+    }
+  }
+}
