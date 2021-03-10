@@ -36,7 +36,7 @@ class QueryApiControllerTest {
 
   private void callQueryApi(boolean dryRun) throws Exception {
     var query = new Query().nodeType(Query.NodeTypeEnum.COLUMN).value("test");
-    var expected = "SELECT * FROM TABLE.v0 WHERE test";
+    var expected = "SELECT * FROM TABLE.v0 WHERE v0.test";
 
     var post =
         post("/api/v1/boolean-query/v0?dryRun={dryRun}", dryRun)

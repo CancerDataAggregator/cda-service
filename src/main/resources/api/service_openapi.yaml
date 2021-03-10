@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 1.0.0-rc.1
+  version: 1.0.1
   title: CDA API
   license:
     name: Apache 2.0
@@ -150,6 +150,7 @@ components:
       required: true
       schema:
         type: string
+        default: v2
       description: Dataset version
     ResultOffset:
       in: query
@@ -229,7 +230,6 @@ components:
 
     DateType:
       type: string
-      format: date-time
 
     DatasetInfo:
       type: object
