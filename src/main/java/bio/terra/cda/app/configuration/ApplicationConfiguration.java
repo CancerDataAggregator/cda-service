@@ -22,6 +22,7 @@ public class ApplicationConfiguration {
   // Configurable properties
 
   private String bqTable;
+  private String datasetVersion;
 
   public String getBqTable() {
     return bqTable;
@@ -29,6 +30,14 @@ public class ApplicationConfiguration {
 
   public void setBqTable(String bqTable) {
     this.bqTable = bqTable;
+  }
+
+  public String getDatasetVersion() {
+    return datasetVersion;
+  }
+
+  public void setDatasetVersion(String datasetVersion) {
+    this.datasetVersion = datasetVersion;
   }
 
   @Bean("objectMapper")

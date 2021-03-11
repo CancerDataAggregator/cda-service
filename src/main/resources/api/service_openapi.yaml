@@ -87,7 +87,8 @@ paths:
     post:
       summary: Execute boolean query 
       description: |
-        Execute a query composed of conditions on columns combined with boolean operators 
+        Execute a query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
       operationId: booleanQuery
       tags:
         - query
@@ -150,7 +151,7 @@ components:
       required: true
       schema:
         type: string
-        default: v2
+        default: v3
       description: Dataset version
     ResultOffset:
       in: query
@@ -255,29 +256,35 @@ components:
     Query:
       type: object
       description: |
-        Queries are built up of operators flanked by columns, values or further
-        queries.
+        A Query consists of a node type, a value and l and r Query objects. A Query must
+        have a node type, but other fields are optional depending on the node type. See
+        the table below for more information.
         
-        For example, the query "age < 50" (where age is a column name and not a
-        value) is expressed as:
+        For example, the query "age < 50" is expressed as:
 
-        A query's contents depends on its node type:
+        ```
+        {
+          "node_type": "<",
+          "l": {
+            "node_type": "column",
+            "value": "age"
+          },
+          "r": {
+            "node_type": "unquoted",
+            "value": 50
+          }
+        }
+        ```
 
-        column, quoted, unquoted - only `value` is used
-        >=, <=, <, >, =, ~, AND, OR, SUBQUERY - only `l` and `r` are used
-        NOT - only `l` is used
+        A query's contents depends on its node type.
+
+        |node_type|usage|
+        |---|---|
+        |column, quoted, unquoted|only `value` is used|
+        |>=, <=, <, >, =, ~, AND, OR, SUBQUERY|only `l` and `r` are used|
+        |NOT|only `l` is used|
 
         SUBQUERY supports sub-queries. `l` is run as a query on the results of `r`.
-
-          ```
-          node_type: "<",
-          l:
-            node_type: column
-            value: age
-          r:
-            node_type: unquoted
-            value: 50
-          ```
 
       properties:
         node_type:

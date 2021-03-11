@@ -13,7 +13,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,19 +41,17 @@ public class MetaApiController implements MetaApi {
     return new ResponseEntity<>(systemStatus, httpStatus);
   }
 
-  private String getDatasetVersion() {
-    var bqTable = applicationConfiguration.getBqTable();
-    int lastDot = bqTable.lastIndexOf('.');
-    // Currently, the table name name in bigquery is the dataset "version".
-    return applicationConfiguration.getBqTable().substring(lastDot + 1);
-  }
-
   // For now, the dataset description is hardcoded. In the future, it will probably be read from a
   // table in bigquery.
   private DatasetDescription createDescription() {
-    var firstOfMarch = OffsetDateTime.of(LocalDate.of(2021, 3, 1), LocalTime.MIN, ZoneOffset.UTC).toString();
+    var firstOfMarch =
+        OffsetDateTime.of(LocalDate.of(2021, 3, 1), LocalTime.MIN, ZoneOffset.UTC).toString();
     return new DatasetDescription()
-        .addDatasetsItem(new DatasetInfo().version(getDatasetVersion()).source("PDC and GDC").date(firstOfMarch))
+        .addDatasetsItem(
+            new DatasetInfo()
+                .version(applicationConfiguration.getDatasetVersion())
+                .source("PDC and GDC")
+                .date(firstOfMarch))
         .cdaVersion("MVP")
         .notes("CDA MVP release")
         .releaseDate(firstOfMarch)
