@@ -88,7 +88,7 @@ class QueryTranslatorTest {
   public void testQueryNot() throws Exception {
     String jsonQuery = Files.readString(TEST_FILES.resolve("query-not.json"));
 
-    String expectedSql = String.format("SELECT * FROM %s WHERE (NOT (1 = 2))", QUALIFIED_TABLE);
+    String expectedSql = String.format("SELECT * FROM %s, UNNEST(A) AS _A WHERE (NOT (1 = _A.B))", QUALIFIED_TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
     String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
