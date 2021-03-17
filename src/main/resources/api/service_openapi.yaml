@@ -258,7 +258,7 @@ components:
       description: |
         A Query consists of a node type, a value and l and r Query objects. A Query must
         have a node type, but other fields are optional depending on the node type. See
-        the table below for more information.
+        the description of `node_type`for more information.
         
         For example, the query "age < 50" is expressed as:
 
@@ -276,21 +276,18 @@ components:
         }
         ```
 
-        A query's contents depends on its node type.
-
-        |node_type|usage|
-        |---|---|
-        |column, quoted, unquoted|only `value` is used|
-        |>=, <=, <, >, =, ~, AND, OR, SUBQUERY|only `l` and `r` are used|
-        |NOT|only `l` is used|
-
-        SUBQUERY supports sub-queries. `l` is run as a query on the results of `r`.
-
       properties:
         node_type:
           type: string
-          enum: ["column", "quoted", "unquoted", ">=", "<=", "<", ">", "=", "~", "AND", "OR", "NOT",
-          "SUBQUERY"]
+          enum: [column, quoted, unquoted, ">=", "<=", "<", ">", "=", "!=", AND, OR, NOT, SUBQUERY]
+          description: >
+            Query contents and behavior depends on `node_type`:
+             * `column` - column name is in `value`
+             * `quoted` - value that needs quotes is in `value`
+             * `unquoted` - value that doesn't need quotes is in `value`
+             * `>=`, `<=`, `<`, `>`, `=`, `!=`, `AND`, `OR` - `l` and `r` are used to create the expression `l` op `r`
+             * `SUBQUERY` - `l` is run as a query on the results of query `r`
+             * `NOT` - `l` is used to create the expression `NOT l`
         value:
           type: string
         l:
