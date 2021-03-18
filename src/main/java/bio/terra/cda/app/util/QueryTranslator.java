@@ -54,7 +54,6 @@ public class QueryTranslator {
       switch (query.getNodeType()) {
         case QUOTED:
         case UNQUOTED:
-        case NOT:
           return Stream.empty();
         case COLUMN:
           var parts = query.getValue().split("\\.");
@@ -64,6 +63,8 @@ public class QueryTranslator {
                       i == 0
                           ? String.format("UNNEST(%1$s) AS _%1$s", parts[i])
                           : String.format("UNNEST(_%1$s.%2$s) AS _%2$s", parts[i - 1], parts[i]));
+        case NOT:
+          return getUnnestColumns(query.getL());
         default:
           return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
       }
