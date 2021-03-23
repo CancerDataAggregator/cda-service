@@ -9,11 +9,11 @@ buildscript {
 plugins {
 	id 'java'
 	id 'idea'
-	id 'org.springframework.boot' version '2.2.2.RELEASE'
-	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
-	id 'com.google.cloud.tools.jib' version '1.8.0'
-	id 'org.openapi.generator' version '4.3.1'
-	id 'com.diffplug.gradle.spotless' version '3.27.2'
+	id 'org.springframework.boot' version '2.4.3'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'com.google.cloud.tools.jib' version '2.8.0'
+	id 'org.openapi.generator' version '5.1.0'
+	id 'com.diffplug.spotless' version '5.11.0'
 }
 
 group = 'bio.terra.cda'
@@ -27,20 +27,19 @@ repositories {
 dependencies {
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jdbc'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
-	implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.16'
-	implementation group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.7.0'
-	implementation group: 'org.apache.commons', name: 'commons-pool2', version: '2.8.0'
-	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
-	implementation group: 'org.liquibase' , name: 'liquibase-core', version: '3.8.6'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
+	implementation group: 'javax.validation', name: 'validation-api'
 	implementation group: 'org.webjars', name: 'swagger-ui', version: '3.24.0'
 
 	implementation group: 'com.google.cloud', name: 'google-cloud-bigquery', version: '1.124.7'
 
+	// These dependencies are required to load the logback config file.
+	implementation group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-logging', version: '1.2.5.RELEASE'
+
 	// -- OpenAPI CodeGen dependencies --
-	// TODO: this version of swagger-annotations is old, but the code gen is still relying on it
-	//  There is an open bug tracking the fix: https://github.com/OpenAPITools/openapi-generator/issues/4245
-	implementation group: 'io.swagger', name: 'swagger-annotations', version: '1.6.0'
-	implementation group: 'org.openapitools', name: 'jackson-databind-nullable', version: '0.2.1'
+	implementation group: 'io.swagger.core.v3', name: 'swagger-annotations', version: '2.1.7'
+	implementation group: 'io.springfox', name: 'springfox-swagger2', version: '3.0.0'
 	// -- --
 
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
@@ -79,6 +78,7 @@ openApiGenerate {
 			generateApiDocumentation : "false",
 			generateModelTests : "false",
 			generateModelDocumentation : "false",
+			"openApiNullable": "false",
 	]
 }
 

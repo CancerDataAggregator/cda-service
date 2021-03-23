@@ -12,10 +12,14 @@ import com.google.cloud.bigquery.TableResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class QueryService {
+
+  private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
   final BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
 
@@ -57,6 +61,7 @@ public class QueryService {
   }
 
   public List<String> runQuery(String query) {
+    logger.info("QUERY: {}", query);
 
     // Wrap query so it returns JSON
     String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", query);

@@ -124,6 +124,16 @@ Notes
 - This will completely overwrite the previous code with the newly generated code.
 - The python package version uses the openapi version (property `info.version`). Be sure to update the openapi yaml
 version before generating a new python client, or the new client will have the same version.
+  
+## Logging
+
+By default, log output is in JSON format to make it easier to process in stackdriver. Since this can make the log
+harder to read, you can use text logging instead by set the environment variable `LOG_APPENDER` to `Console-Standard`
+when debugging:
+
+```shell
+LOG_APPENDER=Console-Standard ./gradlew bootRun
+```
 
 ## OpenAPI V3
 
