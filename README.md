@@ -64,25 +64,25 @@ curl http://localhost:8080/status
   "l": {
     "node_type": "AND",
     "l": {
-      "node_type": ">=",
+      "node_type": ">",
       "l": {
         "node_type": "column",
-        "value": "Diagnosis.age_at_diagnosis"
+        "value": "ResearchSubject.Diagnosis.age_at_diagnosis"
       },
       "r": {
         "node_type": "unquoted",
-        "value": "50"
+        "value": "50 * 365"
       }
     },
     "r": {
       "node_type": "=",
       "l": {
         "node_type": "column",
-        "value": "Specimen.associated_project"
+        "value": "ResearchSubject.Specimen.associated_project"
       },
       "r": {
         "node_type": "quoted",
-        "value": "TCGA-OV"
+        "value": "TCGA-ESCA"
       }
     }
   },
@@ -90,11 +90,11 @@ curl http://localhost:8080/status
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "Diagnosis.tumor_stage"
+      "value": "ResearchSubject.Diagnosis.tumor_stage"
     },
     "r": {
       "node_type": "quoted",
-      "value": "Stage IIIC"
+      "value": "stage iiic"
     }
   }
 }
