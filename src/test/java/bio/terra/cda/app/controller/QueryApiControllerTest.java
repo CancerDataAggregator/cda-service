@@ -2,6 +2,7 @@ package bio.terra.cda.app.controller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
@@ -51,10 +52,10 @@ class QueryApiControllerTest {
   @Test
   void booleanQueryDryRun() throws Exception {
     callQueryApi(true);
-    verify(queryService, never()).runQuery(anyString());
+    verify(queryService, never()).startQuery(anyString(), anyInt());
 
     reset(queryService);
     callQueryApi(false);
-    verify(queryService, only()).runQuery(anyString());
+    verify(queryService, only()).startQuery(anyString(), anyInt());
   }
 }

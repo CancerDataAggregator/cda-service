@@ -1,7 +1,5 @@
 package bio.terra.cda.app.service;
 
-import bio.terra.cda.app.service.exception.BadQueryException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -17,7 +15,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +49,18 @@ public class QueryService {
     return queryJob;
   }
 
+  public QueryResult getQueryResults(String queryId, String pageToken) {
+    final Job job = bigQuery.getJob(queryId);
+    if (job != null && job.exists()) {
+      // Log results of page query here.
+      //      logger.info(
+      //              objectMapper.writeValueAsString(
+      //                      new QueryData(query, timer.elapsed(), jobResults.resultsCount)));
+      return getJobResults(job, pageToken);
+    }
+    return null;
+  }
+
   // For now, hardcode the known list of systems. In the future, we will get this from the
   // database itself, as each published dataset will have a list of contributing systems.
   private enum Source {
@@ -69,84 +78,71 @@ public class QueryService {
     }
   }
 
-  private static class Results {
-    final List<String> jsonData = new ArrayList<>();
-    /** For each system, the number of rows in jsonData that have data from that system. */
-    final Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
+  public static class QueryResult {
+    public final String jobId;
+    public final List<Object> items;
+    public final String pageToken;
+    public final long totalRowCount;
+
+    QueryResult(String jobId, List<Object> items, String pageToken, long totalRowCount) {
+      this.jobId = jobId;
+      this.items = items;
+      this.pageToken = pageToken;
+      this.totalRowCount = totalRowCount;
+    }
   }
 
-  private Results getJobResults(Job queryJob) {
+  private QueryResult getJobResults(Job queryJob, String pageToken) {
+    final Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
+    var options = new BigQuery.QueryResultsOption[0];
+    if (pageToken != null) {
+      options =
+          new BigQuery.QueryResultsOption[] {BigQuery.QueryResultsOption.pageToken(pageToken)};
+    }
     try {
       // Get the results.
-      TableResult result = queryJob.getQueryResults();
+      TableResult result = queryJob.getQueryResults(options);
 
-      Results results = new Results();
+      List<Object> items = new ArrayList<>();
 
       // Copy all row data to results. Each row is a JSON object.
       for (FieldValueList row : result.iterateAll()) {
         var rowData = row.get(0).getStringValue();
-        results.jsonData.add(rowData);
+        items.add(rowData);
         Arrays.stream(Source.values())
             .forEach(
                 s -> {
                   // Each row can match one or more system.
                   if (s.match(rowData)) {
-                    results.resultsCount.put(s, results.resultsCount.getOrDefault(s, 0) + 1);
+                    resultsCount.put(s, resultsCount.getOrDefault(s, 0) + 1);
                   }
                 });
       }
 
-      return results;
+      return new QueryResult(queryJob.getJobId().getJob(), items, pageToken, result.getTotalRows());
     } catch (InterruptedException e) {
       throw new RuntimeException("Error while getting query results", e);
     }
   }
 
-  private static class QueryData {
-    public final String query;
-    public final float duration;
-    public final Map<Source, Integer> systemUsage;
-
-    QueryData(String query, float duration, Map<Source, Integer> systemUsage) {
-      this.query = query;
-      this.duration = duration;
-      this.systemUsage = systemUsage;
-    }
-  }
-
-  private static class Timer {
-    final long start = System.nanoTime();
-    /** @return the time since object creation in seconds */
-    float elapsed() {
-      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) / 1000.0F;
-    }
-  }
-
-  public List<String> runQuery(String query) {
+  /**
+   * Start the BQ query and return its job ID.
+   *
+   * @param query The BQ query to run
+   * @return the BQ job ID
+   */
+  public QueryResult startQuery(String query, Integer limit) {
     // Wrap query so it returns JSON
     String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", query);
-    QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
+    var queryConfig = QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false);
+    if (limit != null) {
+      queryConfig.setMaxResults((long) limit);
+    }
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
+    Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
 
-    try {
-      Timer timer = new Timer();
-      Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
-      queryJob = runJob(queryJob);
-      var jobResults = getJobResults(queryJob);
-
-      try {
-        logger.info(
-                objectMapper.writeValueAsString(
-                        new QueryData(query, timer.elapsed(), jobResults.resultsCount)));
-      } catch (JsonProcessingException e) {
-        logger.warn("Error converting object to JSON", e);
-      }
-      return jobResults.jsonData;
-    } catch (Throwable t) {
-      throw new BadQueryException(String.format("Error calling BigQuery: '%s'", query), t);
-    }
+    return getJobResults(queryJob, null);
   }
 }

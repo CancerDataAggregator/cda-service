@@ -109,6 +109,10 @@ test {
 
 spotless {
 	java {
+		// Specify java source file tree to avoid scanning openapi generated code.
+		target project.fileTree(project.rootDir) {
+			include 'src/**/*.java'
+		}
 		googleJavaFormat()
 	}
 }
