@@ -43,11 +43,11 @@ public class QueryTranslator {
         return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
       }
       var fromClause =
-          Stream.concat(Stream.of(tableOrSubClause), getUnnestColumns(query).distinct())
+          Stream.concat(Stream.of(tableOrSubClause + " AS p"), getUnnestColumns(query).distinct())
               .collect(Collectors.joining(", "));
 
       var condition = queryString(query);
-      return String.format("SELECT * FROM %s WHERE %s", fromClause, condition);
+      return String.format("SELECT p.* FROM %s WHERE %s", fromClause, condition);
     }
 
     private Stream<String> getUnnestColumns(Query query) {
