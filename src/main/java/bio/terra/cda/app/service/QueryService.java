@@ -139,8 +139,8 @@ public class QueryService {
 
       try {
         logger.info(
-                objectMapper.writeValueAsString(
-                        new QueryData(query, timer.elapsed(), jobResults.resultsCount)));
+            objectMapper.writeValueAsString(
+                new QueryData(query, timer.elapsed(), jobResults.resultsCount)));
       } catch (JsonProcessingException e) {
         logger.warn("Error converting object to JSON", e);
       }
