@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.FieldList;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobId;
@@ -79,12 +80,19 @@ public class QueryService {
     try {
       // Get the results.
       TableResult result = queryJob.getQueryResults();
+      FieldList fields = result.getSchema().getFields();
 
       Results results = new Results();
 
-      // Copy all row data to results. Each row is a JSON object.
+      // Copy all row data to results. For each row, collect the fields as JSON key/value pairs.
       for (FieldValueList row : result.iterateAll()) {
-        var rowData = row.get(0).getStringValue();
+        List<String> fieldData = new ArrayList<>();
+        for (int i = 0; i < fields.size(); i++) {
+          fieldData.add(
+              String.format(
+                  "\"%s\":\"%s\"\n", fields.get(i).getName(), row.get(i).getStringValue()));
+        }
+        String rowData = "{" + String.join(",", fieldData) + "}";
         results.jsonData.add(rowData);
         Arrays.stream(Source.values())
             .forEach(
@@ -95,7 +103,6 @@ public class QueryService {
                   }
                 });
       }
-
       return results;
     } catch (InterruptedException e) {
       throw new RuntimeException("Error while getting query results", e);
@@ -123,10 +130,8 @@ public class QueryService {
   }
 
   public List<String> runQuery(String query) {
-    // Wrap query so it returns JSON
-    String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", query);
     QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
+        QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).build();
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
