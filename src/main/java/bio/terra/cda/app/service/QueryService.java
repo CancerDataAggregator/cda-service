@@ -85,7 +85,7 @@ public class QueryService {
 
       Results results = new Results();
 
-      // Copy all row data to results. For each row, collect the fields as JSON key/value pairs.
+      // Copy all row data to results. For each row, create a Json object to hold the column/value data.
       for (FieldValueList row : result.iterateAll()) {
         ObjectNode rowObject = objectMapper.createObjectNode();
         StringBuilder allFieldValues = new StringBuilder();
