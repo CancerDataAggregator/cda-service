@@ -3,6 +3,7 @@ package bio.terra.cda.app.service;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldList;
@@ -71,7 +72,7 @@ public class QueryService {
   }
 
   private static class Results {
-    final List<String> jsonData = new ArrayList<>();
+    final List<ObjectNode> jsonData = new ArrayList<>();
     /** For each system, the number of rows in jsonData that have data from that system. */
     final Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
   }
@@ -86,19 +87,20 @@ public class QueryService {
 
       // Copy all row data to results. For each row, collect the fields as JSON key/value pairs.
       for (FieldValueList row : result.iterateAll()) {
-        List<String> fieldData = new ArrayList<>();
+        ObjectNode rowObject = objectMapper.createObjectNode();
+        StringBuilder allFieldValues = new StringBuilder();
         for (int i = 0; i < fields.size(); i++) {
-          fieldData.add(
-              String.format(
-                  "\"%s\":\"%s\"\n", fields.get(i).getName(), row.get(i).getStringValue()));
+          rowObject.put(fields.get(i).getName(), row.get(i).getStringValue());
+          allFieldValues.append(row.get(i).getStringValue());
         }
-        String rowData = "{" + String.join(",", fieldData) + "}";
-        results.jsonData.add(rowData);
+        results.jsonData.add(rowObject);
+
+        String allFieldData = allFieldValues.toString();
         Arrays.stream(Source.values())
             .forEach(
                 s -> {
                   // Each row can match one or more system.
-                  if (s.match(rowData)) {
+                  if (s.match(allFieldData)) {
                     results.resultsCount.put(s, results.resultsCount.getOrDefault(s, 0) + 1);
                   }
                 });
@@ -129,7 +131,7 @@ public class QueryService {
     }
   }
 
-  public List<String> runQuery(String query) {
+  public List<ObjectNode> runQuery(String query) {
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).build();
 

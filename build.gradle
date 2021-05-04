@@ -93,13 +93,7 @@ openApiValidate {
 	inputSpec = "${openapiSourceFile}".toString()
 }
 
-task patchGeneratedJava(type: Exec) {
-	commandLine "patch", "-p0", "-i", "misc/QueryResponseData.java.patch"
-} dependsOn(tasks.openApiGenerate)
-
-compileJava.dependsOn tasks.patchGeneratedJava
 sourceSets.main.java.srcDir "${openapiTargetDir}/src/main/java"
-ideaModule.dependsOn tasks.patchGeneratedJava
 
 // end of OpenAPI Server Generation
 
