@@ -93,7 +93,9 @@ openApiValidate {
 	inputSpec = "${openapiSourceFile}".toString()
 }
 
+compileJava.dependsOn tasks.openApiGenerate
 sourceSets.main.java.srcDir "${openapiTargetDir}/src/main/java"
+ideaModule.dependsOn tasks.openApiGenerate
 
 // end of OpenAPI Server Generation
 
