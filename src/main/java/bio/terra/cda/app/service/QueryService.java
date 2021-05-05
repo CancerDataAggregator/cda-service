@@ -73,21 +73,19 @@ public class QueryService {
     /** For each system, the number of rows in jsonData that have data from that system. */
     final Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
 
-    /**
-     * Traverse the json data and collect the number of systems data present in resultsCount.
-     */
+     /** Traverse the json data and collect the number of systems data present in resultsCount. */
     private void generateUsageData() {
       // Each node is a single row in the result.
       for (JsonNode jsonNode : jsonData) {
         List<String> systems = jsonNode.findValuesAsText("system");
         Arrays.stream(Source.values())
-                .forEach(
-                        s -> {
-                          // Each row can match more than one system, so we have to count them all.
-                          if (systems.contains(s.name())) {
-                            resultsCount.put(s, resultsCount.getOrDefault(s, 0) + 1);
-                          }
-                        });
+            .forEach(
+                s -> {
+                  // Each row can match more than one system, so we have to count them all.
+                  if (systems.contains(s.name())) {
+                    resultsCount.put(s, resultsCount.getOrDefault(s, 0) + 1);
+                  }
+                });
       }
     }
   }
@@ -108,7 +106,7 @@ public class QueryService {
         for (int i = 0; i < subFields.size(); i++) {
           var subField = subFields.get(i);
           object.set(subField.getName(), valueToJson(list.get(i), subField));
-         }
+        }
         return object;
       case REPEATED:
         var array = objectMapper.createArrayNode();
@@ -144,7 +142,10 @@ public class QueryService {
 
       // Copy all row data to results. For each row, create a Json object using the result's schema.
       for (FieldValueList row : result.iterateAll()) {
-        results.jsonData.add(valueToJson(FieldValue.of(FieldValue.Attribute.RECORD, row), Field.of("root", LegacySQLTypeName.RECORD, fields)));
+        results.jsonData.add(
+            valueToJson(
+                FieldValue.of(FieldValue.Attribute.RECORD, row),
+                Field.of("root", LegacySQLTypeName.RECORD, fields)));
       }
 
       results.generateUsageData();
