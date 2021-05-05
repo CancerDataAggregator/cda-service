@@ -2,15 +2,22 @@ package bio.terra.cda.app.service;
 
 import bio.terra.cda.app.service.exception.BadQueryException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DecimalNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.FieldList;
+import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
 import java.util.ArrayList;
@@ -59,22 +66,72 @@ public class QueryService {
   private enum Source {
     GDC,
     PDC;
-
-    final String match;
-
-    Source() {
-      match = String.format("\"system\": \"%s\"", name());
-    }
-
-    boolean match(String s) {
-      return s.contains(match);
-    }
   }
 
   private static class Results {
-    final List<ObjectNode> jsonData = new ArrayList<>();
+    final List<JsonNode> jsonData = new ArrayList<>();
     /** For each system, the number of rows in jsonData that have data from that system. */
     final Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
+
+    /**
+     * Traverse the json data and collect the number of systems data present in resultsCount.
+     */
+    private void generateUsageData() {
+      // Each node is a single row in the result.
+      for (JsonNode jsonNode : jsonData) {
+        List<String> systems = jsonNode.findValuesAsText("system");
+        Arrays.stream(Source.values())
+                .forEach(
+                        s -> {
+                          // Each row can match more than one system, so we have to count them all.
+                          if (systems.contains(s.name())) {
+                            resultsCount.put(s, resultsCount.getOrDefault(s, 0) + 1);
+                          }
+                        });
+      }
+    }
+  }
+
+  /**
+   * Convert a BQ value to a json node.
+   *
+   * @param value the value to convert
+   * @param field the schema field for the value
+   * @return a json node for the value
+   */
+  private JsonNode valueToJson(FieldValue value, Field field) {
+    switch (value.getAttribute()) {
+      case RECORD:
+        var object = objectMapper.createObjectNode();
+        var list = value.getRecordValue();
+        var subFields = field.getSubFields();
+        for (int i = 0; i < subFields.size(); i++) {
+          var subField = subFields.get(i);
+          object.set(subField.getName(), valueToJson(list.get(i), subField));
+         }
+        return object;
+      case REPEATED:
+        var array = objectMapper.createArrayNode();
+        for (FieldValue fieldValue : value.getRepeatedValue()) {
+          array.add(valueToJson(fieldValue, field));
+        }
+        return array;
+      case PRIMITIVE:
+        if (value.isNull()) {
+          return NullNode.instance;
+        }
+        switch (field.getType().getStandardType()) {
+          case NUMERIC:
+            return new DecimalNode(value.getNumericValue());
+          case BOOL:
+            return BooleanNode.valueOf(value.getBooleanValue());
+          default:
+            // Primitive types other than boolean and numeric are represented as strings.
+            return new TextNode(value.getStringValue());
+        }
+      default:
+        throw new RuntimeException("Unknown field value type: " + value.getAttribute());
+    }
   }
 
   private Results getJobResults(Job queryJob) {
@@ -85,26 +142,13 @@ public class QueryService {
 
       Results results = new Results();
 
-      // Copy all row data to results. For each row, create a Json object to hold the column/value data.
+      // Copy all row data to results. For each row, create a Json object using the result's schema.
       for (FieldValueList row : result.iterateAll()) {
-        ObjectNode rowObject = objectMapper.createObjectNode();
-        StringBuilder allFieldValues = new StringBuilder();
-        for (int i = 0; i < fields.size(); i++) {
-          rowObject.put(fields.get(i).getName(), row.get(i).getStringValue());
-          allFieldValues.append(row.get(i).getStringValue());
-        }
-        results.jsonData.add(rowObject);
-
-        String allFieldData = allFieldValues.toString();
-        Arrays.stream(Source.values())
-            .forEach(
-                s -> {
-                  // Each row can match one or more system.
-                  if (s.match(allFieldData)) {
-                    results.resultsCount.put(s, results.resultsCount.getOrDefault(s, 0) + 1);
-                  }
-                });
+        results.jsonData.add(valueToJson(FieldValue.of(FieldValue.Attribute.RECORD, row), Field.of("root", LegacySQLTypeName.RECORD, fields)));
       }
+
+      results.generateUsageData();
+
       return results;
     } catch (InterruptedException e) {
       throw new RuntimeException("Error while getting query results", e);
@@ -131,7 +175,7 @@ public class QueryService {
     }
   }
 
-  public List<ObjectNode> runQuery(String query) {
+  public List<JsonNode> runQuery(String query) {
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).build();
 
