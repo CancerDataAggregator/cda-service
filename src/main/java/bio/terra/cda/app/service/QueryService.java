@@ -38,7 +38,7 @@ public class QueryService {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-  final BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
+  final BigQuery bigQuery = BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
 
   private final ObjectMapper objectMapper;
 
