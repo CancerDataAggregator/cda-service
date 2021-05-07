@@ -12,8 +12,8 @@ plugins {
 	id 'org.springframework.boot' version '2.4.3'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'com.google.cloud.tools.jib' version '2.8.0'
-	id 'org.openapi.generator' version '5.1.0'
-	id 'com.diffplug.spotless' version '5.11.0'
+	id 'org.openapi.generator' version '5.1.1'
+	id 'com.diffplug.spotless' version '5.12.4'
 }
 
 group = 'bio.terra.cda'

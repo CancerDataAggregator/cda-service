@@ -40,7 +40,12 @@ public class QueryService {
 
   final BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
 
-  @Autowired private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
+
+  @Autowired
+  public QueryService(ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
 
   private Job runJob(Job queryJob) {
     try {
