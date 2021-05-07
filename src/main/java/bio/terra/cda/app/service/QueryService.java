@@ -20,6 +20,7 @@ import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -68,7 +69,8 @@ public class QueryService {
    * @param field the schema field for the value
    * @return a json node for the value
    */
-  private JsonNode valueToJson(FieldValue value, Field field) {
+  @VisibleForTesting
+  protected JsonNode valueToJson(FieldValue value, Field field) {
     switch (value.getAttribute()) {
       case RECORD:
         var object = objectMapper.createObjectNode();
