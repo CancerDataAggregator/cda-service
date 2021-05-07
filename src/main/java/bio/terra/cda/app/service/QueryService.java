@@ -61,35 +61,6 @@ public class QueryService {
     return queryJob;
   }
 
-  // For now, hardcode the known list of systems. In the future, we will get this from the
-  // database itself, as each published dataset will have a list of contributing systems.
-  private enum Source {
-    GDC,
-    PDC;
-  }
-
-  private static class Results {
-    final List<JsonNode> jsonData = new ArrayList<>();
-    /** For each system, the number of rows in jsonData that have data from that system. */
-    final Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
-
-     /** Traverse the json data and collect the number of systems data present in resultsCount. */
-    private void generateUsageData() {
-      // Each node is a single row in the result.
-      for (JsonNode jsonNode : jsonData) {
-        List<String> systems = jsonNode.findValuesAsText("system");
-        Arrays.stream(Source.values())
-            .forEach(
-                s -> {
-                  // Each row can match more than one system, so we have to count them all.
-                  if (systems.contains(s.name())) {
-                    resultsCount.put(s, resultsCount.getOrDefault(s, 0) + 1);
-                  }
-                });
-      }
-    }
-  }
-
   /**
    * Convert a BQ value to a json node.
    *
@@ -132,25 +103,23 @@ public class QueryService {
     }
   }
 
-  private Results getJobResults(Job queryJob) {
+  private List<JsonNode> getJobResults(Job queryJob) {
     try {
       // Get the results.
       TableResult result = queryJob.getQueryResults();
       FieldList fields = result.getSchema().getFields();
 
-      Results results = new Results();
+      List<JsonNode> jsonData = new ArrayList<>();
 
       // Copy all row data to results. For each row, create a Json object using the result's schema.
       for (FieldValueList row : result.iterateAll()) {
-        results.jsonData.add(
+        jsonData.add(
             valueToJson(
                 FieldValue.of(FieldValue.Attribute.RECORD, row),
                 Field.of("root", LegacySQLTypeName.RECORD, fields)));
       }
 
-      results.generateUsageData();
-
-      return results;
+      return jsonData;
     } catch (InterruptedException e) {
       throw new RuntimeException("Error while getting query results", e);
     }
@@ -176,6 +145,36 @@ public class QueryService {
     }
   }
 
+  // For now, hardcode the known list of systems. In the future, we will get this from the
+  // database itself, as each published dataset will have a list of contributing systems.
+  private enum Source {
+    GDC,
+    PDC;
+  }
+
+  /**
+   * Traverse the json data and collect the number of systems data present in resultsCount.
+   *
+   * @param jsonData the data to scan
+   * @return For each system, the number of rows in jsonData that have data from that system
+   */
+  private Map<Source, Integer> generateUsageData(List<JsonNode> jsonData) {
+    Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
+    // Each node is a single row in the result.
+    for (JsonNode jsonNode : jsonData) {
+      List<String> systems = jsonNode.findValuesAsText("system");
+      Arrays.stream(Source.values())
+          .forEach(
+              s -> {
+                // Each row can match more than one system, so we have to count them all.
+                if (systems.contains(s.name())) {
+                  resultsCount.put(s, resultsCount.getOrDefault(s, 0) + 1);
+                }
+              });
+    }
+    return resultsCount;
+  }
+
   public List<JsonNode> runQuery(String query) {
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).build();
@@ -188,15 +187,15 @@ public class QueryService {
       Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
       queryJob = runJob(queryJob);
       var jobResults = getJobResults(queryJob);
+      var usageData = generateUsageData(jobResults);
 
       try {
         logger.info(
-            objectMapper.writeValueAsString(
-                new QueryData(query, timer.elapsed(), jobResults.resultsCount)));
+            objectMapper.writeValueAsString(new QueryData(query, timer.elapsed(), usageData)));
       } catch (JsonProcessingException e) {
         logger.warn("Error converting object to JSON", e);
       }
-      return jobResults.jsonData;
+      return jobResults;
     } catch (Throwable t) {
       throw new BadQueryException(String.format("Error calling BigQuery: '%s'", query), t);
     }
