@@ -23,7 +23,8 @@ class QueryTranslatorTest {
     String jsonQuery = Files.readString(TEST_FILES.resolve("query1.json"));
 
     String expectedSql =
-        String.format("SELECT p.* FROM %s AS p WHERE (%s.project_id = 'TCGA-OV')", QUALIFIED_TABLE, TABLE);
+        String.format(
+            "SELECT p.* FROM %s AS p WHERE (%s.project_id = 'TCGA-OV')", QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
     String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
@@ -89,7 +90,8 @@ class QueryTranslatorTest {
     String jsonQuery = Files.readString(TEST_FILES.resolve("query-not.json"));
 
     String expectedSql =
-        String.format("SELECT p.* FROM %s AS p, UNNEST(A) AS _A WHERE (NOT (1 = _A.B))", QUALIFIED_TABLE);
+        String.format(
+            "SELECT p.* FROM %s AS p, UNNEST(A) AS _A WHERE (NOT (1 = _A.B))", QUALIFIED_TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
     String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);

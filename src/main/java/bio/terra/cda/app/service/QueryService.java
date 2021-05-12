@@ -2,15 +2,25 @@ package bio.terra.cda.app.service;
 
 import bio.terra.cda.app.service.exception.BadQueryException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DecimalNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.FieldList;
+import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -28,9 +38,14 @@ public class QueryService {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-  final BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
+  final BigQuery bigQuery = BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
 
-  @Autowired private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
+
+  @Autowired
+  public QueryService(ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
 
   private Job runJob(Job queryJob) {
     try {
@@ -52,51 +67,66 @@ public class QueryService {
     return queryJob;
   }
 
-  // For now, hardcode the known list of systems. In the future, we will get this from the
-  // database itself, as each published dataset will have a list of contributing systems.
-  private enum Source {
-    GDC,
-    PDC;
-
-    final String match;
-
-    Source() {
-      match = String.format("\"system\": \"%s\"", name());
-    }
-
-    boolean match(String s) {
-      return s.contains(match);
+  /**
+   * Convert a BQ value to a json node.
+   *
+   * @param value the value to convert
+   * @param field the schema field for the value
+   * @return a json node for the value
+   */
+  @VisibleForTesting
+  protected JsonNode valueToJson(FieldValue value, Field field) {
+    switch (value.getAttribute()) {
+      case RECORD:
+        var object = objectMapper.createObjectNode();
+        var list = value.getRecordValue();
+        var subFields = field.getSubFields();
+        for (int i = 0; i < subFields.size(); i++) {
+          var subField = subFields.get(i);
+          object.set(subField.getName(), valueToJson(list.get(i), subField));
+        }
+        return object;
+      case REPEATED:
+        var array = objectMapper.createArrayNode();
+        for (FieldValue fieldValue : value.getRepeatedValue()) {
+          array.add(valueToJson(fieldValue, field));
+        }
+        return array;
+      case PRIMITIVE:
+        if (value.isNull()) {
+          return NullNode.instance;
+        }
+        switch (field.getType().getStandardType()) {
+          case NUMERIC:
+            return DecimalNode.valueOf(value.getNumericValue());
+          case BOOL:
+            return BooleanNode.valueOf(value.getBooleanValue());
+          default:
+            // Primitive types other than boolean and numeric are represented as strings.
+            return TextNode.valueOf(value.getStringValue());
+        }
+      default:
+        throw new RuntimeException("Unknown field value type: " + value.getAttribute());
     }
   }
 
-  private static class Results {
-    final List<String> jsonData = new ArrayList<>();
-    /** For each system, the number of rows in jsonData that have data from that system. */
-    final Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
-  }
-
-  private Results getJobResults(Job queryJob) {
+  private List<JsonNode> getJobResults(Job queryJob) {
     try {
       // Get the results.
       TableResult result = queryJob.getQueryResults();
+      FieldList fields = result.getSchema().getFields();
 
-      Results results = new Results();
+      List<JsonNode> jsonData = new ArrayList<>();
 
-      // Copy all row data to results. Each row is a JSON object.
+      // Copy all row data to results. For each row, create a Json object using the result's schema.
       for (FieldValueList row : result.iterateAll()) {
-        var rowData = row.get(0).getStringValue();
-        results.jsonData.add(rowData);
-        Arrays.stream(Source.values())
-            .forEach(
-                s -> {
-                  // Each row can match one or more system.
-                  if (s.match(rowData)) {
-                    results.resultsCount.put(s, results.resultsCount.getOrDefault(s, 0) + 1);
-                  }
-                });
+        jsonData.add(
+            valueToJson(
+                FieldValue.of(FieldValue.Attribute.RECORD, row),
+                Field.of("root", LegacySQLTypeName.RECORD, fields)));
       }
 
-      return results;
+      return jsonData;
     } catch (InterruptedException e) {
       throw new RuntimeException("Error while getting query results", e);
     }
@@ -122,11 +152,39 @@ public class QueryService {
     }
   }
 
-  public List<String> runQuery(String query) {
-    // Wrap query so it returns JSON
-    String jsonQuery = String.format("SELECT TO_JSON_STRING(t,true) from (%s) as t", query);
+  // For now, hardcode the known list of systems. In the future, we will get this from the
+  // database itself, as each published dataset will have a list of contributing systems.
+  private enum Source {
+    GDC,
+    PDC;
+  }
+
+  /**
+   * Traverse the json data and collect the number of systems data present in resultsCount.
+   *
+   * @param jsonData the data to scan
+   * @return For each system, the number of rows in jsonData that have data from that system
+   */
+  private Map<Source, Integer> generateUsageData(List<JsonNode> jsonData) {
+    Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
+    // Each node is a single row in the result.
+    for (JsonNode jsonNode : jsonData) {
+      List<String> systems = jsonNode.findValuesAsText("system");
+      Arrays.stream(Source.values())
+          .forEach(
+              s -> {
+                // Each row can match more than one system, so we have to count them all.
+                if (systems.contains(s.name())) {
+                  resultsCount.put(s, resultsCount.getOrDefault(s, 0) + 1);
+                }
+              });
+    }
+    return resultsCount;
+  }
+
+  public List<JsonNode> runQuery(String query) {
     QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(jsonQuery).setUseLegacySql(false).build();
+        QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).build();
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
@@ -136,15 +194,15 @@ public class QueryService {
       Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
       queryJob = runJob(queryJob);
       var jobResults = getJobResults(queryJob);
+      var usageData = generateUsageData(jobResults);
 
       try {
         logger.info(
-            objectMapper.writeValueAsString(
-                new QueryData(query, timer.elapsed(), jobResults.resultsCount)));
+            objectMapper.writeValueAsString(new QueryData(query, timer.elapsed(), usageData)));
       } catch (JsonProcessingException e) {
         logger.warn("Error converting object to JSON", e);
       }
-      return jobResults.jsonData;
+      return jobResults;
     } catch (Throwable t) {
       throw new BadQueryException(String.format("Error calling BigQuery: '%s'", query), t);
     }
