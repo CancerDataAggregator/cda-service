@@ -98,12 +98,12 @@ public class QueryService {
         }
         switch (field.getType().getStandardType()) {
           case NUMERIC:
-            return new DecimalNode(value.getNumericValue());
+            return DecimalNode.valueOf(value.getNumericValue());
           case BOOL:
             return BooleanNode.valueOf(value.getBooleanValue());
           default:
             // Primitive types other than boolean and numeric are represented as strings.
-            return new TextNode(value.getStringValue());
+            return TextNode.valueOf(value.getStringValue());
         }
       default:
         throw new RuntimeException("Unknown field value type: " + value.getAttribute());
