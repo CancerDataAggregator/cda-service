@@ -12,12 +12,12 @@ plugins {
 	id 'org.springframework.boot' version '2.4.3'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'com.google.cloud.tools.jib' version '2.8.0'
-	id 'org.openapi.generator' version '5.1.0'
-	id 'com.diffplug.spotless' version '5.11.0'
+	id 'org.openapi.generator' version '5.1.1'
+	id 'com.diffplug.spotless' version '5.12.4'
 }
 
 group = 'bio.terra.cda'
-version = '0.0.11'
+version = '0.0.12'
 sourceCompatibility = '1.11'
 
 repositories {
@@ -93,13 +93,9 @@ openApiValidate {
 	inputSpec = "${openapiSourceFile}".toString()
 }
 
-task patchGeneratedJava(type: Exec) {
-	commandLine "patch", "-p0", "-i", "misc/QueryResponseData.java.patch"
-} dependsOn(tasks.openApiGenerate)
-
-compileJava.dependsOn tasks.patchGeneratedJava
+compileJava.dependsOn tasks.openApiGenerate
 sourceSets.main.java.srcDir "${openapiTargetDir}/src/main/java"
-ideaModule.dependsOn tasks.patchGeneratedJava
+ideaModule.dependsOn tasks.openApiGenerate
 
 // end of OpenAPI Server Generation
 
@@ -114,5 +110,13 @@ spotless {
 			include 'src/**/*.java'
 		}
 		googleJavaFormat()
+	}
+}
+
+// Enable publishing a build scan
+if (hasProperty('buildScan')) {
+	buildScan {
+		termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+		termsOfServiceAgree = 'yes'
 	}
 }
