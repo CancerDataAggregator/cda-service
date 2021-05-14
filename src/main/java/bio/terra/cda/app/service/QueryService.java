@@ -141,7 +141,8 @@ public class QueryService {
           break;
         }
       }
-      final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
+
+      logQuery(queryJob, jsonData);
 
       return new QueryResult(jsonData, result.getTotalRows());
     } catch (InterruptedException e) {
@@ -158,14 +159,6 @@ public class QueryService {
       this.query = query;
       this.duration = duration;
       this.systemUsage = systemUsage;
-    }
-  }
-
-  private static class Timer {
-    final long start = System.nanoTime();
-    /** @return the time since object creation in seconds */
-    float elapsed() {
-      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) / 1000.0F;
     }
   }
 
@@ -199,33 +192,19 @@ public class QueryService {
     return resultsCount;
   }
 
-  /*
-  public List<JsonNode> runQuery(String query) {
-    QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).build();
-
-    // Create a job ID so that we can safely retry.
-    JobId jobId = JobId.of(UUID.randomUUID().toString());
-
+  private void logQuery(Job queryJob, List<JsonNode> jsonData) {
+    // Log usage data for this response.
+    final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
     try {
-      Timer timer = new Timer();
-      Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
-      queryJob = runJob(queryJob);
-      var jobResults = getJobResults(queryJob);
-      var usageData = generateUsageData(jobResults);
-
-      try {
-        logger.info(
-            objectMapper.writeValueAsString(new QueryData(query, timer.elapsed(), usageData)));
-      } catch (JsonProcessingException e) {
-        logger.warn("Error converting object to JSON", e);
-      }
-      return jobResults;
-    } catch (Throwable t) {
-      throw new BadQueryException(String.format("Error calling BigQuery: '%s'", query), t);
+      var elapsed = (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime()) / 1000.0F;
+      String query = "";
+      var queryConfig = (QueryJobConfiguration) queryJob.getConfiguration();
+      var logData = new QueryData(queryConfig.getQuery(), elapsed, resultsCount);
+      logger.info(objectMapper.writeValueAsString(logData));
+    } catch (JsonProcessingException e) {
+      logger.warn("Error converting object to JSON", e);
     }
   }
-*/
 
   public String startQuery(String query, Integer limit) {
     var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
