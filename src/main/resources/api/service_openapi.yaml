@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 1.0.1
+  version: 1.1.0
   title: CDA API
   license:
     name: Apache 2.0
@@ -79,7 +79,7 @@ paths:
 
       responses:
         200:
-          $ref: '#/components/responses/QueryResponse'
+          $ref: '#/components/responses/QueryCreated'
 
 
   /api/v1/boolean-query/{version}:
@@ -112,7 +112,7 @@ paths:
                     
       responses:
         200:
-          $ref: '#/components/responses/QueryResponse'
+          $ref: '#/components/responses/QueryCreated'
 
 
   /api/v1/sql-query/{version}:
@@ -136,23 +136,23 @@ paths:
                     
       responses:
         200:
-          $ref: '#/components/responses/QueryResponse'
+          $ref: '#/components/responses/QueryCreated'
 
   /api/v1/query/{id}:
     get:
-      summary: Given a query ID, return the next page of data in the query.
+      summary: Given a query ID, return the a page of data from the query result.
       description: |
-        Use this API to get the data back from a previous query. If there is more data present,
+        Use this API to get the data back from a query. If there is more data present,
         next_url will contain the link to use to get the rest of the data. If the current page of data
-        is not yet ready, the result will be empty, but next_url will be set. Use page_token to specify
-        which page of data to return.
+        is not yet ready, the result will be empty, but next_url will be set.
       operationId: query
       tags:
         - query
 
       parameters:
         - $ref: '#/components/parameters/QueryId'
-        - $ref: '#/components/parameters/PageToken'
+        - $ref: '#/components/parameters/ResultOffset'
+        - $ref: '#/components/parameters/PageSize'
 
       responses:
         200:
@@ -170,9 +170,21 @@ components:
         type: string
         default: v3
       description: Dataset version
+    ResultOffset:
+      in: query
+      name: offset
+      schema:
+        type: integer
+      description: The number of entries to skip
     ResultLimit:
       in: query
       name: limit
+      schema:
+        type: integer
+      description: The total numbers of entries to return for a query
+    PageSize:
+      in: query
+      name: pageSize
       schema:
         type: integer
       description: The numbers of entries to return per page of data
@@ -223,11 +235,19 @@ components:
                 items:
                   type: string
 
+    QueryCreatedData:
+      type: object
+      properties:
+        query_id:
+          type: string
+          description: the created query ID
+        query_sql:
+          type: string
+          description: the generated BigQuery SQL
+
     QueryResponseData:
       type: object
       properties:
-        query_sql:
-          type: string
         result:
           type: array
           items:
@@ -329,8 +349,15 @@ components:
           schema:
             $ref: '#/components/schemas/SystemStatus'
 
+    QueryCreated:
+      description: query created response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/QueryCreatedData'
+
     QueryResponse:
-      description: common query response
+      description: query data response
       content:
         application/json:
           schema:

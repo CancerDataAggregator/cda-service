@@ -23,6 +23,7 @@ import com.google.cloud.bigquery.TableResult;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Nonnull;
 
 @Component
 public class QueryService {
@@ -45,26 +48,6 @@ public class QueryService {
   @Autowired
   public QueryService(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
-  }
-
-  private Job runJob(Job queryJob) {
-    try {
-      // Wait for the query to complete.
-      queryJob = queryJob.waitFor();
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Error while polling for job completion", e);
-    }
-
-    // Check for errors
-    if (queryJob == null) {
-      throw new RuntimeException("Job no longer exists");
-    }
-    if (queryJob.getStatus().getError() != null) {
-      // You can also look at queryJob.getStatus().getExecutionErrors() for all
-      // errors, not just the latest one.
-      throw new RuntimeException(String.valueOf(queryJob.getStatus().getError()));
-    }
-    return queryJob;
   }
 
   /**
@@ -109,24 +92,58 @@ public class QueryService {
         throw new RuntimeException("Unknown field value type: " + value.getAttribute());
     }
   }
+  public QueryResult getQueryResults(String queryId, Integer offset, Integer pageSize) {
+    final Job job = bigQuery.getJob(queryId);
+    if (job != null && job.exists()) {
+      return getJobResults(job, offset, pageSize);
+    }
+    return null;
+  }
 
-  private List<JsonNode> getJobResults(Job queryJob) {
+  public static class QueryResult {
+    public final List<Object> items;
+    public final long totalRowCount;
+
+    QueryResult(List<JsonNode> items, long totalRowCount) {
+      this.items = new ArrayList<>(items);
+      this.totalRowCount = totalRowCount;
+    }
+  }
+
+  private QueryResult getJobResults(Job queryJob, Integer offset, Integer pageSize) {
+    var options = new ArrayList<BigQuery.QueryResultsOption>();
+    if (offset != null) {
+      if (offset < 0) {
+        throw new RuntimeException("Invalid offset: " + offset);
+      }
+      options.add(BigQuery.QueryResultsOption.startIndex(offset));
+    }
+    if (pageSize != null) {
+      if (pageSize < 1) {
+        throw new RuntimeException("Invalid page size: " + pageSize);
+      }
+      options.add(BigQuery.QueryResultsOption.pageSize(pageSize));
+    }
     try {
       // Get the results.
-      TableResult result = queryJob.getQueryResults();
+      TableResult result = queryJob.getQueryResults(options.toArray(new BigQuery.QueryResultsOption[0]));
       FieldList fields = result.getSchema().getFields();
 
       List<JsonNode> jsonData = new ArrayList<>();
 
-      // Copy all row data to results. For each row, create a Json object using the result's schema.
+      int rowCount = 0;
       for (FieldValueList row : result.iterateAll()) {
         jsonData.add(
-            valueToJson(
-                FieldValue.of(FieldValue.Attribute.RECORD, row),
-                Field.of("root", LegacySQLTypeName.RECORD, fields)));
+                valueToJson(
+                        FieldValue.of(FieldValue.Attribute.RECORD, row),
+                        Field.of("root", LegacySQLTypeName.RECORD, fields)));
+        if (pageSize != null && ++rowCount == pageSize) {
+          break;
+        }
       }
+      final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
 
-      return jsonData;
+      return new QueryResult(jsonData, result.getTotalRows());
     } catch (InterruptedException e) {
       throw new RuntimeException("Error while getting query results", e);
     }
@@ -182,6 +199,7 @@ public class QueryService {
     return resultsCount;
   }
 
+  /*
   public List<JsonNode> runQuery(String query) {
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).build();
@@ -206,5 +224,19 @@ public class QueryService {
     } catch (Throwable t) {
       throw new BadQueryException(String.format("Error calling BigQuery: '%s'", query), t);
     }
+  }
+*/
+
+  public String startQuery(String query, Integer limit) {
+    var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
+    if (limit != null) {
+      queryConfig.setMaxResults((long) limit);
+    }
+
+    // Create a job ID so that we can safely retry.
+    JobId jobId = JobId.of(UUID.randomUUID().toString());
+    Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
+
+    return queryJob.getJobId().getJob();
   }
 }

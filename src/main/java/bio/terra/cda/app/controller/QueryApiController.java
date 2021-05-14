@@ -5,7 +5,12 @@ import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -16,8 +21,6 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class QueryApiController implements QueryApi {
-
-  public static final int DEFAULT_LIMIT = 100;
 
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
@@ -33,50 +36,55 @@ public class QueryApiController implements QueryApi {
     this.webRequest = webRequest;
   }
 
-  private String createNextUrl(String jobId, String pageToken) {
-    var path = webRequest.getHeader("origin");
-    return String.format("%s/api/v1/query/%s?page_token=%s", path, jobId, pageToken);
+  private String createNextUrl(String jobId, Integer offset, Integer pageSize) {
+    var path = String.format("/api/v1/query/%s?offset=%s&pageSize=%s", jobId, offset, pageSize);
+
+    URL baseUrl;
+
+    try {
+      baseUrl = new URL(webRequest.getHeader("referer"));
+      return new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPort(), path).toString();
+    } catch (MalformedURLException e) {
+      // Not sure what a good fallback would be here.
+      return path;
+    }
   }
 
   @Override
-  public ResponseEntity<QueryResponseData> query(String id, String pageToken) {
-    var result = queryService.getQueryResults(id, pageToken);
+  public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer pageSize) {
+    var result = queryService.getQueryResults(id, offset, pageSize);
     var response =
         new QueryResponseData()
             .result(new ArrayList<>(result.items))
-            .totalRowCount(result.totalRowCount)
-            .nextUrl(createNextUrl(id, result.pageToken));
+            .totalRowCount(result.totalRowCount);
+    if (offset + pageSize < result.totalRowCount) {
+      response.nextUrl(createNextUrl(id, offset + pageSize, pageSize));
+    }
     return ResponseEntity.ok(response);
   }
 
-  private ResponseEntity<QueryResponseData> sendQuery(
-      @Valid String querySql, @Valid Integer limit, boolean dryRun) {
-    var response = new QueryResponseData().querySql(querySql);
+  private ResponseEntity<QueryCreatedData> sendQuery(
+      String querySql, Integer limit, boolean dryRun) {
+    var response = new QueryCreatedData().querySql(querySql);
     if (!dryRun) {
-      var result = queryService.startQuery(querySql, limit);
-      response
-          .result(result.items)
-          .totalRowCount(result.totalRowCount)
-          .nextUrl(createNextUrl(result.jobId, result.pageToken));
+      response.queryId(queryService.startQuery(querySql, limit));
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<QueryResponseData> bulkData(String version, @Valid Integer limit) {
+  public ResponseEntity<QueryCreatedData> bulkData(String version, @Valid Integer limit) {
     String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
     return sendQuery(querySql, limit, false);
   }
 
   @Override
-  public ResponseEntity<QueryResponseData> sqlQuery(
-      String version, @Valid String querySql, @Valid Integer limit) {
+  public ResponseEntity<QueryCreatedData> sqlQuery(String version, @Valid String querySql, @Valid Integer limit) {
     return sendQuery(querySql, limit, false);
   }
 
   @Override
-  public ResponseEntity<QueryResponseData> booleanQuery(
-      String version, @Valid Query body, @Valid Integer limit, @Valid Boolean dryRun) {
+  public ResponseEntity<QueryCreatedData> booleanQuery(String version, @Valid Query body, @Valid Integer limit, @Valid Boolean dryRun) {
 
     String querySql =
         QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);
