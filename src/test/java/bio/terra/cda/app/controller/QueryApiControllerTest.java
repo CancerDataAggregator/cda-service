@@ -1,5 +1,18 @@
 package bio.terra.cda.app.controller;
 
+import bio.terra.cda.app.service.QueryService;
+import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.generated.model.QueryCreatedData;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -10,19 +23,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import bio.terra.cda.app.service.QueryService;
-import bio.terra.cda.generated.model.Query;
-import bio.terra.cda.generated.model.QueryResponseData;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 @Tag("unit")
 @SpringBootTest(properties = "cda.bqTable=TABLE")
@@ -45,7 +45,7 @@ class QueryApiControllerTest {
             .contentType(MediaType.APPLICATION_JSON);
     var result = mvc.perform(post).andExpect(status().isOk()).andReturn();
     var response =
-        objectMapper.readValue(result.getResponse().getContentAsString(), QueryResponseData.class);
+        objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
     assertThat(response.getQuerySql(), equalTo(expected));
   }
 
