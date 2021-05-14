@@ -175,18 +175,21 @@ components:
       name: offset
       schema:
         type: integer
+        default: 0
       description: The number of entries to skip
     ResultLimit:
       in: query
       name: limit
       schema:
         type: integer
-      description: The total numbers of entries to return for a query
+        format: int64
+      description: The total numbers of entries to return for a query. If ommitted, all entries are returned
     PageSize:
       in: query
       name: pageSize
       schema:
         type: integer
+        default: 100
       description: The numbers of entries to return per page of data
     QueryId:
       in: path

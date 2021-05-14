@@ -89,7 +89,7 @@ public class QueryService {
     }
   }
 
-  public QueryResult getQueryResults(String queryId, Integer offset, Integer pageSize) {
+  public QueryResult getQueryResults(String queryId, int offset, int pageSize) {
     final Job job = bigQuery.getJob(queryId);
     if (job != null && job.exists()) {
       return getJobResults(job, offset, pageSize);
@@ -107,20 +107,16 @@ public class QueryService {
     }
   }
 
-  private QueryResult getJobResults(Job queryJob, Integer offset, Integer pageSize) {
+  private QueryResult getJobResults(Job queryJob, int offset, int pageSize) {
     var options = new ArrayList<BigQuery.QueryResultsOption>();
-    if (offset != null) {
-      if (offset < 0) {
-        throw new RuntimeException("Invalid offset: " + offset);
-      }
-      options.add(BigQuery.QueryResultsOption.startIndex(offset));
+    if (offset < 0) {
+      throw new RuntimeException("Invalid offset: " + offset);
     }
-    if (pageSize != null) {
-      if (pageSize < 1) {
-        throw new RuntimeException("Invalid page size: " + pageSize);
-      }
-      options.add(BigQuery.QueryResultsOption.pageSize(pageSize));
+    options.add(BigQuery.QueryResultsOption.startIndex(offset));
+    if (pageSize < 1) {
+      throw new RuntimeException("Invalid page size: " + pageSize);
     }
+    options.add(BigQuery.QueryResultsOption.pageSize(pageSize));
     try {
       // Get the results.
       TableResult result =
@@ -135,7 +131,7 @@ public class QueryService {
             valueToJson(
                 FieldValue.of(FieldValue.Attribute.RECORD, row),
                 Field.of("root", LegacySQLTypeName.RECORD, fields)));
-        if (pageSize != null && ++rowCount == pageSize) {
+        if (++rowCount == pageSize) {
           break;
         }
       }
@@ -206,10 +202,10 @@ public class QueryService {
     }
   }
 
-  public String startQuery(String query, Integer limit) {
+  public String startQuery(String query, Long limit) {
     var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
     if (limit != null) {
-      queryConfig.setMaxResults((long) limit);
+      queryConfig.setMaxResults(limit);
     }
 
     // Create a job ID so that we can safely retry.

@@ -20,6 +20,9 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class QueryApiController implements QueryApi {
 
+  public static final int DEFAULT_PAGE_SIZE = 100;
+  public static final int DEFAULT_OFFSET = 100;
+
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
   private final HttpServletRequest webRequest;
@@ -34,7 +37,7 @@ public class QueryApiController implements QueryApi {
     this.webRequest = webRequest;
   }
 
-  private String createNextUrl(String jobId, Integer offset, Integer pageSize) {
+  private String createNextUrl(String jobId, int offset, int pageSize) {
     var path = String.format("/api/v1/query/%s?offset=%s&pageSize=%s", jobId, offset, pageSize);
 
     URL baseUrl;
@@ -49,20 +52,23 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer pageSize) {
+  public ResponseEntity<QueryResponseData> query(
+      String id, Integer boxedOffset, Integer boxedPageSize) {
+    int offset = boxedOffset != null ? boxedOffset : DEFAULT_OFFSET;
+    int pageSize = boxedPageSize != null ? boxedPageSize : DEFAULT_PAGE_SIZE;
     var result = queryService.getQueryResults(id, offset, pageSize);
     var response =
         new QueryResponseData()
             .result(new ArrayList<>(result.items))
             .totalRowCount(result.totalRowCount);
-    if (offset + pageSize < result.totalRowCount) {
-      response.nextUrl(createNextUrl(id, offset + pageSize, pageSize));
+    int nextPage = result.items.size() + pageSize;
+    if (nextPage < result.totalRowCount) {
+      response.nextUrl(createNextUrl(id, nextPage, pageSize));
     }
     return ResponseEntity.ok(response);
   }
 
-  private ResponseEntity<QueryCreatedData> sendQuery(
-      String querySql, Integer limit, boolean dryRun) {
+  private ResponseEntity<QueryCreatedData> sendQuery(String querySql, Long limit, boolean dryRun) {
     var response = new QueryCreatedData().querySql(querySql);
     if (!dryRun) {
       response.queryId(queryService.startQuery(querySql, limit));
@@ -71,20 +77,20 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> bulkData(String version, @Valid Integer limit) {
+  public ResponseEntity<QueryCreatedData> bulkData(String version, @Valid Long limit) {
     String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
     return sendQuery(querySql, limit, false);
   }
 
   @Override
   public ResponseEntity<QueryCreatedData> sqlQuery(
-      String version, @Valid String querySql, @Valid Integer limit) {
+      String version, @Valid String querySql, @Valid Long limit) {
     return sendQuery(querySql, limit, false);
   }
 
   @Override
   public ResponseEntity<QueryCreatedData> booleanQuery(
-      String version, @Valid Query body, @Valid Integer limit, @Valid Boolean dryRun) {
+      String version, @Valid Query body, @Valid Long limit, @Valid Boolean dryRun) {
 
     String querySql =
         QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);
