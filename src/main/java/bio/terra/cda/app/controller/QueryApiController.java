@@ -7,9 +7,7 @@ import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
-
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import javax.servlet.http.HttpServletRequest;
@@ -79,12 +77,14 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> sqlQuery(String version, @Valid String querySql, @Valid Integer limit) {
+  public ResponseEntity<QueryCreatedData> sqlQuery(
+      String version, @Valid String querySql, @Valid Integer limit) {
     return sendQuery(querySql, limit, false);
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> booleanQuery(String version, @Valid Query body, @Valid Integer limit, @Valid Boolean dryRun) {
+  public ResponseEntity<QueryCreatedData> booleanQuery(
+      String version, @Valid Query body, @Valid Integer limit, @Valid Boolean dryRun) {
 
     String querySql =
         QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);

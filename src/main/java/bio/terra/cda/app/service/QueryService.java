@@ -1,6 +1,5 @@
 package bio.terra.cda.app.service;
 
-import bio.terra.cda.app.service.exception.BadQueryException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,25 +22,22 @@ import com.google.cloud.bigquery.TableResult;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Nonnull;
 
 @Component
 public class QueryService {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-  final BigQuery bigQuery = BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
+  final BigQuery bigQuery =
+      BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
 
   private final ObjectMapper objectMapper;
 
@@ -92,6 +88,7 @@ public class QueryService {
         throw new RuntimeException("Unknown field value type: " + value.getAttribute());
     }
   }
+
   public QueryResult getQueryResults(String queryId, Integer offset, Integer pageSize) {
     final Job job = bigQuery.getJob(queryId);
     if (job != null && job.exists()) {
@@ -126,7 +123,8 @@ public class QueryService {
     }
     try {
       // Get the results.
-      TableResult result = queryJob.getQueryResults(options.toArray(new BigQuery.QueryResultsOption[0]));
+      TableResult result =
+          queryJob.getQueryResults(options.toArray(new BigQuery.QueryResultsOption[0]));
       FieldList fields = result.getSchema().getFields();
 
       List<JsonNode> jsonData = new ArrayList<>();
@@ -134,9 +132,9 @@ public class QueryService {
       int rowCount = 0;
       for (FieldValueList row : result.iterateAll()) {
         jsonData.add(
-                valueToJson(
-                        FieldValue.of(FieldValue.Attribute.RECORD, row),
-                        Field.of("root", LegacySQLTypeName.RECORD, fields)));
+            valueToJson(
+                FieldValue.of(FieldValue.Attribute.RECORD, row),
+                Field.of("root", LegacySQLTypeName.RECORD, fields)));
         if (pageSize != null && ++rowCount == pageSize) {
           break;
         }
@@ -196,7 +194,9 @@ public class QueryService {
     // Log usage data for this response.
     final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
     try {
-      var elapsed = (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime()) / 1000.0F;
+      var elapsed =
+          (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime())
+              / 1000.0F;
       String query = "";
       var queryConfig = (QueryJobConfiguration) queryJob.getConfiguration();
       var logData = new QueryData(queryConfig.getQuery(), elapsed, resultsCount);
