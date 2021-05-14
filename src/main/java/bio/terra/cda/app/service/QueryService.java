@@ -198,13 +198,13 @@ public class QueryService {
   private void logQuery(Job queryJob, List<JsonNode> jsonData) {
     // Log usage data for this response.
     final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
+    var elapsed =
+        (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime()) / 1000.0F;
+    // This cast is safe because we've called getQueryResults() and that would throw if this job
+    // wasn't a query.
+    var queryConfig = (QueryJobConfiguration) queryJob.getConfiguration();
+    var logData = new QueryData(queryConfig.getQuery(), elapsed, resultsCount);
     try {
-      var elapsed =
-          (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime())
-              / 1000.0F;
-      String query = "";
-      var queryConfig = (QueryJobConfiguration) queryJob.getConfiguration();
-      var logData = new QueryData(queryConfig.getQuery(), elapsed, resultsCount);
       logger.info(objectMapper.writeValueAsString(logData));
     } catch (JsonProcessingException e) {
       logger.warn("Error converting object to JSON", e);
