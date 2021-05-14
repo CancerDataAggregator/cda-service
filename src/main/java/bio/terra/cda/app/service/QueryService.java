@@ -22,6 +22,7 @@ import com.google.cloud.bigquery.TableResult;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -91,17 +92,21 @@ public class QueryService {
 
   public QueryResult getQueryResults(String queryId, int offset, int pageSize) {
     final Job job = bigQuery.getJob(queryId);
-    if (job != null && job.exists()) {
-      return getJobResults(job, offset, pageSize);
+    if (job == null || !job.exists()) {
+      throw new RuntimeException("Unknown query " + queryId);
     }
-    return null;
+    if (!job.isDone()) {
+      // If the Query is still running, return an empty result.
+      return new QueryResult(Collections.emptyList(), null);
+    }
+    return getJobResults(job, offset, pageSize);
   }
 
   public static class QueryResult {
     public final List<Object> items;
-    public final long totalRowCount;
+    public final Long totalRowCount;
 
-    QueryResult(List<JsonNode> items, long totalRowCount) {
+    QueryResult(List<JsonNode> items, Long totalRowCount) {
       this.items = new ArrayList<>(items);
       this.totalRowCount = totalRowCount;
     }
@@ -131,6 +136,10 @@ public class QueryService {
             valueToJson(
                 FieldValue.of(FieldValue.Attribute.RECORD, row),
                 Field.of("root", LegacySQLTypeName.RECORD, fields)));
+
+        // This check is required because pageSize is the number of rows BQ retrieves at a time,
+        // not the total number of rows returned by iterateAll(). Without this check, this loop
+        // would return all rows in the result table.
         if (++rowCount == pageSize) {
           break;
         }

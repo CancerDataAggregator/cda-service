@@ -40,10 +40,8 @@ public class QueryApiController implements QueryApi {
   private String createNextUrl(String jobId, int offset, int pageSize) {
     var path = String.format("/api/v1/query/%s?offset=%s&pageSize=%s", jobId, offset, pageSize);
 
-    URL baseUrl;
-
     try {
-      baseUrl = new URL(webRequest.getHeader("referer"));
+      URL baseUrl = new URL(webRequest.getHeader("referer"));
       return new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPort(), path).toString();
     } catch (MalformedURLException e) {
       // Not sure what a good fallback would be here.
@@ -62,7 +60,7 @@ public class QueryApiController implements QueryApi {
             .result(new ArrayList<>(result.items))
             .totalRowCount(result.totalRowCount);
     int nextPage = result.items.size() + pageSize;
-    if (nextPage < result.totalRowCount) {
+    if (result.totalRowCount == null || nextPage < result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, pageSize));
     }
     return ResponseEntity.ok(response);
