@@ -155,6 +155,29 @@ paths:
         200:
           $ref: '#/components/responses/QueryResponse'
 
+  /api/v1/unique-values/{version}:
+    post:
+      summary: Returns all distinct values
+      description: Return distinct values given a qualified TABLE.columnName
+      operationId: uniqueValues
+      tags:
+        - query
+
+      parameters:
+        - $ref: '#/components/parameters/DatasetVersion'
+        - $ref: '#/components/parameters/ResultLimit'
+
+      requestBody:
+        description: TABLE.column_name of table value being requested
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+
+      responses:
+        200:
+          $ref: '#/components/responses/QueryResponse'
 
 components:
 

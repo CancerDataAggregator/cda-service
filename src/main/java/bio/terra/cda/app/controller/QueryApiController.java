@@ -2,6 +2,7 @@ package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.QueryService;
+import bio.terra.cda.app.util.CDAUtils;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.Query;
@@ -11,7 +12,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+import java.util.Objects;
 import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +24,7 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class QueryApiController implements QueryApi {
+  private static final Logger logger = LoggerFactory.getLogger(QueryApiController.class);
 
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
@@ -88,5 +94,24 @@ public class QueryApiController implements QueryApi {
         QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);
 
     return sendQuery(querySql, dryRun);
+  }
+
+  @Override
+  public ResponseEntity<QueryResponseData> uniqueValues(
+      String version, @Valid String body, @Valid Integer limit) {
+
+    String bqTable = "gdc-bq-sample";
+    Map<String, String> tableParts = CDAUtils.parseTableName(body);
+    // SELECT * FROM UNNEST (SELECT DISTINCT p.column FROM qualifiedTABLE as p);
+    String querySql =
+        "SELECT DISTINCT p."
+            + tableParts.get("columnName")
+            + " FROM "
+            + bqTable
+            + "."
+            + tableParts.get("tableName")
+            + " AS p";
+    logger.info("uniqueValues: " + querySql);
+    return sqlQuery(version, querySql, 0, limit);
   }
 }
