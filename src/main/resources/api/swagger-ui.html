@@ -29,40 +29,22 @@
 
   <body>
     <div id="swagger-ui"></div>
-
     <script src="swagger-webjar/swagger-ui-bundle.js"></script>
     <script src="swagger-webjar/swagger-ui-standalone-preset.js"></script>
     <script>
-      function selectCurrentUrl() {
-        let currentServer = window.location.host.toLowerCase();
-        let selectOptions = document.querySelector('.servers select').options;
-        /**
-         * Creates a array for HTMlCollection items computable with ie 11 it polyfill for Array.from ES6
-         * */
-        function HTMLCollectionToArrayforIE(htmlCollection) {
-          return [].slice.call(htmlCollection);
-        }
-        /**
-         * This loops over select options and matches url to current url
-         * */
-        HTMLCollectionToArrayforIE(selectOptions).forEach((option, index) => {
-          if (currentServer === option.value.replace(/^https?:\/\//, '')) {
-            selectOptions[index].selected = 'selected';
-          }
-        });
-      }
       window.onload = function () {
         // Begin Swagger UI call region
+        let yamlFile =
+          window.location.host.toLowerCase().indexOf('localhost', 0) !== -1
+            ? 'dev_openapi.yaml'
+            : 'service_openapi.yaml';
         const ui = SwaggerUIBundle({
-          url: 'service_openapi.yaml',
+          url: yamlFile,
           dom_id: '#swagger-ui',
           deepLinking: true,
           presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
           plugins: [SwaggerUIBundle.plugins.DownloadUrl],
           layout: 'StandaloneLayout',
-          onComplete: function () {
-            selectCurrentUrl();
-          },
         });
         // End Swagger UI call region
 
