@@ -8,7 +8,7 @@ info:
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
 
 servers:
-  - url: https://cda.cda-dev.broadinstitute.org
+  - url: http://localhost:8080
 
 tags:
   - name: query
