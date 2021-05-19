@@ -183,13 +183,14 @@ components:
       schema:
         type: integer
         format: int64
+        nullable: true
       description: The total numbers of entries to return for a query. If ommitted, all entries are returned
     PageSize:
       in: query
-      name: pageSize
+      name: page_size
       schema:
         type: integer
-        default: 100
+        default: 1000
       description: The numbers of entries to return per page of data
     QueryId:
       in: path
@@ -255,11 +256,18 @@ components:
           type: array
           items:
             type: object
+        query_sql:
+          type: string
+          description: the generated BigQuery SQL
         total_row_count:
           type: integer
           format: int64
+          nullable: true
+          description: the total number of rows in the query. can be null if the query is not complete
         next_url:
           type: string
+          nullable: true
+          description: a URL to use to fetch the next page of data in the query. can be null if the query is not complete
 
     DatasetDescription:
       type: object

@@ -9,7 +9,6 @@ import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -21,7 +20,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class QueryApiController implements QueryApi {
 
-  public static final int DEFAULT_PAGE_SIZE = 100;
+  public static final int DEFAULT_PAGE_SIZE = 1000;
   public static final int DEFAULT_OFFSET = 0;
 
   private final QueryService queryService;
@@ -59,7 +58,8 @@ public class QueryApiController implements QueryApi {
     var response =
         new QueryResponseData()
             .result(Collections.unmodifiableList(result.items))
-            .totalRowCount(result.totalRowCount);
+            .totalRowCount(result.totalRowCount)
+            .querySql(result.querySql);
     int nextPage = result.items.size() + pageSize;
     if (result.totalRowCount == null || nextPage < result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, pageSize));

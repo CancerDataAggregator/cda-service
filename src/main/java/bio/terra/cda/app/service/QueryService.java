@@ -97,7 +97,7 @@ public class QueryService {
     }
     if (!job.isDone()) {
       // If the Query is still running, return an empty result.
-      return new QueryResult(Collections.emptyList(), null);
+      return new QueryResult(Collections.emptyList(), null, getSqlFromJob(job));
     }
     return getJobResults(job, offset, pageSize);
   }
@@ -105,10 +105,12 @@ public class QueryService {
   public static class QueryResult {
     public final List<Object> items;
     public final Long totalRowCount;
+    public final String querySql;
 
-    QueryResult(List<JsonNode> items, Long totalRowCount) {
+    QueryResult(List<JsonNode> items, Long totalRowCount, String querySql) {
       this.items = new ArrayList<>(items);
       this.totalRowCount = totalRowCount;
+      this.querySql = querySql;
     }
   }
 
@@ -147,7 +149,7 @@ public class QueryService {
 
       logQuery(queryJob, jsonData);
 
-      return new QueryResult(jsonData, result.getTotalRows());
+      return new QueryResult(jsonData, result.getTotalRows(), getSqlFromJob(queryJob));
     } catch (InterruptedException e) {
       throw new RuntimeException("Error while getting query results", e);
     }
@@ -195,15 +197,20 @@ public class QueryService {
     return resultsCount;
   }
 
+  private static String getSqlFromJob(Job queryJob) {
+    // This cast is safe because it's only done on queries that have been generated using startQuery() below.
+    return ((QueryJobConfiguration) queryJob.getConfiguration()).getQuery();
+  }
+
   private void logQuery(Job queryJob, List<JsonNode> jsonData) {
     // Log usage data for this response.
     final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
-    var elapsed =
-        (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime()) / 1000.0F;
-    // This cast is safe because we've called getQueryResults() and that would throw if this job
-    // wasn't a query.
-    var queryConfig = (QueryJobConfiguration) queryJob.getConfiguration();
-    var logData = new QueryData(queryConfig.getQuery(), elapsed, resultsCount);
+    float elapsed = 0;
+    // In some cases endTime is null, even though startTime and creationTime are non-null and the job is complete.
+    if (queryJob.getStatistics().getEndTime() != null && queryJob.getStatistics().getStartTime() != null) {
+      elapsed = (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime()) / 1000.0F;
+    }
+    var logData = new QueryData(getSqlFromJob(queryJob), elapsed, resultsCount);
     try {
       logger.info(objectMapper.writeValueAsString(logData));
     } catch (JsonProcessingException e) {
