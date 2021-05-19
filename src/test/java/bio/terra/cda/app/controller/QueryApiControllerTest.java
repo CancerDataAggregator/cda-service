@@ -2,7 +2,6 @@ package bio.terra.cda.app.controller;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
@@ -37,7 +36,7 @@ class QueryApiControllerTest {
 
   private void callQueryApi(boolean dryRun) throws Exception {
     var query = new Query().nodeType(Query.NodeTypeEnum.COLUMN).value("test");
-    var expected = "SELECT p.* FROM TABLE.v0 AS p WHERE v0.test";
+    var expected = "SELECT v0.* FROM TABLE.v0 AS v0 WHERE v0.test";
 
     var post =
         post("/api/v1/boolean-query/v0?dryRun={dryRun}", dryRun)
@@ -52,10 +51,10 @@ class QueryApiControllerTest {
   @Test
   void booleanQueryDryRun() throws Exception {
     callQueryApi(true);
-    verify(queryService, never()).startQuery(anyString(), any());
+    verify(queryService, never()).startQuery(anyString());
 
     reset(queryService);
     callQueryApi(false);
-    verify(queryService, only()).startQuery(anyString(), any());
+    verify(queryService, only()).startQuery(anyString());
   }
 }

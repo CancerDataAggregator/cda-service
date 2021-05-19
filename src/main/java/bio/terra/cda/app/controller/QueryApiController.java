@@ -47,48 +47,46 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryResponseData> query(
-      String id, Integer offset, Integer pageSize) {
-    var result = queryService.getQueryResults(id, offset, pageSize);
+  public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
+    var result = queryService.getQueryResults(id, offset, limit);
     var response =
         new QueryResponseData()
             .result(Collections.unmodifiableList(result.items))
             .totalRowCount(result.totalRowCount)
             .querySql(result.querySql);
-    int nextPage = result.items.size() + pageSize;
-    if (result.totalRowCount == null || nextPage < result.totalRowCount) {
-      response.nextUrl(createNextUrl(id, nextPage, pageSize));
+    int nextPage = result.items.size() + limit;
+    if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
+      response.nextUrl(createNextUrl(id, nextPage, limit));
     }
     return ResponseEntity.ok(response);
   }
 
-  private ResponseEntity<QueryCreatedData> sendQuery(String querySql, Long limit, boolean dryRun) {
+  private ResponseEntity<QueryCreatedData> sendQuery(String querySql, boolean dryRun) {
     var response = new QueryCreatedData().querySql(querySql);
     if (!dryRun) {
-      response.queryId(queryService.startQuery(querySql, limit));
+      response.queryId(queryService.startQuery(querySql));
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> bulkData(String version, @Valid Long limit) {
+  public ResponseEntity<QueryCreatedData> bulkData(String version) {
     String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
-    return sendQuery(querySql, limit, false);
+    return sendQuery(querySql, false);
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> sqlQuery(
-      String version, @Valid String querySql, @Valid Long limit) {
-    return sendQuery(querySql, limit, false);
+  public ResponseEntity<QueryCreatedData> sqlQuery(String version, @Valid String querySql) {
+    return sendQuery(querySql, false);
   }
 
   @Override
   public ResponseEntity<QueryCreatedData> booleanQuery(
-      String version, @Valid Query body, @Valid Long limit, @Valid Boolean dryRun) {
+      String version, @Valid Query body, @Valid Boolean dryRun) {
 
     String querySql =
         QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);
 
-    return sendQuery(querySql, limit, dryRun);
+    return sendQuery(querySql, dryRun);
   }
 }

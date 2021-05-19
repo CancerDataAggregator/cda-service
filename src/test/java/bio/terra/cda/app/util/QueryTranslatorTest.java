@@ -24,7 +24,8 @@ class QueryTranslatorTest {
 
     String expectedSql =
         String.format(
-            "SELECT %2$s.* FROM %1$s AS %2$s WHERE (%2$s.project_id = 'TCGA-OV')", QUALIFIED_TABLE, TABLE);
+            "SELECT %2$s.* FROM %1$s AS %2$s WHERE (%2$s.project_id = 'TCGA-OV')",
+            QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
     String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
@@ -91,7 +92,8 @@ class QueryTranslatorTest {
 
     String expectedSql =
         String.format(
-            "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(A) AS _A WHERE (NOT (1 = _A.B))", QUALIFIED_TABLE, TABLE);
+            "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(A) AS _A WHERE (NOT (1 = _A.B))",
+            QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
     String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);

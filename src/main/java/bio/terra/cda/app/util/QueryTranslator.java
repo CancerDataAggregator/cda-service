@@ -43,7 +43,8 @@ public class QueryTranslator {
         return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
       }
       var fromClause =
-          Stream.concat(Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
+          Stream.concat(
+                  Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
               .collect(Collectors.joining(", "));
 
       var condition = queryString(query);

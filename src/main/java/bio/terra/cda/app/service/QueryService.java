@@ -198,7 +198,8 @@ public class QueryService {
   }
 
   private static String getSqlFromJob(Job queryJob) {
-    // This cast is safe because it's only done on queries that have been generated using startQuery() below.
+    // This cast is safe because it's only done on queries that have been generated using
+    // startQuery() below.
     return ((QueryJobConfiguration) queryJob.getConfiguration()).getQuery();
   }
 
@@ -206,9 +207,13 @@ public class QueryService {
     // Log usage data for this response.
     final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
     float elapsed = 0;
-    // In some cases endTime is null, even though startTime and creationTime are non-null and the job is complete.
-    if (queryJob.getStatistics().getEndTime() != null && queryJob.getStatistics().getStartTime() != null) {
-      elapsed = (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime()) / 1000.0F;
+    // In some cases endTime is null, even though startTime and creationTime are non-null and the
+    // job is complete.
+    if (queryJob.getStatistics().getEndTime() != null
+        && queryJob.getStatistics().getStartTime() != null) {
+      elapsed =
+          (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime())
+              / 1000.0F;
     }
     var logData = new QueryData(getSqlFromJob(queryJob), elapsed, resultsCount);
     try {
@@ -218,11 +223,8 @@ public class QueryService {
     }
   }
 
-  public String startQuery(String query, Long limit) {
+  public String startQuery(String query) {
     var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
-    if (limit != null) {
-      queryConfig.setMaxResults(limit);
-    }
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
