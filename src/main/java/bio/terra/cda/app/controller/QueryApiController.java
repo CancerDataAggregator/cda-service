@@ -76,7 +76,7 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> sqlQuery(String version, @Valid String querySql) {
+  public ResponseEntity<QueryCreatedData> sqlQuery(String version, String querySql) {
     return sendQuery(querySql, false);
   }
 
