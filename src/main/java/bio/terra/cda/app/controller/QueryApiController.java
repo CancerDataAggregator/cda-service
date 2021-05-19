@@ -20,9 +20,6 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class QueryApiController implements QueryApi {
 
-  public static final int DEFAULT_PAGE_SIZE = 1000;
-  public static final int DEFAULT_OFFSET = 0;
-
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
   private final HttpServletRequest webRequest;
@@ -51,9 +48,7 @@ public class QueryApiController implements QueryApi {
 
   @Override
   public ResponseEntity<QueryResponseData> query(
-      String id, Integer boxedOffset, Integer boxedPageSize) {
-    int offset = boxedOffset != null ? boxedOffset : DEFAULT_OFFSET;
-    int pageSize = boxedPageSize != null ? boxedPageSize : DEFAULT_PAGE_SIZE;
+      String id, Integer offset, Integer pageSize) {
     var result = queryService.getQueryResults(id, offset, pageSize);
     var response =
         new QueryResponseData()
