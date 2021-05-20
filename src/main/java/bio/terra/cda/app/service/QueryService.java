@@ -1,6 +1,5 @@
 package bio.terra.cda.app.service;
 
-import bio.terra.cda.app.service.exception.BadQueryException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,11 +22,11 @@ import com.google.cloud.bigquery.TableResult;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,33 +37,14 @@ public class QueryService {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-  final BigQuery bigQuery = BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
+  final BigQuery bigQuery =
+      BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
 
   private final ObjectMapper objectMapper;
 
   @Autowired
   public QueryService(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
-  }
-
-  private Job runJob(Job queryJob) {
-    try {
-      // Wait for the query to complete.
-      queryJob = queryJob.waitFor();
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Error while polling for job completion", e);
-    }
-
-    // Check for errors
-    if (queryJob == null) {
-      throw new RuntimeException("Job no longer exists");
-    }
-    if (queryJob.getStatus().getError() != null) {
-      // You can also look at queryJob.getStatus().getExecutionErrors() for all
-      // errors, not just the latest one.
-      throw new RuntimeException(String.valueOf(queryJob.getStatus().getError()));
-    }
-    return queryJob;
   }
 
   /**
@@ -110,23 +90,66 @@ public class QueryService {
     }
   }
 
-  private List<JsonNode> getJobResults(Job queryJob) {
+  public QueryResult getQueryResults(String queryId, int offset, int pageSize) {
+    final Job job = bigQuery.getJob(queryId);
+    if (job == null || !job.exists()) {
+      throw new RuntimeException("Unknown query " + queryId);
+    }
+    if (!job.isDone()) {
+      // If the Query is still running, return an empty result.
+      return new QueryResult(Collections.emptyList(), null, getSqlFromJob(job));
+    }
+    return getJobResults(job, offset, pageSize);
+  }
+
+  public static class QueryResult {
+    public final List<Object> items;
+    public final Long totalRowCount;
+    public final String querySql;
+
+    QueryResult(List<JsonNode> items, Long totalRowCount, String querySql) {
+      this.items = new ArrayList<>(items);
+      this.totalRowCount = totalRowCount;
+      this.querySql = querySql;
+    }
+  }
+
+  private QueryResult getJobResults(Job queryJob, int offset, int pageSize) {
+    var options = new ArrayList<BigQuery.QueryResultsOption>();
+    if (offset < 0) {
+      throw new RuntimeException("Invalid offset: " + offset);
+    }
+    options.add(BigQuery.QueryResultsOption.startIndex(offset));
+    if (pageSize < 1) {
+      throw new RuntimeException("Invalid page size: " + pageSize);
+    }
+    options.add(BigQuery.QueryResultsOption.pageSize(pageSize));
     try {
       // Get the results.
-      TableResult result = queryJob.getQueryResults();
+      TableResult result =
+          queryJob.getQueryResults(options.toArray(new BigQuery.QueryResultsOption[0]));
       FieldList fields = result.getSchema().getFields();
 
       List<JsonNode> jsonData = new ArrayList<>();
 
-      // Copy all row data to results. For each row, create a Json object using the result's schema.
+      int rowCount = 0;
       for (FieldValueList row : result.iterateAll()) {
         jsonData.add(
             valueToJson(
                 FieldValue.of(FieldValue.Attribute.RECORD, row),
                 Field.of("root", LegacySQLTypeName.RECORD, fields)));
+
+        // This check is required because pageSize is the number of rows BQ retrieves at a time,
+        // not the total number of rows returned by iterateAll(). Without this check, this loop
+        // would return all rows in the result table.
+        if (++rowCount == pageSize) {
+          break;
+        }
       }
 
-      return jsonData;
+      logQuery(queryJob, jsonData);
+
+      return new QueryResult(jsonData, result.getTotalRows(), getSqlFromJob(queryJob));
     } catch (InterruptedException e) {
       throw new RuntimeException("Error while getting query results", e);
     }
@@ -141,14 +164,6 @@ public class QueryService {
       this.query = query;
       this.duration = duration;
       this.systemUsage = systemUsage;
-    }
-  }
-
-  private static class Timer {
-    final long start = System.nanoTime();
-    /** @return the time since object creation in seconds */
-    float elapsed() {
-      return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) / 1000.0F;
     }
   }
 
@@ -182,29 +197,39 @@ public class QueryService {
     return resultsCount;
   }
 
-  public List<JsonNode> runQuery(String query) {
-    QueryJobConfiguration queryConfig =
-        QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).build();
+  private static String getSqlFromJob(Job queryJob) {
+    // This cast is safe because it's only done on queries that have been generated using
+    // startQuery() below.
+    return ((QueryJobConfiguration) queryJob.getConfiguration()).getQuery();
+  }
+
+  private void logQuery(Job queryJob, List<JsonNode> jsonData) {
+    // Log usage data for this response.
+    final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
+    float elapsed = 0;
+    // In some cases endTime is null, even though startTime and creationTime are non-null and the
+    // job is complete.
+    if (queryJob.getStatistics().getEndTime() != null
+        && queryJob.getStatistics().getStartTime() != null) {
+      elapsed =
+          (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime())
+              / 1000.0F;
+    }
+    var logData = new QueryData(getSqlFromJob(queryJob), elapsed, resultsCount);
+    try {
+      logger.info(objectMapper.writeValueAsString(logData));
+    } catch (JsonProcessingException e) {
+      logger.warn("Error converting object to JSON", e);
+    }
+  }
+
+  public String startQuery(String query) {
+    var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
+    Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
 
-    try {
-      Timer timer = new Timer();
-      Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
-      queryJob = runJob(queryJob);
-      var jobResults = getJobResults(queryJob);
-      var usageData = generateUsageData(jobResults);
-
-      try {
-        logger.info(
-            objectMapper.writeValueAsString(new QueryData(query, timer.elapsed(), usageData)));
-      } catch (JsonProcessingException e) {
-        logger.warn("Error converting object to JSON", e);
-      }
-      return jobResults;
-    } catch (Throwable t) {
-      throw new BadQueryException(String.format("Error calling BigQuery: '%s'", query), t);
-    }
+    return queryJob.getJobId().getJob();
   }
 }

@@ -18,7 +18,7 @@ plugins {
 
 group = 'bio.terra.cda'
 version = '0.0.13'
-sourceCompatibility = '1.11'
+sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
 	mavenCentral()
@@ -87,6 +87,9 @@ task buildPythonSdk(type: GenerateTask){
 	packageName = "cda_client"
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
+	configOptions = [
+			"packageVersion" : "1.1.0",
+	]
 }
 
 openApiValidate {
@@ -105,6 +108,10 @@ test {
 
 spotless {
 	java {
+		// Specify java source file tree to avoid scanning openapi generated code.
+		target project.fileTree(project.rootDir) {
+			include 'src/**/*.java'
+		}
 		googleJavaFormat()
 	}
 }

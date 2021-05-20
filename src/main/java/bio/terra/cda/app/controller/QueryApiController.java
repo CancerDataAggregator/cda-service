@@ -5,10 +5,12 @@ import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
-import java.util.ArrayList;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
-import java.util.Objects;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,58 +20,73 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class QueryApiController implements QueryApi {
 
-  public static final int DEFAULT_LIMIT = 100;
-  public static final int DEFAULT_OFFSET = 0;
-
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
+  private final HttpServletRequest webRequest;
 
   @Autowired
   public QueryApiController(
-      QueryService queryService, ApplicationConfiguration applicationConfiguration) {
+      QueryService queryService,
+      ApplicationConfiguration applicationConfiguration,
+      HttpServletRequest webRequest) {
     this.queryService = queryService;
     this.applicationConfiguration = applicationConfiguration;
+    this.webRequest = webRequest;
   }
 
-  private ResponseEntity<QueryResponseData> sendQuery(
-      @Valid String querySql, @Valid Integer offset, @Valid Integer limit, boolean dryRun) {
-    String queryStringWithPagination =
-        String.format(
-            "%s LIMIT %d OFFSET %d",
-            querySql,
-            Objects.requireNonNullElse(limit, DEFAULT_LIMIT),
-            Objects.requireNonNullElse(offset, DEFAULT_OFFSET));
+  private String createNextUrl(String jobId, int offset, int limit) {
+    var path = String.format("/api/v1/query/%s?offset=%s&limit=%s", jobId, offset, limit);
 
-    var result =
-        dryRun ? Collections.emptyList() : queryService.runQuery(queryStringWithPagination);
-    var response = new QueryResponseData().result(new ArrayList<>(result)).querySql(querySql);
+    try {
+      URL baseUrl = new URL(webRequest.getHeader("referer"));
+      return new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPort(), path).toString();
+    } catch (MalformedURLException e) {
+      // Not sure what a good fallback would be here.
+      return path;
+    }
+  }
+
+  @Override
+  public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
+    var result = queryService.getQueryResults(id, offset, limit);
+    var response =
+        new QueryResponseData()
+            .result(Collections.unmodifiableList(result.items))
+            .totalRowCount(result.totalRowCount)
+            .querySql(result.querySql);
+    int nextPage = result.items.size() + limit;
+    if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
+      response.nextUrl(createNextUrl(id, nextPage, limit));
+    }
+    return ResponseEntity.ok(response);
+  }
+
+  private ResponseEntity<QueryCreatedData> sendQuery(String querySql, boolean dryRun) {
+    var response = new QueryCreatedData().querySql(querySql);
+    if (!dryRun) {
+      response.queryId(queryService.startQuery(querySql));
+    }
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<QueryResponseData> bulkData(
-      String version, @Valid Integer offset, @Valid Integer limit) {
+  public ResponseEntity<QueryCreatedData> bulkData(String version) {
     String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
-    return sendQuery(querySql, offset, limit, false);
+    return sendQuery(querySql, false);
   }
 
   @Override
-  public ResponseEntity<QueryResponseData> sqlQuery(
-      String version, @Valid String querySql, @Valid Integer offset, @Valid Integer limit) {
-    return sendQuery(querySql, offset, limit, false);
+  public ResponseEntity<QueryCreatedData> sqlQuery(String version, String querySql) {
+    return sendQuery(querySql, false);
   }
 
   @Override
-  public ResponseEntity<QueryResponseData> booleanQuery(
-      String version,
-      @Valid Query body,
-      @Valid Integer offset,
-      @Valid Integer limit,
-      @Valid Boolean dryRun) {
+  public ResponseEntity<QueryCreatedData> booleanQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun) {
 
     String querySql =
         QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);
 
-    return sendQuery(querySql, offset, limit, dryRun);
+    return sendQuery(querySql, dryRun);
   }
 }

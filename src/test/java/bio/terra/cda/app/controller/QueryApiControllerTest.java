@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.generated.model.Query;
-import bio.terra.cda.generated.model.QueryResponseData;
+import bio.terra.cda.generated.model.QueryCreatedData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ class QueryApiControllerTest {
 
   private void callQueryApi(boolean dryRun) throws Exception {
     var query = new Query().nodeType(Query.NodeTypeEnum.COLUMN).value("test");
-    var expected = "SELECT p.* FROM TABLE.v0 AS p WHERE v0.test";
+    var expected = "SELECT v0.* FROM TABLE.v0 AS v0 WHERE v0.test";
 
     var post =
         post("/api/v1/boolean-query/v0?dryRun={dryRun}", dryRun)
@@ -44,17 +44,17 @@ class QueryApiControllerTest {
             .contentType(MediaType.APPLICATION_JSON);
     var result = mvc.perform(post).andExpect(status().isOk()).andReturn();
     var response =
-        objectMapper.readValue(result.getResponse().getContentAsString(), QueryResponseData.class);
+        objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
     assertThat(response.getQuerySql(), equalTo(expected));
   }
 
   @Test
   void booleanQueryDryRun() throws Exception {
     callQueryApi(true);
-    verify(queryService, never()).runQuery(anyString());
+    verify(queryService, never()).startQuery(anyString());
 
     reset(queryService);
     callQueryApi(false);
-    verify(queryService, only()).runQuery(anyString());
+    verify(queryService, only()).startQuery(anyString());
   }
 }

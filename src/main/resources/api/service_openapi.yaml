@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 1.0.1
+  version: 1.1.0
   title: CDA API
   license:
     name: Apache 2.0
@@ -75,12 +75,10 @@ paths:
         - query
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
-        - $ref: '#/components/parameters/ResultOffset'
-        - $ref: '#/components/parameters/ResultLimit'
 
       responses:
         200:
-          $ref: '#/components/responses/QueryResponse'
+          $ref: '#/components/responses/QueryCreated'
 
 
   /api/v1/boolean-query/{version}:
@@ -95,8 +93,6 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
-        - $ref: '#/components/parameters/ResultOffset'
-        - $ref: '#/components/parameters/ResultLimit'
         - in: query
           description: If true, don't run the query, only generate and return it.
           name: dryRun
@@ -114,7 +110,7 @@ paths:
                     
       responses:
         200:
-          $ref: '#/components/responses/QueryResponse'
+          $ref: '#/components/responses/QueryCreated'
 
 
   /api/v1/sql-query/{version}:
@@ -126,8 +122,6 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
-        - $ref: '#/components/parameters/ResultOffset'
-        - $ref: '#/components/parameters/ResultLimit'
 
       requestBody:
         description: BigQuery SQL to run on data table
@@ -137,6 +131,26 @@ paths:
             schema:
               type: string
                     
+      responses:
+        200:
+          $ref: '#/components/responses/QueryCreated'
+
+  /api/v1/query/{id}:
+    get:
+      summary: Given a query ID, return the a page of data from the query result.
+      description: |
+        Use this API to get the data back from a query. If there is more data present,
+        next_url will contain the link to use to get the rest of the data. If the current page of data
+        is not yet ready, the result will be empty, but next_url will be set.
+      operationId: query
+      tags:
+        - query
+
+      parameters:
+        - $ref: '#/components/parameters/QueryId'
+        - $ref: '#/components/parameters/ResultOffset'
+        - $ref: '#/components/parameters/ResultLimit'
+
       responses:
         200:
           $ref: '#/components/responses/QueryResponse'
@@ -158,13 +172,21 @@ components:
       name: offset
       schema:
         type: integer
+        default: 0
       description: The number of entries to skip
     ResultLimit:
       in: query
       name: limit
       schema:
         type: integer
-      description: The numbers of entries to return          
+      description: The numbers of entries to return per page of data
+    QueryId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: Query ID
 
 
   schemas:
@@ -199,19 +221,35 @@ components:
                 items:
                   type: string
 
+    QueryCreatedData:
+      type: object
+      properties:
+        query_id:
+          type: string
+          description: the created query ID
+        query_sql:
+          type: string
+          description: the generated BigQuery SQL
+
     QueryResponseData:
       type: object
       properties:
-        query_sql:
-          type: string
         result:
           type: array
           items:
             type: object
-        previous_url:
+        query_sql:
           type: string
+          description: the generated BigQuery SQL
+        total_row_count:
+          type: integer
+          format: int64
+          nullable: true
+          description: the total number of rows in the query. can be null if the query is not complete
         next_url:
           type: string
+          nullable: true
+          description: a URL to use to fetch the next page of data in the query. can be null if the query is not complete
 
     DatasetDescription:
       type: object
@@ -304,8 +342,15 @@ components:
           schema:
             $ref: '#/components/schemas/SystemStatus'
 
+    QueryCreated:
+      description: query created response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/QueryCreatedData'
+
     QueryResponse:
-      description: common query response
+      description: query data response
       content:
         application/json:
           schema:
