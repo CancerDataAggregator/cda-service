@@ -34,8 +34,8 @@ public class QueryApiController implements QueryApi {
     this.webRequest = webRequest;
   }
 
-  private String createNextUrl(String jobId, int offset, int pageSize) {
-    var path = String.format("/api/v1/query/%s?offset=%s&pageSize=%s", jobId, offset, pageSize);
+  private String createNextUrl(String jobId, int offset, int limit) {
+    var path = String.format("/api/v1/query/%s?offset=%s&limit=%s", jobId, offset, limit);
 
     try {
       URL baseUrl = new URL(webRequest.getHeader("referer"));
