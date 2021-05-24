@@ -20,9 +20,7 @@ public class QueryTranslator {
     return new SqlGenerator(table, query).generate();
   }
 
-  /**
-   *  Split the TABLE.ColumnName into component parts
-   */
+  /** Split the TABLE.ColumnName into component parts */
   public static Map<String, String> parseTableName(String qualifiedTable) {
     int dotPos = qualifiedTable.lastIndexOf('.');
     String table = qualifiedTable.substring(0, dotPos);

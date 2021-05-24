@@ -95,7 +95,7 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> uniqueValues(String version, @Valid String body) {
+  public ResponseEntity<QueryResponseData> uniqueValues(String version, @Valid String body) {
 
     String bqTable = "gdc-bq-sample";
     Map<String, String> tableParts = QueryTranslator.parseTableName(body);
@@ -109,6 +109,10 @@ public class QueryApiController implements QueryApi {
             + tableParts.get("tableName")
             + " AS p";
     logger.info("uniqueValues: " + querySql);
-    return sqlQuery(version, querySql);
+
+    ResponseEntity<QueryCreatedData> response = sendQuery(querySql, false);
+    var query_id = response.getBody().getQueryId();
+
+    return query(query_id, 0, 1000);
   }
 }

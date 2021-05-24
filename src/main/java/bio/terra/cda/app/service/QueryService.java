@@ -155,6 +155,11 @@ public class QueryService {
     }
   }
 
+  public boolean jobStatus(String jobId) {
+
+    return false;
+  }
+
   private static class QueryData {
     public final String query;
     public final float duration;
@@ -223,6 +228,10 @@ public class QueryService {
     }
   }
 
+  /**
+   * @param query
+   * @return
+   */
   public String startQuery(String query) {
     var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
 
@@ -232,4 +241,24 @@ public class QueryService {
 
     return queryJob.getJobId().getJob();
   }
+
+  /**
+   * Preserves the ability to run a synchronous Job where a simple return value is expected
+   *
+   * <p>public Job runSynchronousQuery(String sql) { QueryJobConfiguration queryConfig =
+   * QueryJobConfiguration.newBuilder(sql).setUseLegacySql(false).build();
+   *
+   * <p>// Create a job ID so that we can safely retry. JobId jobId =
+   * JobId.of(UUID.randomUUID().toString());
+   *
+   * <p>try { // Wait for the query to complete. Job queryJob =
+   * bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build()); queryJob =
+   * queryJob.waitFor(); } catch (InterruptedException e) { throw new RuntimeException("Error while
+   * polling for job completion", e); }
+   *
+   * <p>// Check for errors if (queryJob == null) { throw new RuntimeException("Job no longer
+   * exists"); } if (queryJob.getStatus().getError() != null) { // You can also look at
+   * queryJob.getStatus().getExecutionErrors() for all // errors, not just the latest one. throw new
+   * RuntimeException(String.valueOf(queryJob.getStatus().getError())); } return queryJob; }
+   */
 }

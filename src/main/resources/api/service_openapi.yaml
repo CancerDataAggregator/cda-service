@@ -176,7 +176,7 @@ paths:
 
       responses:
         200:
-          $ref: '#/components/responses/QueryCreated'
+          $ref: '#/components/responses/QueryResponse'
 
 components:
 
@@ -201,6 +201,7 @@ components:
       name: limit
       schema:
         type: integer
+        default: 1000
       description: The numbers of entries to return per page of data
     QueryId:
       in: path
