@@ -1,6 +1,7 @@
 package bio.terra.cda.app.util;
 
 import bio.terra.cda.generated.model.Query;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -17,6 +18,17 @@ public class QueryTranslator {
    */
   public static String sql(String table, Query query) {
     return new SqlGenerator(table, query).generate();
+  }
+
+  /**
+   *  Split the TABLE.ColumnName into component parts
+   */
+  public static Map<String, String> parseTableName(String qualifiedTable) {
+    int dotPos = qualifiedTable.lastIndexOf('.');
+    String table = qualifiedTable.substring(0, dotPos);
+    String column = qualifiedTable.substring(dotPos + 1);
+
+    return Map.of("columnName", qualifiedTable.substring(dotPos + 1), "tableName", table);
   }
 
   // A convenience class to avoid having to pass 'table' around to all the methods.
