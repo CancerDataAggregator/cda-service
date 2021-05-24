@@ -1,0 +1,25 @@
+{
+  "node_type": "SUBQUERY",
+  "l": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "ResearchSubject.identifier.system"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "GDC"
+    }
+  },
+  "r": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "ResearchSubject.identifier.system"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "PDC"
+    }
+  }
+}
