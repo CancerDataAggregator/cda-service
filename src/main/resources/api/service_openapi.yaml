@@ -157,15 +157,14 @@ paths:
 
   /api/v1/unique-values/{version}:
     post:
-      summary: Returns all distinct values
-      description: Return distinct values given a qualified TABLE.columnName
+      summary: Returns all unique values
+      description: Return unique values given a qualified columnName
       operationId: uniqueValues
       tags:
         - query
 
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
-        - $ref: '#/components/parameters/ResultLimit'
 
       requestBody:
         description: TABLE.column_name of table value being requested
@@ -177,7 +176,7 @@ paths:
 
       responses:
         200:
-          $ref: '#/components/responses/QueryResponse'
+          $ref: '#/components/responses/QueryCreated'
 
 components:
 
@@ -202,6 +201,7 @@ components:
       name: limit
       schema:
         type: integer
+        default: 1000
       description: The numbers of entries to return per page of data
     QueryId:
       in: path
