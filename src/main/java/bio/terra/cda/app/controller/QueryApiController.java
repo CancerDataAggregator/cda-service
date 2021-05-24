@@ -55,6 +55,7 @@ public class QueryApiController implements QueryApi {
     var result = queryService.getQueryResults(id, offset, limit);
     var response =
         new QueryResponseData()
+            .queryId(id)
             .result(Collections.unmodifiableList(result.items))
             .totalRowCount(result.totalRowCount)
             .querySql(result.querySql);
@@ -101,13 +102,12 @@ public class QueryApiController implements QueryApi {
     Map<String, String> tableParts = QueryTranslator.parseTableName(body);
     // SELECT * FROM UNNEST (SELECT DISTINCT p.column FROM qualifiedTABLE as p);
     String querySql =
-        "SELECT DISTINCT p."
+        "SELECT DISTINCT "
             + tableParts.get("columnName")
             + " FROM "
             + bqTable
             + "."
-            + tableParts.get("tableName")
-            + " AS p";
+            + tableParts.get("tableName");
     logger.info("uniqueValues: " + querySql);
 
     ResponseEntity<QueryCreatedData> response = sendQuery(querySql, false);

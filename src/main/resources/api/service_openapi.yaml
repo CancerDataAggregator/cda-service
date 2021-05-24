@@ -257,6 +257,9 @@ components:
     QueryResponseData:
       type: object
       properties:
+        query_id:
+          type: string
+          description: queryId of these results
         result:
           type: array
           items:
