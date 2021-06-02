@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class QueryTranslatorTest {
@@ -115,13 +114,5 @@ class QueryTranslatorTest {
     String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
 
     assertEquals(expectedSql, translatedQuery);
-  }
-
-  @Test
-  void parseColumnNameTest() throws Exception {
-    String tableColumn = "ICD_Coding.ICD_0_3_Coding.Site_recode";
-    Map<String, String> parts = QueryTranslator.parseTableName(tableColumn);
-    assertEquals(parts.get("tableName"), "ICD_Coding.ICD_0_3_Coding");
-    assertEquals(parts.get("columnName"), "Site_recode");
   }
 }
