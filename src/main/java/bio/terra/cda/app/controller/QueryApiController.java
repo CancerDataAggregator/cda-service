@@ -55,6 +55,7 @@ public class QueryApiController implements QueryApi {
     var result = queryService.getQueryResults(id, offset, limit);
     var response =
         new QueryResponseData()
+            .queryId(id)
             .result(Collections.unmodifiableList(result.items))
             .totalRowCount(result.totalRowCount)
             .querySql(result.querySql);
@@ -110,6 +111,5 @@ public class QueryApiController implements QueryApi {
     logger.debug("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);
-
   }
 }
