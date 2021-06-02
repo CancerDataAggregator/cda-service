@@ -155,11 +155,6 @@ public class QueryService {
     }
   }
 
-  public boolean jobStatus(String jobId) {
-
-    return false;
-  }
-
   private static class QueryData {
     public final String query;
     public final float duration;

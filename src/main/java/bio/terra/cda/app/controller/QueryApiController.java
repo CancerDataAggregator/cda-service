@@ -102,7 +102,7 @@ public class QueryApiController implements QueryApi {
    * UNNEST(_C.identifier) AS _D";
    */
   @Override
-  public ResponseEntity<QueryCreatedData> uniqueValues(String version, @Valid String body) {
+  public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body) {
 
     String table = applicationConfiguration.getBqTable() + "." + version;
     NestedColumn nt = new bio.terra.cda.app.model.NestedColumn(body);
