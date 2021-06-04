@@ -1,8 +1,8 @@
 package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
-import bio.terra.cda.app.model.NestedColumn;
 import bio.terra.cda.app.service.QueryService;
+import bio.terra.cda.app.util.NestedColumn;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.Query;
@@ -55,6 +55,7 @@ public class QueryApiController implements QueryApi {
     var result = queryService.getQueryResults(id, offset, limit);
     var response =
         new QueryResponseData()
+            .queryId(id)
             .result(Collections.unmodifiableList(result.items))
             .totalRowCount(result.totalRowCount)
             .querySql(result.querySql);
@@ -98,7 +99,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body) {
 
     String table = applicationConfiguration.getBqTable() + "." + version;
-    NestedColumn nt = new NestedColumn(body);
+    NestedColumn nt = new NestedColumn().generate(body);
     String querySql = "SELECT DISTINCT " + nt.getColumn() + " FROM " + table + nt.getUnnestClause();
     logger.debug("uniqueValues: " + querySql);
 
