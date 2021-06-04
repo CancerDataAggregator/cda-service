@@ -40,6 +40,7 @@ public class NestedColumn {
           return new NestedColumn(qualifiedColumnName, "");
         }
       }
+      // Case where a null or empty value is passed.
       throw new IllegalArgumentException("");
     }
   }
