@@ -25,17 +25,17 @@ public class NestedColumn {
      * AS _B, UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D
      */
     public NestedColumn generate(String qualifiedColumnName) throws IllegalArgumentException {
-      String unnestClause = null;
+      StringBuilder unnestClause = new StringBuilder("");
       String newColumn = null;
       if (qualifiedColumnName != null) {
         String[] c = qualifiedColumnName.split("\\.");
         if (c.length > 1) {
           newColumn = "_" + c[c.length - 2] + "." + c[c.length - 1];
-          unnestClause = ", UNNEST(" + c[0] + ") AS _" + c[0];
+          unnestClause.append(", UNNEST(" + c[0] + ") AS _" + c[0]);
           for (int n = 1; n < c.length - 1; n++) {
-            unnestClause += ", UNNEST(_" + c[n - 1] + "." + c[n] + ") AS _" + c[n];
+            unnestClause.append(", UNNEST(_" + c[n - 1] + "." + c[n] + ") AS _" + c[n]);
           }
-          return new NestedColumn(newColumn, unnestClause);
+          return new NestedColumn(newColumn, unnestClause.toString());
         } else if (c.length > 0) {
           return new NestedColumn(qualifiedColumnName, "");
         }
