@@ -3,36 +3,37 @@ package bio.terra.cda.app.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class NestedColumnTest {
 
-  @Test
-  public void testGeneratedUnnestClause() throws Exception {
-    String sample1 = "A.B.C";
-    String sample2 = "A.B";
-    String sample3 = "A";
+  private static Stream<Arguments> unnestData() {
+    return Stream.of(
+        Arguments.of("A.B.C", "_B.C", ", UNNEST(A) AS _A, UNNEST(_A.B) AS _B"),
+        Arguments.of("A.B", "_A.B", ", UNNEST(A) AS _A"),
+        Arguments.of("A", "A", ""),
+        Arguments.of("", "", ""));
+  }
 
-    NestedColumn result1 = new NestedColumn().generate(sample1);
-    assertEquals(result1.getColumn(), "_B.C");
-    assertEquals(result1.getUnnestClause(), ", UNNEST(A) AS _A, UNNEST(_A.B) AS _B");
-
-    NestedColumn result2 = new NestedColumn().generate(sample2);
-    assertEquals(result2.getColumn(), "_A.B");
-    assertEquals(result2.getUnnestClause(), ", UNNEST(A) AS _A");
-
-    NestedColumn result3 = new NestedColumn().generate(sample3);
-    assertEquals(result3.getColumn(), "A");
-    assertEquals(result3.getUnnestClause(), "");
+  @ParameterizedTest
+  @MethodSource("unnestData")
+  public void testGeneratedUnnestClause2(String qualifiedName, String column, String clause)
+      throws Exception {
+    NestedColumn result1 = NestedColumn.generate(qualifiedName);
+    assertEquals(column, result1.getColumn());
+    assertEquals(clause, result1.getUnnestClause());
   }
 
   @Test
   public void testIllegalArgCondition() throws Exception {
-    String sample4 = null;
     assertThrows(
         IllegalArgumentException.class,
         () -> {
-          new NestedColumn().generate(sample4);
+          NestedColumn.generate(null);
         });
   }
 }

@@ -11,8 +11,8 @@ public class NestedColumn {
     this.unnestClause = unnestClause;
   }
 
-  public NestedColumn generate(String qualifiedColumnName) {
-    return new Builder().generate(qualifiedColumnName);
+  public static NestedColumn generate(String qualifiedColumnName) {
+    return Builder.generate(qualifiedColumnName);
   }
 
   public static class Builder {
@@ -24,8 +24,9 @@ public class NestedColumn {
      * <p>A.B.C.D.column -> > SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(A) AS _A, UNNEST(_A.B)
      * AS _B, UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D
      */
-    public NestedColumn generate(String qualifiedColumnName) throws IllegalArgumentException {
-      StringBuilder unnestClause = new StringBuilder("");
+    public static NestedColumn generate(String qualifiedColumnName)
+        throws IllegalArgumentException {
+      StringBuilder unnestClause = new StringBuilder();
       String newColumn = null;
       if (qualifiedColumnName != null) {
         String[] c = qualifiedColumnName.split("\\.");
@@ -36,12 +37,12 @@ public class NestedColumn {
             unnestClause.append(", UNNEST(_" + c[n - 1] + "." + c[n] + ") AS _" + c[n]);
           }
           return new NestedColumn(newColumn, unnestClause.toString());
-        } else if (c.length > 0) {
+        } else if (c.length == 1) {
           return new NestedColumn(qualifiedColumnName, "");
         }
       }
       // Case where a null or empty value is passed.
-      throw new IllegalArgumentException("");
+      throw new IllegalArgumentException("Empty column name");
     }
   }
 

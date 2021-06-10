@@ -99,7 +99,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body) {
 
     String table = applicationConfiguration.getBqTable() + "." + version;
-    NestedColumn nt = new NestedColumn().generate(body);
+    NestedColumn nt = NestedColumn.generate(body);
     String querySql = "SELECT DISTINCT " + nt.getColumn() + " FROM " + table + nt.getUnnestClause();
     logger.debug("uniqueValues: " + querySql);
 
