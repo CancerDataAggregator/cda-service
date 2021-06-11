@@ -167,7 +167,7 @@ paths:
         - $ref: '#/components/parameters/DatasetVersion'
 
       requestBody:
-        description: TABLE.column_name of table value being requested
+        description: column_name of table value being requested
         required: true
         content:
           text/plain:

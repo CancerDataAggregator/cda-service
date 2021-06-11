@@ -1,10 +1,8 @@
 package bio.terra.cda.app.util;
 
 public class NestedColumn {
-  private String column;
-  private String unnestClause;
-
-  public NestedColumn() {}
+  private final String column;
+  private final String unnestClause;
 
   public NestedColumn(String column, String unnestClause) {
     this.column = column;
@@ -16,14 +14,12 @@ public class NestedColumn {
   }
 
   public static class Builder {
-    /**
-     * column -> SELECT DISTINCT(column)
-     *
-     * <p>D.column -> SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(D) AS _D
-     *
-     * <p>A.B.C.D.column -> > SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(A) AS _A, UNNEST(_A.B)
-     * AS _B, UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D
-     */
+    /*
+     column -> SELECT DISTINCT(column)
+     D.column -> SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(D) AS _D
+     A.B.C.D.column -> > SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(A) AS _A, UNNEST(_A.B)
+     AS _B, UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D
+    */
     public static NestedColumn generate(String qualifiedColumnName)
         throws IllegalArgumentException {
       StringBuilder unnestClause = new StringBuilder();
@@ -37,7 +33,8 @@ public class NestedColumn {
             unnestClause.append(", UNNEST(_" + c[n - 1] + "." + c[n] + ") AS _" + c[n]);
           }
           return new NestedColumn(newColumn, unnestClause.toString());
-        } else if (c.length == 1) {
+        }
+        if (c.length == 1) {
           return new NestedColumn(qualifiedColumnName, "");
         }
       }
@@ -50,15 +47,7 @@ public class NestedColumn {
     return column;
   }
 
-  public void setColumn(String column) {
-    this.column = column;
-  }
-
   public String getUnnestClause() {
     return unnestClause;
-  }
-
-  public void setUnnestClause(String unnestClause) {
-    this.unnestClause = unnestClause;
   }
 }

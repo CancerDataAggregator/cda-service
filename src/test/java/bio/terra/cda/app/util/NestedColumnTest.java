@@ -21,19 +21,15 @@ public class NestedColumnTest {
 
   @ParameterizedTest
   @MethodSource("unnestData")
-  public void testGeneratedUnnestClause2(String qualifiedName, String column, String clause)
+  public void testGeneratedUnnestClause(String qualifiedName, String column, String clause)
       throws Exception {
-    NestedColumn result1 = NestedColumn.generate(qualifiedName);
-    assertEquals(column, result1.getColumn());
-    assertEquals(clause, result1.getUnnestClause());
+    NestedColumn result = NestedColumn.generate(qualifiedName);
+    assertEquals(column, result.getColumn());
+    assertEquals(clause, result.getUnnestClause());
   }
 
   @Test
   public void testIllegalArgCondition() throws Exception {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          NestedColumn.generate(null);
-        });
+    assertThrows(IllegalArgumentException.class, () -> NestedColumn.generate(null));
   }
 }
