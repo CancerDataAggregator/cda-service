@@ -2,6 +2,7 @@ package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.QueryService;
+import bio.terra.cda.app.util.NestedColumn;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.Query;
@@ -12,6 +13,8 @@ import java.net.URL;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class QueryApiController implements QueryApi {
+  private static final Logger logger = LoggerFactory.getLogger(QueryApiController.class);
 
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
@@ -88,5 +92,16 @@ public class QueryApiController implements QueryApi {
         QueryTranslator.sql(applicationConfiguration.getBqTable() + "." + version, body);
 
     return sendQuery(querySql, dryRun);
+  }
+
+  @Override
+  public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body) {
+
+    String table = applicationConfiguration.getBqTable() + "." + version;
+    NestedColumn nt = NestedColumn.generate(body);
+    String querySql = "SELECT DISTINCT " + nt.getColumn() + " FROM " + table + nt.getUnnestClause();
+    logger.debug("uniqueValues: " + querySql);
+
+    return sendQuery(querySql, false);
   }
 }

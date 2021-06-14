@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 1.1.0
+  version: 1.1.1
   title: CDA API
   license:
     name: Apache 2.0
@@ -152,6 +152,28 @@ paths:
         200:
           $ref: '#/components/responses/QueryResponse'
 
+  /api/v1/unique-values/{version}:
+    post:
+      summary: Returns all unique values
+      description: Return unique values given a qualified columnName
+      operationId: uniqueValues
+      tags:
+        - query
+
+      parameters:
+        - $ref: '#/components/parameters/DatasetVersion'
+
+      requestBody:
+        description: column_name of table value being requested
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+
+      responses:
+        200:
+          $ref: '#/components/responses/QueryCreated'
 
 components:
 
@@ -176,6 +198,7 @@ components:
       name: limit
       schema:
         type: integer
+        default: 1000
       description: The numbers of entries to return per page of data
     QueryId:
       in: path
