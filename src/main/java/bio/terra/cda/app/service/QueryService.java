@@ -223,10 +223,6 @@ public class QueryService {
     }
   }
 
-  /**
-   * @param query
-   * @return
-   */
   public String startQuery(String query) {
     var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
 

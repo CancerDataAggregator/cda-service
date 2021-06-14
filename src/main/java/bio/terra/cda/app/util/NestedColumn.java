@@ -15,11 +15,11 @@ public class NestedColumn {
 
   public static class Builder {
     /*
-     column -> SELECT DISTINCT(column)
-     D.column -> SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(D) AS _D
-     A.B.C.D.column -> > SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(A) AS _A, UNNEST(_A.B)
-     AS _B, UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D
-    */
+     * column -> SELECT DISTINCT(column)
+     * D.column -> SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(D) AS _D
+     * A.B.C.D.column -> > SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(A) AS _A, UNNEST(_A.B)
+     * AS _B, UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D
+     */
     public static NestedColumn generate(String qualifiedColumnName)
         throws IllegalArgumentException {
       StringBuilder unnestClause = new StringBuilder();
