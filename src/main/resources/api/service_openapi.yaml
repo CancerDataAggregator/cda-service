@@ -113,15 +113,12 @@ paths:
           $ref: '#/components/responses/QueryCreated'
 
 
-  /api/v1/sql-query/{version}:
+  /api/v1/sql-query:
     post:
       summary: Execute SQL directly on a version of the dataset
       operationId: sqlQuery
       tags:
         - query
-
-      parameters:
-        - $ref: '#/components/parameters/DatasetVersion'
 
       requestBody:
         description: BigQuery SQL to run on data table
