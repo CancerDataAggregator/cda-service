@@ -162,6 +162,7 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
+        - $ref: '#/components/parameters/SystemValue'
 
       requestBody:
         description: column_name of table value being requested
@@ -186,6 +187,12 @@ components:
         type: string
         default: v3
       description: Dataset version
+    SystemValue:
+      in: query
+      name: system
+      schema:
+        type: string
+      description: Filter on system for results
     ResultOffset:
       in: query
       name: offset
