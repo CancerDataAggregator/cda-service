@@ -109,6 +109,8 @@ public class QueryApiController implements QueryApi {
       // add any additional 'where' unnest partials that aren't already included in columns-unnest
       // clauses
       whereColumns.getUnnestClauses().stream().forEach((c) -> unnestClauses.add(c));
+    } else {
+      whereClause = " ";
     }
     if (!unnestClauses.isEmpty()) {
       unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
@@ -121,7 +123,7 @@ public class QueryApiController implements QueryApi {
             + table
             + unnestConcat.toString()
             + whereClause
-            + "ORDER BY "
+            + " ORDER BY "
             + nt.getColumn();
     logger.info("uniqueValues: " + querySql);
 
