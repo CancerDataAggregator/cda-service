@@ -121,7 +121,8 @@ public class QueryApiController implements QueryApi {
             + table
             + unnestConcat.toString()
             + whereClause
-            + "ORDER BY " + nt.getColumn();
+            + "ORDER BY "
+            + nt.getColumn();
     logger.info("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);
