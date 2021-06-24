@@ -30,9 +30,7 @@ public class NestedColumnTest {
     NestedColumn result = NestedColumn.generate(qualifiedName);
     StringBuffer unnestClause = new StringBuffer();
     Set<String> unnestClauses = result.getUnnestClauses();
-    if (unnestClauses != null) {
-      unnestClauses.stream().forEach((s) -> unnestClause.append(s));
-    }
+    unnestClauses.stream().forEach((s) -> unnestClause.append(s));
     assertEquals(column, result.getColumn());
     assertEquals(clause, unnestClause.toString());
   }

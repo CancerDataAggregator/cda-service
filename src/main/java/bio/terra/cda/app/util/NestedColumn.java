@@ -37,9 +37,7 @@ public class NestedColumn {
           }
           return new NestedColumn(newColumn, unnestClauses);
         }
-        if (c.length == 1) {
-          return new NestedColumn(qualifiedColumnName, null);
-        }
+        return new NestedColumn(qualifiedColumnName, new LinkedHashSet<String>());
       }
       // Case where a null or empty value is passed.
       throw new IllegalArgumentException("Empty column name");

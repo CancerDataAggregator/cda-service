@@ -100,28 +100,26 @@ public class QueryApiController implements QueryApi {
     String table = applicationConfiguration.getBqTable() + "." + version;
     NestedColumn nt = NestedColumn.generate(body);
     Set<String> unnestClauses = nt.getUnnestClauses();
-    StringBuffer unnestConcat = new StringBuffer();
-    String whereClause = null;
+    final String whereClause;
 
     if (system != null) {
       NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
-      whereClause = " WHERE " + whereColumns.getColumn() + " = " + system;
+      whereClause = " WHERE " + whereColumns.getColumn() + " = '" + system + "'";
       // add any additional 'where' unnest partials that aren't already included in columns-unnest
       // clauses
-      whereColumns.getUnnestClauses().stream().forEach((c) -> unnestClauses.add(c));
+      unnestClauses.addAll(whereColumns.getUnnestClauses());
     } else {
-      whereClause = " ";
+      whereClause = "";
     }
-    if (!unnestClauses.isEmpty()) {
-      unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
-    }
+    StringBuffer unnestConcat = new StringBuffer();
+    unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
 
     String querySql =
         "SELECT DISTINCT "
             + nt.getColumn()
             + " FROM "
             + table
-            + unnestConcat.toString()
+            + unnestConcat
             + whereClause
             + " ORDER BY "
             + nt.getColumn();
