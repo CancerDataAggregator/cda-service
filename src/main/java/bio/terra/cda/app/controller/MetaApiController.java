@@ -13,6 +13,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
+
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.Dataset;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +26,7 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class MetaApiController implements MetaApi {
-
+  private static final Logger logger = LoggerFactory.getLogger(MetaApiController.class);
   private final ApplicationConfiguration applicationConfiguration;
 
   @Autowired
@@ -30,16 +36,27 @@ public class MetaApiController implements MetaApi {
 
   @Override
   public ResponseEntity<SystemStatus> serviceStatus() {
-    HttpStatus httpStatus = HttpStatus.OK;
-
-    SystemStatusSystems otherSystemStatus =
-        new SystemStatusSystems().ok(true).addMessagesItem("everything is fine");
-
-    SystemStatus systemStatus =
-        new SystemStatus().ok(true).putSystemsItem("BigQuery", otherSystemStatus);
-
-    return new ResponseEntity<>(systemStatus, httpStatus);
+    SystemStatus systemStatus = new SystemStatus();
+    try {
+      BigQuery bigQuery = BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
+      String StatusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
+      if (StatusCheck.equals("cda_mvp")) {
+        SystemStatusSystems otherSystemStatus = new SystemStatusSystems().ok(true).addMessagesItem("everything is fine");
+        systemStatus.ok(true).putSystemsItem("BigQuery", otherSystemStatus);
+        return new ResponseEntity<>(systemStatus, HttpStatus.OK);
+      }
+    } catch (Exception e) {
+      logger.error(e.getMessage());
+      SystemStatusSystems otherSystemStatus = new SystemStatusSystems();
+      otherSystemStatus.setOk(false);
+      otherSystemStatus.addMessagesItem("Error");
+      systemStatus = new SystemStatus().putSystemsItem("BigQuery", otherSystemStatus);
+      logger.error(e.toString());
+    }
+    return new ResponseEntity<>(systemStatus, HttpStatus.BAD_REQUEST);
   }
+
+
 
   // For now, the dataset description is hardcoded. In the future, it will probably be read from a
   // table in bigquery.
