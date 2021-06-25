@@ -64,11 +64,10 @@ class QueryApiControllerTest {
     String system = "GDC";
     String body = "sex";
     var expected =
-        "SELECT DISTINCT sex FROM TABLE.v3, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC' ORDER BY sex";
+        "SELECT DISTINCT sex FROM TABLE.v3, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC'";
     var result =
         mvc.perform(
-                post("/api/v1/unique-values/v3")
-                    .param("version", version)
+                post("/api/v1/unique-values/{version}", version)
                     .param("system", system)
                     .contentType(MediaType.valueOf("text/plain"))
                     .content(body)

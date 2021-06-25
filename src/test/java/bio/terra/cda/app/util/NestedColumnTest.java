@@ -9,11 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class NestedColumnTest {
-  private static final Logger logger = LoggerFactory.getLogger(NestedColumnTest.class);
 
   private static Stream<Arguments> unnestData() {
     return Stream.of(
