@@ -3,6 +3,7 @@ package bio.terra.cda.app.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,8 +25,11 @@ public class NestedColumnTest {
   public void testGeneratedUnnestClause(String qualifiedName, String column, String clause)
       throws Exception {
     NestedColumn result = NestedColumn.generate(qualifiedName);
+    StringBuffer unnestClause = new StringBuffer();
+    Set<String> unnestClauses = result.getUnnestClauses();
+    unnestClauses.stream().forEach((s) -> unnestClause.append(s));
     assertEquals(column, result.getColumn());
-    assertEquals(clause, result.getUnnestClause());
+    assertEquals(clause, unnestClause.toString());
   }
 
   @Test
