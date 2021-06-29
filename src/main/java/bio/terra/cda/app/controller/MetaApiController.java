@@ -26,7 +26,6 @@ import org.springframework.stereotype.Controller;
 public class MetaApiController implements MetaApi {
   private static final Logger logger = LoggerFactory.getLogger(MetaApiController.class);
   private final ApplicationConfiguration applicationConfiguration;
-  @Autowired public BigQueryClearCache checkStatus;
 
   @Autowired public QueryService queryService;
 

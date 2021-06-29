@@ -14,7 +14,7 @@ public class BigQueryClearCache {
     @Autowired
     QueryService queryService;
 
-    @Scheduled(fixedRate = 900000) // 15 min refresh
+    @Scheduled(fixedRate = 120000) // 2 min refresh
     public void task() {
         logger.info("Scheduler has updated cache");
         queryService.clearSystemStatus();
