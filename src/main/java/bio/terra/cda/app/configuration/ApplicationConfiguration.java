@@ -8,6 +8,8 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +42,10 @@ public class ApplicationConfiguration {
     this.datasetVersion = datasetVersion;
   }
 
+  @Bean
+  public CacheManager cacheManager(){
+    return new ConcurrentMapCacheManager("system-status");
+  }
   @Bean("objectMapper")
   public ObjectMapper objectMapper() {
     return new ObjectMapper()
@@ -55,8 +61,7 @@ public class ApplicationConfiguration {
   // done, it should happen inside this method.
   @Bean
   public SmartInitializingSingleton postSetupInitialization(ApplicationContext applicationContext) {
-    return () -> {
-      StartupInitializer.initialize(applicationContext);
-    };
+    return () -> StartupInitializer.initialize(applicationContext);
+
   }
 }

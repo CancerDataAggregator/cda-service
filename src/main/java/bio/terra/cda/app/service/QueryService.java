@@ -1,5 +1,7 @@
 package bio.terra.cda.app.service;
 
+import bio.terra.cda.generated.model.SystemStatus;
+import bio.terra.cda.generated.model.SystemStatusSystems;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,9 +32,13 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Component
+@CacheConfig(cacheNames = "system-status")
 public class QueryService {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
@@ -46,7 +52,34 @@ public class QueryService {
   public QueryService(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
   }
+  @CacheEvict
+  public void clearSystemStatus() {
+    logger.debug("Clear SystemStatus");
+  }
 
+
+  SystemStatus systemStatus = new SystemStatus();
+  @Cacheable
+  public SystemStatus bigQueryCheck(){
+    SystemStatusSystems bigQuerySystemStatus = new SystemStatusSystems();
+    logger.info("This was hit");
+    boolean success = false;
+    try{
+      String StatusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
+      logger.info(StatusCheck);
+      success = StatusCheck.equals("cda_mvp");
+    }catch (Exception e){
+      logger.error("Status check failed ", e);
+    }
+    if(success){
+      bigQuerySystemStatus.ok(true).addMessagesItem("everything is fine");
+    }else{
+
+      bigQuerySystemStatus.ok(false).addMessagesItem("Error");
+    }
+    systemStatus.ok(bigQuerySystemStatus.getOk()).putSystemsItem("BigQuery",bigQuerySystemStatus);
+    return systemStatus;
+  }
   /**
    * Convert a BQ value to a json node.
    *
@@ -171,7 +204,7 @@ public class QueryService {
   // database itself, as each published dataset will have a list of contributing systems.
   private enum Source {
     GDC,
-    PDC;
+    PDC
   }
 
   /**

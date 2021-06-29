@@ -1,12 +1,14 @@
 package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
+import bio.terra.cda.app.service.BigQueryClearCache;
+import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.generated.controller.MetaApi;
 import bio.terra.cda.generated.model.DatasetDescription;
 import bio.terra.cda.generated.model.DatasetInfo;
 import bio.terra.cda.generated.model.Model;
 import bio.terra.cda.generated.model.SystemStatus;
-import bio.terra.cda.generated.model.SystemStatusSystems;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -14,13 +16,9 @@ import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Dataset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 
@@ -28,6 +26,9 @@ import org.springframework.stereotype.Controller;
 public class MetaApiController implements MetaApi {
   private static final Logger logger = LoggerFactory.getLogger(MetaApiController.class);
   private final ApplicationConfiguration applicationConfiguration;
+  @Autowired public BigQueryClearCache checkStatus;
+
+  @Autowired public QueryService queryService;
 
   @Autowired
   public MetaApiController(ApplicationConfiguration applicationConfiguration) {
@@ -36,24 +37,7 @@ public class MetaApiController implements MetaApi {
 
   @Override
   public ResponseEntity<SystemStatus> serviceStatus() {
-    SystemStatus systemStatus = new SystemStatus();
-    try {
-      BigQuery bigQuery = BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
-      String StatusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
-      if (StatusCheck.equals("cda_mvp")) {
-        SystemStatusSystems otherSystemStatus = new SystemStatusSystems().ok(true).addMessagesItem("everything is fine");
-        systemStatus.ok(true).putSystemsItem("BigQuery", otherSystemStatus);
-        return new ResponseEntity<>(systemStatus, HttpStatus.OK);
-      }
-    } catch (Exception e) {
-      logger.error(e.getMessage());
-      SystemStatusSystems otherSystemStatus = new SystemStatusSystems();
-      otherSystemStatus.setOk(false);
-      otherSystemStatus.addMessagesItem("Error");
-      systemStatus = new SystemStatus().putSystemsItem("BigQuery", otherSystemStatus);
-      logger.error(e.toString());
-    }
-    return new ResponseEntity<>(systemStatus, HttpStatus.BAD_REQUEST);
+    return ResponseEntity.ok(queryService.bigQueryCheck());
   }
 
 
