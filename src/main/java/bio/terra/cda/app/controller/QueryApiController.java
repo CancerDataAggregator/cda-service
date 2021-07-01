@@ -102,7 +102,7 @@ public class QueryApiController implements QueryApi {
     Set<String> unnestClauses = nt.getUnnestClauses();
     final String whereClause;
 
-    if (system != null) {
+    if (system != null && system.length() > 0) {
       NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
       whereClause = " WHERE " + whereColumns.getColumn() + " = '" + system + "'";
       // add any additional 'where' unnest partials that aren't already included in columns-unnest
