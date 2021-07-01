@@ -62,11 +62,9 @@ public class QueryService {
   @Cacheable
   public SystemStatus bigQueryCheck(){
     SystemStatusSystems bigQuerySystemStatus = new SystemStatusSystems();
-    logger.info("This was hit");
     boolean success = false;
     try{
       String StatusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
-      logger.info(StatusCheck);
       success = StatusCheck.equals("cda_mvp");
     }catch (Exception e){
       logger.error("Status check failed ", e);
@@ -75,9 +73,10 @@ public class QueryService {
       bigQuerySystemStatus.ok(true).addMessagesItem("everything is fine");
     }else{
 
-      bigQuerySystemStatus.ok(false).addMessagesItem("Error");
+      bigQuerySystemStatus.ok(false).addMessagesItem("BiqQuery Status check has indicated the 'cda_mvp' dataset is currently unreachable from the Service API" );
     }
-    systemStatus.ok(bigQuerySystemStatus.getOk()).putSystemsItem("BigQuery",bigQuerySystemStatus);
+    systemStatus.ok(bigQuerySystemStatus.getOk()).putSystemsItem("BigQueryStatus",bigQuerySystemStatus);
+
     return systemStatus;
   }
   /**
