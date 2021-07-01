@@ -52,30 +52,36 @@ public class QueryService {
   public QueryService(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
   }
+
   @CacheEvict
   public void clearSystemStatus() {
     logger.debug("Clear SystemStatus");
   }
 
-
   SystemStatus systemStatus = new SystemStatus();
+
   @Cacheable
-  public SystemStatus bigQueryCheck(){
+  public SystemStatus bigQueryCheck() {
     SystemStatusSystems bigQuerySystemStatus = new SystemStatusSystems();
     boolean success = false;
-    try{
+    try {
       String StatusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
       success = StatusCheck.equals("cda_mvp");
-    }catch (Exception e){
+    } catch (Exception e) {
       logger.error("Status check failed ", e);
     }
-    if(success){
+    if (success) {
       bigQuerySystemStatus.ok(true).addMessagesItem("everything is fine");
-    }else{
+    } else {
 
-      bigQuerySystemStatus.ok(false).addMessagesItem("BiqQuery Status check has indicated the 'cda_mvp' dataset is currently unreachable from the Service API" );
+      bigQuerySystemStatus
+          .ok(false)
+          .addMessagesItem(
+              "BiqQuery Status check has indicated the 'cda_mvp' dataset is currently unreachable from the Service API");
     }
-    systemStatus.ok(bigQuerySystemStatus.getOk()).putSystemsItem("BigQueryStatus",bigQuerySystemStatus);
+    systemStatus
+        .ok(bigQuerySystemStatus.getOk())
+        .putSystemsItem("BigQueryStatus", bigQuerySystemStatus);
 
     return systemStatus;
   }

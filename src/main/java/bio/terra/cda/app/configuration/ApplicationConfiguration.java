@@ -43,9 +43,10 @@ public class ApplicationConfiguration {
   }
 
   @Bean
-  public CacheManager cacheManager(){
+  public CacheManager cacheManager() {
     return new ConcurrentMapCacheManager("system-status");
   }
+
   @Bean("objectMapper")
   public ObjectMapper objectMapper() {
     return new ObjectMapper()
@@ -62,6 +63,5 @@ public class ApplicationConfiguration {
   @Bean
   public SmartInitializingSingleton postSetupInitialization(ApplicationContext applicationContext) {
     return () -> StartupInitializer.initialize(applicationContext);
-
   }
 }
