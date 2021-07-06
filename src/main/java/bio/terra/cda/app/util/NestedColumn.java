@@ -1,12 +1,15 @@
 package bio.terra.cda.app.util;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 public class NestedColumn {
   private final String column;
-  private final String unnestClause;
+  private final Set<String> unnestClauses;
 
-  public NestedColumn(String column, String unnestClause) {
+  public NestedColumn(String column, Set<String> unnestClauses) {
     this.column = column;
-    this.unnestClause = unnestClause;
+    this.unnestClauses = unnestClauses;
   }
 
   public static NestedColumn generate(String qualifiedColumnName) {
@@ -22,21 +25,19 @@ public class NestedColumn {
      */
     public static NestedColumn generate(String qualifiedColumnName)
         throws IllegalArgumentException {
-      StringBuilder unnestClause = new StringBuilder();
+      Set<String> unnestClauses = new LinkedHashSet<String>();
       String newColumn = null;
       if (qualifiedColumnName != null) {
         String[] c = qualifiedColumnName.split("\\.");
         if (c.length > 1) {
           newColumn = "_" + c[c.length - 2] + "." + c[c.length - 1];
-          unnestClause.append(", UNNEST(" + c[0] + ") AS _" + c[0]);
+          unnestClauses.add(", UNNEST(" + c[0] + ") AS _" + c[0]);
           for (int n = 1; n < c.length - 1; n++) {
-            unnestClause.append(", UNNEST(_" + c[n - 1] + "." + c[n] + ") AS _" + c[n]);
+            unnestClauses.add(", UNNEST(_" + c[n - 1] + "." + c[n] + ") AS _" + c[n]);
           }
-          return new NestedColumn(newColumn, unnestClause.toString());
+          return new NestedColumn(newColumn, unnestClauses);
         }
-        if (c.length == 1) {
-          return new NestedColumn(qualifiedColumnName, "");
-        }
+        return new NestedColumn(qualifiedColumnName, new LinkedHashSet<String>());
       }
       // Case where a null or empty value is passed.
       throw new IllegalArgumentException("Empty column name");
@@ -47,7 +48,7 @@ public class NestedColumn {
     return column;
   }
 
-  public String getUnnestClause() {
-    return unnestClause;
+  public Set<String> getUnnestClauses() {
+    return unnestClauses;
   }
 }

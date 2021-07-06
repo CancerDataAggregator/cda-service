@@ -11,6 +11,7 @@ import bio.terra.cda.generated.model.QueryResponseData;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.slf4j.Logger;
@@ -95,11 +96,26 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body) {
-
+  public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body, String system) {
     String table = applicationConfiguration.getBqTable() + "." + version;
     NestedColumn nt = NestedColumn.generate(body);
-    String querySql = "SELECT DISTINCT " + nt.getColumn() + " FROM " + table + nt.getUnnestClause();
+    Set<String> unnestClauses = nt.getUnnestClauses();
+    final String whereClause;
+
+    if (system != null) {
+      NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
+      whereClause = " WHERE " + whereColumns.getColumn() + " = '" + system + "'";
+      // add any additional 'where' unnest partials that aren't already included in columns-unnest
+      // clauses
+      unnestClauses.addAll(whereColumns.getUnnestClauses());
+    } else {
+      whereClause = "";
+    }
+    StringBuffer unnestConcat = new StringBuffer();
+    unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
+
+    String querySql =
+        "SELECT DISTINCT " + nt.getColumn() + " FROM " + table + unnestConcat + whereClause;
     logger.debug("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);

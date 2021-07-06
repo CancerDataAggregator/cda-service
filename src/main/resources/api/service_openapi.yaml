@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 1.1.1
+  version: 1.1.2
   title: CDA API
   license:
     name: Apache 2.0
@@ -162,6 +162,7 @@ paths:
 
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
+        - $ref: '#/components/parameters/SystemValue'
 
       requestBody:
         description: column_name of table value being requested
@@ -186,6 +187,12 @@ components:
         type: string
         default: v3
       description: Dataset version
+    SystemValue:
+      in: query
+      name: system
+      schema:
+        type: string
+      description: Filter on system for results
     ResultOffset:
       in: query
       name: offset
