@@ -17,7 +17,7 @@ plugins {
 }
 
 group = 'bio.terra.cda'
-version = '0.0.16'
+version = '0.0.17'
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
