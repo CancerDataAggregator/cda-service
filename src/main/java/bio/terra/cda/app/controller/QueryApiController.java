@@ -89,7 +89,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
 
-    String querySql = QueryTranslator.sql(table, body);
+    String querySql = QueryTranslator.sql(table + "." + version, body);
 
     return sendQuery(querySql, dryRun);
   }

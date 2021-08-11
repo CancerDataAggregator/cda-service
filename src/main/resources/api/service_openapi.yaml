@@ -103,7 +103,7 @@ paths:
           name: table
           schema:
             type: string
-            default: gdc-bq-sample.cda_mvp.v3
+            default: gdc-bq-sample.cda_mvp
 
       requestBody:
         description: The boolean query
