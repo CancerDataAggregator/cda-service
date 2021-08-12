@@ -99,6 +99,11 @@ paths:
           schema:
             type: boolean
             default: false
+        - in: query
+          name: table
+          schema:
+            type: string
+            default: gdc-bq-sample.cda_mvp
 
       requestBody:
         description: The boolean query
