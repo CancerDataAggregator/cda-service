@@ -83,7 +83,7 @@ paths:
 
   /api/v1/boolean-query/{version}:
     post:
-      summary: Execute boolean query 
+      summary: Execute boolean query
       description: |
         Execute a query composed of conditions on columns combined with boolean operators. The
         generated SQL query is returned in the response.
@@ -99,11 +99,7 @@ paths:
           schema:
             type: boolean
             default: false
-        - in: query
-          name: table
-          schema:
-            type: string
-            default: gdc-bq-sample.cda_mvp
+        - $ref: '#/components/parameters/Table'
 
       requestBody:
         description: The boolean query
@@ -112,11 +108,10 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Query'
-                    
+
       responses:
         200:
           $ref: '#/components/responses/QueryCreated'
-
 
   /api/v1/sql-query:
     post:
@@ -132,7 +127,7 @@ paths:
           text/plain:
             schema:
               type: string
-                    
+
       responses:
         200:
           $ref: '#/components/responses/QueryCreated'
@@ -219,6 +214,13 @@ components:
       schema:
         type: string
       description: Query ID
+    Table:
+      in: query
+      name: table
+      schema:
+        type: string
+        default: gdc-bq-sample.cda_mvp
+      description: table name
 
 
   schemas:
@@ -329,7 +331,7 @@ components:
         A Query consists of a node type, a value and l and r Query objects. A Query must
         have a node type, but other fields are optional depending on the node type. See
         the description of `node_type`for more information.
-        
+
         For example, the query "age < 50" is expressed as:
 
         ```
@@ -361,9 +363,9 @@ components:
         value:
           type: string
         l:
-          $ref: '#/components/schemas/Query' 
+          $ref: '#/components/schemas/Query'
         r:
-          $ref: '#/components/schemas/Query' 
+          $ref: '#/components/schemas/Query'
 
   responses:
 
