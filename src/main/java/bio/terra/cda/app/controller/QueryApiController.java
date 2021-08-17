@@ -5,9 +5,7 @@ import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.util.NestedColumn;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
-import bio.terra.cda.generated.model.Query;
-import bio.terra.cda.generated.model.QueryCreatedData;
-import bio.terra.cda.generated.model.QueryResponseData;
+import bio.terra.cda.generated.model.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -63,6 +61,13 @@ public class QueryApiController implements QueryApi {
     if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, limit));
     }
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  public ResponseEntity<JobStatusData> jobStatus(String id) {
+    var response = queryService.getQueryStatusFromJob(id);
+    logger.info("****JobStatusController:" + response);
     return ResponseEntity.ok(response);
   }
 

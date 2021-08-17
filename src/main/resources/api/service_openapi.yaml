@@ -152,6 +152,24 @@ paths:
         200:
           $ref: '#/components/responses/QueryResponse'
 
+  /api/v1/job-status/{id}:
+    get:
+      summary: Return the running status of long running queries.
+      description: |
+        For long running queries we may need to determine if the query is
+        PENDING RUNNING, DONE or FAILURE.
+        Pass the Job ID to this endpoint and get the running status back.
+      operationId: jobStatus
+      tags:
+        - query
+
+      parameters:
+        - $ref: '#/components/parameters/QueryId'
+
+      responses:
+        200:
+          $ref: '#/components/responses/JobStatusResponse'
+
   /api/v1/unique-values/{version}:
     post:
       summary: Returns all unique values
@@ -325,6 +343,16 @@ components:
           type: object
           properties: {}
 
+    JobStatusData:
+      type: object
+      properties:
+        queryId:
+          type: string
+        status:
+          type: string
+        runningTime:
+          type: string
+
     Query:
       type: object
       description: |
@@ -389,3 +417,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/QueryResponseData'
+
+    JobStatusResponse:
+      description:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JobStatusData'

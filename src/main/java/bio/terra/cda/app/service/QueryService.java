@@ -1,5 +1,6 @@
 package bio.terra.cda.app.service;
 
+import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.SystemStatus;
 import bio.terra.cda.generated.model.SystemStatusSystems;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,18 +10,7 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DecimalNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.FieldList;
-import com.google.cloud.bigquery.FieldValue;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.Job;
-import com.google.cloud.bigquery.JobId;
-import com.google.cloud.bigquery.JobInfo;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.TableResult;
+import com.google.cloud.bigquery.*;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -239,6 +229,20 @@ public class QueryService {
     // This cast is safe because it's only done on queries that have been generated using
     // startQuery() below.
     return ((QueryJobConfiguration) queryJob.getConfiguration()).getQuery();
+  }
+
+  @Cacheable
+  public JobStatusData getQueryStatusFromJob(String queryId) {
+    final Job job = bigQuery.getJob(queryId);
+    if (job == null || !job.exists()) {
+      throw new RuntimeException("Unknown query " + queryId);
+    }
+    JobStatusData data = new JobStatusData();
+    data.setQueryId(queryId);
+    logger.info("***JobStatus: " + job.getStatus().toString());
+    data.setStatus(job.getStatus().toString());
+
+    return data;
   }
 
   private void logQuery(Job queryJob, List<JsonNode> jsonData) {
