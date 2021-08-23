@@ -282,7 +282,7 @@ public class QueryService {
     // Create a job ID so that we can safely retry.
 
     JobId jobId = JobId.of(String.valueOf(UUID.randomUUID().toString()));
-
+    // Bigquery has a default 10s wait time this updates it
     BigQuery.QueryResultsOption.maxWaitTime(30000);
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
     return queryJob.getJobId().getJob();
