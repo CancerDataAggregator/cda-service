@@ -12,6 +12,10 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.*;
 import com.google.common.annotations.VisibleForTesting;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,6 +39,8 @@ public class QueryService {
 
   final BigQuery bigQuery =
       BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
+
+
 
   private final ObjectMapper objectMapper;
 
@@ -241,6 +247,11 @@ public class QueryService {
     data.setQueryId(queryId);
     logger.info("***JobStatus: " + job.getStatus().toString());
     data.setStatus(job.getStatus().toString());
+    if(data.getRunningTime() == null){
+      // Added this check for python
+      data.runningTime("");
+
+    }
 
     return data;
   }
@@ -266,12 +277,14 @@ public class QueryService {
   }
 
   public String startQuery(String query) {
-    var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
+    var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).setUseQueryCache(true);
 
     // Create a job ID so that we can safely retry.
-    JobId jobId = JobId.of(UUID.randomUUID().toString());
-    Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
 
+    JobId jobId = JobId.of(String.valueOf(UUID.randomUUID().toString()));
+
+    BigQuery.QueryResultsOption.maxWaitTime(30000);
+    Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
     return queryJob.getJobId().getJob();
   }
 }
