@@ -283,8 +283,21 @@ public class QueryService {
 
     JobId jobId = JobId.of(String.valueOf(UUID.randomUUID().toString()));
     // Bigquery has a default 10s wait time this updates it
-    BigQuery.QueryResultsOption.maxWaitTime(30000);
+//    BigQuery.QueryResultsOption.maxWaitTime(30000);
+
+
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
+//    this while loop will wait until the async job has returned by using sleep
+    while (!JobStatus.State.DONE.equals(queryJob.getStatus().getState())){
+      try {
+        System.out.println(queryJob.getJobId().getJob());
+        Thread.sleep(1000L);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      queryJob = queryJob.reload();
+    }
+
     return queryJob.getJobId().getJob();
   }
 }
