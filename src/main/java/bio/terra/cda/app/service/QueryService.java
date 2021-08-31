@@ -10,12 +10,15 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DecimalNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.cloud.RetryOption;
 import com.google.cloud.bigquery.*;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import org.threeten.bp.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -288,15 +291,11 @@ public class QueryService {
 
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
 //    this while loop will wait until the async job has returned by using sleep
-    while (!JobStatus.State.DONE.equals(queryJob.getStatus().getState())){
-      try {
-        Thread.sleep(1000L);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      queryJob = queryJob.reload();
-    }
-
+  try{
+    queryJob = queryJob.waitFor(RetryOption.initialRetryDelay(Duration.ofSeconds(1)), RetryOption.totalTimeout(Duration.ofMinutes(2)));
+  } catch (BigQueryException | InterruptedException e) {
+    logger.error(e.getMessage());
+  }`
     return queryJob.getJobId().getJob();
   }
 }
