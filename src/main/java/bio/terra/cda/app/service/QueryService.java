@@ -295,7 +295,7 @@ public class QueryService {
     queryJob = queryJob.waitFor(RetryOption.initialRetryDelay(Duration.ofSeconds(1)), RetryOption.totalTimeout(Duration.ofMinutes(2)));
   } catch (BigQueryException | InterruptedException e) {
     logger.error(e.getMessage());
-  }`
+  }
     return queryJob.getJobId().getJob();
   }
 }
