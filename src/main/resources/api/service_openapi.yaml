@@ -9,6 +9,7 @@ info:
 
 servers:
   - url: https://cda.cda-dev.broadinstitute.org
+  - url: https://integration.dev.broadinstitute.org
   - url: http://localhost:8080
 
 tags:
