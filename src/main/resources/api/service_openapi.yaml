@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 1.1.2
+  version: 1.1.8
   title: CDA API
   license:
     name: Apache 2.0
@@ -10,6 +10,7 @@ info:
 servers:
   - url: https://cda.cda-dev.broadinstitute.org
   - url: http://localhost:8080
+  - url: http://34.132.58.138:8080
 
 tags:
   - name: query
