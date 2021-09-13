@@ -204,7 +204,7 @@ components:
       required: true
       schema:
         type: string
-        default: v3
+        default: all_v1
       description: Dataset version
     SystemValue:
       in: query
@@ -224,7 +224,7 @@ components:
       name: limit
       schema:
         type: integer
-        default: 1000
+        default: 100
       description: The numbers of entries to return per page of data
     QueryId:
       in: path
@@ -238,7 +238,7 @@ components:
       name: table
       schema:
         type: string
-        default: gdc-bq-sample.cda_mvp
+        default: gdc-bq-sample.integration
       description: table name
 
 
