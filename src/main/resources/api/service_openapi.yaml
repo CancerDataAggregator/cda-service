@@ -10,7 +10,7 @@ info:
 servers:
   - url: https://cda.cda-dev.broadinstitute.org
   - url: http://localhost:8080
-  - url: http://34.132.58.138:8080
+  - url: http://34.135.248.14:8080
 
 tags:
   - name: query
@@ -182,6 +182,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
         - $ref: '#/components/parameters/SystemValue'
+        - $ref: '#/components/parameters/AddTable'
 
       requestBody:
         description: column_name of table value being requested
@@ -204,13 +205,20 @@ components:
       required: true
       schema:
         type: string
-        default: all_v1
+        default: v3
       description: Dataset version
     SystemValue:
       in: query
       name: system
       schema:
         type: string
+      description: Filter on system for results
+    AddTable:
+      in: query
+      name: table name
+      schema:
+        type: string
+        default: gdc-bq-sample.cda_mvp
       description: Filter on system for results
     ResultOffset:
       in: query
@@ -380,7 +388,7 @@ components:
       properties:
         node_type:
           type: string
-          enum: [column, quoted, unquoted, ">=", "<=", "<", ">", "=", "!=", AND, OR, NOT, SUBQUERY]
+          enum: [column, quoted, unquoted, ">=", "<=", "<", ">", "=", "!=", AND, OR, NOT, SUBQUERY,WHERE]
           description: >
             Query contents and behavior depends on `node_type`:
              * `column` - column name is in `value`
@@ -420,7 +428,7 @@ components:
             $ref: '#/components/schemas/QueryResponseData'
 
     JobStatusResponse:
-      description:
+      description: Get's Bigquery job id status
       content:
         application/json:
           schema:

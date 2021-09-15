@@ -99,8 +99,9 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body, String system) {
-    String table = applicationConfiguration.getBqTable() + "." + version;
+  public ResponseEntity<QueryCreatedData> uniqueValues(
+      String version, String body, String system, String tableName) {
+    String table = tableName + "." + version;
     NestedColumn nt = NestedColumn.generate(body);
     Set<String> unnestClauses = nt.getUnnestClauses();
     final String whereClause;
