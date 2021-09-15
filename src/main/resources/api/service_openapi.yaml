@@ -10,7 +10,7 @@ info:
 servers:
   - url: https://cda.cda-dev.broadinstitute.org
   - url: http://localhost:8080
-  - url: http://34.132.58.138:8080
+  - url: http://34.135.248.14:8080
 
 tags:
   - name: query
@@ -205,7 +205,7 @@ components:
       required: true
       schema:
         type: string
-        default: all_v1
+        default: v3
       description: Dataset version
     SystemValue:
       in: query

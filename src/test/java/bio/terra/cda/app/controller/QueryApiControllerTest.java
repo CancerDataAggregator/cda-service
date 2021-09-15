@@ -72,7 +72,7 @@ class QueryApiControllerTest {
         mvc.perform(
                 post("/api/v1/unique-values/{version}", version)
                     .param("system", system)
-                        .param("table name",tableName)
+                    .param("table name", tableName)
                     .contentType(MediaType.valueOf("text/plain"))
                     .content(body)
                     .accept(MediaType.APPLICATION_JSON))
