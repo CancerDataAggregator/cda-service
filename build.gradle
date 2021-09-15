@@ -17,7 +17,7 @@ plugins {
 }
 
 group = 'bio.terra.cda'
-version = '0.0.20'
+version = '0.0.21'
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
@@ -88,7 +88,7 @@ task buildPythonSdk(type: GenerateTask){
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
 	configOptions = [
-			"packageVersion" : "1.1.2",
+			"packageVersion" : "9.15.2021",
 	]
 }
 
