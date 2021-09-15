@@ -65,12 +65,14 @@ class QueryApiControllerTest {
     String version = "v3";
     String system = "GDC";
     String body = "sex";
+    String tableName = "TABLE";
     var expected =
         "SELECT DISTINCT sex FROM TABLE.v3, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC'";
     var result =
         mvc.perform(
                 post("/api/v1/unique-values/{version}", version)
                     .param("system", system)
+                        .param("table name",tableName)
                     .contentType(MediaType.valueOf("text/plain"))
                     .content(body)
                     .accept(MediaType.APPLICATION_JSON))
