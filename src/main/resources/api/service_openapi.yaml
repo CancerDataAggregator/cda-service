@@ -195,6 +195,22 @@ paths:
         200:
           $ref: '#/components/responses/QueryCreated'
 
+  /api/v1/columns/{version}:
+    get:
+      summary: Returns all column names
+      description: Return columnNames for schema
+      operationId: columns
+      tags:
+        - query
+
+      parameters:
+        - $ref: '#/components/parameters/DatasetVersion'
+        - $ref: '#/components/parameters/Table'
+
+      responses:
+        200:
+          $ref: '#/components/responses/QueryCreated'
+
 components:
 
   parameters:
@@ -239,7 +255,7 @@ components:
       schema:
         type: string
         default: gdc-bq-sample.cda_mvp
-      description: table name
+      description: tablename
 
 
   schemas:
