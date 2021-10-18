@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -73,6 +74,25 @@ class QueryApiControllerTest {
                     .param("system", system)
                     .contentType(MediaType.valueOf("text/plain"))
                     .content(body)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andReturn();
+    var response =
+        objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
+    assertThat(response.getQuerySql(), equalTo(expected));
+  }
+
+  @Test
+  public void columnsTest() throws Exception {
+    String version = "all_v1";
+    String table = "integration";
+
+    var expected =
+        "SELECT field_path FROM integration.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = 'all_v1'";
+    var result =
+        mvc.perform(
+                get("/api/v1/column/{version}", version)
+                    .param("table", table)
+                    .contentType(MediaType.valueOf("text/plain"))
                     .accept(MediaType.APPLICATION_JSON))
             .andReturn();
     var response =
