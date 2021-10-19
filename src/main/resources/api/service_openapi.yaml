@@ -380,7 +380,7 @@ components:
       properties:
         node_type:
           type: string
-          enum: [column, quoted, unquoted, ">=", "<=", "<", ">", "=", "!=", AND, OR, NOT, SUBQUERY]
+          enum: [column, quoted, unquoted, ">=", "<=", "<", ">", "=", "!=", AND, OR, NOT, SUBQUERY,IN,SELECT,SELECTVALUES]
           description: >
             Query contents and behavior depends on `node_type`:
              * `column` - column name is in `value`

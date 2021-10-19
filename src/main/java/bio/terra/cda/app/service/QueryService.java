@@ -266,6 +266,7 @@ public class QueryService {
   }
 
   public String startQuery(String query) {
+    System.out.println(query);
     var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
 
     // Create a job ID so that we can safely retry.
