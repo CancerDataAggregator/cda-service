@@ -80,23 +80,5 @@ class QueryApiControllerTest {
         objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
     assertThat(response.getQuerySql(), equalTo(expected));
   }
-
-  @Test
-  public void columnsTest() throws Exception {
-    String version = "all_v1";
-    String table = "integration";
-
-    var expected =
-        "SELECT field_path FROM integration.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = 'all_v1'";
-    var result =
-        mvc.perform(
-                get("/api/v1/column/{version}", version)
-                    .param("table", table)
-                    .contentType(MediaType.valueOf("text/plain"))
-                    .accept(MediaType.APPLICATION_JSON))
-            .andReturn();
-    var response =
-        objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
-    assertThat(response.getQuerySql(), equalTo(expected));
-  }
+  
 }
