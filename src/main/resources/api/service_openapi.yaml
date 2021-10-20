@@ -248,7 +248,7 @@ components:
       name: limit
       schema:
         type: integer
-        default: 1000
+        default: 100
       description: The numbers of entries to return per page of data
     QueryId:
       in: path

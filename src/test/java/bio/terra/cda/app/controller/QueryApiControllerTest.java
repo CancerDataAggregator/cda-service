@@ -66,6 +66,7 @@ class QueryApiControllerTest {
     String system = "GDC";
     String body = "sex";
     String table = "TABLE";
+
     var expected =
         "SELECT DISTINCT sex FROM TABLE.v3, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC'";
     var result =
