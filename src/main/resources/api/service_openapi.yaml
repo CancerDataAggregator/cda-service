@@ -182,6 +182,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
         - $ref: '#/components/parameters/SystemValue'
+        - $ref: '#/components/parameters/AddTable'
 
       requestBody:
         description: column_name of table value being requested
@@ -227,6 +228,13 @@ components:
       name: system
       schema:
         type: string
+      description: Filter on system for results
+    AddTable:
+      in: query
+      name: table name
+      schema:
+        type: string
+        default: gdc-bq-sample.cda_mvp
       description: Filter on system for results
     ResultOffset:
       in: query
@@ -396,7 +404,7 @@ components:
       properties:
         node_type:
           type: string
-          enum: [column, quoted, unquoted, ">=", "<=", "<", ">", "=", "!=", AND, OR, NOT, SUBQUERY]
+          enum: [column, quoted, unquoted, ">=", "<=", "<", ">", "=", "!=", AND, OR, NOT, SUBQUERY,WHERE]
           description: >
             Query contents and behavior depends on `node_type`:
              * `column` - column name is in `value`
@@ -436,7 +444,7 @@ components:
             $ref: '#/components/schemas/QueryResponseData'
 
     JobStatusResponse:
-      description:
+      description: Get's Bigquery job id status
       content:
         application/json:
           schema:
