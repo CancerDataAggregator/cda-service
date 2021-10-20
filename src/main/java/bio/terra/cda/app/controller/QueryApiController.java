@@ -100,12 +100,12 @@ public class QueryApiController implements QueryApi {
 
   @Override
   public ResponseEntity<QueryCreatedData> uniqueValues(
-      String version, String body, String system, String tableName) {
-    String table;
-    if (tableName == null) {
-      table = applicationConfiguration.getBqTable() + "." + version;
+      String version, String body, String system, String table) {
+    String tableName;
+    if (table == null) {
+      tableName = applicationConfiguration.getBqTable() + "." + version;
     } else {
-      table = tableName + "." + version;
+      tableName = table + "." + version;
     }
 
     NestedColumn nt = NestedColumn.generate(body);
@@ -125,7 +125,7 @@ public class QueryApiController implements QueryApi {
     unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
 
     String querySql =
-        "SELECT DISTINCT " + nt.getColumn() + " FROM " + table + unnestConcat + whereClause;
+        "SELECT DISTINCT " + nt.getColumn() + " FROM " + tableName + unnestConcat + whereClause;
     logger.debug("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);
