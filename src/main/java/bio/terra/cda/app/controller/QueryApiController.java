@@ -123,4 +123,18 @@ public class QueryApiController implements QueryApi {
 
     return sendQuery(querySql, false);
   }
+
+  @Override
+  public ResponseEntity<QueryCreatedData> columns(String version, String table) {
+    table = applicationConfiguration.getBqTable();
+    String querySql =
+        "SELECT field_path FROM "
+            + table
+            + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
+            + version
+            + "'";
+    logger.debug("columns: " + querySql);
+
+    return sendQuery(querySql, false);
+  }
 }

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -79,4 +80,5 @@ class QueryApiControllerTest {
         objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
     assertThat(response.getQuerySql(), equalTo(expected));
   }
+  
 }
