@@ -7,7 +7,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -73,7 +72,7 @@ class QueryApiControllerTest {
         mvc.perform(
                 post("/api/v1/unique-values/{version}", version)
                     .param("system", system)
-                        .param("table name",tableName)
+                    .param("table name", tableName)
                     .contentType(MediaType.valueOf("text/plain"))
                     .content(body)
                     .accept(MediaType.APPLICATION_JSON))
@@ -82,5 +81,4 @@ class QueryApiControllerTest {
         objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
     assertThat(response.getQuerySql(), equalTo(expected));
   }
-  
 }

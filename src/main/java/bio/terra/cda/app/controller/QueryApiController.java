@@ -99,11 +99,12 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body, String system, String tableName) {
+  public ResponseEntity<QueryCreatedData> uniqueValues(
+      String version, String body, String system, String tableName) {
     String table;
-    if(tableName == null){
+    if (tableName == null) {
       table = applicationConfiguration.getBqTable() + "." + version;
-    }else {
+    } else {
       table = tableName + "." + version;
     }
 
@@ -132,10 +133,15 @@ public class QueryApiController implements QueryApi {
 
   @Override
   public ResponseEntity<QueryCreatedData> columns(String version, String table) {
-    table = applicationConfiguration.getBqTable();
+    String tableName;
+    if (table == null) {
+      tableName = applicationConfiguration.getBqTable();
+    } else {
+      tableName = table;
+    }
     String querySql =
         "SELECT field_path FROM "
-            + table
+            + tableName
             + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
             + version
             + "'";
