@@ -182,7 +182,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
         - $ref: '#/components/parameters/SystemValue'
-        - $ref: '#/components/parameters/AddTable'
+        - $ref: '#/components/parameters/Table'
 
       requestBody:
         description: column_name of table value being requested
