@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 1.1.12
+  version: 2.0.0
   title: CDA API
   license:
     name: Apache 2.0
@@ -182,7 +182,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/DatasetVersion'
         - $ref: '#/components/parameters/SystemValue'
-        - $ref: '#/components/parameters/AddTable'
+        - $ref: '#/components/parameters/Table'
 
       requestBody:
         description: column_name of table value being requested
@@ -191,6 +191,22 @@ paths:
           text/plain:
             schema:
               type: string
+
+      responses:
+        200:
+          $ref: '#/components/responses/QueryCreated'
+
+  /api/v1/columns/{version}:
+    get:
+      summary: Returns all column names
+      description: Return columnNames for schema
+      operationId: columns
+      tags:
+        - query
+
+      parameters:
+        - $ref: '#/components/parameters/DatasetVersion'
+        - $ref: '#/components/parameters/Table'
 
       responses:
         200:
@@ -205,7 +221,7 @@ components:
       required: true
       schema:
         type: string
-        default: v3
+        default: all_v2
       description: Dataset version
     SystemValue:
       in: query
@@ -218,7 +234,7 @@ components:
       name: table name
       schema:
         type: string
-        default: gdc-bq-sample.cda_mvp
+        default: gdc-bq-sample.integration
       description: Filter on system for results
     ResultOffset:
       in: query
@@ -232,7 +248,7 @@ components:
       name: limit
       schema:
         type: integer
-        default: 1000
+        default: 100
       description: The numbers of entries to return per page of data
     QueryId:
       in: path
@@ -246,8 +262,8 @@ components:
       name: table
       schema:
         type: string
-        default: gdc-bq-sample.cda_mvp
-      description: table name
+        default: gdc-bq-sample.integration
+      description: tablename
 
 
   schemas:

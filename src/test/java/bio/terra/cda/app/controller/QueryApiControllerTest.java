@@ -29,23 +29,23 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class QueryApiControllerTest {
 
-  @Autowired private MockMvc mvc;
+  @Autowired
+  private MockMvc mvc;
 
-  @Autowired private ObjectMapper objectMapper;
+  @Autowired
+  private ObjectMapper objectMapper;
 
-  @MockBean private QueryService queryService;
+  @MockBean
+  private QueryService queryService;
 
   private void callQueryApi(boolean dryRun) throws Exception {
     var query = new Query().nodeType(Query.NodeTypeEnum.COLUMN).value("test");
     var expected = "SELECT v0.* FROM TABLE.v0 AS v0 WHERE v0.test";
 
-    var post =
-        post("/api/v1/boolean-query/v0?dryRun={dryRun}&table=test", dryRun)
-            .content(objectMapper.writeValueAsString(query))
-            .contentType(MediaType.APPLICATION_JSON);
+    var post = post("/api/v1/boolean-query/v0?dryRun={dryRun}&table=test", dryRun)
+        .content(objectMapper.writeValueAsString(query)).contentType(MediaType.APPLICATION_JSON);
     var result = mvc.perform(post).andExpect(status().isOk()).andReturn();
-    var response =
-        objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
+    var response = objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
     System.out.println(response.getQuerySql());
     assertThat(response.getQuerySql(), equalTo(expected));
   }
@@ -65,20 +65,13 @@ class QueryApiControllerTest {
     String version = "v3";
     String system = "GDC";
     String body = "sex";
-    String tableName = "TABLE";
-    var expected =
-        "SELECT DISTINCT sex FROM TABLE.v3, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC'";
-    var result =
-        mvc.perform(
-                post("/api/v1/unique-values/{version}", version)
-                    .param("system", system)
-                        .param("table name",tableName)
-                    .contentType(MediaType.valueOf("text/plain"))
-                    .content(body)
-                    .accept(MediaType.APPLICATION_JSON))
-            .andReturn();
-    var response =
-        objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
+    String table = "TABLE";
+    var expected = "SELECT DISTINCT sex FROM TABLE.v3, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC'";
+    var result = mvc
+        .perform(post("/api/v1/unique-values/{version}", version).param("system", system).param("table", table)
+            .contentType(MediaType.valueOf("text/plain")).content(body).accept(MediaType.APPLICATION_JSON))
+        .andReturn();
+    var response = objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
     assertThat(response.getQuerySql(), equalTo(expected));
   }
 }

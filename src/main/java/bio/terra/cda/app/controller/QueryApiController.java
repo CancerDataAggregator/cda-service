@@ -28,9 +28,7 @@ public class QueryApiController implements QueryApi {
   private final HttpServletRequest webRequest;
 
   @Autowired
-  public QueryApiController(
-      QueryService queryService,
-      ApplicationConfiguration applicationConfiguration,
+  public QueryApiController(QueryService queryService, ApplicationConfiguration applicationConfiguration,
       HttpServletRequest webRequest) {
     this.queryService = queryService;
     this.applicationConfiguration = applicationConfiguration;
@@ -52,11 +50,8 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
     var result = queryService.getQueryResults(id, offset, limit);
-    var response =
-        new QueryResponseData()
-            .result(Collections.unmodifiableList(result.items))
-            .totalRowCount(result.totalRowCount)
-            .querySql(result.querySql);
+    var response = new QueryResponseData().result(Collections.unmodifiableList(result.items))
+        .totalRowCount(result.totalRowCount).querySql(result.querySql);
     int nextPage = result.items.size() + limit;
     if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, limit));
@@ -91,22 +86,22 @@ public class QueryApiController implements QueryApi {
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> booleanQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+  public ResponseEntity<QueryCreatedData> booleanQuery(String version, @Valid Query body, @Valid Boolean dryRun,
+      @Valid String table) {
     String querySql = QueryTranslator.sql(table + "." + version, body);
 
     return sendQuery(querySql, dryRun);
   }
 
   @Override
-  public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body, String system, String tableName) {
-
-    String table;
-    if(tableName == null){
-      table = applicationConfiguration.getBqTable() + "." + version;
-    }else{
-      table = tableName + "." + version;
+  public ResponseEntity<QueryCreatedData> uniqueValues(String version, String body, String system, String table) {
+    String tableName;
+    if (table == null) {
+      tableName = applicationConfiguration.getBqTable() + "." + version;
+    } else {
+      tableName = table + "." + version;
     }
+
     NestedColumn nt = NestedColumn.generate(body);
     Set<String> unnestClauses = nt.getUnnestClauses();
     final String whereClause;
@@ -114,7 +109,8 @@ public class QueryApiController implements QueryApi {
     if (system != null && system.length() > 0) {
       NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
       whereClause = " WHERE " + whereColumns.getColumn() + " = '" + system + "'";
-      // add any additional 'where' unnest partials that aren't already included in columns-unnest
+      // add any additional 'where' unnest partials that aren't already included in
+      // columns-unnest
       // clauses
       unnestClauses.addAll(whereColumns.getUnnestClauses());
     } else {
@@ -123,9 +119,23 @@ public class QueryApiController implements QueryApi {
     StringBuilder unnestConcat = new StringBuilder();
     unnestClauses.forEach(unnestConcat::append);
 
-    String querySql =
-        "SELECT DISTINCT " + nt.getColumn() + " FROM " + table + unnestConcat + whereClause;
+    String querySql = "SELECT DISTINCT " + nt.getColumn() + " FROM " + tableName + unnestConcat + whereClause;
     logger.debug("uniqueValues: " + querySql);
+
+    return sendQuery(querySql, false);
+  }
+
+  @Override
+  public ResponseEntity<QueryCreatedData> columns(String version, String table) {
+    String tableName;
+    if (table == null) {
+      tableName = applicationConfiguration.getBqTable();
+    } else {
+      tableName = table;
+    }
+    String querySql = "SELECT field_path FROM " + tableName
+        + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '" + version + "'";
+    logger.debug("columns: " + querySql);
 
     return sendQuery(querySql, false);
   }
