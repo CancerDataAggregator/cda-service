@@ -125,7 +125,14 @@ public class QueryApiController implements QueryApi {
     unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
 
     String querySql =
-        "SELECT DISTINCT " + nt.getColumn() + " FROM " + tableName + unnestConcat + whereClause;
+        "SELECT DISTINCT "
+            + nt.getColumn()
+            + " FROM "
+            + tableName
+            + unnestConcat
+            + whereClause
+            + " ORDER BY "
+            + nt.getColumn();
     logger.debug("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);
