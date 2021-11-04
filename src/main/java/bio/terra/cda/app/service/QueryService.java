@@ -12,13 +12,6 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.*;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +19,9 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Component
 @CacheConfig(cacheNames = "system-status")
@@ -184,12 +180,18 @@ public class QueryService {
   }
 
   private static class QueryData {
+    public final String timestamp;
+    public final String userEmail;
+    public final String jobId;
     public final String query;
     public final float duration;
     public final Map<Source, Integer> systemUsage;
 
-    QueryData(String query, float duration, Map<Source, Integer> systemUsage) {
-      this.query = query;
+    QueryData(Job queryJob, float duration, Map<Source, Integer> systemUsage) {
+      this.timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
+      this.userEmail = queryJob.getUserEmail();
+      this.jobId = queryJob.getJobId().getJob();
+      this.query = getSqlFromJob(queryJob);
       this.duration = duration;
       this.systemUsage = systemUsage;
     }
@@ -257,7 +259,7 @@ public class QueryService {
           (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime())
               / 1000.0F;
     }
-    var logData = new QueryData(getSqlFromJob(queryJob), elapsed, resultsCount);
+    var logData = new QueryData(queryJob, elapsed, resultsCount);
     try {
       logger.info(objectMapper.writeValueAsString(logData));
     } catch (JsonProcessingException e) {
