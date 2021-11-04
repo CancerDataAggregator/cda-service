@@ -20,6 +20,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -179,6 +180,7 @@ public class QueryService {
   }
 
   private static class QueryData {
+    public final String timestamp;
     public final String userEmail;
     public final String jobId;
     public final String query;
@@ -186,6 +188,7 @@ public class QueryService {
     public final Map<Source, Integer> systemUsage;
 
     QueryData(Job queryJob, float duration, Map<Source, Integer> systemUsage) {
+      this.timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
       this.userEmail = queryJob.getUserEmail();
       this.jobId = queryJob.getJobId().getJob();
       this.query = getSqlFromJob(queryJob);
