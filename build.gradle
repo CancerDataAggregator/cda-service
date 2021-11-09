@@ -31,6 +31,7 @@ sourceSets {
 }
 
 configurations {
+    jib.from.image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:15-alpine'
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 }
