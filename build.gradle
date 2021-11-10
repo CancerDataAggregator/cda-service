@@ -17,7 +17,9 @@ plugins {
 }
 
 group = 'bio.terra.cda'
-version = '2.0.2-SNAPSHOT'
+
+version = '2.0.4-SNAPSHOT'
+
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
@@ -31,6 +33,7 @@ sourceSets {
 }
 
 configurations {
+    jib.from.image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 }
