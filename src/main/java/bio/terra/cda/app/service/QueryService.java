@@ -23,6 +23,8 @@ import org.springframework.stereotype.Component;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static java.lang.Thread.currentThread;
+
 @Component
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
@@ -51,8 +53,8 @@ public class QueryService {
     SystemStatusSystems bigQuerySystemStatus = new SystemStatusSystems();
     boolean success = false;
     try {
-      String StatusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
-      success = StatusCheck.equals("cda_mvp");
+      String statusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
+      success = statusCheck.equals("cda_mvp");
     } catch (Exception e) {
       logger.error("Status check failed ", e);
     }
@@ -175,6 +177,7 @@ public class QueryService {
 
       return new QueryResult(jsonData, result.getTotalRows(), getSqlFromJob(queryJob));
     } catch (InterruptedException e) {
+      currentThread().interrupt();
       throw new RuntimeException("Error while getting query results", e);
     }
   }
