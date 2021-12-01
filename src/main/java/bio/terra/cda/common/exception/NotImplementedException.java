@@ -4,9 +4,8 @@ package bio.terra.cda.common.exception;
 // the OpenAPI yaml. The global exception handler auto-magically converts exceptions
 // of this base class into the appropriate ErrorReport REST response.
 
-import org.springframework.http.HttpStatus;
-
 import java.util.List;
+import org.springframework.http.HttpStatus;
 
 public abstract class NotImplementedException extends ErrorReportException {
   private static final HttpStatus thisStatus = HttpStatus.NOT_IMPLEMENTED;

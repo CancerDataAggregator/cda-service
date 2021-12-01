@@ -25,8 +25,6 @@ public class QueryTranslator {
     final Query rootQuery;
     final String table;
 
-    private SqlGenerator() {}
-
     private SqlGenerator(String qualifiedTable, Query rootQuery) {
       this.qualifiedTable = qualifiedTable;
       this.rootQuery = rootQuery;
