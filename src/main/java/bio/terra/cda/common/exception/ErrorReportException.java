@@ -4,39 +4,40 @@ package bio.terra.cda.common.exception;
 // the OpenAPI yaml. The global exception handler auto-magically converts exceptions
 // of this base class into the appropriate ErrorReport REST response.
 
-import java.util.List;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.http.HttpStatus;
+
+import java.util.List;
 
 public abstract class ErrorReportException extends RuntimeException {
   private final List<String> causes;
   private final HttpStatus statusCode;
 
-  public ErrorReportException(String message) {
+  protected ErrorReportException(String message) {
     super(message);
     this.causes = null;
     this.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
   }
 
-  public ErrorReportException(String message, Throwable cause) {
+  protected ErrorReportException(String message, Throwable cause) {
     super(message, cause);
     this.causes = null;
     this.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
   }
 
-  public ErrorReportException(Throwable cause) {
+  protected ErrorReportException(Throwable cause) {
     super(cause);
     this.causes = null;
     this.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
   }
 
-  public ErrorReportException(String message, List<String> causes, HttpStatus statusCode) {
+  protected ErrorReportException(String message, List<String> causes, HttpStatus statusCode) {
     super(message);
     this.causes = causes;
     this.statusCode = statusCode;
   }
 
-  public ErrorReportException(
+  protected ErrorReportException(
       String message, Throwable cause, List<String> causes, HttpStatus statusCode) {
     super(message, cause);
     this.causes = causes;
