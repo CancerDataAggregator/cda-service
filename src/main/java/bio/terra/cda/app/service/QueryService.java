@@ -1,5 +1,8 @@
 package bio.terra.cda.app.service;
 
+import static java.lang.Thread.currentThread;
+
+import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.SystemStatus;
 import bio.terra.cda.generated.model.SystemStatusSystems;
@@ -12,6 +15,8 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.*;
 import com.google.common.annotations.VisibleForTesting;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +24,6 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
-
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 @Component
 @CacheConfig(cacheNames = "system-status")
@@ -51,8 +53,8 @@ public class QueryService {
     SystemStatusSystems bigQuerySystemStatus = new SystemStatusSystems();
     boolean success = false;
     try {
-      String StatusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
-      success = StatusCheck.equals("cda_mvp");
+      String statusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
+      success = statusCheck.equals("cda_mvp");
     } catch (Exception e) {
       logger.error("Status check failed ", e);
     }
@@ -141,11 +143,11 @@ public class QueryService {
   private QueryResult getJobResults(Job queryJob, int offset, int pageSize) {
     var options = new ArrayList<BigQuery.QueryResultsOption>();
     if (offset < 0) {
-      throw new RuntimeException("Invalid offset: " + offset);
+      throw new IllegalArgumentException("Invalid offset: " + offset);
     }
     options.add(BigQuery.QueryResultsOption.startIndex(offset));
     if (pageSize < 1) {
-      throw new RuntimeException("Invalid page size: " + pageSize);
+      throw new IllegalArgumentException("Invalid page size: " + pageSize);
     }
     options.add(BigQuery.QueryResultsOption.pageSize(pageSize));
     try {
@@ -175,7 +177,8 @@ public class QueryService {
 
       return new QueryResult(jsonData, result.getTotalRows(), getSqlFromJob(queryJob));
     } catch (InterruptedException e) {
-      throw new RuntimeException("Error while getting query results", e);
+      currentThread().interrupt();
+      throw new BadQueryException("Error while getting query results", e);
     }
   }
 
@@ -237,7 +240,7 @@ public class QueryService {
   public JobStatusData getQueryStatusFromJob(String queryId) {
     final Job job = bigQuery.getJob(queryId);
     if (job == null || !job.exists()) {
-      throw new RuntimeException("Unknown query " + queryId);
+      throw new BadQueryException("Job is null or doesn't exist:  " + queryId);
     }
     JobStatusData data = new JobStatusData();
     data.setQueryId(queryId);
