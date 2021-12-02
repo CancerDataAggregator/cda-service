@@ -1,5 +1,7 @@
 package bio.terra.cda.app.controller;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import bio.terra.cda.common.exception.BadRequestException;
 import bio.terra.cda.common.exception.ErrorReportException;
 import bio.terra.cda.generated.model.ErrorReport;
@@ -24,6 +26,13 @@ public class GlobalExceptionHandlerTest {
     GlobalExceptionHandler handler = new GlobalExceptionHandler();
     ResponseEntity<ErrorReport> report = handler.errorReportHandler(erx);
     assert (report.getStatusCode() == HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  public void TestErrorReportHandlerIncompleteError() throws Exception {
+    GlobalExceptionHandler handler = new GlobalExceptionHandler();
+    ResponseEntity<ErrorReport> report = handler.errorReportHandler(null);
+    assertNull(report);
   }
 
   @Test

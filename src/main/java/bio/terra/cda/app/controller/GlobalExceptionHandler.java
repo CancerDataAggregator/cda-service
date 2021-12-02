@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ErrorReportException.class)
   public ResponseEntity<ErrorReport> errorReportHandler(ErrorReportException ex) {
     if (ex == null) {
-      throw new IllegalArgumentException("Error reporting has missing values");
+      return null;
     }
     return buildErrorReport(ex, ex.getStatusCode(), ex.getCauses());
   }
