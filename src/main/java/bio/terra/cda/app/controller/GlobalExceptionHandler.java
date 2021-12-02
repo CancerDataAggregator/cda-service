@@ -27,10 +27,12 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ErrorReportException.class)
   public ResponseEntity<ErrorReport> errorReportHandler(@CheckForNull ErrorReportException ex) {
     HttpStatus statusCode = null;
+    List<String> causes = null;
     if(ex != null) {
        statusCode = ex.getStatusCode();
+       causes = ex.getCauses();
     }
-    return buildErrorReport(ex, statusCode, ex.getCauses());
+    return buildErrorReport(ex, statusCode, causes);
   }
 
   // -- validation exceptions - we don't control the exception raised
