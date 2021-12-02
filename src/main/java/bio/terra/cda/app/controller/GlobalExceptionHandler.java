@@ -2,6 +2,8 @@ package bio.terra.cda.app.controller;
 
 import bio.terra.cda.common.exception.ErrorReportException;
 import bio.terra.cda.generated.model.ErrorReport;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -10,10 +12,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import javax.annotation.CheckForNull;
-import java.util.ArrayList;
-import java.util.List;
 
 // This module provides a top-level exception handler for controllers.
 // All exceptions that rise through the controllers are caught in this handler.
@@ -25,14 +23,11 @@ public class GlobalExceptionHandler {
 
   // -- Error Report - one of our exceptions --
   @ExceptionHandler(ErrorReportException.class)
-  public ResponseEntity<ErrorReport> errorReportHandler(@CheckForNull ErrorReportException ex) {
-    HttpStatus statusCode = null;
-    List<String> causes = null;
-    if(ex != null) {
-       statusCode = ex.getStatusCode();
-       causes = ex.getCauses();
+  public ResponseEntity<ErrorReport> errorReportHandler(ErrorReportException ex) {
+    if (ex == null) {
+      throw new IllegalArgumentException("Error reporting has missing values");
     }
-    return buildErrorReport(ex, statusCode, causes);
+    return buildErrorReport(ex, ex.getStatusCode(), ex.getCauses());
   }
 
   // -- validation exceptions - we don't control the exception raised
