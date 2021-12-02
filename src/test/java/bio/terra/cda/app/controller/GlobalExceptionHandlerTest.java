@@ -50,6 +50,6 @@ class GlobalExceptionHandlerTest {
 
     GlobalExceptionHandler handler = new GlobalExceptionHandler();
     ResponseEntity<ErrorReport> report = handler.validationExceptionHandler(erx);
-    assertEquals (report.getStatusCode(), HttpStatus.BAD_REQUEST);
+    assertEquals (HttpStatus.BAD_REQUEST, report.getStatusCode());
   }
 }
