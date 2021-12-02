@@ -24,6 +24,9 @@ public class GlobalExceptionHandler {
   // -- Error Report - one of our exceptions --
   @ExceptionHandler(ErrorReportException.class)
   public ResponseEntity<ErrorReport> errorReportHandler(ErrorReportException ex) {
+    if (ex == null) {
+      return null;
+    }
     return buildErrorReport(ex, ex.getStatusCode(), ex.getCauses());
   }
 
