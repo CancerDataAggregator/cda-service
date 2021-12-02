@@ -4,6 +4,7 @@ import bio.terra.cda.common.exception.ErrorReportException;
 import bio.terra.cda.generated.model.ErrorReport;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.CheckForNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,7 @@ public class GlobalExceptionHandler {
 
   // -- Error Report - one of our exceptions --
   @ExceptionHandler(ErrorReportException.class)
-  public ResponseEntity<ErrorReport> errorReportHandler(ErrorReportException ex) {
+  public ResponseEntity<ErrorReport> errorReportHandler(@CheckForNull ErrorReportException ex) {
     return buildErrorReport(ex, ex.getStatusCode(), ex.getCauses());
   }
 

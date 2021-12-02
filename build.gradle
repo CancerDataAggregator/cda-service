@@ -168,6 +168,16 @@ jacocoTestReport {
 		xml.enabled true
 	}
 }
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.2
+			}
+		}
+	}
+}
 test.finalizedBy jacocoTestReport
 
 
@@ -177,6 +187,7 @@ sonarqube {
     property "sonar.organization", "cancerdataaggregator"
     property "sonar.host.url", "https://sonarcloud.io"
 	property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
+	property "sonar.exclusions", "build/generated/**"
   }
 }
 
