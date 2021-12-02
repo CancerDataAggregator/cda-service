@@ -1,19 +1,21 @@
 package bio.terra.cda.app.controller;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 import bio.terra.cda.common.exception.BadRequestException;
 import bio.terra.cda.common.exception.ErrorReportException;
 import bio.terra.cda.generated.model.ErrorReport;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-public class GlobalExceptionHandlerTest {
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+class GlobalExceptionHandlerTest {
 
   @Test
-  public void TestErrorReportHandler() throws Exception {
+  void TestErrorReportHandler() throws Exception {
     HttpStatus statusCode = HttpStatus.BAD_REQUEST;
     ErrorReportException erx =
         new BadRequestException("Bad Request") {
@@ -25,18 +27,18 @@ public class GlobalExceptionHandlerTest {
 
     GlobalExceptionHandler handler = new GlobalExceptionHandler();
     ResponseEntity<ErrorReport> report = handler.errorReportHandler(erx);
-    assert (report.getStatusCode() == HttpStatus.BAD_REQUEST);
+    assertEquals (HttpStatus.BAD_REQUEST, report.getStatusCode());
   }
 
   @Test
-  public void TestErrorReportHandlerIncompleteError() throws Exception {
+  void TestErrorReportHandlerIncompleteError() throws Exception {
     GlobalExceptionHandler handler = new GlobalExceptionHandler();
     ResponseEntity<ErrorReport> report = handler.errorReportHandler(null);
     assertNull(report);
   }
 
   @Test
-  public void TestValidationExceptionHandler() throws Exception {
+  void TestValidationExceptionHandler() throws Exception {
     HttpStatus statusCode = HttpStatus.BAD_REQUEST;
     ErrorReportException erx =
         new BadRequestException("Bad Request") {
@@ -48,6 +50,6 @@ public class GlobalExceptionHandlerTest {
 
     GlobalExceptionHandler handler = new GlobalExceptionHandler();
     ResponseEntity<ErrorReport> report = handler.validationExceptionHandler(erx);
-    assert (report.getStatusCode() == HttpStatus.BAD_REQUEST);
+    assertEquals (report.getStatusCode(), HttpStatus.BAD_REQUEST);
   }
 }
