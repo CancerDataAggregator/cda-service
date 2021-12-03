@@ -170,7 +170,7 @@ public class QueryTranslator {
           try {
             System.out.println(query.getR().getNodeType());
             if (query.getR().getNodeType().toString().equals("quoted")) {
-              String paramName = String.format("@%s", query.getR().getValue());
+              String paramName = String.format("%s", query.getR().getValue());
               paramValues.put(paramName, query.getR().getValue());
               System.out.println(paramValues);
             }
@@ -178,7 +178,7 @@ public class QueryTranslator {
             System.out.println(e.getMessage());
           }
           return String.format(
-              "(%s %s 8%s)",
+              "(%s %s %s)",
               queryString(query.getL()), query.getNodeType(), queryString(query.getR()));
       }
     }
