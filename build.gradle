@@ -22,7 +22,7 @@ ext['log4j2.version'] = '2.17.0'
 
 group = 'bio.terra.cda'
 
-version = '2.0.5-SNAPSHOT'
+version = '2.0.6-SNAPSHOT'
 
 //sourceCompatibility = JavaVersion.VERSION_11
 
