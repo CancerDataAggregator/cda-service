@@ -9,7 +9,7 @@ buildscript {
 plugins {
 	id 'java'
 	id 'idea'
-	id 'org.springframework.boot' version '2.5.4'
+	id 'org.springframework.boot' version '2.4.3'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'com.google.cloud.tools.jib' version '2.8.0'
 	id 'org.openapi.generator' version '5.1.1'
@@ -23,8 +23,7 @@ ext['log4j2.version'] = '2.17.0'
 group = 'bio.terra.cda'
 
 version = '2.0.4-SNAPSHOT'
-
-//sourceCompatibility = JavaVersion.VERSION_11
+sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
 	mavenCentral()
