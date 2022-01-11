@@ -21,7 +21,8 @@ public class QueryTranslator {
     return new SqlGenerator(table, query).generate();
   }
 
-  // A convenience class to avoid having to pass 'table' around to all the methods.
+  // A convenience class to avoid having to pass 'table' around to all the
+  // methods.
   private static class SqlGenerator {
     final String qualifiedTable;
     final Query rootQuery;
@@ -29,7 +30,7 @@ public class QueryTranslator {
     private Boolean hasGroupBy = false;
     private String selectInValue;
     private String tableValueList;
-    private Map<String,String> paramValues = new HashMap<>();
+    private Map<String, String> paramValues = new HashMap<>();
 
     private SqlGenerator(String qualifiedTable, Query rootQuery) {
       this.qualifiedTable = qualifiedTable;
@@ -44,69 +45,64 @@ public class QueryTranslator {
 
     private String sql(String tableOrSubClause, Query query) {
       if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
-        // A SUBQUERY is built differently from other queries. The FROM clause is the SQL version of
-        // the right subtree, instead of using table. The left subtree is now the top level query.
+        // A SUBQUERY is built differently from other queries. The FROM clause is the
+        // SQL version of
+        // the right subtree, instead of using table. The left subtree is now the top
+        // level query.
         return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
       }
       Query tmpQuery = query;
-    if(query.getNodeType() == Query.NodeTypeEnum.SELECT){
-       tableValueList = query.getL().getValue();
-       tmpQuery = query.getR();
+      if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
+        tableValueList = query.getL().getValue();
+        tmpQuery = query.getR();
 
+      }
 
-    }
-
-
-      var fromClause =
-          Stream.concat(
-                  Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
-              .collect(Collectors.joining(", "));
+      var fromClause = Stream.concat(
+          Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
+          .collect(Collectors.joining(", "));
 
       var condition = queryString(tmpQuery);
-      if(hasGroupBy && !(tableValueList == null)){
+      if (hasGroupBy && !(tableValueList == null)) {
         selectInValue = Arrays.stream(tableValueList.split(","))
-                .map(e -> {
-                          String[] value = e.split("\\.");
-                          if (e.equals("id")) {
-                            return String.format("%s.%s", table.trim(), e.trim());
-                          } else {
-                            if(e.contains(".")){
-                              return String.format("ANY_VALUE(%s) as %s",
-                                      String.format("_%s.%s",value[value.length -2].trim(),value[value.length -1].trim()),
-                                      value[value.length -1].trim()
-                                      );
-                            }
-                            return String.format("ANY_VALUE(%s) as %s",e.trim(),e.trim());
-                          }
-                        }
+            .map(e -> {
+              String[] value = e.split("\\.");
+              if (e.equals("id")) {
+                return String.format("%s.%s", table.trim(), e.trim());
+              } else {
+                if (e.contains(".")) {
+                  return String.format("ANY_VALUE(%s) as %s",
+                      String.format("_%s.%s", value[value.length - 2].trim(), value[value.length - 1].trim()),
+                      value[value.length - 1].trim());
+                }
+                return String.format("ANY_VALUE(%s) as %s", e.trim(), e.trim());
+              }
+            }
 
-                ).collect(Collectors.joining(", "));
-        condition += String.format("\n GROUP BY %s.id",table);
+            ).collect(Collectors.joining(", "));
+        condition += String.format("\n GROUP BY %s.id", table);
         return String.format("SELECT %s FROM %s WHERE %s", selectInValue, fromClause, condition);
       }
       return String.format("SELECT %s.* FROM %s WHERE %s", table, fromClause, condition);
     }
 
-
-    private String sql(String tableOrSubClause, Query query, String selectClause ) {
+    private String sql(String tableOrSubClause, Query query, String selectClause) {
       if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
-        // A SUBQUERY is built differently from other queries. The FROM clause is the SQL version of
-        // the right subtree, instead of using table. The left subtree is now the top level query.
+        // A SUBQUERY is built differently from other queries. The FROM clause is the
+        // SQL version of
+        // the right subtree, instead of using table. The left subtree is now the top
+        // level query.
         return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
       }
 
-
-
-
-      var fromClause =
-              Stream.concat(
-                      Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
-                      .collect(Collectors.joining(", "));
+      var fromClause = Stream.concat(
+          Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
+          .collect(Collectors.joining(", "));
 
       var condition = queryString(query);
 
-        condition += String.format("\n GROUP BY %s \n HAVING COUNT(*) >= 1",selectClause );
-      return  String.format("SELECT %s FROM %s WHERE %s", selectClause, fromClause, condition);
+      condition += String.format("\n GROUP BY %s \n HAVING COUNT(*) >= 1", selectClause);
+      return String.format("SELECT %s FROM %s WHERE %s", selectClause, fromClause, condition);
     }
 
     private Stream<String> getUnnestColumns(Query query) {
@@ -126,7 +122,8 @@ public class QueryTranslator {
           return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
       }
     }
-    private Stream<String> partsToUnnest(String value){
+
+    private Stream<String> partsToUnnest(String value) {
       // filter out table in UNNEST
       List<String> list = new ArrayList<>();
       for (String s : value.split("\\.")) {
@@ -137,13 +134,12 @@ public class QueryTranslator {
       var parts = list.toArray();
       hasGroupBy = parts.length > 1;
       return IntStream.range(0, parts.length - 1)
-              .mapToObj(
-                      i ->
-                              i == 0
-                                      ? String.format("UNNEST(%1$s) AS _%1$s", parts[i])
-                                      : String.format("UNNEST(_%1$s.%2$s) AS _%2$s", parts[i - 1], parts[i])
-              );
+          .mapToObj(
+              i -> i == 0
+                  ? String.format("UNNEST(%1$s) AS _%1$s", parts[i])
+                  : String.format("UNNEST(_%1$s.%2$s) AS _%2$s", parts[i - 1], parts[i]));
     }
+
     private String queryString(Query query) {
       switch (query.getNodeType()) {
         case SELECTVALUES:
@@ -155,13 +151,15 @@ public class QueryTranslator {
         case IN:
           hasGroupBy = Boolean.TRUE;
 
-            return String.format("%s IN (%s)",query.getL().getValue(),sql(qualifiedTable,query.getR(),query.getL().getValue()));
+          return String.format("%s IN (%s)", query.getL().getValue(),
+              sql(qualifiedTable, query.getR(), query.getL().getValue()));
         case COLUMN:
           var parts = query.getValue().split("\\.");
           if (parts.length > 1) {
             return String.format("_%s.%s", parts[parts.length - 2], parts[parts.length - 1]);
           }
-          // Top level fields must be scoped by the table name, otherwise they could conflict with
+          // Top level fields must be scoped by the table name, otherwise they could
+          // conflict with
           // unnested fields.
           return String.format("%s.%s", table, query.getValue());
         case NOT:
@@ -174,7 +172,7 @@ public class QueryTranslator {
               paramValues.put(paramName, query.getR().getValue());
               System.out.println(paramValues);
             }
-          }catch (Exception e){
+          } catch (Exception e) {
             System.out.println(e.getMessage());
           }
           return String.format(
