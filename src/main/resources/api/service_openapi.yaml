@@ -212,6 +212,22 @@ paths:
         200:
           $ref: '#/components/responses/QueryCreated'
 
+  /api/v1/global-counts/{version}:
+    post:
+      summary: Returns counts of the DCS
+      description: Return GlobalCounts for schema
+      operationId: GlobalCounts
+      tags:
+        - query
+
+      parameters:
+        - $ref: '#/components/parameters/DatasetVersion'
+        - $ref: '#/components/parameters/Table'
+
+      responses:
+        200:
+          $ref: '#/components/responses/QueryCreated'
+
 components:
 
   parameters:

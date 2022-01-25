@@ -271,7 +271,7 @@ public class QueryService {
   }
 
   public String startQuery(String query) {
-    var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
+  QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).setUseQueryCache(true);
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
@@ -280,3 +280,4 @@ public class QueryService {
     return queryJob.getJobId().getJob();
   }
 }
+
