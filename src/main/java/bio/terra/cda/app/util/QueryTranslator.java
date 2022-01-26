@@ -87,6 +87,8 @@ public class QueryTranslator {
           return String.format("%s.%s", table, query.getValue());
         case NOT:
           return String.format("(%s %s)", query.getNodeType(), queryString(query.getL()));
+        case IN:
+          return String.format("(%s IN %s)", query.getR().value(),query.getL().value());
         default:
           return String.format(
               "(%s %s %s)",
