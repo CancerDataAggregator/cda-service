@@ -23,6 +23,9 @@ local-dev/
 *.ipr
 out/
 
+### tCell agent ###
+tcell/
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
