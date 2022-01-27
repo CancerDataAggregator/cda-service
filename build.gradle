@@ -37,7 +37,7 @@ sourceSets {
 
 configurations {
     jib.from.image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
-    jib.container.jvmFlags = ['-javaagent:/tcell/tcellagent.jar']
+    jib.container.jvmFlags = ['-javaagent:tcellagent.jar']
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 }
