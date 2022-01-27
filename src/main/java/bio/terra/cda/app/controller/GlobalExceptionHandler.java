@@ -4,7 +4,6 @@ import bio.terra.cda.common.exception.ErrorReportException;
 import bio.terra.cda.generated.model.ErrorReport;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.CheckForNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -44,12 +43,15 @@ public class GlobalExceptionHandler {
   // -- catchall - log so we can understand what we have missed in the handlers above
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorReport> catchallHandler(Exception ex) {
+    if (ex == null) {
+      return null;
+    }
     logger.error("Exception caught by catchall hander", ex);
     return buildErrorReport(ex, HttpStatus.INTERNAL_SERVER_ERROR, null);
   }
 
   private ResponseEntity<ErrorReport> buildErrorReport(
-      @CheckForNull Throwable ex, HttpStatus statusCode, List<String> causes) {
+      Throwable ex, HttpStatus statusCode, List<String> causes) {
     logger.error("Global exception handler: catch stack", ex);
 
     List<String> collectCauses = new ArrayList<>();
@@ -62,8 +64,10 @@ public class GlobalExceptionHandler {
       causes = collectCauses;
     }
 
-    ErrorReport errorReport =
-        new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
+    ErrorReport errorReport = new ErrorReport();
+    if (ex != null) {
+      errorReport.message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
+    }
     return new ResponseEntity<>(errorReport, statusCode);
   }
 }
