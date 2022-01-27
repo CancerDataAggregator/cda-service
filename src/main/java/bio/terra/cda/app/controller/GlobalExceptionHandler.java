@@ -2,9 +2,6 @@ package bio.terra.cda.app.controller;
 
 import bio.terra.cda.common.exception.ErrorReportException;
 import bio.terra.cda.generated.model.ErrorReport;
-import java.util.ArrayList;
-import java.util.List;
-import javax.annotation.CheckForNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -13,6 +10,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 // This module provides a top-level exception handler for controllers.
 // All exceptions that rise through the controllers are caught in this handler.
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
   }
 
   private ResponseEntity<ErrorReport> buildErrorReport(
-      @CheckForNull Throwable ex, HttpStatus statusCode, List<String> causes) {
+      Throwable ex, HttpStatus statusCode, List<String> causes) {
     logger.error("Global exception handler: catch stack", ex);
 
     List<String> collectCauses = new ArrayList<>();
@@ -62,8 +62,10 @@ public class GlobalExceptionHandler {
       causes = collectCauses;
     }
 
-    ErrorReport errorReport =
-        new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
+    ErrorReport errorReport = new ErrorReport();
+    if(ex != null) {
+      errorReport.message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
+    }
     return new ResponseEntity<>(errorReport, statusCode);
   }
 }
