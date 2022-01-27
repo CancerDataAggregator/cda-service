@@ -1,3 +1,4 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=CancerDataAggregator_cda-service&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=CancerDataAggregator_cda-service)
 # cda-service
 This repository started as a clone of the [kernel-service-poc](https://github.com/DataBiosphere/kernel-service-poc) project.
 
