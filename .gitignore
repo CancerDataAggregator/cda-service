@@ -24,7 +24,7 @@ local-dev/
 out/
 
 ### tCell agent ###
-tcell*
+jib-agents/
 
 ### NetBeans ###
 /nbproject/private/
