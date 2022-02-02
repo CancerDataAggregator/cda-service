@@ -47,7 +47,12 @@ public class QueryTranslator {
                   Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
               .collect(Collectors.joining(", "));
 
-      var condition = queryString(query);
+      String condition = null;
+      try {
+        condition = queryString(query);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
       return String.format("SELECT %s.* FROM %s WHERE %s", table, fromClause, condition);
     }
 
@@ -70,11 +75,10 @@ public class QueryTranslator {
           return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
       }
     }
-
-    private String queryString(Query query) {
+    private String queryString(Query query) throws IllegalArgumentException {
       switch (query.getNodeType()) {
         case QUOTED:
-          return String.format("'%s'", query.getValue());
+          return String.format("UPPER('%s')", query.getValue());
         case UNQUOTED:
           return String.format("%s", query.getValue());
         case COLUMN:
@@ -88,7 +92,15 @@ public class QueryTranslator {
         case NOT:
           return String.format("(%s %s)", query.getNodeType(), queryString(query.getL()));
         case IN:
-          return String.format("(%s IN %s)", query.getR().value(),query.getL().value());
+          String right = queryString(query.getR());
+          if (right.contains("[") || right.contains("(")) {
+            right = right.substring(1, right.length() - 1).replace("\"","'");
+          }else{
+            throw new IllegalArgumentException("To use IN you need to add [ or (");
+          }
+
+          String left = queryString(query.getL());
+          return String.format("(%s IN (%s))",left,right);
         default:
           return String.format(
               "(%s %s %s)",

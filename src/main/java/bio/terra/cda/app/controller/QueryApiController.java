@@ -161,26 +161,8 @@ public class QueryApiController implements QueryApi {
 
 
 @Override
-  public ResponseEntity<QueryCreatedData> globalCounts(String version, String table) {
-    String tableName;
-    if (table == null) {
-      tableName = applicationConfiguration.getBqTable();
-    } else {
-      tableName = table;
-    }
-    String querySql =
-            "SELECT" +
-                    "(" +
-                    "SUM((SELECT COUNT(system) FROM UNNEST(identifier) WHERE system = 'GDC'))" +
-                    ") AS GDC," +
-                    "(" +
-                    "    SUM((SELECT COUNT(system) FROM UNNEST(identifier) WHERE system = 'PDC'))" +
-                    ") AS PDC," +
-                    "(" +
-                    "    SUM((SELECT COUNT(system) FROM UNNEST(identifier) WHERE system = 'IDC'))" +
-                    ") AS IDC" +
-                    "" +
-                    String.format(" From (SELECT identifier FROM %s.%s), UNNEST(identifier)", tableName, version);
-    return sendQuery(querySql,false);
+  public ResponseEntity<QueryCreatedData> globalCounts(String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    String querySql = QueryTranslator.sql(table + "." + version, body);
+    return sendQuery(querySql, dryRun);
   }
 }
