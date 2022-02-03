@@ -60,8 +60,10 @@ public class GlobalExceptionHandler {
     if (causes == null) {
       causes = collectCauses;
     }
-    ErrorReport errorReport =
-        new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
+    ErrorReport errorReport = null;
+    if (ex != null) {
+      errorReport = new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
+    }
     return new ResponseEntity<>(errorReport, statusCode);
   }
 }
