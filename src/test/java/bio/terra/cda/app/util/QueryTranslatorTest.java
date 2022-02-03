@@ -24,7 +24,7 @@ class QueryTranslatorTest {
 
     String expectedSql =
         String.format(
-            "SELECT %2$s.* FROM %1$s AS %2$s WHERE (%2$s.project_id = 'TCGA-OV')",
+            "SELECT %2$s.* FROM %1$s AS %2$s WHERE (UPPER(%2$s.project_id) = UPPER('TCGA-OV'))",
             QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
@@ -41,7 +41,7 @@ class QueryTranslatorTest {
         String.format(
             "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(demographic) AS _demographic, UNNEST(project) AS _project, "
                 + "UNNEST(diagnoses) AS _diagnoses WHERE (((_demographic.age_at_index >= 50) AND "
-                + "(_project.project_id = 'TCGA-OV')) AND (_diagnoses.figo_stage = 'Stage IIIC'))",
+                + "(_project.project_id = UPPER('TCGA-OV'))) AND (_diagnoses.figo_stage = UPPER('Stage IIIC')))",
             QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
@@ -75,9 +75,9 @@ class QueryTranslatorTest {
             "SELECT %2$s.* FROM "
                 + "(SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(ResearchSubject) AS _ResearchSubject, "
                 + "UNNEST(_ResearchSubject.identifier) AS _identifier "
-                + "WHERE (_identifier.system = 'PDC')) AS %2$s,"
+                + "WHERE (_identifier.system = UPPER('PDC'))) AS %2$s,"
                 + " UNNEST(ResearchSubject) AS _ResearchSubject, "
-                + "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (_identifier.system = 'GDC')",
+                + "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (_identifier.system = UPPER('GDC'))",
             QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
@@ -107,7 +107,7 @@ class QueryTranslatorTest {
 
     String expectedSql =
         String.format(
-            "SELECT %2$s.* FROM (SELECT %2$s.* FROM %1$s AS %2$s WHERE (%2$s.id = 'that')) AS %2$s WHERE (%2$s.id = 'this')",
+            "SELECT %2$s.* FROM (SELECT %2$s.* FROM %1$s AS %2$s WHERE (UPPER(%2$s.id) = UPPER('that'))) AS %2$s WHERE (UPPER(%2$s.id) = UPPER('this'))",
             QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);

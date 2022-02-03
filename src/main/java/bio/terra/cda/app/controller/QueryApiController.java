@@ -15,7 +15,6 @@ import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -30,9 +29,9 @@ public class QueryApiController implements QueryApi {
 
   @Autowired
   public QueryApiController(
-          QueryService queryService,
-          ApplicationConfiguration applicationConfiguration,
-          HttpServletRequest webRequest) {
+      QueryService queryService,
+      ApplicationConfiguration applicationConfiguration,
+      HttpServletRequest webRequest) {
     this.queryService = queryService;
     this.applicationConfiguration = applicationConfiguration;
     this.webRequest = webRequest;
@@ -55,10 +54,10 @@ public class QueryApiController implements QueryApi {
 
     var result = queryService.getQueryResults(id, offset, limit);
     var response =
-            new QueryResponseData()
-                    .result(Collections.unmodifiableList(result.items))
-                    .totalRowCount(result.totalRowCount)
-                    .querySql(result.querySql);
+        new QueryResponseData()
+            .result(Collections.unmodifiableList(result.items))
+            .totalRowCount(result.totalRowCount)
+            .querySql(result.querySql);
     int nextPage = result.items.size() + limit;
     if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, limit));
@@ -94,7 +93,7 @@ public class QueryApiController implements QueryApi {
 
   @Override
   public ResponseEntity<QueryCreatedData> booleanQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     String querySql = QueryTranslator.sql(table + "." + version, body);
 
     return sendQuery(querySql, dryRun);
@@ -102,7 +101,7 @@ public class QueryApiController implements QueryApi {
 
   @Override
   public ResponseEntity<QueryCreatedData> uniqueValues(
-          String version, String body, String system, String table) {
+      String version, String body, String system, String table) {
     String tableName;
     if (table == null) {
       tableName = applicationConfiguration.getBqTable() + "." + version;
@@ -127,14 +126,14 @@ public class QueryApiController implements QueryApi {
     unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
 
     String querySql =
-            "SELECT DISTINCT "
-                    + nt.getColumn()
-                    + " FROM "
-                    + tableName
-                    + unnestConcat
-                    + whereClause
-                    + " ORDER BY "
-                    + nt.getColumn();
+        "SELECT DISTINCT "
+            + nt.getColumn()
+            + " FROM "
+            + tableName
+            + unnestConcat
+            + whereClause
+            + " ORDER BY "
+            + nt.getColumn();
     logger.debug("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);
@@ -149,19 +148,19 @@ public class QueryApiController implements QueryApi {
       tableName = table;
     }
     String querySql =
-            "SELECT field_path FROM "
-                    + tableName
-                    + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
-                    + version
-                    + "'";
+        "SELECT field_path FROM "
+            + tableName
+            + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
+            + version
+            + "'";
     logger.debug("columns: " + querySql);
 
     return sendQuery(querySql, false);
   }
 
-
-@Override
-  public ResponseEntity<QueryCreatedData> globalCounts(String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+  @Override
+  public ResponseEntity<QueryCreatedData> globalCounts(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     String querySql = QueryTranslator.sqlCount(table + "." + version, body);
     return sendQuery(querySql, dryRun);
   }
