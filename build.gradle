@@ -20,20 +20,16 @@ plugins {
 
 //ext['log4j2.version'] = '2.17.1'
 ext {
-	tcellBucketUrl = 'https://storage.googleapis.com/cloud-debugger/compute-java/debian-wheezy/cdbg_java_agent_gce.tar.gz'
+	tcellDirectoryLocation = 'tcell'
 
 	// location for jib extras, including the Java agent
-	jibExtraDirectory = "${buildDir}/jib-agents"
+	jibExtraDirectory = tcellDirectoryLocation
 }
 
-// Download and extract the Cloud Debugger Java Agent
-task copyAgent(type: Copy) {
-	src stackdriverDebuggerAgentUrl
-	dest "${buildDir}/cdbg_java_agent_gce.tar.gz"
-}
-task extractAgent(dependsOn: downloadAgent, type: Copy) {
-	from tarTree(downloadAgent.dest)
-	into "${jibExtraDirectory}/${stackdriverDebuggerLocation}"
+// Download and extract the TCell Java Agent
+task extractAgent(type: Copy) {
+ 	from tarTree(resources.gzip("./tcellagent.tgz"))
+	into "${jibExtraDirectory}"
 }
 
 
@@ -41,17 +37,17 @@ jib {
 	from {
 		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
 	}
-	extraDirectories.paths = [file(jibExtraDirectory)]
+	extraDirectories.paths = [file('./tcell')]
 	container {
 		jvmFlags = [
-				'-agentpath:' + "${jibExtraDirectory}/tcellagent.jar"
+				'-javaagent:tcellagent.jar'
 		]
 	}
 }
 
 group = 'bio.terra.cda'
 
-version = '2.0.4-SNAPSHOT'
+version = '2.1.0'
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
@@ -65,8 +61,6 @@ sourceSets {
 }
 
 configurations {
-    jib.from.image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
-    jib.container.jvmFlags = ['-javaagent:tcell/tcellagent.jar']
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 }
@@ -170,6 +164,10 @@ openApiValidate {
 compileJava.dependsOn tasks.openApiGenerate
 sourceSets.main.java.srcDir "${openapiTargetDir}/src/main/java"
 ideaModule.dependsOn tasks.openApiGenerate
+tasks.jib.dependsOn extractAgent
+tasks.jibDockerBuild.dependsOn extractAgent
+tasks.jibBuildTar.dependsOn extractAgent
+defaultTasks 'jib'
 
 // end of OpenAPI Server Generation
 
@@ -226,5 +224,4 @@ sonarqube {
 	property "sonar.exclusions", "build/generated/**"
   }
 }
-
 

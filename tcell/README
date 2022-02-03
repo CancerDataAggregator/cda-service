@@ -1,0 +1,34 @@
+
+----------------------------------
+tCell.io JVM Agent 1.14.1
+----------------------------------
+
+Detailed instructions are available here: https://tcell.zendesk.com/hc/en-us/articles/207175037-Installing-the-JVM-Agent
+
+Basic Installation
+------------
+1) Untar/unzip the package (you've done this already if you are reading this)
+2) Create your config file:
+
+    Edit tcell_agent.config.template with the right information for: company, app name, and security key and rename
+    to tcell_agent.config
+
+    OR
+
+    Download a complete configuration file from the tCell admin console under Agents > "Download Agents Configuration File"
+
+3) Add the tCell.io agent to your startup script:
+
+    Add the following to your java commandline: -javaagent:<path-to-here>/tcellagent.jar
+
+    If you are using Tomcat, this can be done by adding the following line to your bin/setenv.sh file
+
+      CATALINA_OPTS="$CATALINA_OPTS -javaagent:${CATALINA_HOME}/tcell/tcellagent.jar"
+
+
+Troubleshooting
+* Log files are created be in the tcell/log directory
+* Additional logging can be enabled via options in tcell_agent.config
+* The current tCell policy can be reviewed by tCell service can be found in the ./cache directory
+
+
