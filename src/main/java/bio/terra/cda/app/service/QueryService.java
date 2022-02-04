@@ -38,7 +38,8 @@ public class QueryService {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-  final BigQuery bigQuery = BigQueryOptions.newBuilder().setProjectId(project).build().getService();
+  final BigQuery bigQuery =
+      BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
 
   private final ObjectMapper objectMapper;
 
@@ -73,10 +74,7 @@ public class QueryService {
           .addMessagesItem(
               "PROJECT: "
                   + project
-                  + "- "
-                  + "BiqQuery Status check has indicated the '"
-                  + bqTable
-                  + "' dataset is currently unreachable from the Service API");
+                  + "BiqQuery Status check has indicated the 'cda_mvp' dataset is currently unreachable from the Service API");
     }
     systemStatus
         .ok(bigQuerySystemStatus.getOk())
