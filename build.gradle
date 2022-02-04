@@ -22,7 +22,7 @@ ext['log4j2.version'] = '2.17.1'
 
 group = 'bio.terra.cda'
 
-version = '2.0.4-SNAPSHOT'
+version = '2.1.0'
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
@@ -37,7 +37,6 @@ sourceSets {
 
 configurations {
     jib.from.image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
-    jib.container.jvmFlags = ['-javaagent:tcellagent.jar']
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 }
