@@ -30,18 +30,17 @@ import org.springframework.stereotype.Component;
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
 
-  @Value("${project}")
+  @Value("${project:default}")
   private String project;
 
-  @Value("${bqTable}")
+  @Value("${bqTable:default}")
   private String bqTable;
 
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-  final BigQuery bigQuery =
-      BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
-
   private final ObjectMapper objectMapper;
+
+  @Autowired private BigQuery bigQuery;
 
   @Autowired
   public QueryService(ObjectMapper objectMapper) {
@@ -74,7 +73,9 @@ public class QueryService {
           .addMessagesItem(
               "PROJECT: "
                   + project
-                  + "BiqQuery Status check has indicated the 'cda_mvp' dataset is currently unreachable from the Service API");
+                  + " - BiqQuery Status check has indicated the '"
+                  + bqTable
+                  + "' dataset is currently unreachable from the Service API");
     }
     systemStatus
         .ok(bigQuerySystemStatus.getOk())
