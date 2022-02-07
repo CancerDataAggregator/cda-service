@@ -3,16 +3,16 @@ package bio.terra.cda.app.model;
 import java.util.List;
 
 public class SchemaObjectList {
-  private List<SchemaObject> result;
+  private List<Object> result;
   private String query_sql;
   private int total_row_count;
   private String next_url;
 
-  public List<SchemaObject> getResult() {
+  public List<Object> getResult() {
     return result;
   }
 
-  public void setResult(List<SchemaObject> result) {
+  public void setResult(List<Object> result) {
     this.result = result;
   }
 
