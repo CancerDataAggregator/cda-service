@@ -1,0 +1,31 @@
+{
+  "version":1,
+  "applications": 
+    [
+      {
+      "app_id":"<your app name>",
+      "api_key":"<your v1 api key>",
+
+      // optional - to disable agent entirely, set to false
+      "enabled":true,
+
+      // optional - to prevent tcell agent from pulling data from tcell, set to true
+      //"fetch_policies_from_tcell":true,
+
+      // optional - to prevent tcell agent from automatically instrumenting the app, set to true
+      //"instrument_for_events":true,
+
+      // optional - a response from the API you want to use (usually used with fetch_policies_from_tcell:false) to control change in production manually
+      // "preload_policy_filename":null,
+
+      // optional - to enable the Server Agent inserting HTML into each page to include JSAgent
+      // "enable_output_filter": true,
+
+      // Default logging is appended to the file ./logs/tcell.log
+      "logging_options": {
+           "enabled":true,
+           "level":"INFO"
+           }
+      }
+   ]
+}
