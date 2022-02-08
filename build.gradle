@@ -40,7 +40,7 @@ jib {
 	extraDirectories.paths = [file('./tcell')]
 	container {
 		jvmFlags = [
-				'-javaagent:tcellagent.jar'
+				'-javaagent:tcell/tcellagent.jar'
 		]
 	}
 }
