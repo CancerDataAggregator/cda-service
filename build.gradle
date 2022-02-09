@@ -36,8 +36,6 @@ sourceSets {
 }
 
 configurations {
-    jib.from.image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
-    jib.container.jvmFlags = ['-javaagent:tcellagent.jar']
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 }
@@ -130,6 +128,16 @@ task integrationTest(type: Test) {
     outputs.upToDateWhen { false } // other way: inputs.upToDateWhen { false }
     
     mustRunAfter test
+}
+
+jib {
+	from {
+		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
+	}
+	container {
+		environment = [ 'spring.profiles.active':'dev' ]
+
+	}
 }
 
 tasks.register("bootRunDev") {

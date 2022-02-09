@@ -11,6 +11,7 @@ servers:
   - url: https://cda.cda-dev.broadinstitute.org
   - url: http://localhost:8080
   - url: http://34.71.42.239:8080
+  - url: http://dsde-cda-dev:8080
 
 tags:
   - name: query
@@ -221,7 +222,7 @@ components:
       required: true
       schema:
         type: string
-        default: all_v2
+        default: all_v2_1
       description: Dataset version
     SystemValue:
       in: query
