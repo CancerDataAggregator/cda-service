@@ -20,6 +20,7 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -29,12 +30,17 @@ import org.springframework.stereotype.Component;
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
 
+  @Value("${project}")
+  private String project;
+
+  @Value("${bqTable:default}")
+  private String bqTable;
+
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-  final BigQuery bigQuery =
-      BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
-
   private final ObjectMapper objectMapper;
+
+  @Autowired private BigQuery bigQuery;
 
   @Autowired
   public QueryService(ObjectMapper objectMapper) {
@@ -53,8 +59,8 @@ public class QueryService {
     SystemStatusSystems bigQuerySystemStatus = new SystemStatusSystems();
     boolean success = false;
     try {
-      String statusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
-      success = statusCheck.equals("cda_mvp");
+      String statusCheck = bigQuery.getDataset(bqTable).getDatasetId().getDataset();
+      success = statusCheck.equals(bqTable);
     } catch (Exception e) {
       logger.error("Status check failed ", e);
     }
@@ -65,7 +71,11 @@ public class QueryService {
       bigQuerySystemStatus
           .ok(false)
           .addMessagesItem(
-              "BiqQuery Status check has indicated the 'cda_mvp' dataset is currently unreachable from the Service API");
+              "PROJECT: "
+                  + project
+                  + " - BiqQuery Status check has indicated the '"
+                  + bqTable
+                  + "' dataset is currently unreachable from the Service API");
     }
     systemStatus
         .ok(bigQuerySystemStatus.getOk())

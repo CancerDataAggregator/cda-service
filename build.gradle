@@ -36,7 +36,6 @@ sourceSets {
 }
 
 configurations {
-    jib.from.image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 }
@@ -129,6 +128,38 @@ task integrationTest(type: Test) {
     outputs.upToDateWhen { false } // other way: inputs.upToDateWhen { false }
     
     mustRunAfter test
+}
+
+jib {
+	from {
+		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
+	}
+	container {
+		environment = [ 'spring.profiles.active':'dev' ]
+
+	}
+}
+
+tasks.register("bootRunLocal") {
+	group = "application"
+	description = "Runs the Spring Boot application with the local profile"
+	doFirst {
+		tasks.bootRun.configure {
+			systemProperty("spring.profiles.active", "local")
+		}
+	}
+	finalizedBy("bootRun")
+}
+
+tasks.register("bootRunDev") {
+	group = "application"
+	description = "Runs the Spring Boot application with the dev profile"
+	doFirst {
+		tasks.bootRun.configure {
+			systemProperty("spring.profiles.active", "dev")
+		}
+	}
+	finalizedBy("bootRun")
 }
 
 check.dependsOn integrationTest

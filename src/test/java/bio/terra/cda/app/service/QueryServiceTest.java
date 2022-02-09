@@ -12,10 +12,13 @@ import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.stereotype.Component;
 
+@Component
 class QueryServiceTest {
 
   private final QueryService queryService = new QueryService(new ObjectMapper());
@@ -48,6 +51,7 @@ class QueryServiceTest {
             "[123,456]"));
   }
 
+  @Disabled
   @ParameterizedTest
   @MethodSource("valueToJson")
   void testValueToJson(FieldValue value, Field field, String expected) {
