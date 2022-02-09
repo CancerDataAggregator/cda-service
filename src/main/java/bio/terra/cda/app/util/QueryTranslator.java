@@ -23,7 +23,8 @@ public class QueryTranslator {
     return new SqlGenerator(table, query, Boolean.TRUE).generate();
   }
 
-  // A convenience class to avoid having to pass 'table' around to all the methods.
+  // A convenience class to avoid having to pass 'table' around to all the
+  // methods.
   private static class SqlGenerator {
     final String qualifiedTable;
     final Query rootQuery;
@@ -51,14 +52,15 @@ public class QueryTranslator {
 
     private String sql(String tableOrSubClause, Query query) {
       if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
-        // A SUBQUERY is built differently from other queries. The FROM clause is the SQL version of
-        // the right subtree, instead of using table. The left subtree is now the top level query.
+        // A SUBQUERY is built differently from other queries. The FROM clause is the
+        // SQL version of
+        // the right subtree, instead of using table. The left subtree is now the top
+        // level query.
         return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
       }
-      var fromClause =
-          Stream.concat(
-                  Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
-              .collect(Collectors.joining(", "));
+      var fromClause = Stream.concat(
+          Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
+          .collect(Collectors.joining(", "));
 
       String condition = null;
       try {
@@ -191,10 +193,9 @@ public class QueryTranslator {
           var parts = query.getValue().split("\\.");
           return IntStream.range(0, parts.length - 1)
               .mapToObj(
-                  i ->
-                      i == 0
-                          ? String.format("UNNEST(%1$s) AS _%1$s", parts[i])
-                          : String.format("UNNEST(_%1$s.%2$s) AS _%2$s", parts[i - 1], parts[i]));
+                  i -> i == 0
+                      ? String.format("UNNEST(%1$s) AS _%1$s", parts[i])
+                      : String.format("UNNEST(_%1$s.%2$s) AS _%2$s", parts[i - 1], parts[i]));
         case NOT:
           return getUnnestColumns(query.getL());
         default:
@@ -205,7 +206,11 @@ public class QueryTranslator {
     private String queryString(Query query) throws IllegalArgumentException {
       switch (query.getNodeType()) {
         case QUOTED:
-          return String.format("UPPER('%s')", query.getValue());
+          String value = query.getValue();
+          if (value.contains("days_to_birth") || value.contains("age_at_death")) {
+            return String.format("'%s'", value);
+          }
+          return String.format("UPPER('%s')", value);
         case UNQUOTED:
           return String.format("%s", query.getValue());
         case COLUMN:
@@ -213,8 +218,13 @@ public class QueryTranslator {
           if (parts.length > 1) {
             return String.format("_%s.%s", parts[parts.length - 2], parts[parts.length - 1]);
           }
-          // Top level fields must be scoped by the table name, otherwise they could conflict with
+          // Top level fields must be scoped by the table name, otherwise they could
+          // conflict with
           // unnested fields.
+          String value_col = query.getValue();
+          if (value_col.contains("days_to_birth") || value_col.contains("age_at_death")) {
+            return String.format("%s.%s", table, value_col);
+          }
           return String.format("UPPER(%s.%s)", table, query.getValue());
         case NOT:
           return String.format("(%s %s)", query.getNodeType(), queryString(query.getL()));
