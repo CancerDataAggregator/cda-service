@@ -34,15 +34,17 @@ task extractAgent(type: Copy) {
 
 
 jib {
-//	from {
-//		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
-//	}
+	from {
+		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
+	}
 	extraDirectories.paths = [file('./tcell')]
 	container {
 		environment = [
 				'CATALINA_OPTS': '-javaagent:tcellagent.jar'
 		]
-		jvmFlags = [ '-javaagent:tcellagent.jar'	]
+		jvmFlags = [
+                '-javaagent:tcellagent.jar'
+		]
 	}
 }
 
