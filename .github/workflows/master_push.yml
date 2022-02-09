@@ -7,6 +7,10 @@ on:
     paths-ignore:
     - 'README.md'
     - '.github/**'
+  pull_request:
+    branches:
+    - master
+    
 env:
   SERVICE_NAME: cancerdata
   GOOGLE_PROJECT: broad-dsp-gcr-public
