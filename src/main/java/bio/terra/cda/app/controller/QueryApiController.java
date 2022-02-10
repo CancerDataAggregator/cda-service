@@ -10,19 +10,18 @@ import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collections;
-import java.util.Set;
 
 @Controller
 public class QueryApiController implements QueryApi {

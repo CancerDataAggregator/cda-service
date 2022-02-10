@@ -13,6 +13,7 @@ import bio.terra.cda.generated.model.QueryCreatedData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -56,7 +57,7 @@ class QueryApiControllerTest {
     verify(queryService, only()).startQuery(anyString());
   }
 
-  @Disabled
+  @Test
   public void uniqueValuesTest() throws Exception {
     String version = "v3";
     String system = "GDC";
