@@ -3,15 +3,14 @@ package bio.terra.cda.app.service;
 import bio.terra.cda.app.model.QueryResult;
 import bio.terra.cda.app.model.SchemaObjectList;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PerformanceIntegrationTests {
@@ -97,8 +96,14 @@ public class PerformanceIntegrationTests {
       System.out.println("\nExecution time in milliseconds  : " + totalTime + "ms\n");
       totalExecutionTime += totalTime;
     }
-    System.out.println("\nPerformance Report for " + dateFormat.format(date) + " Optimal performance is <= 80secs");
-    System.out.println("*** Total Execution for 10 sequential queries in seconds: " + totalExecutionTime/1000 +"secs");
+    System.out.println(
+        "\nPerformance Report for "
+            + dateFormat.format(date)
+            + " Optimal performance is <= 80secs");
+    System.out.println(
+        "*** Total Execution for 10 sequential queries in seconds: "
+            + totalExecutionTime / 1000
+            + "secs");
   }
 
   /**

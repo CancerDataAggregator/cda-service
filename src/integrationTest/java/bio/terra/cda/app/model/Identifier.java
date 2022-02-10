@@ -1,30 +1,27 @@
 package bio.terra.cda.app.model;
 
 public class Identifier {
-    private String system;
-    private String value;
+  private String system;
+  private String value;
 
-    public String getSystem() {
-        return system;
-    }
+  public String getSystem() {
+    return system;
+  }
 
-    public void setSystem(String system) {
-        this.system = system;
-    }
+  public void setSystem(String system) {
+    this.system = system;
+  }
 
-    public String getValue() {
-        return value;
-    }
+  public String getValue() {
+    return value;
+  }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
+  public void setValue(String value) {
+    this.value = value;
+  }
 
-    @Override
-    public String toString() {
-        return "Identifier{" +
-                "system='" + system + '\'' +
-                ", value='" + value + '\'' +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "Identifier{" + "system='" + system + '\'' + ", value='" + value + '\'' + '}';
+  }
 }
