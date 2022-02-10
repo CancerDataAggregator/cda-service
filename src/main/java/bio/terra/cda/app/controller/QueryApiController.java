@@ -1,23 +1,28 @@
 package bio.terra.cda.app.controller;
 
+import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.util.NestedColumn;
 import bio.terra.cda.app.util.QueryTranslator;
 import bio.terra.cda.generated.controller.QueryApi;
-import bio.terra.cda.generated.model.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collections;
-import java.util.Set;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import bio.terra.cda.generated.model.JobStatusData;
+import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.generated.model.QueryCreatedData;
+import bio.terra.cda.generated.model.QueryResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Set;
 
 @Controller
 public class QueryApiController implements QueryApi {
@@ -49,6 +54,7 @@ public class QueryApiController implements QueryApi {
     }
   }
 
+  @TrackExecutionTime
   @Override
   public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
     var result = queryService.getQueryResults(id, offset, limit);
@@ -64,6 +70,7 @@ public class QueryApiController implements QueryApi {
     return ResponseEntity.ok(response);
   }
 
+  @TrackExecutionTime
   @Override
   public ResponseEntity<JobStatusData> jobStatus(String id) {
     var response = queryService.getQueryStatusFromJob(id);
@@ -79,17 +86,20 @@ public class QueryApiController implements QueryApi {
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
+  @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> bulkData(String version) {
     String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
     return sendQuery(querySql, false);
   }
 
+  @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> sqlQuery(String querySql) {
     return sendQuery(querySql, false);
   }
 
+  @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
@@ -98,6 +108,7 @@ public class QueryApiController implements QueryApi {
     return sendQuery(querySql, dryRun);
   }
 
+  @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> uniqueValues(
       String version, String body, String system, String table) {
@@ -138,6 +149,7 @@ public class QueryApiController implements QueryApi {
     return sendQuery(querySql, false);
   }
 
+  @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> columns(String version, String table) {
     String tableName;
