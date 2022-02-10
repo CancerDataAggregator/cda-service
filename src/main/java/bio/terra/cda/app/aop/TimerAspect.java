@@ -9,12 +9,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class TimerAspect {
 
-    @Around("@annotation(bio.terra.cda.app.aop.LogExecutionTime)")
-    public Object executionTimer(ProceedingJoinPoint joinPoint) throws Throwable {
-        long start = System.currentTimeMillis();
-        Object proceed = joinPoint.proceed();
-        long executionTime = System.currentTimeMillis() - start;
-        System.out.println(joinPoint.getSignature() + " executed in " + executionTime + "ms");
-        return proceed;
-    }
+  @Around("@annotation(bio.terra.cda.app.aop.LogExecutionTime)")
+  public Object executionTimer(ProceedingJoinPoint joinPoint) throws Throwable {
+    long start = System.currentTimeMillis();
+    Object proceed = joinPoint.proceed();
+    long executionTime = System.currentTimeMillis() - start;
+    System.out.println(joinPoint.getSignature() + " executed in " + executionTime + "ms");
+    return proceed;
+  }
 }
