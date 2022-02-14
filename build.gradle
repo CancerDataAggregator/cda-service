@@ -4,6 +4,9 @@ buildscript {
 	repositories {
 		mavenCentral()
 	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:2.4.3.RELEASE")
+	}
 }
 
 plugins {
@@ -18,10 +21,11 @@ plugins {
 	id 'jacoco'
 }
 
+ext['log4j2.version'] = '2.17.1'
+
 group = 'bio.terra.cda'
 
-version = '2.0.4-SNAPSHOT'
-
+version = '2.1.0'
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
@@ -35,7 +39,6 @@ sourceSets {
 }
 
 configurations {
-    jib.from.image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 }
@@ -46,12 +49,12 @@ dependencies {
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
 	implementation group: 'javax.validation', name: 'validation-api'
 	implementation group: 'org.webjars', name: 'swagger-ui', version: '3.24.0'
-
+	implementation group: 'org.aspectj', name: 'aspectjweaver', version: '1.8.8'
 	implementation group: 'com.google.cloud', name: 'google-cloud-bigquery', version: '1.124.7'
 
 	// These dependencies are required to load the logback config file.
 	implementation group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
-	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-logging', version: '1.2.5.RELEASE'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-logging', version: '1.2.8.RELEASE'
 
 	// -- OpenAPI CodeGen dependencies --
 	implementation group: 'io.swagger.core.v3', name: 'swagger-annotations', version: '2.1.7'
@@ -71,6 +74,11 @@ dependencies {
 // Exclude the Spring logger, so everything will use SLF4J
 configurations.all {
 	exclude group: "commons-logging", module: "commons-logging"
+	resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+		if (details.requested.group == 'org.apache.logging.log4j') {
+			details.useVersion '2.17.1'
+		}
+	}
 }
 
 // OpenAPI Server Generation
@@ -123,6 +131,38 @@ task integrationTest(type: Test) {
     outputs.upToDateWhen { false } // other way: inputs.upToDateWhen { false }
     
     mustRunAfter test
+}
+
+jib {
+	from {
+		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
+	}
+	container {
+		environment = [ 'spring.profiles.active':'dev' ]
+
+	}
+}
+
+tasks.register("bootRunLocal") {
+	group = "application"
+	description = "Runs the Spring Boot application with the local profile"
+	doFirst {
+		tasks.bootRun.configure {
+			systemProperty("spring.profiles.active", "local")
+		}
+	}
+	finalizedBy("bootRun")
+}
+
+tasks.register("bootRunDev") {
+	group = "application"
+	description = "Runs the Spring Boot application with the dev profile"
+	doFirst {
+		tasks.bootRun.configure {
+			systemProperty("spring.profiles.active", "dev")
+		}
+	}
+	finalizedBy("bootRun")
 }
 
 check.dependsOn integrationTest

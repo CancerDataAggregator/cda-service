@@ -32,15 +32,16 @@ public class GlobalExceptionHandler {
 
   // -- validation exceptions - we don't control the exception raised
   @ExceptionHandler({
-    MethodArgumentNotValidException.class,
-    IllegalArgumentException.class,
-    NoHandlerFoundException.class
+      MethodArgumentNotValidException.class,
+      IllegalArgumentException.class,
+      NoHandlerFoundException.class
   })
   public ResponseEntity<ErrorReport> validationExceptionHandler(Exception ex) {
     return buildErrorReport(ex, HttpStatus.BAD_REQUEST, null);
   }
 
-  // -- catchall - log so we can understand what we have missed in the handlers above
+  // -- catchall - log so we can understand what we have missed in the handlers
+  // above
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorReport> catchallHandler(Exception ex) {
     logger.error("Exception caught by catchall hander", ex);

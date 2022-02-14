@@ -21,21 +21,29 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
+
 @Component
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
-  
+
+  @Value("${project}")
+  private String project;
+
+  @Value("${bqTable:default}")
+  private String bqTable;
+
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-  final BigQuery bigQuery =
-      BigQueryOptions.newBuilder().setProjectId("gdc-bq-sample").build().getService();
-
   private final ObjectMapper objectMapper;
+
+  @Autowired
+  private BigQuery bigQuery;
 
   @Autowired
   public QueryService(ObjectMapper objectMapper) {
@@ -52,7 +60,7 @@ public class QueryService {
   public void getBigQuery() {
     ApplicationConfiguration applicationConfiguration = null;
     String value = applicationConfiguration.getBqTable();
-//    Table table =  bigQuery
+    // Table table = bigQuery
 
   }
 
@@ -61,8 +69,8 @@ public class QueryService {
     SystemStatusSystems bigQuerySystemStatus = new SystemStatusSystems();
     boolean success = false;
     try {
-      String statusCheck = bigQuery.getDataset("cda_mvp").getDatasetId().getDataset();
-      success = statusCheck.equals("cda_mvp");
+      String statusCheck = bigQuery.getDataset(bqTable).getDatasetId().getDataset();
+      success = statusCheck.equals(bqTable);
     } catch (Exception e) {
       logger.error("Status check failed ", e);
     }
@@ -73,7 +81,11 @@ public class QueryService {
       bigQuerySystemStatus
           .ok(false)
           .addMessagesItem(
-              "BiqQuery Status check has indicated the 'cda_mvp' dataset is currently unreachable from the Service API");
+              "PROJECT: "
+                  + project
+                  + " - BiqQuery Status check has indicated the '"
+                  + bqTable
+                  + "' dataset is currently unreachable from the Service API");
     }
     systemStatus
         .ok(bigQuerySystemStatus.getOk())
@@ -81,6 +93,7 @@ public class QueryService {
 
     return systemStatus;
   }
+
   /**
    * Convert a BQ value to a json node.
    *
@@ -160,8 +173,7 @@ public class QueryService {
     options.add(BigQuery.QueryResultsOption.pageSize(pageSize));
     try {
       // Get the results.
-      TableResult result =
-          queryJob.getQueryResults(options.toArray(new BigQuery.QueryResultsOption[0]));
+      TableResult result = queryJob.getQueryResults(options.toArray(new BigQuery.QueryResultsOption[0]));
       FieldList fields = result.getSchema().getFields();
 
       List<JsonNode> jsonData = new ArrayList<>();
@@ -173,8 +185,10 @@ public class QueryService {
                 FieldValue.of(FieldValue.Attribute.RECORD, row),
                 Field.of("root", LegacySQLTypeName.RECORD, fields)));
 
-        // This check is required because pageSize is the number of rows BQ retrieves at a time,
-        // not the total number of rows returned by iterateAll(). Without this check, this loop
+        // This check is required because pageSize is the number of rows BQ retrieves at
+        // a time,
+        // not the total number of rows returned by iterateAll(). Without this check,
+        // this loop
         // would return all rows in the result table.
         if (++rowCount == pageSize) {
           break;
@@ -208,18 +222,22 @@ public class QueryService {
     }
   }
 
-  // For now, hardcode the known list of systems. In the future, we will get this from the
-  // database itself, as each published dataset will have a list of contributing systems.
+  // For now, hardcode the known list of systems. In the future, we will get this
+  // from the
+  // database itself, as each published dataset will have a list of contributing
+  // systems.
   private enum Source {
     GDC,
     PDC
   }
 
   /**
-   * Traverse the json data and collect the number of systems data present in resultsCount.
+   * Traverse the json data and collect the number of systems data present in
+   * resultsCount.
    *
    * @param jsonData the data to scan
-   * @return For each system, the number of rows in jsonData that have data from that system
+   * @return For each system, the number of rows in jsonData that have data from
+   *         that system
    */
   private Map<Source, Integer> generateUsageData(List<JsonNode> jsonData) {
     Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
@@ -239,7 +257,8 @@ public class QueryService {
   }
 
   private static String getSqlFromJob(Job queryJob) {
-    // This cast is safe because it's only done on queries that have been generated using
+    // This cast is safe because it's only done on queries that have been generated
+    // using
     // startQuery() below.
     return ((QueryJobConfiguration) queryJob.getConfiguration()).getQuery();
   }
@@ -262,13 +281,13 @@ public class QueryService {
     // Log usage data for this response.
     final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
     float elapsed = 0;
-    // In some cases endTime is null, even though startTime and creationTime are non-null and the
+    // In some cases endTime is null, even though startTime and creationTime are
+    // non-null and the
     // job is complete.
     if (queryJob.getStatistics().getEndTime() != null
         && queryJob.getStatistics().getStartTime() != null) {
-      elapsed =
-          (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime())
-              / 1000.0F;
+      elapsed = (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime())
+          / 1000.0F;
     }
     var logData = new QueryData(queryJob, elapsed, resultsCount);
     try {
@@ -279,8 +298,8 @@ public class QueryService {
   }
 
   public String startQuery(String query) {
-    QueryJobConfiguration.Builder queryConfig =
-        QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).setUseQueryCache(true);
+    QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false)
+        .setUseQueryCache(true);
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
