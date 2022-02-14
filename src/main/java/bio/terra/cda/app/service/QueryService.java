@@ -2,6 +2,7 @@ package bio.terra.cda.app.service;
 
 import static java.lang.Thread.currentThread;
 
+import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.SystemStatus;
@@ -24,11 +25,11 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
-
+import bio.terra.cda.app.configuration.ApplicationConfiguration;
 @Component
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
-
+  
   private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
   final BigQuery bigQuery =
@@ -47,6 +48,13 @@ public class QueryService {
   }
 
   SystemStatus systemStatus = new SystemStatus();
+
+  public void getBigQuery() {
+    ApplicationConfiguration applicationConfiguration = null;
+    String value = applicationConfiguration.getBqTable();
+//    Table table =  bigQuery
+
+  }
 
   @Cacheable
   public SystemStatus bigQueryCheck() {
@@ -276,8 +284,12 @@ public class QueryService {
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
+    /**
+     * Biguery has a maximum wait time by default of 10 seconds
+     * this will update the max time to 1min.
+     */
+    BigQuery.QueryResultsOption.maxWaitTime(60);
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
-
     return queryJob.getJobId().getJob();
   }
 }

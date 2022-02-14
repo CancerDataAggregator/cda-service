@@ -207,7 +207,8 @@ public class QueryTranslator {
       switch (query.getNodeType()) {
         case QUOTED:
           String value = query.getValue();
-          if (value.contains("days_to_birth") || value.contains("age_at_death")) {
+//          Int check
+          if (value.contains("days_to_birth") || value.contains("age_at_death") || value.contains("age_")) {
             return String.format("'%s'", value);
           }
           return String.format("UPPER('%s')", value);
@@ -216,7 +217,11 @@ public class QueryTranslator {
         case COLUMN:
           var parts = query.getValue().split("\\.");
           if (parts.length > 1) {
-            return String.format("_%s.%s", parts[parts.length - 2], parts[parts.length - 1]);
+            // int check for values that are a int so the UPPER function will not run
+            if(parts[parts.length - 1].contains("age_")){
+              return String.format("_%s.%s", parts[parts.length - 2], parts[parts.length - 1]);
+            }
+            return String.format("UPPER(_%s.%s)", parts[parts.length - 2], parts[parts.length - 1]);
           }
           // Top level fields must be scoped by the table name, otherwise they could
           // conflict with

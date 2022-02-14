@@ -53,11 +53,10 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
 
     var result = queryService.getQueryResults(id, offset, limit);
-    var response =
-        new QueryResponseData()
-            .result(Collections.unmodifiableList(result.items))
-            .totalRowCount(result.totalRowCount)
-            .querySql(result.querySql);
+    var response = new QueryResponseData()
+        .result(Collections.unmodifiableList(result.items))
+        .totalRowCount(result.totalRowCount)
+        .querySql(result.querySql);
     int nextPage = result.items.size() + limit;
     if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, limit));
@@ -74,6 +73,15 @@ public class QueryApiController implements QueryApi {
 
   private ResponseEntity<QueryCreatedData> sendQuery(String querySql, boolean dryRun) {
     var response = new QueryCreatedData().querySql(querySql);
+    if (!querySql.contains(applicationConfiguration.getBqTable())) {
+      return new ResponseEntity("Your database is outside of the project", HttpStatus.BAD_REQUEST);
+    }
+
+    if (querySql.toLowerCase().contains("create table") || querySql.toLowerCase().contains("delete from")
+        || querySql.toLowerCase().contains("drop table") || querySql.toLowerCase().contains("update")
+        || querySql.toLowerCase().contains("alter table")) {
+      return new ResponseEntity("Those actions are not available in sql", HttpStatus.BAD_REQUEST);
+    }
     if (!dryRun) {
       response.queryId(queryService.startQuery(querySql));
     }
@@ -88,12 +96,14 @@ public class QueryApiController implements QueryApi {
 
   @Override
   public ResponseEntity<QueryCreatedData> sqlQuery(String querySql) {
+
     return sendQuery(querySql, false);
   }
 
   @Override
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    // QueryService test = new QueryService();
     String querySql = QueryTranslator.sql(table + "." + version, body);
 
     return sendQuery(querySql, dryRun);
@@ -116,7 +126,8 @@ public class QueryApiController implements QueryApi {
     if (system != null && system.length() > 0) {
       NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
       whereClause = " WHERE " + whereColumns.getColumn() + " = '" + system + "'";
-      // add any additional 'where' unnest partials that aren't already included in columns-unnest
+      // add any additional 'where' unnest partials that aren't already included in
+      // columns-unnest
       // clauses
       unnestClauses.addAll(whereColumns.getUnnestClauses());
     } else {
@@ -125,15 +136,14 @@ public class QueryApiController implements QueryApi {
     StringBuffer unnestConcat = new StringBuffer();
     unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
 
-    String querySql =
-        "SELECT DISTINCT "
-            + nt.getColumn()
-            + " FROM "
-            + tableName
-            + unnestConcat
-            + whereClause
-            + " ORDER BY "
-            + nt.getColumn();
+    String querySql = "SELECT DISTINCT "
+        + nt.getColumn()
+        + " FROM "
+        + tableName
+        + unnestConcat
+        + whereClause
+        + " ORDER BY "
+        + nt.getColumn();
     logger.debug("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);
@@ -147,12 +157,11 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table;
     }
-    String querySql =
-        "SELECT field_path FROM "
-            + tableName
-            + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
-            + version
-            + "'";
+    String querySql = "SELECT field_path FROM "
+        + tableName
+        + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
+        + version
+        + "'";
     logger.debug("columns: " + querySql);
 
     return sendQuery(querySql, false);
