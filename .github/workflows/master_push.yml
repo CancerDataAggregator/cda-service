@@ -48,12 +48,11 @@ jobs:
       env:
         SERVICE_VERSION: ${{ steps.tag.outputs.tag }}
 
-    # Will re-enable this after verifying the deploy in terra-dev environment is working. 
-    # - name: Deploy to Terra Dev environment
-    #   if: github.event_name == 'push'
-    #   uses: broadinstitute/repository-dispatch@master
-    #   with:
-    #     token: ${{ secrets.BROADBOT_TOKEN }}
-    #     repository: broadinstitute/terra-helmfile
-    #     event-type: update-service
-    #     client-payload: '{"service": "cancerdata", "version": "${{ steps.tag.outputs.tag }}"}'
+    - name: Deploy to Terra Dev environment
+      if: github.event_name == 'push'
+      uses: broadinstitute/repository-dispatch@master
+      with:
+        token: ${{ secrets.BROADBOT_TOKEN }}
+        repository: broadinstitute/terra-helmfile
+        event-type: update-service
+        client-payload: '{"service": "cancerdata", "version": "${{ steps.tag.outputs.tag }}"}'
