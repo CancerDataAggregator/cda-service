@@ -74,10 +74,11 @@ paths:
         - query
       parameters:
         - $ref: "#/components/parameters/DatasetVersion"
-
+        - $ref: "#/components/parameters/Table"
       responses:
         200:
           $ref: "#/components/responses/QueryCreated"
+
 
   /api/v1/boolean-query/{version}:
     post:
@@ -98,6 +99,7 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
+
 
       requestBody:
         description: The boolean query
@@ -444,6 +446,8 @@ components:
               SUBQUERY,
               WHERE,
               IN,
+              SELECTVALUES,
+              SELECT
             ]
           description: >
             Query contents and behavior depends on `node_type`:

@@ -307,7 +307,6 @@ public class QueryService {
      * Biguery has a maximum wait time by default of 10 seconds
      * this will update the max time to 1min.
      */
-    BigQuery.QueryResultsOption.maxWaitTime(60);
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
     return queryJob.getJobId().getJob();
   }

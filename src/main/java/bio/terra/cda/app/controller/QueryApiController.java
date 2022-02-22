@@ -66,6 +66,7 @@ public class QueryApiController implements QueryApi {
     if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, limit));
     }
+
     return ResponseEntity.ok(response);
   }
 
@@ -79,7 +80,7 @@ public class QueryApiController implements QueryApi {
 
   private ResponseEntity<QueryCreatedData> sendQuery(String querySql, boolean dryRun) {
     var response = new QueryCreatedData().querySql(querySql);
-    if (!querySql.contains(applicationConfiguration.getBqTable())) {
+    if (!querySql.contains(applicationConfiguration.getProject())) {
       return new ResponseEntity("Your database is outside of the project", HttpStatus.BAD_REQUEST);
     }
 
@@ -96,8 +97,8 @@ public class QueryApiController implements QueryApi {
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> bulkData(String version) {
-    String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
+  public ResponseEntity<QueryCreatedData> bulkData(String version, String table) {
+    String querySql = "SELECT * FROM " + table + "." + version;
     return sendQuery(querySql, false);
   }
 

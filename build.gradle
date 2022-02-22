@@ -111,6 +111,11 @@ openApiGenerate {
 	]
 }
 
+task GetSchema(type: Exec){
+	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:integration.all_v2_1 > schema.json"
+
+}
+
 task buildPythonSdk(type: GenerateTask){
 	generatorName = "python"
 	packageName = "cda_client"

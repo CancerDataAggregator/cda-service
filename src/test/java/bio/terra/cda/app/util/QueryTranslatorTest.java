@@ -57,7 +57,7 @@ class QueryTranslatorTest {
     String expectedSql =
         String.format(
             "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(A) AS _A, UNNEST(_A.B) AS _B, "
-                + "UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D WHERE (_D.column = value)",
+                + "UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D WHERE (UPPER(_D.column) = value)",
             QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
