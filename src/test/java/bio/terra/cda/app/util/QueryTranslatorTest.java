@@ -1,13 +1,14 @@
 package bio.terra.cda.app.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import bio.terra.cda.generated.model.Query;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class QueryTranslatorTest {
 
@@ -41,7 +42,7 @@ class QueryTranslatorTest {
         String.format(
             "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(demographic) AS _demographic, UNNEST(project) AS _project, "
                 + "UNNEST(diagnoses) AS _diagnoses WHERE (((_demographic.age_at_index >= 50) AND "
-                + "(_project.project_id = UPPER('TCGA-OV'))) AND (_diagnoses.figo_stage = UPPER('Stage IIIC')))",
+                + "(UPPER(_project.project_id) = UPPER('TCGA-OV'))) AND (UPPER(_diagnoses.figo_stage) = UPPER('Stage IIIC')))",
             QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
@@ -75,9 +76,9 @@ class QueryTranslatorTest {
             "SELECT %2$s.* FROM "
                 + "(SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(ResearchSubject) AS _ResearchSubject, "
                 + "UNNEST(_ResearchSubject.identifier) AS _identifier "
-                + "WHERE (_identifier.system = UPPER('PDC'))) AS %2$s,"
+                + "WHERE (UPPER(_identifier.system) = UPPER('PDC'))) AS %2$s,"
                 + " UNNEST(ResearchSubject) AS _ResearchSubject, "
-                + "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (_identifier.system = UPPER('GDC'))",
+                + "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (UPPER(_identifier.system) = UPPER('GDC'))",
             QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
@@ -92,7 +93,7 @@ class QueryTranslatorTest {
 
     String expectedSql =
         String.format(
-            "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(A) AS _A WHERE (NOT (1 = _A.B))",
+            "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(A) AS _A WHERE (NOT (1 = UPPER(_A.B)))",
             QUALIFIED_TABLE, TABLE);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
