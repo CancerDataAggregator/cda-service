@@ -135,7 +135,7 @@ task integrationTest(type: Test) {
 
 jib {
 	from {
-		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
+		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-debian'
 	}
 	container {
 		environment = [ 'spring.profiles.active':'dev' ]
