@@ -32,9 +32,9 @@ public class GlobalExceptionHandler {
 
   // -- validation exceptions - we don't control the exception raised
   @ExceptionHandler({
-      MethodArgumentNotValidException.class,
-      IllegalArgumentException.class,
-      NoHandlerFoundException.class
+    MethodArgumentNotValidException.class,
+    IllegalArgumentException.class,
+    NoHandlerFoundException.class
   })
   public ResponseEntity<ErrorReport> validationExceptionHandler(Exception ex) {
     return buildErrorReport(ex, HttpStatus.BAD_REQUEST, null);
@@ -63,7 +63,8 @@ public class GlobalExceptionHandler {
     }
     ErrorReport errorReport = null;
     if (ex != null) {
-      errorReport = new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
+      errorReport =
+          new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
     }
     return new ResponseEntity<>(errorReport, statusCode);
   }

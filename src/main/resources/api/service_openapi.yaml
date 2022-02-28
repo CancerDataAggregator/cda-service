@@ -240,6 +240,36 @@ paths:
         200:
           $ref: "#/components/responses/QueryCreated"
 
+  /api/v1/files/{version}:
+    post:
+      summary: Returns a list of files given a boolean query
+      description: Return list of files for given query
+      operationId: files
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+      requestBody:
+        description: The boolean query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
 components:
   parameters:
     DatasetVersion:

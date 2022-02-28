@@ -113,7 +113,10 @@ openApiGenerate {
 
 task GetSchema(type: Exec){
 	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:integration.all_v2_1 > schema.json"
+}
 
+task GetFilesSchema(type: Exec){
+	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.GDC_Files > files-schema.json"
 }
 
 task buildPythonSdk(type: GenerateTask){

@@ -59,13 +59,13 @@ class QueryApiControllerTest {
 
   @Test
   public void uniqueValuesTest() throws Exception {
-    String version = "v3";
+    String version = "all_v2_1";
     String system = "GDC";
     String body = "sex";
-    String table = "TABLE";
+    String table = "gdc-bq-sample.integration";
 
     var expected =
-        "SELECT DISTINCT sex FROM TABLE.v3, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC' ORDER BY sex";
+        "SELECT DISTINCT sex FROM gdc-bq-sample.integration.all_v2_1, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC' ORDER BY sex";
     var result =
         mvc.perform(
                 post("/api/v1/unique-values/{version}", version)

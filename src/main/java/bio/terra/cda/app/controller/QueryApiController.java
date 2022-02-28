@@ -3,13 +3,15 @@ package bio.terra.cda.app.controller;
 import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.QueryService;
+import bio.terra.cda.app.generators.CountsSqlGenerator;
 import bio.terra.cda.app.util.NestedColumn;
-import bio.terra.cda.app.util.QueryTranslator;
+import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -58,10 +60,11 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
 
     var result = queryService.getQueryResults(id, offset, limit);
-    var response = new QueryResponseData()
-        .result(Collections.unmodifiableList(result.items))
-        .totalRowCount(result.totalRowCount)
-        .querySql(result.querySql);
+    var response =
+        new QueryResponseData()
+            .result(Collections.unmodifiableList(result.items))
+            .totalRowCount(result.totalRowCount)
+            .querySql(result.querySql);
     int nextPage = result.items.size() + limit;
     if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, limit));
@@ -84,8 +87,10 @@ public class QueryApiController implements QueryApi {
       return new ResponseEntity("Your database is outside of the project", HttpStatus.BAD_REQUEST);
     }
 
-    if (querySql.toLowerCase().contains("create table") || querySql.toLowerCase().contains("delete from")
-        || querySql.toLowerCase().contains("drop table") || querySql.toLowerCase().contains("update")
+    if (querySql.toLowerCase().contains("create table")
+        || querySql.toLowerCase().contains("delete from")
+        || querySql.toLowerCase().contains("drop table")
+        || querySql.toLowerCase().contains("update")
         || querySql.toLowerCase().contains("alter table")) {
       return new ResponseEntity("Those actions are not available in sql", HttpStatus.BAD_REQUEST);
     }
@@ -114,7 +119,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     // QueryService test = new QueryService();
-    String querySql = QueryTranslator.sql(table + "." + version, body);
+    String querySql = new SqlGenerator(table + "." + version, body).generate();
 
     return sendQuery(querySql, dryRun);
   }
@@ -147,14 +152,15 @@ public class QueryApiController implements QueryApi {
     StringBuffer unnestConcat = new StringBuffer();
     unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
 
-    String querySql = "SELECT DISTINCT "
-        + nt.getColumn()
-        + " FROM "
-        + tableName
-        + unnestConcat
-        + whereClause
-        + " ORDER BY "
-        + nt.getColumn();
+    String querySql =
+        "SELECT DISTINCT "
+            + nt.getColumn()
+            + " FROM "
+            + tableName
+            + unnestConcat
+            + whereClause
+            + " ORDER BY "
+            + nt.getColumn();
     logger.debug("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);
@@ -169,11 +175,12 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table;
     }
-    String querySql = "SELECT field_path FROM "
-        + tableName
-        + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
-        + version
-        + "'";
+    String querySql =
+        "SELECT field_path FROM "
+            + tableName
+            + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
+            + version
+            + "'";
     logger.debug("columns: " + querySql);
 
     return sendQuery(querySql, false);
@@ -182,7 +189,16 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryCreatedData> globalCounts(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    String querySql = QueryTranslator.sqlCount(table + "." + version, body);
+    String querySql = new CountsSqlGenerator(table + "." + version, body).generate();
+    return sendQuery(querySql, dryRun);
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> files(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    String querySql = "";
+    querySql = new SqlGenerator(table + "." + version, body).generate();
     return sendQuery(querySql, dryRun);
   }
 }

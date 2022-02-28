@@ -26,7 +26,6 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
-import bio.terra.cda.app.configuration.ApplicationConfiguration;
 
 @Component
 @CacheConfig(cacheNames = "system-status")
@@ -42,8 +41,7 @@ public class QueryService {
 
   private final ObjectMapper objectMapper;
 
-  @Autowired
-  private BigQuery bigQuery;
+  @Autowired private BigQuery bigQuery;
 
   @Autowired
   public QueryService(ObjectMapper objectMapper) {
@@ -173,7 +171,8 @@ public class QueryService {
     options.add(BigQuery.QueryResultsOption.pageSize(pageSize));
     try {
       // Get the results.
-      TableResult result = queryJob.getQueryResults(options.toArray(new BigQuery.QueryResultsOption[0]));
+      TableResult result =
+          queryJob.getQueryResults(options.toArray(new BigQuery.QueryResultsOption[0]));
       FieldList fields = result.getSchema().getFields();
 
       List<JsonNode> jsonData = new ArrayList<>();
@@ -232,12 +231,10 @@ public class QueryService {
   }
 
   /**
-   * Traverse the json data and collect the number of systems data present in
-   * resultsCount.
+   * Traverse the json data and collect the number of systems data present in resultsCount.
    *
    * @param jsonData the data to scan
-   * @return For each system, the number of rows in jsonData that have data from
-   *         that system
+   * @return For each system, the number of rows in jsonData that have data from that system
    */
   private Map<Source, Integer> generateUsageData(List<JsonNode> jsonData) {
     Map<Source, Integer> resultsCount = new EnumMap<>(Source.class);
@@ -286,8 +283,9 @@ public class QueryService {
     // job is complete.
     if (queryJob.getStatistics().getEndTime() != null
         && queryJob.getStatistics().getStartTime() != null) {
-      elapsed = (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime())
-          / 1000.0F;
+      elapsed =
+          (queryJob.getStatistics().getEndTime() - queryJob.getStatistics().getStartTime())
+              / 1000.0F;
     }
     var logData = new QueryData(queryJob, elapsed, resultsCount);
     try {
@@ -298,14 +296,14 @@ public class QueryService {
   }
 
   public String startQuery(String query) {
-    QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false)
-        .setUseQueryCache(true);
+    QueryJobConfiguration.Builder queryConfig =
+        QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).setUseQueryCache(true);
 
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(UUID.randomUUID().toString());
     /**
-     * Biguery has a maximum wait time by default of 10 seconds
-     * this will update the max time to 1min.
+     * Biguery has a maximum wait time by default of 10 seconds this will update the max time to
+     * 1min.
      */
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
     return queryJob.getJobId().getJob();
