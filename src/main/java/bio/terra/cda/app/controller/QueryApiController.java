@@ -12,6 +12,7 @@ import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -119,9 +120,12 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     // QueryService test = new QueryService();
-    String querySql = new SqlGenerator(table + "." + version, body).generate();
-
-    return sendQuery(querySql, dryRun);
+    try {
+      String querySql = new SqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
+    }
   }
 
   @TrackExecutionTime
@@ -189,8 +193,12 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryCreatedData> globalCounts(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    String querySql = new CountsSqlGenerator(table + "." + version, body).generate();
-    return sendQuery(querySql, dryRun);
+    try {
+      String querySql = new CountsSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
+    }
   }
 
   @TrackExecutionTime
@@ -198,7 +206,11 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> files(
           String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     String querySql = "";
-    querySql = new SqlGenerator(table + "." + version, body).generate();
+    try {
+      querySql = new SqlGenerator(table + "." + version, body, version).generate();
+    } catch (IOException e) {
+      return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
+    }
     return sendQuery(querySql, dryRun);
   }
 }

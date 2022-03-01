@@ -3,9 +3,11 @@ package bio.terra.cda.app.generators;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.generated.model.Query;
 
+import java.io.IOException;
+
 public class CountsSqlGenerator extends SqlGenerator {
-    public CountsSqlGenerator(String qualifiedTable, Query rootQuery) {
-        super(qualifiedTable, rootQuery);
+    public CountsSqlGenerator(String qualifiedTable, Query rootQuery, String version) throws IOException {
+        super(qualifiedTable, rootQuery, version);
     }
 
     @Override

@@ -1,19 +1,14 @@
 package bio.terra.cda.app.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 public class TableSchema {
     public static class SchemaDefinition {
@@ -64,15 +59,11 @@ public class TableSchema {
         }
     }
 
-    public static Map<String, SchemaDefinition> getFileTableSchema() throws IOException {
-        return getJsonFromFile("schema/files-schema.json");
+    public static Map<String, SchemaDefinition> getSchema(String version) throws IOException {
+        return getSchemaMappingFromFile(String.format("schema/%s.json", version));
     }
 
-    public static Map<String, SchemaDefinition> getSubjectTableSchema() throws IOException {
-        return getJsonFromFile("schema/schema.json");
-    }
-
-    private static Map<String, SchemaDefinition> getJsonFromFile(String fileName) throws IOException {
+    private static Map<String, SchemaDefinition> getSchemaMappingFromFile(String fileName) throws IOException {
         ClassPathResource resource = new ClassPathResource(fileName);
         InputStream inputStream = resource.getInputStream();
         ObjectMapper mapper = new ObjectMapper();

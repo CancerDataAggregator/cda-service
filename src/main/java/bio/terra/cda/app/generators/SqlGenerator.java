@@ -1,7 +1,11 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -10,12 +14,14 @@ public class SqlGenerator {
     final String qualifiedTable;
     final Query rootQuery;
     final String table;
+    final Map<String, TableSchema.SchemaDefinition> tableSchema;
 
-    public SqlGenerator(String qualifiedTable, Query rootQuery) {
+    public SqlGenerator(String qualifiedTable, Query rootQuery, String version) throws IOException {
         this.qualifiedTable = qualifiedTable;
         this.rootQuery = rootQuery;
         int dotPos = qualifiedTable.lastIndexOf('.');
         this.table = dotPos == -1 ? qualifiedTable : qualifiedTable.substring(dotPos + 1);
+        this.tableSchema = TableSchema.getSchema(version);
     }
 
     public String generate() {
@@ -51,11 +57,7 @@ public class SqlGenerator {
                 return Stream.empty();
             case COLUMN:
                 var parts = query.getValue().split("\\.");
-                return IntStream.range(0, parts.length - 1)
-                        .mapToObj(
-                                i -> i == 0
-                                        ? String.format("UNNEST(%1$s) AS _%1$s", parts[i])
-                                        : String.format("UNNEST(_%1$s.%2$s) AS _%2$s", parts[i - 1], parts[i]));
+                return getUnnestsFromParts(parts, false);
             case NOT:
                 return getUnnestColumns(query.getL());
             default:
@@ -79,9 +81,9 @@ public class SqlGenerator {
                 if (parts.length > 1) {
                     // int check for values that are a int so the UPPER function will not run
                     if(parts[parts.length - 1].contains("age_")){
-                        return String.format("_%s.%s", parts[parts.length - 2], parts[parts.length - 1]);
+                        return String.format("%s.%s", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
                     }
-                    return String.format("UPPER(_%s.%s)", parts[parts.length - 2], parts[parts.length - 1]);
+                    return String.format("UPPER(%s.%s)", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
                 }
                 // Top level fields must be scoped by the table name, otherwise they could
                 // conflict with
@@ -108,5 +110,17 @@ public class SqlGenerator {
                         "(%s %s %s)",
                         queryString(query.getL()), query.getNodeType(), queryString(query.getR()));
         }
+    }
+
+    protected Stream<String> getUnnestsFromParts(String[] parts, Boolean includeLast) {
+        return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
+                .mapToObj(
+                        i -> i == 0
+                                ? String.format("UNNEST(%1$s.%2$s) AS %3$s", table, parts[i], getAlias(i, parts))
+                                : String.format("UNNEST(%1$s.%2$s) AS %3$s", getAlias(i -1, parts), parts[i], getAlias(i, parts)));
+    }
+
+    protected String getAlias(Integer index, String[] parts) {
+        return "_" + Arrays.stream(parts, 0, index + 1).collect(Collectors.joining("_"));
     }
 }

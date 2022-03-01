@@ -30,7 +30,7 @@ public class SqlGeneratorTest {
                         QUALIFIED_TABLE, TABLE);
 
         Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query).generate();
+        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query, TABLE).generate();
 
         assertEquals(expectedSql, translatedQuery);
     }
@@ -47,7 +47,7 @@ public class SqlGeneratorTest {
                         QUALIFIED_TABLE, TABLE);
 
         Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query).generate();
+        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query, TABLE).generate();
 
         assertEquals(EXPECTED_SQL, translatedQuery);
     }
@@ -63,7 +63,7 @@ public class SqlGeneratorTest {
                         QUALIFIED_TABLE, TABLE);
 
         Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query).generate();
+        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query, TABLE).generate();
 
         assertEquals(expectedSql, translatedQuery);
     }
@@ -83,7 +83,7 @@ public class SqlGeneratorTest {
                         QUALIFIED_TABLE, TABLE);
 
         Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query).generate();
+        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query, TABLE).generate();
 
         assertEquals(expectedSql, translatedQuery);
     }
@@ -98,7 +98,7 @@ public class SqlGeneratorTest {
                         QUALIFIED_TABLE, TABLE);
 
         Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query).generate();
+        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query, TABLE).generate();
 
         assertEquals(expectedSql, translatedQuery);
     }
@@ -113,7 +113,7 @@ public class SqlGeneratorTest {
                         QUALIFIED_TABLE, TABLE);
 
         Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query).generate();
+        String translatedQuery = new SqlGenerator(QUALIFIED_TABLE, query, TABLE).generate();
 
         assertEquals(expectedSql, translatedQuery);
     }
