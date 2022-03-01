@@ -189,7 +189,8 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryCreatedData> globalCounts(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    String querySql = new CountsSqlGenerator(table + "." + version, body).generate();
+    String querySql = "";
+    querySql = new CountsSqlGenerator(table + "." + version, body).generate();
     return sendQuery(querySql, dryRun);
   }
 
