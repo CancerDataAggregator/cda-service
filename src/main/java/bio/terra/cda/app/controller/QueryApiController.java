@@ -61,11 +61,10 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
 
     var result = queryService.getQueryResults(id, offset, limit);
-    var response =
-        new QueryResponseData()
-            .result(Collections.unmodifiableList(result.items))
-            .totalRowCount(result.totalRowCount)
-            .querySql(result.querySql);
+    var response = new QueryResponseData()
+        .result(Collections.unmodifiableList(result.items))
+        .totalRowCount(result.totalRowCount)
+        .querySql(result.querySql);
     int nextPage = result.items.size() + limit;
     if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, limit));
@@ -156,15 +155,14 @@ public class QueryApiController implements QueryApi {
     StringBuffer unnestConcat = new StringBuffer();
     unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
 
-    String querySql =
-        "SELECT DISTINCT "
-            + nt.getColumn()
-            + " FROM "
-            + tableName
-            + unnestConcat
-            + whereClause
-            + " ORDER BY "
-            + nt.getColumn();
+    String querySql = "SELECT DISTINCT "
+        + nt.getColumn()
+        + " FROM "
+        + tableName
+        + unnestConcat
+        + whereClause
+        + " ORDER BY "
+        + nt.getColumn();
     logger.debug("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);
@@ -179,12 +177,11 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table;
     }
-    String querySql =
-        "SELECT field_path FROM "
-            + tableName
-            + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
-            + version
-            + "'";
+    String querySql = "SELECT field_path FROM "
+        + tableName
+        + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
+        + version
+        + "'";
     logger.debug("columns: " + querySql);
 
     return sendQuery(querySql, false);
@@ -204,7 +201,7 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> files(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     String querySql = "";
     try {
       querySql = new SqlGenerator(table + "." + version, body, version).generate();
