@@ -36,6 +36,7 @@ public class SqlGenerator {
             // level query.
             return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
         }
+
         var fromClause = Stream.concat(
                         Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
                 .collect(Collectors.joining(", "));
@@ -47,11 +48,30 @@ public class SqlGenerator {
             e.printStackTrace();
         }
 
-        return String.format("SELECT %s.* FROM %s WHERE %s", table, fromClause, condition);
+        return String.format("SELECT %s FROM %s WHERE %s", getSelectValues(query, table).collect(Collectors.joining(",")), fromClause, condition);
+    }
+
+    protected Stream<String> getSelectValues(Query query, String table) {
+        if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
+            return Arrays.stream(query.getL().getValue().split(",")).map(select -> {
+                var parts = Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
+                return String.format("%s.%s AS %s",
+                        parts.length == 1
+                                ? table
+                                : getAlias(parts.length - 2, parts),
+                        parts[parts.length - 1],
+                        String.join("_", parts));
+            });
+        } else {
+            return Stream.of(String.format("%s.*", table));
+        }
     }
 
     protected Stream<String> getUnnestColumns(Query query) {
         switch (query.getNodeType()) {
+            case SELECTVALUES:
+                return Arrays.stream(query.getValue().split(","))
+                        .flatMap(select -> getUnnestsFromParts(select.trim().split("\\."), false));
             case QUOTED:
             case UNQUOTED:
                 return Stream.empty();
@@ -67,6 +87,10 @@ public class SqlGenerator {
 
     protected String queryString(Query query) throws IllegalArgumentException {
         switch (query.getNodeType()) {
+            case SELECT:
+                return queryString(query.getR());
+            case SELECTVALUES:
+                return "";
             case QUOTED:
                 String value = query.getValue();
 //          Int check
