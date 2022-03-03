@@ -36,8 +36,9 @@ public class SqlGenerator {
             // level query.
             return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
         }
+
         var fromClause = Stream.concat(
-                        Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
+                Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
                 .collect(Collectors.joining(", "));
 
         String condition = null;
@@ -47,11 +48,31 @@ public class SqlGenerator {
             e.printStackTrace();
         }
 
-        return String.format("SELECT %s.* EXCEPT(File) FROM %s WHERE %s", table, fromClause, condition);
+        return String.format("SELECT %s FROM %s WHERE %s",
+                getSelectValues(query, table).collect(Collectors.joining(",")), fromClause, condition);
+    }
+
+    protected Stream<String> getSelectValues(Query query, String table) {
+        if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
+            return Arrays.stream(query.getL().getValue().split(",")).map(select -> {
+                var parts = Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
+                return String.format("%s.%s AS %s",
+                        parts.length == 1
+                                ? table
+                                : getAlias(parts.length - 2, parts),
+                        parts[parts.length - 1],
+                        String.join("_", parts));
+            });
+        } else {
+            return Stream.of(String.format("%s.*", table));
+        }
     }
 
     protected Stream<String> getUnnestColumns(Query query) {
         switch (query.getNodeType()) {
+            case SELECTVALUES:
+                return Arrays.stream(query.getValue().split(","))
+                        .flatMap(select -> getUnnestsFromParts(select.trim().split("\\."), false));
             case QUOTED:
             case UNQUOTED:
                 return Stream.empty();
@@ -67,9 +88,13 @@ public class SqlGenerator {
 
     protected String queryString(Query query) throws IllegalArgumentException {
         switch (query.getNodeType()) {
+            case SELECT:
+                return queryString(query.getR());
+            case SELECTVALUES:
+                return "";
             case QUOTED:
                 String value = query.getValue();
-//          Int check
+                // Int check
                 if (value.contains("days_to_birth") || value.contains("age_at_death") || value.contains("age_")) {
                     return String.format("'%s'", value);
                 }
@@ -80,7 +105,7 @@ public class SqlGenerator {
                 var parts = query.getValue().split("\\.");
                 if (parts.length > 1) {
                     // int check for values that are a int so the UPPER function will not run
-                    if(parts[parts.length - 1].contains("age_")){
+                    if (parts[parts.length - 1].contains("age_")) {
                         return String.format("%s.%s", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
                     }
                     return String.format("UPPER(%s.%s)", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
@@ -109,7 +134,7 @@ public class SqlGenerator {
             case LIKE:
                 String right_Like = queryString(query.getR());
                 String left_Like = queryString(query.getL());
-                return String.format("%s LIKE %s",left_Like,right_Like);
+                return String.format("%s LIKE %s", left_Like, right_Like);
             default:
                 return String.format(
                         "(%s %s %s)",
@@ -122,7 +147,8 @@ public class SqlGenerator {
                 .mapToObj(
                         i -> i == 0
                                 ? String.format("UNNEST(%1$s.%2$s) AS %3$s", table, parts[i], getAlias(i, parts))
-                                : String.format("UNNEST(%1$s.%2$s) AS %3$s", getAlias(i -1, parts), parts[i], getAlias(i, parts)));
+                                : String.format("UNNEST(%1$s.%2$s) AS %3$s", getAlias(i - 1, parts), parts[i],
+                                        getAlias(i, parts)));
     }
 
     protected String getAlias(Integer index, String[] parts) {
