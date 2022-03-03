@@ -1,110 +1,38 @@
 package bio.terra.cda.app.util;
 
-import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.app.models.Subject;
+import bio.terra.cda.app.models.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 class FlattenTest {
 
-    static final Path TEST_FILES = Paths.get("src/test/resources/json_files");
+  static final Path TEST_FILES = Paths.get("src/test/resources/json_files");
 
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+  @Test
+  public void testSubjectMapping() throws Exception {
+    String jsonString = Files.readString(TEST_FILES.resolve("tcga_brca1.json"));
+    Subject subject = objectMapper.readValue(jsonString, Subject.class);
+    System.out.println(subject);
+  }
 
-    @Test
-    public void testQuerySimple() throws Exception {
-        String jsonQuery = Files.readString(TEST_FILES.resolve("query1.json"));
+  @Disabled
+  public void testQueryComplex() throws Exception {
+    String jsonString = Files.readString(TEST_FILES.resolve("tcga_brca1.json"));
+    Wrapper wrapper = objectMapper.readValue(jsonString, Wrapper.class);
+    System.out.println(wrapper);
+  }
 
-        assertEquals(expectedSql, translatedQuery);
-    }
-
-    @Test
-    public void testQueryComplex() throws Exception {
-        String jsonQuery = Files.readString(TEST_FILES.resolve("query2.json"));
-
-        String EXPECTED_SQL =
-                String.format(
-                        "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(demographic) AS _demographic, UNNEST(project) AS _project, "
-                                + "UNNEST(diagnoses) AS _diagnoses WHERE (((_demographic.age_at_index >= 50) AND "
-                                + "(_project.project_id = 'TCGA-OV')) AND (_diagnoses.figo_stage = 'Stage IIIC'))",
-                        QUALIFIED_TABLE, TABLE);
-
-        Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
-
-        assertEquals(EXPECTED_SQL, translatedQuery);
-    }
-
-    @Test
-    public void testQueryNested() throws Exception {
-        String jsonQuery = Files.readString(TEST_FILES.resolve("query3.json"));
-
-        String expectedSql =
-                String.format(
-                        "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(A) AS _A, UNNEST(_A.B) AS _B, "
-                                + "UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D WHERE (_D.column = value)",
-                        QUALIFIED_TABLE, TABLE);
-
-        Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
-
-        assertEquals(expectedSql, translatedQuery);
-    }
-
-    @Test
-    public void testQueryFrom() throws Exception {
-        String jsonQuery = Files.readString(TEST_FILES.resolve("query-subquery.json"));
-
-        String expectedSql =
-                String.format(
-                        "SELECT %2$s.* FROM "
-                                + "(SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(ResearchSubject) AS _ResearchSubject, "
-                                + "UNNEST(_ResearchSubject.identifier) AS _identifier "
-                                + "WHERE (_identifier.system = 'PDC')) AS %2$s,"
-                                + " UNNEST(ResearchSubject) AS _ResearchSubject, "
-                                + "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (_identifier.system = 'GDC')",
-                        QUALIFIED_TABLE, TABLE);
-
-        Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
-
-        assertEquals(expectedSql, translatedQuery);
-    }
-
-    @Test
-    public void testQueryNot() throws Exception {
-        String jsonQuery = Files.readString(TEST_FILES.resolve("query-not.json"));
-
-        String expectedSql =
-                String.format(
-                        "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(A) AS _A WHERE (NOT (1 = _A.B))",
-                        QUALIFIED_TABLE, TABLE);
-
-        Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
-
-        assertEquals(expectedSql, translatedQuery);
-    }
-
-    @Test
-    public void testQueryAmbiguous() throws Exception {
-        String jsonQuery = Files.readString(TEST_FILES.resolve("query-ambiguous.json"));
-
-        String expectedSql =
-                String.format(
-                        "SELECT %2$s.* FROM (SELECT %2$s.* FROM %1$s AS %2$s WHERE (%2$s.id = 'that')) AS %2$s WHERE (%2$s.id = 'this')",
-                        QUALIFIED_TABLE, TABLE);
-
-        Query query = objectMapper.readValue(jsonQuery, Query.class);
-        String translatedQuery = QueryTranslator.sql(QUALIFIED_TABLE, query);
-
-        assertEquals(expectedSql, translatedQuery);
-    }
+  @Disabled
+  public void testQueryNested() throws Exception {
+    String jsonQuery = Files.readString(TEST_FILES.resolve("TCGA-EW-A1J2.json"));
+    System.out.println(jsonQuery);
+  }
 }
-

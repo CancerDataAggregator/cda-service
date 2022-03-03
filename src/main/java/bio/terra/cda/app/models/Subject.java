@@ -1,7 +1,9 @@
 package bio.terra.cda.app.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Subject {
   private String id;
   private List<Identifier> identifier;
