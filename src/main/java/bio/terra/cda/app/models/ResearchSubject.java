@@ -9,6 +9,7 @@ public class ResearchSubject {
   private String primary_diagnosis_condition;
   private String primary_diagnosis_site;
   private List<Diagnosis> Diagnosis;
+  private List<Specimen> Specimen;
 
   public String getId() {
     return id;
@@ -58,6 +59,14 @@ public class ResearchSubject {
     Diagnosis = diagnosis;
   }
 
+  public List<bio.terra.cda.app.models.Specimen> getSpecimen() {
+    return Specimen;
+  }
+
+  public void setSpecimen(List<bio.terra.cda.app.models.Specimen> specimen) {
+    Specimen = specimen;
+  }
+
   @Override
   public String toString() {
     return "ResearchSubject{"
@@ -77,6 +86,8 @@ public class ResearchSubject {
         + '\''
         + ", Diagnosis="
         + Diagnosis
+        + ", Specimen="
+        + Specimen
         + '}';
   }
 }

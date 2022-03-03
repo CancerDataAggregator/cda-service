@@ -13,6 +13,7 @@ public class Specimen {
   private String specimen_type;
   private String derived_from_specimen;
   private String derived_from_subject;
+  private List<File> File;
 
   public String getId() {
     return id;
@@ -94,6 +95,14 @@ public class Specimen {
     this.derived_from_subject = derived_from_subject;
   }
 
+  public List<bio.terra.cda.app.models.File> getFile() {
+    return File;
+  }
+
+  public void setFile(List<bio.terra.cda.app.models.File> file) {
+    File = file;
+  }
+
   @Override
   public String toString() {
     return "Specimen{"
@@ -126,6 +135,8 @@ public class Specimen {
         + ", derived_from_subject='"
         + derived_from_subject
         + '\''
+        + ", File="
+        + File
         + '}';
   }
 }

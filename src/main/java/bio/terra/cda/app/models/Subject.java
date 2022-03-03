@@ -13,6 +13,7 @@ public class Subject {
   private String ethnicity;
   private String days_to_birth;
   private List<String> subject_associated_project;
+  private List<Object> File;
 
   public String getId() {
     return id;
@@ -70,6 +71,14 @@ public class Subject {
     this.days_to_birth = days_to_birth;
   }
 
+  public List<Object> getFile() {
+    return File;
+  }
+
+  public void setFile(List<Object> File) {
+    File = File;
+  }
+
   public List<String> getSubject_associated_project() {
     return subject_associated_project;
   }
@@ -103,6 +112,8 @@ public class Subject {
         + '\''
         + ", subject_associated_project="
         + subject_associated_project
+        + ", File="
+        + File
         + '}';
   }
 }
