@@ -17,7 +17,10 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.*;
 import com.google.common.annotations.VisibleForTesting;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -295,12 +298,24 @@ public class QueryService {
     }
   }
 
-  public String startQuery(String query) {
-    QueryJobConfiguration.Builder queryConfig =
-        QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).setUseQueryCache(true);
+  public String startQuery(String query) throws Exception{
+    String destinationDataset = "";
+    String destinationTable = "";
+    String jobID = UUID.randomUUID().toString();
+    destinationDataset = "Job_Queue";
+    destinationTable = String.format("Job_%s",jobID);
+    TableId tableId = TableId.of(destinationDataset, destinationTable);
+    TableDefinition tableDefinition = StandardTableDefinition.of(Schema.of());
+    TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).setExpirationTime(Instant.now().toEpochMilli() + TimeUnit.MINUTES.toMillis(10)).build();
 
+    QueryJobConfiguration.Builder queryConfig =
+        QueryJobConfiguration.newBuilder(query)
+                .setUseLegacySql(false)
+                .setUseQueryCache(true)
+                .setAllowLargeResults(true)
+                .setDestinationTable(tableInfo.getTableId());
     // Create a job ID so that we can safely retry.
-    JobId jobId = JobId.of(UUID.randomUUID().toString());
+    JobId jobId = JobId.of(jobID);
     /**
      * Biguery has a maximum wait time by default of 10 seconds this will update the max time to
      * 1min.

@@ -47,7 +47,7 @@ public class SqlGenerator {
             e.printStackTrace();
         }
 
-        return String.format("SELECT %s.* FROM %s WHERE %s", table, fromClause, condition);
+        return String.format("SELECT %s.* EXCEPT(File) FROM %s WHERE %s", table, fromClause, condition);
     }
 
     protected Stream<String> getUnnestColumns(Query query) {
@@ -105,6 +105,11 @@ public class SqlGenerator {
 
                 String left = queryString(query.getL());
                 return String.format("(%s IN (%s))", left, right);
+
+            case LIKE:
+                String right_Like = queryString(query.getR());
+                String left_Like = queryString(query.getL());
+                return String.format("%s LIKE %s",left_Like,right_Like);
             default:
                 return String.format(
                         "(%s %s %s)",

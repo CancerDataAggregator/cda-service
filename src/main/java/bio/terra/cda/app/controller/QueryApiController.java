@@ -95,7 +95,12 @@ public class QueryApiController implements QueryApi {
       return new ResponseEntity("Those actions are not available in sql", HttpStatus.BAD_REQUEST);
     }
     if (!dryRun) {
-      response.queryId(queryService.startQuery(querySql));
+      try {
+        response.queryId(queryService.startQuery(querySql));
+      } catch (Exception e) {
+        e.printStackTrace();
+        return new ResponseEntity("Could not create job", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
@@ -120,7 +125,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     // QueryService test = new QueryService();
     try {
-      String querySql = new SqlGenerator(table + "." + version, body, version).generate();
+         String querySql = new SqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
