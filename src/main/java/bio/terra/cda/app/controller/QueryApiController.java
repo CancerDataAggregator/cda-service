@@ -2,6 +2,7 @@ package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
+import bio.terra.cda.app.generators.FileSqlGenerator;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
 import bio.terra.cda.app.util.NestedColumn;
@@ -204,7 +205,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     String querySql = "";
     try {
-      querySql = new SqlGenerator(table + "." + version, body, version).generate();
+      querySql = new FileSqlGenerator(table + "." + version, body, version).generate();
     } catch (IOException e) {
       return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
     }

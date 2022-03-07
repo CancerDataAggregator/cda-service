@@ -119,6 +119,10 @@ task GetFilesSchema(type: Exec){
 	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.GDC_Files > files-schema.json"
 }
 
+task GetSubjectViewSchema(type: Exec){
+	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.GDC_Subjects_NoFiles > GDC_Subjects_NoFiles.json"
+}
+
 task buildPythonSdk(type: GenerateTask){
 	generatorName = "python"
 	packageName = "cda_client"

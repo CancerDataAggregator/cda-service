@@ -16,11 +16,7 @@ public class CountsSqlGenerator extends SqlGenerator {
         }
 
         @Override
-        public String generate() {
-                return sql(qualifiedTable, rootQuery);
-        }
-
-        private String sql(String tableOrSubClause, Query query) {
+        protected String sql(String tableOrSubClause, Query query) {
                 if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
                         // A SUBQUERY is built differently from other queries. The FROM clause is the
                         // SQL version of
