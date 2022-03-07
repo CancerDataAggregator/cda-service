@@ -43,7 +43,7 @@ public class SqlGenerator {
         }
 
         var fromClause = Stream.concat(
-                        Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
+                Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
                 .collect(Collectors.joining(", "));
 
         String condition = null;
@@ -102,7 +102,7 @@ public class SqlGenerator {
                 return "";
             case QUOTED:
                 String value = query.getValue();
-//          Int check
+                // Int check
                 if (value.contains("days_to_birth") || value.contains("age_at_death") || value.contains("age_")) {
                     return String.format("'%s'", value);
                 }
@@ -113,7 +113,7 @@ public class SqlGenerator {
                 var parts = query.getValue().split("\\.");
                 if (parts.length > 1) {
                     // int check for values that are a int so the UPPER function will not run
-                    if(parts[parts.length - 1].contains("age_")){
+                    if (parts[parts.length - 1].contains("age_")) {
                         return String.format("%s.%s", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
                     }
                     return String.format("UPPER(%s.%s)", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
@@ -138,6 +138,11 @@ public class SqlGenerator {
 
                 String left = queryString(query.getL());
                 return String.format("(%s IN (%s))", left, right);
+
+            case LIKE:
+                String right_Like = queryString(query.getR());
+                String left_Like = queryString(query.getL());
+                return String.format("%s LIKE %s", left_Like, right_Like);
             default:
                 return String.format(
                         "(%s %s %s)",
@@ -150,7 +155,8 @@ public class SqlGenerator {
                 .mapToObj(
                         i -> i == 0
                                 ? String.format("UNNEST(%1$s.%2$s) AS %3$s", table, parts[i], getAlias(i, parts))
-                                : String.format("UNNEST(%1$s.%2$s) AS %3$s", getAlias(i -1, parts), parts[i], getAlias(i, parts)));
+                                : String.format("UNNEST(%1$s.%2$s) AS %3$s", getAlias(i - 1, parts), parts[i],
+                                        getAlias(i, parts)));
     }
 
     protected String getAlias(Integer index, String[] parts) {

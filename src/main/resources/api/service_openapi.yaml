@@ -477,7 +477,8 @@ components:
               WHERE,
               IN,
               SELECTVALUES,
-              SELECT
+              SELECT,
+              LIKE
             ]
           description: >
             Query contents and behavior depends on `node_type`:
