@@ -60,7 +60,6 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
-
     var result = queryService.getQueryResults(id, offset, limit);
     var response = new QueryResponseData()
         .result(Collections.unmodifiableList(result.items))

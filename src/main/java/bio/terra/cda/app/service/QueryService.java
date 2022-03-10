@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
 @Component
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
-
+  Map<String, String> Job_Creation_Status = new HashMap<>();
   @Value("${project}")
   private String project;
 
@@ -148,6 +148,10 @@ public class QueryService {
       return new QueryResult(Collections.emptyList(), null, getSqlFromJob(job));
     }
     return getJobResults(job, offset, pageSize);
+  }
+
+  public void setBigQuery(BigQuery bigQuery) {
+    this.bigQuery = bigQuery;
   }
 
   public static class QueryResult {
@@ -299,14 +303,26 @@ public class QueryService {
   }
 
   public String startQuery(String query) throws Exception{
-    String destinationDataset = "";
-    String destinationTable = "";
     String jobID = UUID.randomUUID().toString();
-    destinationDataset = "Job_Queue";
-    destinationTable = String.format("Job_%s",jobID);
+    String destinationDataset = "Job_Queue";
+    String destinationTable = String.format("Job_%s",jobID);
     TableId tableId = TableId.of(destinationDataset, destinationTable);
     TableDefinition tableDefinition = StandardTableDefinition.of(Schema.of());
     TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).setExpirationTime(Instant.now().toEpochMilli() + TimeUnit.MINUTES.toMillis(10)).build();
+//    if(this.Job_Creation_Status.containsValue(query)) {
+//      for( var entry : this.Job_Creation_Status.entrySet()){
+//        if(entry.getValue().equals(query)){
+//          query = entry.getValue();
+//          break;
+//        }
+//      }
+//
+//    }else {
+//      ApplicationConfiguration test = new ApplicationConfiguration();
+//      String swap_Query_With_JobData = query.replace(bqTable,destinationDataset);
+//      swap_Query_With_JobData = swap_Query_With_JobData.replace(test.getDatasetVersion(),destinationTable);
+//      this.Job_Creation_Status.put(jobID, swap_Query_With_JobData);
+//    }
 
     QueryJobConfiguration.Builder queryConfig =
         QueryJobConfiguration.newBuilder(query)
