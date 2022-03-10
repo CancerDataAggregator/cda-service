@@ -5,6 +5,8 @@ import bio.terra.cda.generated.model.Query;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -33,139 +35,84 @@ public class CountsSqlGenerator extends SqlGenerator {
                         e.printStackTrace();
                 }
 
-                String where = "WHERE\n"
-                                + "    %s\n";
+                var whereClause = condition != null && condition.length() > 0
+                        ? String.format("WHERE\n"
+                                + "    %s\n", condition)
+                        : "";
+
+                var countArrays = tableSchemaMap.keySet().stream().filter(field -> {
+                        var splitField = field.split("\\.");
+                        if (splitField.length < 2) {
+                                return false;
+                        }
+
+                        return splitField[1].equals("identifier");
+                }).map(field -> {
+                        var splitField = field.split("\\.");
+                        return String.join(".", new String[] { splitField[0], splitField[1] });
+                }).distinct();
+
+                var selects = new LinkedList<String>();
+                var queries = new LinkedList<String>();
+
+                countArrays.forEach(field -> {
+                        var splitField = field.split("\\.");
+                        var alias = String.format("%s_count", splitField[0].toLowerCase());
+                        var filesAlias = String.format("%s_files_count", splitField[0].toLowerCase());
+                        selects.add(getSelectField(alias));
+                        selects.add(getSelectField(filesAlias));
+                        // Entity count
+                        queries.add(getSubQuery(fromClause, whereClause, alias, field, field));
+                        // File count
+                        queries.add(getSubQuery(fromClause, whereClause, filesAlias, field, "identifier"));
+                });
+
                 StringBuilder sb = new StringBuilder();
-                sb.append("SELECT\n"
-                                + "  identifiers.system,\n"
-                                + "  CASE\n"
-                                + "    WHEN subject_count.count_file IS NULL THEN 0\n"
-                                + "    ELSE subject_count.count_file\n"
-                                + "  END AS subject_count,\n"
-                                + "  CASE\n"
-                                + "    WHEN top_level_file.count_file IS NULL THEN 0\n"
-                                + "    ELSE top_level_file.count_file\n"
-                                + "  END AS subject_file_count,\n"
-                                + "  CASE\n"
-                                + "    WHEN researchsubject_count.count_researchsubject IS NULL THEN 0\n"
-                                + "    ELSE researchsubject_count.count_researchsubject\n"
-                                + "  END AS researchsubject_count,\n"
-                                + "  CASE\n"
-                                + "    WHEN researchsubject_file_count.count_researchsubject IS NULL THEN 0\n"
-                                + "    ELSE researchsubject_file_count.count_researchsubject\n"
-                                + "  END AS researchsubject_file_count,\n"
-                                + "  CASE\n"
-                                + "    WHEN specimen_count.count_specimen IS NULL THEN 0\n"
-                                + "    ELSE specimen_count.count_specimen\n"
-                                + "  END AS specimen_count,\n"
-                                + "  CASE\n"
-                                + "    WHEN specimen_file_count.count_file IS NULL THEN 0\n"
-                                + "    ELSE specimen_file_count.count_file\n"
-                                + "  END AS specimen_file_count \n"
-                                + "FROM (\n"
-                                + "    SELECT DISTINCT _Identifier.system\n"
-                                + "    FROM gdc-bq-sample.integration.all_v2_1 AS all_v2_1,\n"
-                                + "    UNNEST(identifier) AS _Identifier\n"
-                                + ") as identifiers \n");
-
-                var whereClause = condition != null && condition.length() > 0 ? String.format(where, condition) : "";
-
-                var topLevelFrom = Stream.concat(
-                                fromClause.get(), getUnnestsFromParts(new String[] { "File", "identifier" }, true))
-                                .distinct().collect(Collectors.joining(",\n"));
-                sb.append(String.format("  LEFT OUTER JOIN (\n"
-                                + "    SELECT\n"
-                                + "      _File_identifier.system,\n"
-                                + "      COUNT(_File_identifier.value) AS count_file\n"
-                                + "    FROM\n"
-                                + "      %s\n"
-                                + "    %s"
-                                + "    GROUP BY\n"
-                                + "      _File_identifier.system\n"
-                                + "  ) AS top_level_file on top_level_file.system = identifiers.system\n", topLevelFrom,
-                                whereClause));
-
-                var rsFrom = Stream.concat(
-                                fromClause.get(),
-                                getUnnestsFromParts(new String[] { "ResearchSubject", "identifier" }, true)).distinct()
-                                .collect(Collectors.joining(",\n"));
-                sb.append(String.format("  LEFT OUTER JOIN (\n"
-                                + "    SELECT\n"
-                                + "      _ResearchSubject_identifier.system,\n"
-                                + "      COUNT(_ResearchSubject_identifier.value) AS count_researchsubject\n"
-                                + "    FROM\n"
-                                + "      %s\n"
-                                + "    %s"
-                                + "    GROUP BY\n"
-                                + "      _ResearchSubject_identifier.system\n"
-                                + "  ) AS researchsubject_count ON researchsubject_count.system = identifiers.system\n",
-                                rsFrom, whereClause));
-
-                var rsFileFrom = Stream.concat(
-                                fromClause.get(),
-                                getUnnestsFromParts(new String[] { "ResearchSubject", "File", "identifier" }, true))
-                                .distinct().collect(Collectors.joining(",\n"));
-                sb.append(String.format("  LEFT OUTER JOIN (\n"
-                                + "    SELECT\n"
-                                + "      _ResearchSubject_File_identifier.system,\n"
-                                + "      COUNT(_ResearchSubject_File_identifier.value) AS count_researchsubject\n"
-                                + "    FROM\n"
-                                + "      %s\n"
-                                + "    %s"
-                                + "    GROUP BY\n"
-                                + "      _ResearchSubject_File_identifier.system\n"
-                                + "  ) AS researchsubject_file_count ON researchsubject_file_count.system = identifiers.system\n",
-                                rsFileFrom, whereClause));
-
-                var specimenFrom = Stream.concat(
-                                fromClause.get(),
-                                getUnnestsFromParts(new String[] { "ResearchSubject", "Specimen", "identifier" }, true))
-                                .distinct().collect(Collectors.joining(",\n"));
-                sb.append(String.format("  LEFT OUTER JOIN (\n"
-                                + "    SELECT\n"
-                                + "      _ResearchSubject_Specimen_identifier.system,\n"
-                                + "      COUNT(_ResearchSubject_Specimen_identifier.value) AS count_specimen\n"
-                                + "    FROM\n"
-                                + "      %s\n"
-                                + "    %s"
-                                + "    GROUP BY\n"
-                                + "      _ResearchSubject_Specimen_identifier.system\n"
-                                + "  ) AS specimen_count ON specimen_count.system = identifiers.system\n", specimenFrom,
-                                whereClause));
-
-                var specimenFileFrom = Stream.concat(
-                                fromClause.get(),
-                                getUnnestsFromParts(
-                                                new String[] { "ResearchSubject", "Specimen", "File", "identifier" },
-                                                true))
-                                .distinct().collect(Collectors.joining(",\n"));
-                sb.append(String.format("  LEFT OUTER JOIN (\n"
-                                + "    SELECT\n"
-                                + "      _ResearchSubject_Specimen_File_identifier.system,\n"
-                                + "      COUNT(_ResearchSubject_Specimen_File_identifier.value) AS count_file\n"
-                                + "    FROM\n"
-                                + "      %s\n"
-                                + "    %s"
-                                + "    GROUP BY\n"
-                                + "      _ResearchSubject_Specimen_File_identifier.system\n"
-                                + "  ) AS specimen_file_count ON specimen_file_count.system = identifiers.system\n",
-                                specimenFileFrom, whereClause));
-
-                var identFrom = Stream.concat(
-                                fromClause.get(), getUnnestsFromParts(new String[] { "identifier" }, true)).distinct()
-                                .collect(Collectors.joining(",\n"));
-                sb.append(String.format("  LEFT OUTER JOIN (\n"
-                                + "    SELECT\n"
-                                + "      _identifier.system,\n"
-                                + "      COUNT(_identifier.value) AS count_file\n"
-                                + "    FROM\n"
-                                + "      %s\n"
-                                + "    %s"
-                                + "    GROUP BY\n"
-                                + "      _identifier.system\n"
-                                + "  ) AS subject_count ON subject_count.system = identifiers.system\n", identFrom,
-                                whereClause));
+                sb.append(String.format("SELECT\n"
+                                + " identifiers.system,\n"
+                                + "%s", String.join(",\n ", selects)));
+                sb.append(String.format(" FROM (\n"
+                        + "    SELECT DISTINCT _Identifier.system\n"
+                        + "    FROM %1$s AS %2$s,\n"
+                        + "    UNNEST(identifier) AS _Identifier\n"
+                        + ") as identifiers \n"
+                        + "%3$s", tableOrSubClause, table, String.join(" \n ", queries)));
 
                 return sb.toString();
+        }
+
+        private String getSubQuery(Supplier<Stream<String>> currentUnnests, String whereClause,
+                                   String alias, String groupByField, String countByField) {
+                var from = Stream.concat(
+                        currentUnnests.get(),
+                        Stream.concat(
+                                getUnnestsFromParts(groupByField.split("\\."), true),
+                                getUnnestsFromParts(countByField.split("\\."), true)
+                        )
+                ).distinct().collect(Collectors.joining(",\n"));
+
+                var groupBySplit = groupByField.split("\\.");
+                var countBySplit = countByField.split("\\.");
+
+                return String.format("  LEFT OUTER JOIN (\n"
+                        + "    SELECT\n"
+                        + "      %1$s.system,\n"
+                        + "      COUNT(DISTINCT %2$s.value) AS count\n"
+                        + "    FROM\n"
+                        + "      %3$s\n"
+                        + "    %4$s"
+                        + "    GROUP BY\n"
+                        + "      %1$s.system\n"
+                        + "  ) AS %5$s ON %5$s.system = identifiers.system\n",
+                        getAlias(groupBySplit.length - 1, groupBySplit),
+                        getAlias(countBySplit.length - 1, countBySplit),
+                        from, whereClause, alias);
+        }
+
+        private String getSelectField(String alias) {
+                return String.format("  CASE\n"
+                        + "    WHEN %1$s.count IS NULL THEN 0\n"
+                        + "    ELSE %1$s.count\n"
+                        + "  END AS %1$s\n", alias);
         }
 }
