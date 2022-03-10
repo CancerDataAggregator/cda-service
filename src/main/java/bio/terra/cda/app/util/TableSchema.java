@@ -4,11 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.springframework.core.io.ClassPathResource;
 
+import javax.xml.validation.Schema;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class TableSchema {
     public static class SchemaDefinition {
@@ -59,17 +64,71 @@ public class TableSchema {
         }
     }
 
-    public static Map<String, SchemaDefinition> getSchema(String version) throws IOException {
-        return getSchemaMappingFromFile(String.format("schema/%s.json", version));
+    public static List<SchemaDefinition> getSchema(String version) throws IOException {
+        return loadSchemaFromFile(getFileName(version));
     }
 
-    private static Map<String, SchemaDefinition> getSchemaMappingFromFile(String fileName) throws IOException {
+    public static Map<String, SchemaDefinition> buildSchemaMap(List<SchemaDefinition> definitions) throws IOException {
+        Map<String, SchemaDefinition> definitionMap = new HashMap<String, SchemaDefinition>();
+        addToMap("", definitions, definitionMap);
+        return definitionMap;
+    }
+
+    public static List<SchemaDefinition> getSchemaByColumnName(List<SchemaDefinition> definitions, String columnName) {
+        List<SchemaDefinition> newSchema = new ArrayList<SchemaDefinition>();
+
+        definitions.forEach(def -> {
+            hasColumn(def, columnName).ifPresent(newSchema::add);
+        });
+
+        return newSchema;
+    }
+
+    private static Optional<SchemaDefinition> hasColumn(SchemaDefinition definition, String columnName) {
+        SchemaDefinition newDef = new SchemaDefinition();
+        newDef.setDescription(definition.getDescription());
+        newDef.setMode(definition.getMode());
+        newDef.setName(definition.getName());
+        newDef.setType(definition.getType());
+
+        if (newDef.getName().equals(columnName)) {
+            return Optional.of(newDef);
+        }
+
+        if (definition.getFields() == null) {
+            return Optional.empty();
+        }
+
+        List<SchemaDefinition> newFields = new ArrayList<SchemaDefinition>();
+        Arrays.stream(definition.getFields()).forEach(def -> {
+            hasColumn(def, columnName).ifPresent(newFields::add);
+        });
+
+        if (newFields.size() == 0) {
+            return Optional.empty();
+        }
+
+        SchemaDefinition[] fields = new SchemaDefinition[newFields.size()];
+        newDef.setFields(newFields.toArray(fields));
+
+        return Optional.of(newDef);
+    }
+
+    private static String getFileName(String version) {
+        return String.format("schema/%s.json", version);
+    }
+
+    private static List<SchemaDefinition> loadSchemaFromFile(String fileName) throws IOException {
         ClassPathResource resource = new ClassPathResource(fileName);
         InputStream inputStream = resource.getInputStream();
         ObjectMapper mapper = new ObjectMapper();
         CollectionType collectionType = mapper.getTypeFactory().constructCollectionType(List.class, SchemaDefinition.class);
 
-        List<SchemaDefinition> definitions = mapper.readValue(inputStream, collectionType);
+        return mapper.readValue(inputStream, collectionType);
+    }
+
+    private static Map<String, SchemaDefinition> getSchemaMappingFromFile(String fileName) throws IOException {
+        List<SchemaDefinition> definitions = loadSchemaFromFile(fileName);
 
         Map<String, SchemaDefinition> definitionMap = new HashMap<String, SchemaDefinition>();
         addToMap("", definitions, definitionMap);

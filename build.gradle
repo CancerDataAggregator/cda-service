@@ -116,7 +116,11 @@ task GetSchema(type: Exec){
 }
 
 task GetFilesSchema(type: Exec){
-	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.GDC_Files > files-schema.json"
+	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.all_v3_0_Files > all_v3_0_Files.json"
+}
+
+task GetSubjectViewSchema(type: Exec){
+	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.all_v3_0_subjects_meta > all_v3_0_subjects_meta.json"
 }
 
 task buildPythonSdk(type: GenerateTask){

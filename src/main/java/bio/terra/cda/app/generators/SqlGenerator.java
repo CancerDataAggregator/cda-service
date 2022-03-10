@@ -4,7 +4,10 @@ import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -14,7 +17,8 @@ public class SqlGenerator {
     final String qualifiedTable;
     final Query rootQuery;
     final String table;
-    final Map<String, TableSchema.SchemaDefinition> tableSchema;
+    final Map<String, TableSchema.SchemaDefinition> tableSchemaMap;
+    final List<TableSchema.SchemaDefinition> tableSchema;
 
     public SqlGenerator(String qualifiedTable, Query rootQuery, String version) throws IOException {
         this.qualifiedTable = qualifiedTable;
@@ -22,13 +26,14 @@ public class SqlGenerator {
         int dotPos = qualifiedTable.lastIndexOf('.');
         this.table = dotPos == -1 ? qualifiedTable : qualifiedTable.substring(dotPos + 1);
         this.tableSchema = TableSchema.getSchema(version);
+        this.tableSchemaMap = TableSchema.buildSchemaMap(this.tableSchema);
     }
 
     public String generate() {
         return sql(qualifiedTable, rootQuery);
     }
 
-    private String sql(String tableOrSubClause, Query query) {
+    protected String sql(String tableOrSubClause, Query query) {
         if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
             // A SUBQUERY is built differently from other queries. The FROM clause is the
             // SQL version of
@@ -48,24 +53,27 @@ public class SqlGenerator {
             e.printStackTrace();
         }
 
-        return String.format("SELECT %s FROM %s WHERE %s",
-                getSelectValues(query, table).collect(Collectors.joining(",")), fromClause, condition);
+        return String.format("%s FROM %s WHERE %s", getSelect(query, table), fromClause, condition);
     }
 
-    protected Stream<String> getSelectValues(Query query, String table) {
+    protected String getSelect(Query query, String table) {
         if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
-            return Arrays.stream(query.getL().getValue().split(",")).map(select -> {
-                var parts = Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
-                return String.format("%s.%s AS %s",
-                        parts.length == 1
-                                ? table
-                                : getAlias(parts.length - 2, parts),
-                        parts[parts.length - 1],
-                        String.join("_", parts));
-            });
+            return String.format("SELECT %s", queryToSelect(query).collect(Collectors.joining(",")));
         } else {
-            return Stream.of(String.format("%s.*", table));
+            return String.format("SELECT %s.*", table);
         }
+    }
+
+    protected Stream<String> queryToSelect(Query query) {
+        return Arrays.stream(query.getL().getValue().split(",")).map(select -> {
+            var parts = Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
+            return String.format("%s.%s AS %s",
+                    parts.length == 1
+                            ? table
+                            : getAlias(parts.length - 2, parts),
+                    parts[parts.length - 1],
+                    String.join("_", parts));
+        });
     }
 
     protected Stream<String> getUnnestColumns(Query query) {
