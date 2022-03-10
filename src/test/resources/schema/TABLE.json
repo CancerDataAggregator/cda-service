@@ -1,0 +1,35 @@
+[
+  {
+    "mode": "REPEATED",
+    "name": "A",
+    "type": "RECORD",
+    "fields": [
+      {
+        "mode": "REPEATED",
+        "name": "B",
+        "type": "RECORD",
+        "fields": [
+          {
+            "mode": "REPEATED",
+            "name": "C",
+            "type": "RECORD",
+            "fields": [
+              {
+                "mode": "REPEATED",
+                "name": "D",
+                "type": "RECORD",
+                "fields": [
+                  {
+                    "mode": "NULLABLE",
+                    "name": "column",
+                    "type": "INTEGER"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
