@@ -73,10 +73,20 @@ public class SqlGenerator {
             case SELECTVALUES:
                 return Arrays.stream(query.getValue().split(","))
                         .flatMap(select -> getUnnestsFromParts(select.trim().split("\\."), false));
+            case LIKE:
+                return getUnnestColumns(query.getL());
             case QUOTED:
             case UNQUOTED:
                 return Stream.empty();
             case COLUMN:
+               var tmp = tableSchema.get(query.getValue());
+               var tmpGetMode = tmp.getMode();
+               var tmpGetType = tmp.getType();
+                if (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")){
+                   String tableValue = String.format("_%s",query.getValue());
+                   Stream<String> tmpReturn = Arrays.stream(new String[]{String.format("UNNEST(%1$s) AS %2$s", query.getValue(), tableValue)});
+                    return tmpReturn;
+               }
                 var parts = query.getValue().split("\\.");
                 return getUnnestsFromParts(parts, false);
             case NOT:
@@ -132,9 +142,9 @@ public class SqlGenerator {
                 return String.format("(%s IN (%s))", left, right);
 
             case LIKE:
-                String right_Like = queryString(query.getR());
-                String left_Like = queryString(query.getL());
-                return String.format("%s LIKE %s", left_Like, right_Like);
+                String rightValue = query.getR().getValue();
+                String leftValue = queryString(query.getL());
+                return String.format("%s LIKE UPPER(%s)", leftValue,rightValue);
             default:
                 return String.format(
                         "(%s %s %s)",

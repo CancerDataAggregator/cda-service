@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ import org.springframework.stereotype.Component;
 @Component
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
+  @Autowired public ApplicationConfiguration applicationConfiguration;
   Map<String, String> Job_Creation_Status = new HashMap<>();
   @Value("${project}")
   private String project;
@@ -218,6 +220,7 @@ public class QueryService {
     public final float duration;
     public final Map<Source, Integer> systemUsage;
 
+
     QueryData(Job queryJob, float duration, Map<Source, Integer> systemUsage) {
       this.timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
       this.userEmail = queryJob.getUserEmail();
@@ -309,20 +312,37 @@ public class QueryService {
     TableId tableId = TableId.of(destinationDataset, destinationTable);
     TableDefinition tableDefinition = StandardTableDefinition.of(Schema.of());
     TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).setExpirationTime(Instant.now().toEpochMilli() + TimeUnit.MINUTES.toMillis(10)).build();
-//    if(this.Job_Creation_Status.containsValue(query)) {
-//      for( var entry : this.Job_Creation_Status.entrySet()){
-//        if(entry.getValue().equals(query)){
-//          query = entry.getValue();
-//          break;
-//        }
-//      }
-//
-//    }else {
-//      ApplicationConfiguration test = new ApplicationConfiguration();
-//      String swap_Query_With_JobData = query.replace(bqTable,destinationDataset);
-//      swap_Query_With_JobData = swap_Query_With_JobData.replace(test.getDatasetVersion(),destinationTable);
-//      this.Job_Creation_Status.put(jobID, swap_Query_With_JobData);
-//    }
+    if(this.Job_Creation_Status.containsValue(query)) {
+      for( var entry : this.Job_Creation_Status.entrySet()){
+        if(entry.getValue().equals(query)){
+          query = entry.getValue();
+          break;
+        }
+      }
+
+    }else {
+      String swap_Query_With_JobData = Arrays.stream(query.split(" ")).map(e-> {
+        if(e.contains(bqTable)){
+          e =  e.replace(bqTable,destinationDataset)+".";
+        }
+        if(e.contains("integration")){
+          e =  " "+e.replace("integration",destinationDataset)+".";
+        }
+        if(e.contains("dev")){
+
+          e =  " "+e.replace("dev",destinationDataset);
+        }
+        // adds the table
+        if(e.contains(".GDC_Subjects")){
+          e =  e.replace(".GDC_Subjects","."+destinationTable)+" ";
+        }
+        if(e.contains(this.applicationConfiguration.getDatasetVersion())){
+         e = "."+e.replace(this.applicationConfiguration.getDatasetVersion(),"."+destinationTable)+" ";
+        }
+        return e;
+      }).collect(Collectors.joining());
+      this.Job_Creation_Status.put(jobID, swap_Query_With_JobData);
+    }
 
     QueryJobConfiguration.Builder queryConfig =
         QueryJobConfiguration.newBuilder(query)
