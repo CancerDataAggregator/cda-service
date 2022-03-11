@@ -4,16 +4,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.springframework.core.io.ClassPathResource;
 
-import javax.xml.validation.Schema;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TableSchema {
     public static class SchemaDefinition {
@@ -82,6 +89,19 @@ public class TableSchema {
         });
 
         return newSchema;
+    }
+
+    public static List<String> supportedSchemas() throws IOException, URISyntaxException {
+        ClassLoader classLoader = TableSchema.class.getClassLoader();
+
+        URL resource = classLoader.getResource("schema");
+
+        return Files.walk(Paths.get(resource.toURI()))
+                .filter(path -> path.getFileName().toString().endsWith(".json"))
+                .map(path -> {
+                    var file = path.getFileName().toString();
+                    return file.substring(0, file.length() - 5).toLowerCase();
+                }).collect(Collectors.toList());
     }
 
     private static Optional<SchemaDefinition> hasColumn(SchemaDefinition definition, String columnName) {

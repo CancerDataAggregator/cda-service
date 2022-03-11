@@ -7,6 +7,7 @@ import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
 import bio.terra.cda.app.util.NestedColumn;
 import bio.terra.cda.app.generators.SqlGenerator;
+import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.Query;
@@ -86,12 +87,31 @@ public class QueryApiController implements QueryApi {
     if (!querySql.contains(applicationConfiguration.getProject())) {
       return new ResponseEntity("Your database is outside of the project", HttpStatus.BAD_REQUEST);
     }
+    var lowerCaseQuery = querySql.toLowerCase();
 
-    if (querySql.toLowerCase().contains("create table")
-        || querySql.toLowerCase().contains("delete from")
-        || querySql.toLowerCase().contains("drop table")
-        || querySql.toLowerCase().contains("update")
-        || querySql.toLowerCase().contains("alter table")) {
+    try {
+      var supportedSchemas = TableSchema.supportedSchemas();
+      var found = false;
+
+      for (String schema: supportedSchemas) {
+        if (lowerCaseQuery.contains(schema)) {
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        return new ResponseEntity("The database does not exist in our schema.", HttpStatus.BAD_REQUEST);
+      }
+    } catch (Exception e) {
+      return new ResponseEntity("The database does not exist in our schema.", HttpStatus.BAD_REQUEST);
+    }
+
+    if (lowerCaseQuery.contains("create table")
+        || lowerCaseQuery.contains("delete from")
+        || lowerCaseQuery.contains("drop table")
+        || lowerCaseQuery.contains("update")
+        || lowerCaseQuery.contains("alter table")) {
       return new ResponseEntity("Those actions are not available in sql", HttpStatus.BAD_REQUEST);
     }
     if (!dryRun) {

@@ -41,8 +41,8 @@ public class SqlGeneratorTest {
 
         String EXPECTED_SQL =
                 String.format(
-                        "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(demographic) AS _demographic, UNNEST(project) AS _project, "
-                                + "UNNEST(diagnoses) AS _diagnoses WHERE (((_demographic.age_at_index >= 50) AND "
+                        "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(%2$s.demographic) AS _demographic, UNNEST(%2$s.project) AS _project, "
+                                + "UNNEST(%2$s.diagnoses) AS _diagnoses WHERE (((_demographic.age_at_index >= 50) AND "
                                 + "(UPPER(_project.project_id) = UPPER('TCGA-OV'))) AND (UPPER(_diagnoses.figo_stage) = UPPER('Stage IIIC')))",
                         QUALIFIED_TABLE, TABLE);
 
@@ -58,8 +58,8 @@ public class SqlGeneratorTest {
 
         String expectedSql =
                 String.format(
-                        "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(A) AS _A, UNNEST(_A.B) AS _B, "
-                                + "UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D WHERE (UPPER(_D.column) = value)",
+                        "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(%2$s.A) AS _A, UNNEST(_A.B) AS _A_B, "
+                                + "UNNEST(_A_B.C) AS _A_B_C, UNNEST(_A_B_C.D) AS _A_B_C_D WHERE (UPPER(_A_B_C_D.column) = value)",
                         QUALIFIED_TABLE, TABLE);
 
         Query query = objectMapper.readValue(jsonQuery, Query.class);
@@ -75,11 +75,11 @@ public class SqlGeneratorTest {
         String expectedSql =
                 String.format(
                         "SELECT %2$s.* FROM "
-                                + "(SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(ResearchSubject) AS _ResearchSubject, "
-                                + "UNNEST(_ResearchSubject.identifier) AS _identifier "
-                                + "WHERE (UPPER(_identifier.system) = UPPER('PDC'))) AS %2$s,"
-                                + " UNNEST(ResearchSubject) AS _ResearchSubject, "
-                                + "UNNEST(_ResearchSubject.identifier) AS _identifier WHERE (UPPER(_identifier.system) = UPPER('GDC'))",
+                                + "(SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(%2$s.ResearchSubject) AS _ResearchSubject, "
+                                + "UNNEST(_ResearchSubject.identifier) AS _ResearchSubject_identifier "
+                                + "WHERE (UPPER(_ResearchSubject_identifier.system) = UPPER('PDC'))) AS %2$s,"
+                                + " UNNEST(%2$s.ResearchSubject) AS _ResearchSubject, "
+                                + "UNNEST(_ResearchSubject.identifier) AS _ResearchSubject_identifier WHERE (UPPER(_ResearchSubject_identifier.system) = UPPER('GDC'))",
                         QUALIFIED_TABLE, TABLE);
 
         Query query = objectMapper.readValue(jsonQuery, Query.class);
@@ -94,7 +94,7 @@ public class SqlGeneratorTest {
 
         String expectedSql =
                 String.format(
-                        "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(A) AS _A WHERE (NOT (1 = UPPER(_A.B)))",
+                        "SELECT %2$s.* FROM %1$s AS %2$s, UNNEST(%2$s.A) AS _A WHERE (NOT (1 = UPPER(_A.B)))",
                         QUALIFIED_TABLE, TABLE);
 
         Query query = objectMapper.readValue(jsonQuery, Query.class);
