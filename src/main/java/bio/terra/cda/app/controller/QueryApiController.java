@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,7 +151,7 @@ public class QueryApiController implements QueryApi {
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
-    }catch (NullPointerException e){
+    } catch (Exception e) {
       return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
   }
@@ -222,6 +224,8 @@ public class QueryApiController implements QueryApi {
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
+    } catch (Exception e) {
+      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -234,6 +238,8 @@ public class QueryApiController implements QueryApi {
       querySql = new FileSqlGenerator(table + "." + version, body, version).generate();
     } catch (IOException e) {
       return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
+    } catch (Exception e) {
+      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
     return sendQuery(querySql, dryRun);
   }

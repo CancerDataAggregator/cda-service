@@ -2,6 +2,7 @@ package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.generated.model.Query;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 
 import java.io.IOException;
@@ -19,7 +20,7 @@ public class CountsSqlGenerator extends SqlGenerator {
         }
 
         @Override
-        protected String sql(String tableOrSubClause, Query query){
+        protected String sql(String tableOrSubClause, Query query) throws UncheckedExecutionException {
                 if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
                         // A SUBQUERY is built differently from other queries. The FROM clause is the
                         // SQL version of
@@ -27,8 +28,14 @@ public class CountsSqlGenerator extends SqlGenerator {
                         // level query.
                         return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
                 }
-                QueryExecutionConverters.ThrowingSupplier fromClause = () -> Stream.concat(
-                                Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct());
+                Supplier<Stream<String>> fromClause = () -> {
+                        try {
+                                return Stream.concat(
+                                                Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct());
+                        } catch (Exception e) {
+                                throw new UncheckedExecutionException(e);
+                        }
+                };
                 String condition = null;
                 try {
                         condition = queryString(query);
@@ -68,24 +75,21 @@ public class CountsSqlGenerator extends SqlGenerator {
                         queries.add(getSubQuery(fromClause, whereClause, filesAlias, field, "identifier"));
                 });
 
-                StringBuilder sb = new StringBuilder();
-                sb.append(String.format("SELECT\n"
-                                + " identifiers.system,\n"
-                                + "%s", String.join(",\n ", selects)));
-                sb.append(String.format(" FROM (\n"
-                        + "    SELECT DISTINCT _Identifier.system\n"
-                        + "    FROM %1$s AS %2$s,\n"
-                        + "    UNNEST(identifier) AS _Identifier\n"
-                        + ") as identifiers \n"
-                        + "%3$s", tableOrSubClause, table, String.join(" \n ", queries)));
-
-                return sb.toString();
+                return String.format("SELECT\n"
+                        + " identifiers.system,\n"
+                        + "%s", String.join(",\n ", selects)) +
+                        String.format(" FROM (\n"
+                                + "    SELECT DISTINCT _Identifier.system\n"
+                                + "    FROM %1$s AS %2$s,\n"
+                                + "    UNNEST(identifier) AS _Identifier\n"
+                                + ") as identifiers \n"
+                                + "%3$s", tableOrSubClause, table, String.join(" \n ", queries));
         }
 
-        private String getSubQuery(QueryExecutionConverters.ThrowingSupplier currentUnnests, String whereClause,
-                                   String alias, String groupByField, String countByField) throws Throwable {
+        private String getSubQuery(Supplier<Stream<String>> currentUnnests, String whereClause,
+                                   String alias, String groupByField, String countByField) {
                 var from = Stream.concat(
-                        (Stream<String>) currentUnnests.get(),
+                        currentUnnests.get(),
                         Stream.concat(
                                 getUnnestsFromParts(groupByField.split("\\."), true),
                                 getUnnestsFromParts(countByField.split("\\."), true)

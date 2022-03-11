@@ -81,8 +81,6 @@ public class SqlGenerator {
             case SELECTVALUES:
                 return Arrays.stream(query.getValue().split(","))
                         .flatMap(select -> getUnnestsFromParts(select.trim().split("\\."), false));
-            case LIKE:
-                return getUnnestColumns(query.getL());
             case QUOTED:
             case UNQUOTED:
                 return Stream.empty();
@@ -97,9 +95,10 @@ public class SqlGenerator {
 
 //                return getUnnestsFromParts(parts, false);
                 }catch (NullPointerException e){
-                    throw new NullPointerException(String.format("Type error for %s",query.getValue()));
+                    throw new NullPointerException(String.format("Column %s does not exist on table %s",query.getValue(), table));
                 }
             case NOT:
+            case LIKE:
                 return getUnnestColumns(query.getL());
             default:
                 return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
