@@ -149,6 +149,8 @@ public class QueryApiController implements QueryApi {
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
+    }catch (NullPointerException e){
+      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
   }
 

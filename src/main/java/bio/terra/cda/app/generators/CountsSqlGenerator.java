@@ -2,6 +2,7 @@ package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.generated.model.Query;
+import org.springframework.data.repository.util.QueryExecutionConverters;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,7 +19,7 @@ public class CountsSqlGenerator extends SqlGenerator {
         }
 
         @Override
-        protected String sql(String tableOrSubClause, Query query) {
+        protected String sql(String tableOrSubClause, Query query){
                 if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
                         // A SUBQUERY is built differently from other queries. The FROM clause is the
                         // SQL version of
@@ -26,7 +27,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                         // level query.
                         return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
                 }
-                Supplier<Stream<String>> fromClause = () -> Stream.concat(
+                QueryExecutionConverters.ThrowingSupplier fromClause = () -> Stream.concat(
                                 Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct());
                 String condition = null;
                 try {
@@ -81,10 +82,10 @@ public class CountsSqlGenerator extends SqlGenerator {
                 return sb.toString();
         }
 
-        private String getSubQuery(Supplier<Stream<String>> currentUnnests, String whereClause,
-                                   String alias, String groupByField, String countByField) {
+        private String getSubQuery(QueryExecutionConverters.ThrowingSupplier currentUnnests, String whereClause,
+                                   String alias, String groupByField, String countByField) throws Throwable {
                 var from = Stream.concat(
-                        currentUnnests.get(),
+                        (Stream<String>) currentUnnests.get(),
                         Stream.concat(
                                 getUnnestsFromParts(groupByField.split("\\."), true),
                                 getUnnestsFromParts(countByField.split("\\."), true)

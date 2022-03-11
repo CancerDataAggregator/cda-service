@@ -29,11 +29,11 @@ public class SqlGenerator {
         this.tableSchemaMap = TableSchema.buildSchemaMap(this.tableSchema);
     }
 
-    public String generate() {
+    public String generate() throws Exception {
         return sql(qualifiedTable, rootQuery);
     }
 
-    protected String sql(String tableOrSubClause, Query query) {
+    protected String sql(String tableOrSubClause, Query query) throws Exception {
         if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
             // A SUBQUERY is built differently from other queries. The FROM clause is the
             // SQL version of
@@ -76,7 +76,7 @@ public class SqlGenerator {
         });
     }
 
-    protected Stream<String> getUnnestColumns(Query query) {
+    protected Stream<String> getUnnestColumns(Query query) throws Exception {
         switch (query.getNodeType()) {
             case SELECTVALUES:
                 return Arrays.stream(query.getValue().split(","))
@@ -87,16 +87,18 @@ public class SqlGenerator {
             case UNQUOTED:
                 return Stream.empty();
             case COLUMN:
-               var tmp = tableSchemaMap.get(query.getValue());
-               var tmpGetMode = tmp.getMode();
-               var tmpGetType = tmp.getType();
-                if (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")){
-                   String tableValue = String.format("_%s",query.getValue());
-                   Stream<String> tmpReturn = Arrays.stream(new String[]{String.format("UNNEST(%1$s) AS %2$s", query.getValue(), tableValue)});
-                    return tmpReturn;
-               }
-                var parts = query.getValue().split("\\.");
-                return getUnnestsFromParts(parts, false);
+                try {
+                    var tmp = tableSchemaMap.get(query.getValue());
+                    var tmpGetMode = tmp.getMode();
+                    var tmpGetType = tmp.getType();
+                    var parts = query.getValue().split("\\.");
+                    return getUnnestsFromParts(parts, (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")));
+
+
+//                return getUnnestsFromParts(parts, false);
+                }catch (NullPointerException e){
+                    throw new NullPointerException(String.format("Type error for %s",query.getValue()));
+                }
             case NOT:
                 return getUnnestColumns(query.getL());
             default:
@@ -124,7 +126,8 @@ public class SqlGenerator {
                 var tmpGetMode = tmp.getMode();
                 var tmpGetType = tmp.getType();
                 if (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")){
-                    String tableValue = String.format("_%s",query.getValue());
+                    var splitQuery = query.getValue().split("\\.");
+                    String tableValue = String.format("%s",getAlias(splitQuery.length-1,splitQuery));
                     return String.format("UPPER(%s)", tableValue);
                 }
 
