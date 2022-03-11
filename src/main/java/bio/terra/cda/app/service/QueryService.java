@@ -312,37 +312,6 @@ public class QueryService {
     TableId tableId = TableId.of(destinationDataset, destinationTable);
     TableDefinition tableDefinition = StandardTableDefinition.of(Schema.of());
     TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).setExpirationTime(Instant.now().toEpochMilli() + TimeUnit.MINUTES.toMillis(10)).build();
-    if(this.Job_Creation_Status.containsValue(query)) {
-      for( var entry : this.Job_Creation_Status.entrySet()){
-        if(entry.getValue().equals(query)){
-          query = entry.getValue();
-          break;
-        }
-      }
-
-    }else {
-      String swap_Query_With_JobData = Arrays.stream(query.split(" ")).map(e-> {
-        if(e.contains(bqTable)){
-          e =  e.replace(bqTable,destinationDataset)+".";
-        }
-        if(e.contains("integration")){
-          e =  " "+e.replace("integration",destinationDataset)+".";
-        }
-        if(e.contains("dev")){
-
-          e =  " "+e.replace("dev",destinationDataset);
-        }
-        // adds the table
-        if(e.contains(".GDC_Subjects")){
-          e =  e.replace(".GDC_Subjects","."+destinationTable)+" ";
-        }
-        if(e.contains(this.applicationConfiguration.getDatasetVersion())){
-         e = "."+e.replace(this.applicationConfiguration.getDatasetVersion(),"."+destinationTable)+" ";
-        }
-        return e;
-      }).collect(Collectors.joining());
-      this.Job_Creation_Status.put(jobID, swap_Query_With_JobData);
-    }
 
     QueryJobConfiguration.Builder queryConfig =
         QueryJobConfiguration.newBuilder(query)

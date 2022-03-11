@@ -87,7 +87,7 @@ public class SqlGenerator {
             case UNQUOTED:
                 return Stream.empty();
             case COLUMN:
-               var tmp = tableSchema.get(query.getValue());
+               var tmp = tableSchemaMap.get(query.getValue());
                var tmpGetMode = tmp.getMode();
                var tmpGetType = tmp.getType();
                 if (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")){
