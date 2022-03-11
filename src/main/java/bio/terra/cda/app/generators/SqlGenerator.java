@@ -120,6 +120,14 @@ public class SqlGenerator {
             case UNQUOTED:
                 return String.format("%s", query.getValue());
             case COLUMN:
+                var tmp = tableSchemaMap.get(query.getValue());
+                var tmpGetMode = tmp.getMode();
+                var tmpGetType = tmp.getType();
+                if (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")){
+                    String tableValue = String.format("_%s",query.getValue());
+                    return String.format("UPPER(%s)", tableValue);
+                }
+
                 var parts = query.getValue().split("\\.");
                 if (parts.length > 1) {
                     // int check for values that are a int so the UPPER function will not run
