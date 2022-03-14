@@ -1,6 +1,8 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.generators.SqlGenerator;
+import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.springframework.data.repository.util.QueryExecutionConverters;
@@ -31,14 +33,14 @@ public class CountsSqlGenerator extends SqlGenerator {
                 Supplier<Stream<String>> fromClause = () -> {
                         try {
                                 return Stream.concat(
-                                                Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct());
+                                                Stream.of(tableOrSubClause + " AS " + table), ((BasicOperator)query).getUnnestColumns(table, tableSchemaMap).distinct());
                         } catch (Exception e) {
                                 throw new UncheckedExecutionException(e);
                         }
                 };
                 String condition = null;
                 try {
-                        condition = queryString(query);
+                        condition = ((BasicOperator)query).queryString(table, tableSchemaMap);
                 } catch (Exception e) {
                         e.printStackTrace();
                 }
@@ -91,8 +93,8 @@ public class CountsSqlGenerator extends SqlGenerator {
                 var from = Stream.concat(
                         currentUnnests.get(),
                         Stream.concat(
-                                getUnnestsFromParts(groupByField.split("\\."), true),
-                                getUnnestsFromParts(countByField.split("\\."), true)
+                                SqlUtil.getUnnestsFromParts(table, groupByField.split("\\."), true),
+                                SqlUtil.getUnnestsFromParts(table, countByField.split("\\."), true)
                         )
                 ).distinct().collect(Collectors.joining(",\n"));
 
@@ -109,8 +111,8 @@ public class CountsSqlGenerator extends SqlGenerator {
                         + "    GROUP BY\n"
                         + "      %1$s.system\n"
                         + "  ) AS %5$s ON %5$s.system = identifiers.system\n",
-                        getAlias(groupBySplit.length - 1, groupBySplit),
-                        getAlias(countBySplit.length - 1, countBySplit),
+                        SqlUtil.getAlias(groupBySplit.length - 1, groupBySplit),
+                        SqlUtil.getAlias(countBySplit.length - 1, countBySplit),
                         from, whereClause, alias);
         }
 

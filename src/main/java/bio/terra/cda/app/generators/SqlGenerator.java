@@ -1,5 +1,7 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 
@@ -43,12 +45,12 @@ public class SqlGenerator {
         }
 
         var fromClause = Stream.concat(
-                Stream.of(tableOrSubClause + " AS " + table), getUnnestColumns(query).distinct())
+                Stream.of(tableOrSubClause + " AS " + table), ((BasicOperator)query).getUnnestColumns(table, tableSchemaMap).distinct())
                 .collect(Collectors.joining(", "));
 
         String condition = null;
         try {
-            condition = queryString(query);
+            condition = ((BasicOperator)query).queryString(table, tableSchemaMap);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -70,116 +72,9 @@ public class SqlGenerator {
             return String.format("%s.%s AS %s",
                     parts.length == 1
                             ? table
-                            : getAlias(parts.length - 2, parts),
+                            : SqlUtil.getAlias(parts.length - 2, parts),
                     parts[parts.length - 1],
                     String.join("_", parts));
         });
-    }
-
-    protected Stream<String> getUnnestColumns(Query query) throws Exception {
-        switch (query.getNodeType()) {
-            case SELECTVALUES:
-                return Arrays.stream(query.getValue().split(","))
-                        .flatMap(select -> getUnnestsFromParts(select.trim().split("\\."), false));
-            case QUOTED:
-            case UNQUOTED:
-                return Stream.empty();
-            case COLUMN:
-                try {
-                    var tmp = tableSchemaMap.get(query.getValue());
-                    var tmpGetMode = tmp.getMode();
-                    var tmpGetType = tmp.getType();
-                    var parts = query.getValue().split("\\.");
-                    return getUnnestsFromParts(parts, (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")));
-
-
-//                return getUnnestsFromParts(parts, false);
-                }catch (NullPointerException e){
-                    throw new NullPointerException(String.format("Column %s does not exist on table %s",query.getValue(), table));
-                }
-            case NOT:
-            case LIKE:
-                return getUnnestColumns(query.getL());
-            default:
-                return Stream.concat(getUnnestColumns(query.getL()), getUnnestColumns(query.getR()));
-        }
-    }
-
-    protected String queryString(Query query) throws IllegalArgumentException {
-        switch (query.getNodeType()) {
-            case SELECT:
-                return queryString(query.getR());
-            case SELECTVALUES:
-                return "";
-            case QUOTED:
-                String value = query.getValue();
-                // Int check
-                if (value.contains("days_to_birth") || value.contains("age_at_death") || value.contains("age_")) {
-                    return String.format("'%s'", value);
-                }
-                return String.format("UPPER('%s')", value);
-            case UNQUOTED:
-                return String.format("%s", query.getValue());
-            case COLUMN:
-                var tmp = tableSchemaMap.get(query.getValue());
-                var tmpGetMode = tmp.getMode();
-                var tmpGetType = tmp.getType();
-                if (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")){
-                    var splitQuery = query.getValue().split("\\.");
-                    String tableValue = String.format("%s",getAlias(splitQuery.length-1,splitQuery));
-                    return String.format("UPPER(%s)", tableValue);
-                }
-
-                var parts = query.getValue().split("\\.");
-                if (parts.length > 1) {
-                    // int check for values that are a int so the UPPER function will not run
-                    if (parts[parts.length - 1].contains("age_")) {
-                        return String.format("%s.%s", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
-                    }
-                    return String.format("UPPER(%s.%s)", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
-                }
-                // Top level fields must be scoped by the table name, otherwise they could
-                // conflict with
-                // unnested fields.
-                String value_col = query.getValue();
-                if (value_col.contains("days_to_birth") || value_col.contains("age_at_death")) {
-                    return String.format("%s.%s", table, value_col);
-                }
-                return String.format("UPPER(%s.%s)", table, query.getValue());
-            case NOT:
-                return String.format("(%s %s)", query.getNodeType(), queryString(query.getL()));
-            case IN:
-                String right = queryString(query.getR());
-                if (right.contains("[") || right.contains("(")) {
-                    right = right.substring(1, right.length() - 1).replace("\"", "'");
-                } else {
-                    throw new IllegalArgumentException("To use IN you need to add [ or (");
-                }
-
-                String left = queryString(query.getL());
-                return String.format("(%s IN (%s))", left, right);
-
-            case LIKE:
-                String rightValue = query.getR().getValue();
-                String leftValue = queryString(query.getL());
-                return String.format("%s LIKE UPPER(%s)", leftValue,rightValue);
-            default:
-                return String.format(
-                        "(%s %s %s)",
-                        queryString(query.getL()), query.getNodeType(), queryString(query.getR()));
-        }
-    }
-
-    protected Stream<String> getUnnestsFromParts(String[] parts, Boolean includeLast) {
-        return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
-                .mapToObj(
-                        i -> i == 0
-                                ? String.format("UNNEST(%1$s.%2$s) AS %3$s", table, parts[i], getAlias(i, parts))
-                                : String.format("UNNEST(%1$s.%2$s) AS %3$s", getAlias(i - 1, parts), parts[i],
-                                        getAlias(i, parts)));
-    }
-
-    protected String getAlias(Integer index, String[] parts) {
-        return "_" + Arrays.stream(parts, 0, index + 1).collect(Collectors.joining("_"));
     }
 }
