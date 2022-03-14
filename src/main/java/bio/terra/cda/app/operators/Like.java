@@ -6,7 +6,7 @@ import bio.terra.cda.generated.model.Query;
 import java.util.Map;
 
 @QueryOperator(nodeType = Query.NodeTypeEnum.LIKE)
-public class Like extends BasicOperator {
+public class Like extends SingleSidedOperator {
     @Override
     public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
         String rightValue = getR().getValue();

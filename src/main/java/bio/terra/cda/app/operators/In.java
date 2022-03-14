@@ -4,9 +4,10 @@ import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 @QueryOperator(nodeType = Query.NodeTypeEnum.IN)
-public class In extends BasicOperator {
+public class In extends SingleSidedOperator {
     @Override
     public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
         String right = ((BasicOperator)getR()).queryString(table, tableSchemaMap);

@@ -14,9 +14,8 @@ public class Column extends BasicOperator {
         try {
             var tmp = tableSchemaMap.get(getValue());
             var tmpGetMode = tmp.getMode();
-            var tmpGetType = tmp.getType();
             var parts = getValue().split("\\.");
-            return SqlUtil.getUnnestsFromParts(table, parts, (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")));
+            return SqlUtil.getUnnestsFromParts(table, parts, (tmpGetMode.equals("REPEATED")));
 
 
 //                return getUnnestsFromParts(parts, false);
@@ -24,32 +23,22 @@ public class Column extends BasicOperator {
             throw new NullPointerException(String.format("Column %s does not exist on table %s",getValue(), table));
         }
     }
+
     @Override
     public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
         var tmp = tableSchemaMap.get(getValue());
         var tmpGetMode = tmp.getMode();
         var tmpGetType = tmp.getType();
-        if (tmpGetMode.equals("REPEATED") && tmpGetType.equals("STRING")){
-            var splitQuery = getValue().split("\\.");
-            String tableValue = String.format("%s",SqlUtil.getAlias(splitQuery.length-1,splitQuery));
-            return String.format("UPPER(%s)", tableValue);
-        }
+        var value = getValue();
+        var parts = value.split("\\.");
+        var columnText = tmpGetMode.equals("REPEATED")
+                ? String.format("%s", SqlUtil.getAlias(parts.length-1,parts))
+                : parts.length == 1
+                    ? String.format("%s.%s", table, value)
+                    : String.format("%s.%s", SqlUtil.getAlias(parts.length - 2, parts), parts[parts.length - 1]);
 
-        var parts = getValue().split("\\.");
-        if (parts.length > 1) {
-            // int check for values that are a int so the UPPER function will not run
-            if (parts[parts.length - 1].contains("age_")) {
-                return String.format("%s.%s", SqlUtil.getAlias(parts.length - 2, parts), parts[parts.length - 1]);
-            }
-            return String.format("UPPER(%s.%s)", SqlUtil.getAlias(parts.length - 2, parts), parts[parts.length - 1]);
-        }
-        // Top level fields must be scoped by the table name, otherwise they could
-        // conflict with
-        // unnested fields.
-        String value_col = getValue();
-        if (value_col.contains("days_to_birth") || value_col.contains("age_at_death")) {
-            return String.format("%s.%s", table, value_col);
-        }
-        return String.format("UPPER(%s.%s)", table, getValue());
+        return tmpGetType.equals("STRING")
+                ? String.format("UPPER(%s)", columnText)
+                : columnText;
     }
 }
