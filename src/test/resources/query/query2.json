@@ -6,7 +6,7 @@
       "node_type": ">=",
       "l": {
         "node_type": "column",
-        "value": "demographic.age_at_index"
+        "value": "B.BA"
       },
       "r": {
         "node_type": "unquoted",
@@ -17,11 +17,11 @@
       "node_type": "=",
       "l": {
         "node_type": "column",
-        "value": "project.project_id"
+        "value": "B.BB.BBB"
       },
       "r": {
         "node_type": "quoted",
-        "value": "TCGA-OV"
+        "value": "value"
       }
     }
   },
@@ -29,11 +29,11 @@
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "diagnoses.figo_stage"
+      "value": "A1.A1A"
     },
     "r": {
       "node_type": "quoted",
-      "value": "Stage IIIC"
+      "value": "value"
     }
   }
 }

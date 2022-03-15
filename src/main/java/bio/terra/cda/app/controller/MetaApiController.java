@@ -1,5 +1,6 @@
 package bio.terra.cda.app.controller;
 
+import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.generated.controller.MetaApi;
@@ -28,6 +29,7 @@ public class MetaApiController implements MetaApi {
     this.applicationConfiguration = applicationConfiguration;
   }
 
+  @TrackExecutionTime
   @Override
   public ResponseEntity<SystemStatus> serviceStatus() {
     return ResponseEntity.ok(queryService.bigQueryCheck());

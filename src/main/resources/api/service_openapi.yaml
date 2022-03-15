@@ -1,16 +1,17 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 2.0.0
+  version: 2.1.0
   title: CDA API
   license:
     name: Apache 2.0
-    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 
 servers:
+  - url: https://cancerdata.dsde-dev.broadinstitute.org
   - url: https://cda.cda-dev.broadinstitute.org
   - url: http://localhost:8080
-  - url: http://34.71.0.127:8080
+  - url: http://35.192.60.10:8080
 
 tags:
   - name: query
@@ -28,10 +29,9 @@ paths:
         - meta
       responses:
         200:
-          $ref: '#/components/responses/StatusResponse'
+          $ref: "#/components/responses/StatusResponse"
         500:
-          $ref: '#/components/responses/StatusResponse'
-
+          $ref: "#/components/responses/StatusResponse"
 
   /api/v1/dataset-description/latest:
     get:
@@ -46,8 +46,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DatasetDescription'
-
+                $ref: "#/components/schemas/DatasetDescription"
 
   /api/v1/dataset-description/all:
     get:
@@ -64,8 +63,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DatasetDescription'
-
+                  $ref: "#/components/schemas/DatasetDescription"
 
   /api/v1/bulk-data/{version}:
     get:
@@ -75,11 +73,11 @@ paths:
       tags:
         - query
       parameters:
-        - $ref: '#/components/parameters/DatasetVersion'
-
+        - $ref: "#/components/parameters/DatasetVersion"
+        - $ref: "#/components/parameters/Table"
       responses:
         200:
-          $ref: '#/components/responses/QueryCreated'
+          $ref: "#/components/responses/QueryCreated"
 
 
   /api/v1/boolean-query/{version}:
@@ -93,14 +91,15 @@ paths:
         - query
 
       parameters:
-        - $ref: '#/components/parameters/DatasetVersion'
+        - $ref: "#/components/parameters/DatasetVersion"
         - in: query
           description: If true, don't run the query, only generate and return it.
           name: dryRun
           schema:
             type: boolean
             default: false
-        - $ref: '#/components/parameters/Table'
+        - $ref: "#/components/parameters/Table"
+
 
       requestBody:
         description: The boolean query
@@ -108,11 +107,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Query'
+              $ref: "#/components/schemas/Query"
 
       responses:
         200:
-          $ref: '#/components/responses/QueryCreated'
+          $ref: "#/components/responses/QueryCreated"
 
   /api/v1/sql-query:
     post:
@@ -131,7 +130,7 @@ paths:
 
       responses:
         200:
-          $ref: '#/components/responses/QueryCreated'
+          $ref: "#/components/responses/QueryCreated"
 
   /api/v1/query/{id}:
     get:
@@ -145,13 +144,13 @@ paths:
         - query
 
       parameters:
-        - $ref: '#/components/parameters/QueryId'
-        - $ref: '#/components/parameters/ResultOffset'
-        - $ref: '#/components/parameters/ResultLimit'
+        - $ref: "#/components/parameters/QueryId"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       responses:
         200:
-          $ref: '#/components/responses/QueryResponse'
+          $ref: "#/components/responses/QueryResponse"
 
   /api/v1/job-status/{id}:
     get:
@@ -165,11 +164,11 @@ paths:
         - query
 
       parameters:
-        - $ref: '#/components/parameters/QueryId'
+        - $ref: "#/components/parameters/QueryId"
 
       responses:
         200:
-          $ref: '#/components/responses/JobStatusResponse'
+          $ref: "#/components/responses/JobStatusResponse"
 
   /api/v1/unique-values/{version}:
     post:
@@ -180,9 +179,9 @@ paths:
         - query
 
       parameters:
-        - $ref: '#/components/parameters/DatasetVersion'
-        - $ref: '#/components/parameters/SystemValue'
-        - $ref: '#/components/parameters/Table'
+        - $ref: "#/components/parameters/DatasetVersion"
+        - $ref: "#/components/parameters/SystemValue"
+        - $ref: "#/components/parameters/Table"
 
       requestBody:
         description: column_name of table value being requested
@@ -194,7 +193,7 @@ paths:
 
       responses:
         200:
-          $ref: '#/components/responses/QueryCreated'
+          $ref: "#/components/responses/QueryCreated"
 
   /api/v1/columns/{version}:
     get:
@@ -205,15 +204,73 @@ paths:
         - query
 
       parameters:
-        - $ref: '#/components/parameters/DatasetVersion'
-        - $ref: '#/components/parameters/Table'
+        - $ref: "#/components/parameters/DatasetVersion"
+        - $ref: "#/components/parameters/Table"
 
       responses:
         200:
-          $ref: '#/components/responses/QueryCreated'
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/global-counts/{version}:
+    post:
+      summary: Returns counts of the DCS
+      description: Return GlobalCounts for schema
+      operationId: GlobalCounts
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+      requestBody:
+        description: counts
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/files/{version}:
+    post:
+      summary: Returns a list of files given a boolean query
+      description: Return list of files for given query
+      operationId: files
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+      requestBody:
+        description: The boolean query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
 
 components:
-
   parameters:
     DatasetVersion:
       in: path
@@ -221,7 +278,7 @@ components:
       required: true
       schema:
         type: string
-        default: all_v2
+        default: all_v2_1
       description: Dataset version
     SystemValue:
       in: query
@@ -234,7 +291,7 @@ components:
       name: table name
       schema:
         type: string
-        default: gdc-bq-sample.integration
+        default: broad-dsde-dev.cda_dev
       description: Filter on system for results
     ResultOffset:
       in: query
@@ -262,12 +319,10 @@ components:
       name: table
       schema:
         type: string
-        default: gdc-bq-sample.integration
+        default: broad-dsde-dev.cda_dev
       description: tablename
 
-
   schemas:
-
     ErrorReport:
       type: object
       properties:
@@ -332,17 +387,17 @@ components:
       type: object
       properties:
         release-date:
-          $ref: '#/components/schemas/DateType'
+          $ref: "#/components/schemas/DateType"
         cda-version:
           type: string
         cda-model:
-          $ref: '#/components/schemas/Model'
+          $ref: "#/components/schemas/Model"
         notes:
           type: string
         datasets:
           type: array
           items:
-            $ref: '#/components/schemas/DatasetInfo'
+            $ref: "#/components/schemas/DatasetInfo"
 
     DateType:
       type: string
@@ -355,7 +410,7 @@ components:
         version:
           type: string
         date:
-          $ref: '#/components/schemas/DateType'
+          $ref: "#/components/schemas/DateType"
 
     Model:
       type: object
@@ -363,7 +418,7 @@ components:
         version:
           type: string
         date:
-          $ref: '#/components/schemas/DateType'
+          $ref: "#/components/schemas/DateType"
         model:
           type: object
           properties: {}
@@ -404,7 +459,27 @@ components:
       properties:
         node_type:
           type: string
-          enum: [column, quoted, unquoted, ">=", "<=", "<", ">", "=", "!=", AND, OR, NOT, SUBQUERY,WHERE]
+          enum:
+            [
+              column,
+              quoted,
+              unquoted,
+              ">=",
+              "<=",
+              "<",
+              ">",
+              "=",
+              "!=",
+              AND,
+              OR,
+              NOT,
+              SUBQUERY,
+              WHERE,
+              IN,
+              SELECTVALUES,
+              SELECT,
+              LIKE
+            ]
           description: >
             Query contents and behavior depends on `node_type`:
              * `column` - column name is in `value`
@@ -416,36 +491,35 @@ components:
         value:
           type: string
         l:
-          $ref: '#/components/schemas/Query'
+          $ref: "#/components/schemas/Query"
         r:
-          $ref: '#/components/schemas/Query'
+          $ref: "#/components/schemas/Query"
 
   responses:
-
     StatusResponse:
       description: common status response
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SystemStatus'
+            $ref: "#/components/schemas/SystemStatus"
 
     QueryCreated:
       description: query created response
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/QueryCreatedData'
+            $ref: "#/components/schemas/QueryCreatedData"
 
     QueryResponse:
       description: query data response
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/QueryResponseData'
+            $ref: "#/components/schemas/QueryResponseData"
 
     JobStatusResponse:
       description: Get's Bigquery job id status
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/JobStatusData'
+            $ref: "#/components/schemas/JobStatusData"

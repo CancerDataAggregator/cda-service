@@ -2,10 +2,10 @@
   "node_type": "=",
   "l": {
     "node_type": "column",
-    "value": "project_id"
+    "value": "A"
   },
   "r": {
     "node_type": "quoted",
-    "value": "TCGA-OV"
+    "value": "value"
   }
 }
