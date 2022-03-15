@@ -60,13 +60,6 @@ public class QueryService {
 
   SystemStatus systemStatus = new SystemStatus();
 
-  public void getBigQuery() {
-    ApplicationConfiguration applicationConfiguration = null;
-    String value = applicationConfiguration.getBqTable();
-    // Table table = bigQuery
-
-  }
-
   @Cacheable
   public SystemStatus bigQueryCheck() {
     SystemStatusSystems bigQuerySystemStatus = new SystemStatusSystems();

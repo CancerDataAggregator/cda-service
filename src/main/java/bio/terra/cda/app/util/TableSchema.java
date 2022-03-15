@@ -96,12 +96,20 @@ public class TableSchema {
 
         URL resource = classLoader.getResource("schema");
 
-        return Files.walk(Paths.get(resource.toURI()))
-                .filter(path -> path.getFileName().toString().endsWith(".json"))
-                .map(path -> {
-                    var file = path.getFileName().toString();
-                    return file.substring(0, file.length() - 5).toLowerCase();
-                }).collect(Collectors.toList());
+        if (resource == null) {
+            throw new IOException("Schema does not exist");
+        }
+
+        try (Stream<Path> fileStream = Files.walk(Paths.get(resource.toURI()))) {
+            return fileStream
+                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+                    .map(path -> {
+                        var file = path.getFileName().toString();
+                        return file.substring(0, file.length() - 5).toLowerCase();
+                    }).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new IOException(e.getMessage());
+        }
     }
 
     private static Optional<SchemaDefinition> hasColumn(SchemaDefinition definition, String columnName) {
