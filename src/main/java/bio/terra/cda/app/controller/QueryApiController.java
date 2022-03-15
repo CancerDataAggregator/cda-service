@@ -5,6 +5,7 @@ import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.FileSqlGenerator;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
+import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.app.util.NestedColumn;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.util.TableSchema;
@@ -22,6 +23,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.google.cloud.bigquery.BigQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class QueryApiController implements QueryApi {
   private static final Logger logger = LoggerFactory.getLogger(QueryApiController.class);
+  private static final String INVALID_DATABASE = "Unable to find schema for that version.";
 
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
@@ -102,10 +105,10 @@ public class QueryApiController implements QueryApi {
       }
 
       if (!found) {
-        throw new IllegalArgumentException("The database does not exist in our schema.");
+        throw new IllegalArgumentException(INVALID_DATABASE);
       }
     } catch (Exception e) {
-      throw new IllegalArgumentException("The database does not exist in our schema.");
+      throw new IllegalArgumentException(INVALID_DATABASE);
     }
 
     if (lowerCaseQuery.contains("create table")
@@ -118,8 +121,8 @@ public class QueryApiController implements QueryApi {
     if (!dryRun) {
       try {
         response.queryId(queryService.startQuery(querySql));
-      } catch (Exception e) {
-        throw new RuntimeException("Could not create job");
+      } catch (BigQueryException e) {
+        throw new BadQueryException("Could not create job");
       }
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
@@ -147,7 +150,7 @@ public class QueryApiController implements QueryApi {
       String querySql = new SqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
-      throw new IllegalArgumentException("Unable to find schema for that version");
+      throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
@@ -220,7 +223,7 @@ public class QueryApiController implements QueryApi {
       String querySql = new CountsSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
-      throw new IllegalArgumentException("Unable to find schema for that version");
+      throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
@@ -234,7 +237,7 @@ public class QueryApiController implements QueryApi {
     try {
       querySql = new FileSqlGenerator(table + "." + version, body, version).generate();
     } catch (IOException e) {
-      throw new IllegalArgumentException("Unable to find schema for that version");
+      throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
