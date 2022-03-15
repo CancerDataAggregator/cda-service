@@ -43,7 +43,6 @@ public class OperatorDeserializer extends JsonDeserializer<Query> {
                     try {
                         return Class.forName(cls.getBeanClassName());
                     } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
                         return null;
                     }
                 }).filter(Objects::nonNull).filter(cls -> {
@@ -58,13 +57,11 @@ public class OperatorDeserializer extends JsonDeserializer<Query> {
             try {
                 ctor = clazz.get().getConstructor();
             } catch (NoSuchMethodException e) {
-                e.printStackTrace();
                 return null;
             }
             try {
                 query = (Query) ctor.newInstance();
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
                 return null;
             }
         } else {

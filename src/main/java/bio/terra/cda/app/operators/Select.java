@@ -8,7 +8,7 @@ import java.util.Map;
 @QueryOperator(nodeType = Query.NodeTypeEnum.SELECT)
 public class Select extends BasicOperator {
     @Override
-    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) throws IllegalArgumentException {
         return ((BasicOperator)getR()).queryString(table, tableSchemaMap);
     }
 }

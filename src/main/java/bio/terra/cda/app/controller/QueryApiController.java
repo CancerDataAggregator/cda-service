@@ -120,7 +120,6 @@ public class QueryApiController implements QueryApi {
       try {
         response.queryId(queryService.startQuery(querySql));
       } catch (Exception e) {
-        e.printStackTrace();
         return new ResponseEntity("Could not create job", HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
@@ -151,7 +150,7 @@ public class QueryApiController implements QueryApi {
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
-    } catch (Exception e) {
+    } catch (IllegalArgumentException e) {
       return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
   }
@@ -224,7 +223,7 @@ public class QueryApiController implements QueryApi {
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
-    } catch (Exception e) {
+    } catch (IllegalArgumentException e) {
       return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
   }
@@ -238,7 +237,7 @@ public class QueryApiController implements QueryApi {
       querySql = new FileSqlGenerator(table + "." + version, body, version).generate();
     } catch (IOException e) {
       return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
-    } catch (Exception e) {
+    } catch (IllegalArgumentException e) {
       return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
     return sendQuery(querySql, dryRun);

@@ -8,7 +8,7 @@ import java.util.Map;
 @QueryOperator(nodeType = Query.NodeTypeEnum.NOT)
 public class Not extends SingleSidedOperator {
     @Override
-    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) throws IllegalArgumentException {
         return String.format("(%s %s)", getNodeType(), ((BasicOperator)getL()).queryString(table, tableSchemaMap));
     }
 }

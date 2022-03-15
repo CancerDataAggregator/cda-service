@@ -22,7 +22,7 @@ public class CountsSqlGenerator extends SqlGenerator {
         }
 
         @Override
-        protected String sql(String tableOrSubClause, Query query) throws UncheckedExecutionException {
+        protected String sql(String tableOrSubClause, Query query) throws UncheckedExecutionException, IllegalArgumentException {
                 if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
                         // A SUBQUERY is built differently from other queries. The FROM clause is the
                         // SQL version of
@@ -38,12 +38,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                                 throw new UncheckedExecutionException(e);
                         }
                 };
-                String condition = null;
-                try {
-                        condition = ((BasicOperator)query).queryString(table, tableSchemaMap);
-                } catch (Exception e) {
-                        e.printStackTrace();
-                }
+                String condition = ((BasicOperator)query).queryString(table, tableSchemaMap);
 
                 var whereClause = condition != null && condition.length() > 0
                         ? String.format("WHERE\n"

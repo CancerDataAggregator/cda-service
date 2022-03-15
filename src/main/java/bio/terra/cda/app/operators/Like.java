@@ -8,7 +8,7 @@ import java.util.Map;
 @QueryOperator(nodeType = Query.NodeTypeEnum.LIKE)
 public class Like extends SingleSidedOperator {
     @Override
-    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) throws IllegalArgumentException {
         String rightValue = getR().getValue();
         String leftValue = ((BasicOperator)getL()).queryString(table, tableSchemaMap);
         return String.format("%s LIKE UPPER(%s)", leftValue,rightValue);

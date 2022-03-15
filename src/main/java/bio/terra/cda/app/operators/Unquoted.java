@@ -9,12 +9,12 @@ import java.util.stream.Stream;
 @QueryOperator(nodeType = Query.NodeTypeEnum.UNQUOTED)
 public class Unquoted extends BasicOperator {
     @Override
-    public Stream<String> getUnnestColumns(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+    public Stream<String> getUnnestColumns(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) throws IllegalArgumentException {
         return Stream.empty();
     }
 
     @Override
-    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) throws IllegalArgumentException {
         return String.format("%s", getValue());
     }
 }

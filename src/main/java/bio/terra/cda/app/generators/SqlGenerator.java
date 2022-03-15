@@ -31,11 +31,11 @@ public class SqlGenerator {
         this.tableSchemaMap = TableSchema.buildSchemaMap(this.tableSchema);
     }
 
-    public String generate() throws Exception {
+    public String generate() throws IllegalArgumentException {
         return sql(qualifiedTable, rootQuery);
     }
 
-    protected String sql(String tableOrSubClause, Query query) throws Exception {
+    protected String sql(String tableOrSubClause, Query query) throws IllegalArgumentException {
         if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
             // A SUBQUERY is built differently from other queries. The FROM clause is the
             // SQL version of
@@ -48,12 +48,7 @@ public class SqlGenerator {
                 Stream.of(tableOrSubClause + " AS " + table), ((BasicOperator)query).getUnnestColumns(table, tableSchemaMap).distinct())
                 .collect(Collectors.joining(", "));
 
-        String condition = null;
-        try {
-            condition = ((BasicOperator)query).queryString(table, tableSchemaMap);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String condition = ((BasicOperator)query).queryString(table, tableSchemaMap);
 
         return String.format("%s FROM %s WHERE %s", getSelect(query, table), fromClause, condition);
     }

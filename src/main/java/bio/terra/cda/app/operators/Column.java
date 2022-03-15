@@ -20,7 +20,7 @@ public class Column extends BasicOperator {
 
 //                return getUnnestsFromParts(parts, false);
         }catch (NullPointerException e){
-            throw new NullPointerException(String.format("Column %s does not exist on table %s",getValue(), table));
+            throw new IllegalArgumentException(String.format("Column %s does not exist on table %s",getValue(), table));
         }
     }
 

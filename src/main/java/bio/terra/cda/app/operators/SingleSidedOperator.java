@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 public class SingleSidedOperator extends BasicOperator {
     @Override
-    public Stream<String> getUnnestColumns(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+    public Stream<String> getUnnestColumns(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) throws IllegalArgumentException {
         return ((BasicOperator)getL()).getUnnestColumns(table, tableSchemaMap);
     }
 }

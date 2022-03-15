@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 @QueryOperator(nodeType = Query.NodeTypeEnum.IN)
 public class In extends SingleSidedOperator {
     @Override
-    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) throws IllegalArgumentException {
         String right = ((BasicOperator)getR()).queryString(table, tableSchemaMap);
         if (right.contains("[") || right.contains("(")) {
             right = right.substring(1, right.length() - 1).replace("\"", "'");

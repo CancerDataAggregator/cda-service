@@ -11,13 +11,13 @@ import java.util.stream.Stream;
 @QueryOperator(nodeType = Query.NodeTypeEnum.SELECTVALUES)
 public class SelectValues extends BasicOperator {
     @Override
-    public Stream<String> getUnnestColumns(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+    public Stream<String> getUnnestColumns(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) throws IllegalArgumentException {
         return Arrays.stream(getValue().split(","))
                 .flatMap(select -> SqlUtil.getUnnestsFromParts(table, select.trim().split("\\."), false));
     }
 
     @Override
-    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+    public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) throws IllegalArgumentException {
         return "";
     }
 }
