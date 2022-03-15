@@ -133,7 +133,7 @@ public class SqlGenerator {
                 var parts = query.getValue().split("\\.");
                 if (parts.length > 1) {
                     // int check for values that are a int so the UPPER function will not run
-                    if (parts[parts.length - 1].contains("age_")) {
+                    if (tmpGetMode.equals("INTEGER")) {
                         return String.format("%s.%s", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
                     }
                     return String.format("UPPER(%s.%s)", getAlias(parts.length - 2, parts), parts[parts.length - 1]);
@@ -142,7 +142,7 @@ public class SqlGenerator {
                 // conflict with
                 // unnested fields.
                 String value_col = query.getValue();
-                if (value_col.contains("days_to_birth") || value_col.contains("age_at_death")) {
+                if (tmpGetMode.equals("INTEGER")) {
                     return String.format("%s.%s", table, value_col);
                 }
                 return String.format("UPPER(%s.%s)", table, query.getValue());
