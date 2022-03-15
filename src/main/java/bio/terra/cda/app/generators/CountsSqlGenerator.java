@@ -1,19 +1,14 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.operators.BasicOperator;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.springframework.data.repository.util.QueryExecutionConverters;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class CountsSqlGenerator extends SqlGenerator {
@@ -54,7 +49,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                         return splitField[1].equals("identifier");
                 }).map(field -> {
                         var splitField = field.split("\\.");
-                        return String.join(".", new String[] { splitField[0], splitField[1] });
+                        return String.join(".", splitField[0], splitField[1]);
                 }).distinct();
 
                 var selects = new LinkedList<String>();

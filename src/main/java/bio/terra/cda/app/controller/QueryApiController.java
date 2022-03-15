@@ -22,7 +22,6 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,7 +86,7 @@ public class QueryApiController implements QueryApi {
   private ResponseEntity<QueryCreatedData> sendQuery(String querySql, boolean dryRun) {
     var response = new QueryCreatedData().querySql(querySql);
     if (!querySql.contains(applicationConfiguration.getProject())) {
-      return new ResponseEntity("Your database is outside of the project", HttpStatus.BAD_REQUEST);
+      throw new IllegalArgumentException("Your database is outside of the project");
     }
     var lowerCaseQuery = querySql.toLowerCase();
 
@@ -103,10 +102,10 @@ public class QueryApiController implements QueryApi {
       }
 
       if (!found) {
-        return new ResponseEntity("The database does not exist in our schema.", HttpStatus.BAD_REQUEST);
+        throw new IllegalArgumentException("The database does not exist in our schema.");
       }
     } catch (Exception e) {
-      return new ResponseEntity("The database does not exist in our schema.", HttpStatus.BAD_REQUEST);
+      throw new IllegalArgumentException("The database does not exist in our schema.");
     }
 
     if (lowerCaseQuery.contains("create table")
@@ -114,13 +113,13 @@ public class QueryApiController implements QueryApi {
         || lowerCaseQuery.contains("drop table")
         || lowerCaseQuery.contains("update")
         || lowerCaseQuery.contains("alter table")) {
-      return new ResponseEntity("Those actions are not available in sql", HttpStatus.BAD_REQUEST);
+      throw new IllegalArgumentException("Those actions are not available in sql");
     }
     if (!dryRun) {
       try {
         response.queryId(queryService.startQuery(querySql));
       } catch (Exception e) {
-        return new ResponseEntity("Could not create job", HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new RuntimeException("Could not create job");
       }
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
@@ -144,14 +143,13 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    // QueryService test = new QueryService();
     try {
       String querySql = new SqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
-      return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
+      throw new IllegalArgumentException("Unable to find schema for that version");
     } catch (IllegalArgumentException e) {
-      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+      throw new IllegalArgumentException(e.getMessage());
     }
   }
 
@@ -180,8 +178,8 @@ public class QueryApiController implements QueryApi {
     } else {
       whereClause = "";
     }
-    StringBuffer unnestConcat = new StringBuffer();
-    unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
+    StringBuilder unnestConcat = new StringBuilder();
+    unnestClauses.forEach(unnestConcat::append);
 
     String querySql = "SELECT DISTINCT "
         + nt.getColumn()
@@ -222,9 +220,9 @@ public class QueryApiController implements QueryApi {
       String querySql = new CountsSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
-      return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
+      throw new IllegalArgumentException("Unable to find schema for that version");
     } catch (IllegalArgumentException e) {
-      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+      throw new IllegalArgumentException(e.getMessage());
     }
   }
 
@@ -236,9 +234,9 @@ public class QueryApiController implements QueryApi {
     try {
       querySql = new FileSqlGenerator(table + "." + version, body, version).generate();
     } catch (IOException e) {
-      return new ResponseEntity("Unable to find schema for that version", HttpStatus.BAD_REQUEST);
+      throw new IllegalArgumentException("Unable to find schema for that version");
     } catch (IllegalArgumentException e) {
-      return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+      throw new IllegalArgumentException(e.getMessage());
     }
     return sendQuery(querySql, dryRun);
   }

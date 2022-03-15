@@ -58,7 +58,7 @@ class QueryApiControllerTest {
   }
 
   @Test
-  public void uniqueValuesTest() throws Exception {
+  void uniqueValuesTest() throws Exception {
     String version = "all_v3_0_subjects_meta";
     String system = "GDC";
     String body = "sex";

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -18,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -71,27 +69,27 @@ public class TableSchema {
         }
     }
 
+    private TableSchema() { }
+
     public static List<SchemaDefinition> getSchema(String version) throws IOException {
         return loadSchemaFromFile(getFileName(version));
     }
 
-    public static Map<String, SchemaDefinition> buildSchemaMap(List<SchemaDefinition> definitions) throws IOException {
-        Map<String, SchemaDefinition> definitionMap = new HashMap<String, SchemaDefinition>();
+    public static Map<String, SchemaDefinition> buildSchemaMap(List<SchemaDefinition> definitions) {
+        Map<String, SchemaDefinition> definitionMap = new HashMap<>();
         addToMap("", definitions, definitionMap);
         return definitionMap;
     }
 
     public static List<SchemaDefinition> getSchemaByColumnName(List<SchemaDefinition> definitions, String columnName) {
-        List<SchemaDefinition> newSchema = new ArrayList<SchemaDefinition>();
+        List<SchemaDefinition> newSchema = new ArrayList<>();
 
-        definitions.forEach(def -> {
-            hasColumn(def, columnName).ifPresent(newSchema::add);
-        });
+        definitions.forEach(def -> hasColumn(def, columnName).ifPresent(newSchema::add));
 
         return newSchema;
     }
 
-    public static List<String> supportedSchemas() throws IOException, URISyntaxException {
+    public static List<String> supportedSchemas() throws IOException {
         ClassLoader classLoader = TableSchema.class.getClassLoader();
 
         URL resource = classLoader.getResource("schema");
@@ -127,12 +125,10 @@ public class TableSchema {
             return Optional.empty();
         }
 
-        List<SchemaDefinition> newFields = new ArrayList<SchemaDefinition>();
-        Arrays.stream(definition.getFields()).forEach(def -> {
-            hasColumn(def, columnName).ifPresent(newFields::add);
-        });
+        List<SchemaDefinition> newFields = new ArrayList<>();
+        Arrays.stream(definition.getFields()).forEach(def -> hasColumn(def, columnName).ifPresent(newFields::add));
 
-        if (newFields.size() == 0) {
+        if (newFields.isEmpty()) {
             return Optional.empty();
         }
 
@@ -153,14 +149,6 @@ public class TableSchema {
         CollectionType collectionType = mapper.getTypeFactory().constructCollectionType(List.class, SchemaDefinition.class);
 
         return mapper.readValue(inputStream, collectionType);
-    }
-
-    private static Map<String, SchemaDefinition> getSchemaMappingFromFile(String fileName) throws IOException {
-        List<SchemaDefinition> definitions = loadSchemaFromFile(fileName);
-
-        Map<String, SchemaDefinition> definitionMap = new HashMap<String, SchemaDefinition>();
-        addToMap("", definitions, definitionMap);
-        return definitionMap;
     }
 
     private static void addToMap(String prefix, List<SchemaDefinition> definitions, Map<String, SchemaDefinition> definitionMap) {

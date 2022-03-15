@@ -4,7 +4,6 @@ import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 
 import java.util.Map;
-import java.util.stream.Stream;
 
 @QueryOperator(nodeType = Query.NodeTypeEnum.IN)
 public class In extends SingleSidedOperator {

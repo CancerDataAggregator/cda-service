@@ -16,10 +16,7 @@ public class Column extends BasicOperator {
             var tmpGetMode = tmp.getMode();
             var parts = getValue().split("\\.");
             return SqlUtil.getUnnestsFromParts(table, parts, (tmpGetMode.equals("REPEATED")));
-
-
-//                return getUnnestsFromParts(parts, false);
-        }catch (NullPointerException e){
+        } catch (NullPointerException e){
             throw new IllegalArgumentException(String.format("Column %s does not exist on table %s",getValue(), table));
         }
     }
@@ -31,11 +28,14 @@ public class Column extends BasicOperator {
         var tmpGetType = tmp.getType();
         var value = getValue();
         var parts = value.split("\\.");
-        var columnText = tmpGetMode.equals("REPEATED")
-                ? String.format("%s", SqlUtil.getAlias(parts.length-1,parts))
-                : parts.length == 1
-                    ? String.format("%s.%s", table, value)
-                    : String.format("%s.%s", SqlUtil.getAlias(parts.length - 2, parts), parts[parts.length - 1]);
+        var columnText = "";
+        if (tmpGetMode.equals("REPEATED")){
+            columnText = String.format("%s", SqlUtil.getAlias(parts.length - 1, parts));
+        } else if (parts.length == 1) {
+            columnText = String.format("%s.%s", table, value);
+        } else {
+            columnText = String.format("%s.%s", SqlUtil.getAlias(parts.length - 2, parts), parts[parts.length - 1]);
+        }
 
         return tmpGetType.equals("STRING")
                 ? String.format("UPPER(%s)", columnText)

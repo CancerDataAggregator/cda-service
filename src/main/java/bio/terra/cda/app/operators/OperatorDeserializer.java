@@ -17,7 +17,7 @@ import java.util.Objects;
 
 public class OperatorDeserializer extends JsonDeserializer<Query> {
     @Override
-    public Query deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public Query deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         // Get reference to ObjectCodec
         ObjectCodec codec = p.getCodec();
 

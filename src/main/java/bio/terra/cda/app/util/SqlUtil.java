@@ -6,7 +6,9 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class SqlUtil {
-    public static Stream<String> getUnnestsFromParts(String table, String[] parts, Boolean includeLast) {
+    private SqlUtil() { }
+
+    public static Stream<String> getUnnestsFromParts(String table, String[] parts, boolean includeLast) {
         return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
                 .mapToObj(
                         i -> i == 0

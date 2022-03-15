@@ -20,7 +20,6 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,7 @@ import org.springframework.stereotype.Component;
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
   @Autowired public ApplicationConfiguration applicationConfiguration;
-  Map<String, String> Job_Creation_Status = new HashMap<>();
+  Map<String, String> jobCreationStatus = new HashMap<>();
   @Value("${project}")
   private String project;
 
@@ -298,7 +297,7 @@ public class QueryService {
     }
   }
 
-  public String startQuery(String query) throws Exception{
+  public String startQuery(String query) {
     String jobID = UUID.randomUUID().toString();
     String destinationDataset = "Job_Queue";
     String destinationTable = String.format("Job_%s",jobID);
