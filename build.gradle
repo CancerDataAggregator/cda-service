@@ -9,12 +9,16 @@ buildscript {
 plugins {
 	id 'java'
 	id 'idea'
-	id 'org.springframework.boot' version '2.4.3'
+	id 'org.springframework.boot' version '2.5.4'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'com.google.cloud.tools.jib' version '2.8.0'
 	id 'org.openapi.generator' version '5.1.1'
 	id 'com.diffplug.spotless' version '5.12.4'
+  	id "org.sonarqube" version "3.3"
+	id 'jacoco'
 }
+
+ext['log4j2.version'] = '2.17.0'
 
 group = 'bio.terra.cda'
 version = '0.0.22.5-SNAPSHOT'
@@ -46,7 +50,7 @@ dependencies {
 
 	// These dependencies are required to load the logback config file.
 	implementation group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
-	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-logging', version: '1.2.5.RELEASE'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-logging', version: '1.2.8.RELEASE'
 
 	// -- OpenAPI CodeGen dependencies --
 	implementation group: 'io.swagger.core.v3', name: 'swagger-annotations', version: '2.1.7'
@@ -66,6 +70,11 @@ dependencies {
 // Exclude the Spring logger, so everything will use SLF4J
 configurations.all {
 	exclude group: "commons-logging", module: "commons-logging"
+	resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+		if (details.requested.group == 'org.apache.logging.log4j') {
+			details.useVersion '2.17.0'
+		}
+	}
 }
 
 // OpenAPI Server Generation
@@ -153,3 +162,37 @@ if (hasProperty('buildScan')) {
 		termsOfServiceAgree = 'yes'
 	}
 }
+
+jacoco {
+	toolVersion = "0.8.6"
+}
+
+jacocoTestReport {
+	reports {
+		xml.enabled true
+	}
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.2
+			}
+		}
+	}
+}
+test.finalizedBy jacocoTestReport
+
+
+sonarqube {
+  properties {
+    property "sonar.projectKey", "CancerDataAggregator_cda-service"
+    property "sonar.organization", "cancerdataaggregator"
+    property "sonar.host.url", "https://sonarcloud.io"
+	property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
+	property "sonar.exclusions", "build/generated/**"
+  }
+}
+
+

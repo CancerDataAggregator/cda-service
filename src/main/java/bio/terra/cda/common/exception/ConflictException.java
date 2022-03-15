@@ -10,23 +10,23 @@ import org.springframework.http.HttpStatus;
 public abstract class ConflictException extends ErrorReportException {
   private static final HttpStatus thisStatus = HttpStatus.CONFLICT;
 
-  public ConflictException(String message) {
+  protected ConflictException(String message) {
     super(message, null, thisStatus);
   }
 
-  public ConflictException(String message, Throwable cause) {
+  protected ConflictException(String message, Throwable cause) {
     super(message, cause, null, thisStatus);
   }
 
-  public ConflictException(Throwable cause) {
+  protected ConflictException(Throwable cause) {
     super(null, cause, null, thisStatus);
   }
 
-  public ConflictException(String message, List<String> causes) {
+  protected ConflictException(String message, List<String> causes) {
     super(message, causes, thisStatus);
   }
 
-  public ConflictException(String message, Throwable cause, List<String> causes) {
+  protected ConflictException(String message, Throwable cause, List<String> causes) {
     super(message, cause, causes, thisStatus);
   }
 }

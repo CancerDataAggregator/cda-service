@@ -10,23 +10,23 @@ import org.springframework.http.HttpStatus;
 public abstract class NotFoundException extends ErrorReportException {
   private static final HttpStatus thisStatus = HttpStatus.NOT_FOUND;
 
-  public NotFoundException(String message) {
+  protected NotFoundException(String message) {
     super(message, null, thisStatus);
   }
 
-  public NotFoundException(String message, Throwable cause) {
+  protected NotFoundException(String message, Throwable cause) {
     super(message, cause, null, thisStatus);
   }
 
-  public NotFoundException(Throwable cause) {
+  protected NotFoundException(Throwable cause) {
     super(null, cause, null, thisStatus);
   }
 
-  public NotFoundException(String message, List<String> causes) {
+  protected NotFoundException(String message, List<String> causes) {
     super(message, causes, thisStatus);
   }
 
-  public NotFoundException(String message, Throwable cause, List<String> causes) {
+  protected NotFoundException(String message, Throwable cause, List<String> causes) {
     super(message, cause, causes, thisStatus);
   }
 }
