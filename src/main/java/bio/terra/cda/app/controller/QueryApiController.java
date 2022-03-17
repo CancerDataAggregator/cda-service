@@ -87,9 +87,9 @@ public class QueryApiController implements QueryApi {
 
   private ResponseEntity<QueryCreatedData> sendQuery(String querySql, boolean dryRun) {
     var response = new QueryCreatedData().querySql(querySql);
-    if (!querySql.contains(applicationConfiguration.getProject())) {
-      throw new IllegalArgumentException("Your database is outside of the project");
-    }
+    //    if (!querySql.contains(applicationConfiguration.getProject())) {
+    //      throw new IllegalArgumentException("Your database is outside of the project");
+    //    }
     var lowerCaseQuery = querySql.toLowerCase();
 
     try {
