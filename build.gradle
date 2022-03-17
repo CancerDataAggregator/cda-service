@@ -150,7 +150,7 @@ jib {
 		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
 	}
 	container {
-		environment = [ 'spring.profiles.active':'dev' ]
+		environment = [ 'spring.profiles.active':'local' ]
 
 	}
 }
