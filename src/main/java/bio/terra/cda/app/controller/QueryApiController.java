@@ -2,19 +2,19 @@ package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
-import bio.terra.cda.app.generators.FileSqlGenerator;
-import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
+import bio.terra.cda.app.generators.FileSqlGenerator;
+import bio.terra.cda.app.generators.SqlGenerator;
+import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.app.util.NestedColumn;
-import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
-
+import com.google.cloud.bigquery.BigQueryException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -22,8 +22,6 @@ import java.util.Collections;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-
-import com.google.cloud.bigquery.BigQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,10 +64,11 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
     var result = queryService.getQueryResults(id, offset, limit);
-    var response = new QueryResponseData()
-        .result(Collections.unmodifiableList(result.items))
-        .totalRowCount(result.totalRowCount)
-        .querySql(result.querySql);
+    var response =
+        new QueryResponseData()
+            .result(Collections.unmodifiableList(result.items))
+            .totalRowCount(result.totalRowCount)
+            .querySql(result.querySql);
     int nextPage = result.items.size() + limit;
     if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, limit));
@@ -184,14 +183,15 @@ public class QueryApiController implements QueryApi {
     StringBuilder unnestConcat = new StringBuilder();
     unnestClauses.forEach(unnestConcat::append);
 
-    String querySql = "SELECT DISTINCT "
-        + nt.getColumn()
-        + " FROM "
-        + tableName
-        + unnestConcat
-        + whereClause
-        + " ORDER BY "
-        + nt.getColumn();
+    String querySql =
+        "SELECT DISTINCT "
+            + nt.getColumn()
+            + " FROM "
+            + tableName
+            + unnestConcat
+            + whereClause
+            + " ORDER BY "
+            + nt.getColumn();
     logger.debug("uniqueValues: " + querySql);
 
     return sendQuery(querySql, false);
@@ -206,11 +206,12 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table;
     }
-    String querySql = "SELECT field_path FROM "
-        + tableName
-        + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
-        + version
-        + "'";
+    String querySql =
+        "SELECT field_path FROM "
+            + tableName
+            + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
+            + version
+            + "'";
     logger.debug("columns: " + querySql);
 
     return sendQuery(querySql, false);

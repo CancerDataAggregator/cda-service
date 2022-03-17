@@ -4,9 +4,9 @@ import bio.terra.cda.generated.model.Query;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class QueryModule extends SimpleModule {
-    public QueryModule() {
-        super();
+  public QueryModule() {
+    super();
 
-        addDeserializer(Query.class, new OperatorDeserializer());
-    }
+    addDeserializer(Query.class, new OperatorDeserializer());
+  }
 }

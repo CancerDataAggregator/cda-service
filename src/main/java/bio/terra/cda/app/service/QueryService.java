@@ -20,7 +20,6 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +34,7 @@ import org.springframework.stereotype.Component;
 public class QueryService {
   @Autowired public ApplicationConfiguration applicationConfiguration;
   Map<String, String> jobCreationStatus = new HashMap<>();
+
   @Value("${project}")
   private String project;
 
@@ -212,7 +212,6 @@ public class QueryService {
     public final float duration;
     public final Map<Source, Integer> systemUsage;
 
-
     QueryData(Job queryJob, float duration, Map<Source, Integer> systemUsage) {
       this.timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
       this.userEmail = queryJob.getUserEmail();
@@ -300,17 +299,20 @@ public class QueryService {
   public String startQuery(String query) {
     String jobID = UUID.randomUUID().toString();
     String destinationDataset = "Job_Queue";
-    String destinationTable = String.format("Job_%s",jobID);
+    String destinationTable = String.format("Job_%s", jobID);
     TableId tableId = TableId.of(destinationDataset, destinationTable);
     TableDefinition tableDefinition = StandardTableDefinition.of(Schema.of());
-    TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).setExpirationTime(Instant.now().toEpochMilli() + TimeUnit.MINUTES.toMillis(10)).build();
+    TableInfo tableInfo =
+        TableInfo.newBuilder(tableId, tableDefinition)
+            .setExpirationTime(Instant.now().toEpochMilli() + TimeUnit.MINUTES.toMillis(10))
+            .build();
 
     QueryJobConfiguration.Builder queryConfig =
         QueryJobConfiguration.newBuilder(query)
-                .setUseLegacySql(false)
-                .setUseQueryCache(true)
-                .setAllowLargeResults(true)
-                .setDestinationTable(tableInfo.getTableId());
+            .setUseLegacySql(false)
+            .setUseQueryCache(true)
+            .setAllowLargeResults(true)
+            .setDestinationTable(tableInfo.getTableId());
     // Create a job ID so that we can safely retry.
     JobId jobId = JobId.of(jobID);
     /**
