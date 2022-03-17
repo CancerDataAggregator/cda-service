@@ -22,7 +22,7 @@ public class NestedColumnTest {
 
   @ParameterizedTest
   @MethodSource("unnestData")
-  public void testGeneratedUnnestClause(String qualifiedName, String column, String clause)
+  void testGeneratedUnnestClause(String qualifiedName, String column, String clause)
       throws Exception {
     NestedColumn result = NestedColumn.generate(qualifiedName);
     StringBuffer unnestClause = new StringBuffer();
@@ -33,7 +33,7 @@ public class NestedColumnTest {
   }
 
   @Test
-  public void testIllegalArgCondition() throws Exception {
+  void testIllegalArgCondition() throws Exception {
     assertThrows(IllegalArgumentException.class, () -> NestedColumn.generate(null));
   }
 }

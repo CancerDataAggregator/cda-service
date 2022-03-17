@@ -1,0 +1,12 @@
+version: '2'
+services:
+  boot-web:
+    build: ./
+    image: spring-boot-gradle-docker
+    restart: always
+    ports:
+      - 8080:8080
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "10"

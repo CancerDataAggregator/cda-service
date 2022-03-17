@@ -101,7 +101,7 @@ public class EndToEndIntegrationTests {
 
       SchemaObjectList results = retrieveQueryMapResults(qr.getQuery_id());
 
-      assertThat(results.getResult().get(0).getColumn_name(), containsString("days_to_birth"));
+      assertThat(results.getResult().get(0).toString(), containsString("days_to_birth"));
 
     } catch (Exception e) {
       System.out.println(e.getMessage());

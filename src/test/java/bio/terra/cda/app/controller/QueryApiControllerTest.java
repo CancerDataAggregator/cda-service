@@ -3,10 +3,7 @@ package bio.terra.cda.app.controller;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.only;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,14 +58,14 @@ class QueryApiControllerTest {
   }
 
   @Test
-  public void uniqueValuesTest() throws Exception {
-    String version = "v3";
+  void uniqueValuesTest() throws Exception {
+    String version = "all_v3_0_subjects_meta";
     String system = "GDC";
     String body = "sex";
-    String table = "TABLE";
+    String table = "default.dev";
 
     var expected =
-        "SELECT DISTINCT sex FROM TABLE.v3, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC' ORDER BY sex";
+        "SELECT DISTINCT sex FROM default.dev.all_v3_0_subjects_meta, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC' ORDER BY sex";
     var result =
         mvc.perform(
                 post("/api/v1/unique-values/{version}", version)

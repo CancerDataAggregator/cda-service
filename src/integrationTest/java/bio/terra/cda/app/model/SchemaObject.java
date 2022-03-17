@@ -1,6 +1,8 @@
 package bio.terra.cda.app.model;
 
 public class SchemaObject {
+  private String id;
+  private Identifier identifier;
   private String table_catalog;
   private String table_schema;
   private String table_name;
@@ -63,6 +65,22 @@ public class SchemaObject {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public Identifier getIdentifier() {
+    return identifier;
+  }
+
+  public void setIdentifier(Identifier identifier) {
+    this.identifier = identifier;
   }
 
   @Override

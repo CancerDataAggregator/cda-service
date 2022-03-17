@@ -1,0 +1,77 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "A",
+    "type": "STRING"
+  },
+  {
+    "mode": "REPEATED",
+    "name": "A1",
+    "type": "RECORD",
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "A1A",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "ANUM",
+        "type": "INTEGER"
+      }
+    ]
+  },
+  {
+    "mode": "REPEATED",
+    "name": "B",
+    "type": "RECORD",
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "BA",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "REPEATED",
+        "name": "BB",
+        "type": "RECORD",
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "BBA",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "BBB",
+            "type": "STRING"
+          },
+          {
+            "mode": "REPEATED",
+            "name": "BBC",
+            "type": "STRING"
+          },
+          {
+            "mode": "REPEATED",
+            "name": "BBD",
+            "type": "RECORD",
+            "fields": [
+              {
+                "mode": "REPEATED",
+                "name": "BBDD",
+                "type": "RECORD",
+                "fields": [
+                  {
+                    "mode": "NULLABLE",
+                    "name": "BBDDE",
+                    "type": "INTEGER"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
