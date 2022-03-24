@@ -35,8 +35,8 @@ public class JsonFlattener {
 
   private List<String> unique = null;
 
-  private final String ARRAY_INDEX_REGEX = "(\\[[0-9]*\\])";
-  private final String INDEX_REGEX_EOL = "(\\[[0-9]*\\]$)";
+  private static final String ARRAY_INDEX_REGEX = "(\\[[0-9]*\\])";
+  private static final String INDEX_REGEX_EOL = "(\\[[0-9]*\\]$)";
 
   private Pattern pattern = Pattern.compile(ARRAY_INDEX_REGEX, Pattern.MULTILINE);
 
@@ -240,7 +240,7 @@ public class JsonFlattener {
             int index = unique.indexOf(tmpPath);
             current[index] = entry.getValue().getAsJsonPrimitive();
           }
-          tmpPath = null;
+
         } else if (entry.getValue().isJsonObject()) {
           current =
               make2D(
@@ -292,7 +292,7 @@ public class JsonFlattener {
             int index = unique.indexOf(tmpPath);
             current[index] = tmp.getAsJsonPrimitive();
           }
-          tmpPath = null;
+
         } else {
           if (tmp.isJsonObject()) {
             gotArray = isInnerArray(tmp);
@@ -350,7 +350,7 @@ public class JsonFlattener {
    * @return JFlat
    * @throws Exception
    */
-  public JsonFlattener headerSeparator(String separator) throws Exception {
+  public JsonFlattener headerSeparator(String separator) throws IllegalArgumentException {
     try {
 
       int sheetMatrixLen = this.sheetMatrix.get(0).length;
@@ -367,7 +367,7 @@ public class JsonFlattener {
       }
 
     } catch (NullPointerException nullex) {
-      throw new Exception(
+      throw new IllegalArgumentException(
           "The JSON document hasn't been transformed yet. Try using json2Sheet() before using headerSeparator");
     }
     return this;

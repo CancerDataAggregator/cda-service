@@ -28,11 +28,11 @@ public class OrderJson {
   public JsonElement orderJson(JsonElement element) {
 
     // LinkedHashMap to maintain insertion order
-    origMap = new LinkedHashMap<String, Object>();
+    origMap = new LinkedHashMap<>();
 
-    jsonPrimitive = new LinkedHashMap<String, Object>();
-    jsonArray = new LinkedHashMap<String, Object>();
-    jsonObject = new LinkedHashMap<String, Object>();
+    jsonPrimitive = new LinkedHashMap<>();
+    jsonArray = new LinkedHashMap<>();
+    jsonObject = new LinkedHashMap<>();
 
     // converting JsonElement to Map
     origMap = gson.fromJson(element, type);

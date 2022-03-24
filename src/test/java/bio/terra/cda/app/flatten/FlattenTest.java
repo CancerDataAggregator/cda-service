@@ -24,13 +24,13 @@ class FlattenTest {
   static final Path TEST_FILES = Paths.get("src/test/resources/json_files");
 
   @Test
-  public void testFlatteningUsingJsonFlattener() throws Exception {
+  void testFlatteningUsingJsonFlattener() throws Exception {
     String jsonString = Files.readString(TEST_FILES.resolve("gdc_no_files1.json"));
     JsonFlattener jflat = new JsonFlattener();
 
     List<String> json2csv = jflat.json2Sheet(jsonString, "true").getJsonAsSpreadsheet();
 
-    assertEquals(json2csv.size(), 30);
+    assertEquals(30, json2csv.size());
     assertTrue(
         jflat
             .json2Sheet(jsonString, "true")
@@ -39,7 +39,7 @@ class FlattenTest {
   }
 
   @Disabled
-  public void testPathList() throws Exception {
+  void testPathList() throws Exception {
     Configuration.setDefaults(
         new Configuration.Defaults() {
           private final JsonProvider jsonProvider = new JacksonJsonProvider();
@@ -80,18 +80,19 @@ class FlattenTest {
   }
 
   @Disabled
-  public void json2SheetWriter() throws Exception {
+  void json2SheetWriter() throws Exception {
     String jsonString = Files.readString(TEST_FILES.resolve("gdc_no_files1.json"));
     JsonFlattener jflat = new JsonFlattener().json2Sheet(jsonString, "true");
     List<Object[]> objects = jflat.getJsonAsSheet();
-    assertEquals(objects.size(), 29);
+    assertEquals(29, objects.size());
 
     List<String> rows = jflat.getJsonAsSpreadsheet();
-    assertEquals(rows.size(), 29);
+    assertEquals(29, rows.size());
   }
 
+  // Move this to integration Tests
   @Disabled
-  public void testCsvWriter() throws Exception {
+  void testCsvWriter() throws Exception {
     String jsonString = Files.readString(TEST_FILES.resolve("gdc_no_files1.json"));
     JsonFlattener jflat = new JsonFlattener();
 
