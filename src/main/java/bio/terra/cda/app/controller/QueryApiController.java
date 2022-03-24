@@ -18,7 +18,6 @@ import com.google.cloud.bigquery.BigQueryException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -62,11 +61,13 @@ public class QueryApiController implements QueryApi {
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
-    var result = queryService.getQueryResults(id, offset, limit);
-    var response =
+  public ResponseEntity<QueryResponseData> query(
+      String id, Integer offset, Integer limit, String format, String includeHeaders) {
+    QueryService.QueryResult result =
+        queryService.getQueryResults(id, offset, limit, format, includeHeaders);
+    QueryResponseData response =
         new QueryResponseData()
-            .result(Collections.unmodifiableList(result.items))
+            .result(result.items)
             .totalRowCount(result.totalRowCount)
             .querySql(result.querySql);
     int nextPage = result.items.size() + limit;
