@@ -330,11 +330,11 @@ public class JsonFlattener {
 
     for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
       if (entry.getValue().isJsonArray() || entry.getValue().getAsJsonArray().size() > 0) {
-          for (JsonElement checkPrimitive : entry.getValue().getAsJsonArray()) {
-            if (checkPrimitive.isJsonObject()) {
-              return true;
-            }
+        for (JsonElement checkPrimitive : entry.getValue().getAsJsonArray()) {
+          if (checkPrimitive.isJsonObject()) {
+            return true;
           }
+        }
       }
     }
     return false;
