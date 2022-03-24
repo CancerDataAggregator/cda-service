@@ -1,5 +1,8 @@
 package bio.terra.cda.app.flatten;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
@@ -7,30 +10,27 @@ import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
-import org.junit.jupiter.api.Disabled;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 class FlattenTest {
 
   static final Path TEST_FILES = Paths.get("src/test/resources/json_files");
 
-  @Disabled
+  @Test
   public void testFlatteningUsingJsonFlattener() throws Exception {
     String jsonString = Files.readString(TEST_FILES.resolve("gdc_no_files1.json"));
     JsonFlattener jflat = new JsonFlattener();
 
     List<String> json2csv = jflat.json2Sheet(jsonString, "true").getJsonAsSpreadsheet();
 
-    assertEquals(json2csv.size(), 29);
+    assertEquals(json2csv.size(), 30);
     assertTrue(
         jflat
             .json2Sheet(jsonString, "true")

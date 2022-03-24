@@ -43,8 +43,10 @@ public class JsonFlattener {
   private HashSet<String> primitiveUniquePath = null;
   private List<String> unique = null;
 
-  private String regex = "(\\[[0-9]*\\]$)";
-  private Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+  private final String ARRAY_INDEX_REGEX = "(\\[[0-9]*\\])";
+  private final String INDEX_REGEX_EOL = "(\\[[0-9]*\\]$)";
+
+  private Pattern pattern = Pattern.compile(ARRAY_INDEX_REGEX, Pattern.MULTILINE);
 
   private JsonElement element = null;
 
@@ -104,8 +106,8 @@ public class JsonFlattener {
 
     parse = JsonPath.using(conf).parse(this.jsonString);
 
-    primitivePath = new LinkedHashSet<String>();
-    primitiveUniquePath = new LinkedHashSet<String>();
+    primitivePath = new LinkedHashSet<>();
+    primitiveUniquePath = new LinkedHashSet<>();
 
     for (String o : pathList) {
       Object tmp = parse.read(o);
@@ -132,8 +134,8 @@ public class JsonFlattener {
       Matcher m = pattern.matcher(o);
 
       if (m.find()) {
-        tmp = o.replace("$", "").split("(\\[[0-9]*\\]$)");
-        tmp[0] = tmp[0].replaceAll("(\\[[0-9]*\\])", "");
+        tmp = o.replace("$", "").split(INDEX_REGEX_EOL);
+        tmp[0] = tmp[0].replaceAll(ARRAY_INDEX_REGEX, "");
         primitiveUniquePath.add(
             (tmp[0] + m.group())
                 .replace("'][", ".")
@@ -144,7 +146,7 @@ public class JsonFlattener {
       } else {
         primitiveUniquePath.add(
             o.replace("$", "")
-                .replaceAll("(\\[[0-9]*\\])", "")
+                .replaceAll(ARRAY_INDEX_REGEX, "")
                 .replace("[", "")
                 .replace("]", "")
                 .replace("''", ".")
@@ -200,7 +202,7 @@ public class JsonFlattener {
   /**
    * This function transforms the JSON document to its equivalent 2D representation.
    *
-   * @param current its the logical current row of the Json being processed
+   * @param current it's the logical current row of the Json being processed
    * @param old it keeps the old row which is always assigned to the current row.
    * @param element this keeps the part of json being parsed to 2D.
    * @param path this mantains the path of the Json element being processed.
@@ -229,8 +231,8 @@ public class JsonFlattener {
           Matcher m = pattern.matcher(tmpPath);
 
           if (m.find()) {
-            String[] tmp = tmpPath.replace("$", "").split("(\\[[0-9]*\\]$)");
-            tmp[0] = tmp[0].replaceAll("(\\[[0-9]*\\])", "");
+            String[] tmp = tmpPath.replace("$", "").split(INDEX_REGEX_EOL);
+            tmp[0] = tmp[0].replaceAll(ARRAY_INDEX_REGEX, "");
             tmpPath =
                 ((tmp[0] + m.group())
                     .replace("'][", ".")
@@ -242,7 +244,7 @@ public class JsonFlattener {
             tmpPath =
                 (tmpPath
                     .replace("$", "")
-                    .replaceAll("(\\[[0-9]*\\])", "")
+                    .replaceAll(ARRAY_INDEX_REGEX, "")
                     .replace("[", "")
                     .replace("]", "")
                     .replace("''", ".")
@@ -281,8 +283,8 @@ public class JsonFlattener {
           Matcher m = pattern.matcher(tmpPath);
 
           if (m.find()) {
-            String tmp1[] = tmpPath.replace("$", "").split("(\\[[0-9]*\\]$)");
-            tmp1[0] = tmp1[0].replaceAll("(\\[[0-9]*\\])", "");
+            String tmp1[] = tmpPath.replace("$", "").split(INDEX_REGEX_EOL);
+            tmp1[0] = tmp1[0].replaceAll(ARRAY_INDEX_REGEX, "");
             tmpPath =
                 ((tmp1[0] + m.group())
                     .replace("'][", ".")
@@ -294,7 +296,7 @@ public class JsonFlattener {
             tmpPath =
                 (tmpPath
                     .replace("$", "")
-                    .replaceAll("(\\[[0-9]*\\])", "")
+                    .replaceAll(ARRAY_INDEX_REGEX, "")
                     .replace("[", "")
                     .replace("]", "")
                     .replace("''", ".")
@@ -401,7 +403,7 @@ public class JsonFlattener {
    * @return List<Row>
    */
   public List<String> getJsonAsSpreadsheet() {
-    List<String> spreadsheet = new ArrayList<String>();
+    List<String> spreadsheet = new ArrayList<>();
     for (Object[] sheetRow : this.sheetMatrix) {
       spreadsheet.add(Row.toSpreadsheetRow(sheetRow));
     }
