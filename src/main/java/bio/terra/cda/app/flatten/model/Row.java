@@ -6,7 +6,9 @@ public class Row {
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < cellData.length - 1; i++) {
       if (cellData[i] != null) {
-        cellData[i].toString().replaceAll(",", "\\,");
+        if (cellData[i].toString().contains(",")) {
+          cellData[i] = cellData[i].toString().replaceAll(",", "\\,");
+        }
         builder.append(cellData[i].toString() + "\t");
       } else {
         builder.append("\t");

@@ -6,9 +6,11 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OrderJson {
-
+  private static final Logger logger = LoggerFactory.getLogger(OrderJson.class);
   Type type = new TypeToken<Map<String, Object>>() {}.getType();
 
   Map<String, Object> origMap = null;
@@ -40,8 +42,7 @@ public class OrderJson {
 
       try {
         // adding check if value of key in json is null
-        if (entry.getValue() == null
-            || entry.getValue().getClass().getSimpleName().equals("ArrayList")) {
+        if (entry.getValue() == null || entry.getValue().getClass().isInstance("ArrayList")) {
 
           // if Object is of type ArrayList push it to jsonArray Map
           jsonArray.put(entry.getKey(), entry.getValue());
@@ -52,7 +53,7 @@ public class OrderJson {
           jsonPrimitive.put(entry.getKey(), entry.getValue());
         }
       } catch (Exception ex) {
-        ex.printStackTrace();
+        logger.error(ex.getMessage());
       }
     }
 
