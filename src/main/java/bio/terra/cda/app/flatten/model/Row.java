@@ -2,11 +2,15 @@ package bio.terra.cda.app.flatten.model;
 
 public class Row {
 
+  private Row() {}
+
   public static String toSpreadsheetRow(Object[] cellData) {
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < cellData.length - 1; i++) {
       if (cellData[i] != null) {
-        cellData[i].toString().replaceAll(",", "\\,");
+        if (cellData[i].toString().contains(",")) {
+          cellData[i] = cellData[i].toString().replace(",", "\\,");
+        }
         builder.append(cellData[i].toString() + "\t");
       } else {
         builder.append("\t");

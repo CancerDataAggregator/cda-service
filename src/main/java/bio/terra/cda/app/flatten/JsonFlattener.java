@@ -31,28 +31,16 @@ import java.util.regex.Pattern;
  */
 public class JsonFlattener {
 
-  private String jsonString = null;
-
   private List<Object[]> sheetMatrix = null;
 
-  private List<String> pathList = null;
-
-  private String tmp[] = null;
-
-  private HashSet<String> primitivePath = null;
-  private HashSet<String> primitiveUniquePath = null;
   private List<String> unique = null;
+
+  private String tmpPath = null;
 
   private String regex = "(\\[[0-9]*\\]$)";
   private Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 
-  private JsonElement element = null;
-
-  private String tmpPath = null;
-
   private OrderJson makeOrder = new OrderJson();
-
-  public JsonFlattener() {}
 
   /**
    * This method does some pre processing and then calls make2D() to get the spreadsheet
@@ -61,7 +49,6 @@ public class JsonFlattener {
    * @return returns a JsonFlattener object
    */
   public JsonFlattener json2Sheet(String jsonString, String includeHeaders) {
-    this.jsonString = jsonString;
 
     Configuration.setDefaults(
         new Configuration.Defaults() {
@@ -96,16 +83,16 @@ public class JsonFlattener {
 
     DocumentContext parse = null;
 
-    sheetMatrix = new ArrayList<Object[]>();
+    sheetMatrix = new ArrayList<>();
 
-    element = new JsonParser().parse(this.jsonString);
+    JsonElement element = new JsonParser().parse(jsonString);
 
-    pathList = JsonPath.using(pathConf).parse(this.jsonString).read("$..*");
+    List<String> pathList = JsonPath.using(pathConf).parse(jsonString).read("$..*");
 
-    parse = JsonPath.using(conf).parse(this.jsonString);
+    parse = JsonPath.using(conf).parse(jsonString);
 
-    primitivePath = new LinkedHashSet<String>();
-    primitiveUniquePath = new LinkedHashSet<String>();
+    HashSet<String> primitivePath = new LinkedHashSet<>();
+    HashSet<String> primitiveUniquePath = new LinkedHashSet<>();
 
     for (String o : pathList) {
       Object tmp = parse.read(o);
@@ -132,7 +119,7 @@ public class JsonFlattener {
       Matcher m = pattern.matcher(o);
 
       if (m.find()) {
-        tmp = o.replace("$", "").split("(\\[[0-9]*\\]$)");
+        String[] tmp = o.replace("$", "").split("(\\[[0-9]*\\]$)");
         tmp[0] = tmp[0].replaceAll("(\\[[0-9]*\\])", "");
         primitiveUniquePath.add(
             (tmp[0] + m.group())
@@ -152,7 +139,7 @@ public class JsonFlattener {
       }
     }
 
-    unique = new ArrayList<String>(primitiveUniquePath);
+    unique = new ArrayList<>(primitiveUniquePath);
 
     // choose to suppress the header row if we are aggregating multiple input results downstream.
     if (includeHeaders.equals("true")) {
@@ -170,8 +157,8 @@ public class JsonFlattener {
     // adding all the content of csv
     sheetMatrix.add(make2D(new Object[unique.size()], new Object[unique.size()], element, "$"));
 
-    Object last[] = sheetMatrix.get(sheetMatrix.size() - 1);
-    Object secondLast[] = sheetMatrix.get(sheetMatrix.size() - 2);
+    Object[] last = sheetMatrix.get(sheetMatrix.size() - 1);
+    Object[] secondLast = sheetMatrix.get(sheetMatrix.size() - 2);
 
     boolean delete = true;
 
@@ -281,7 +268,7 @@ public class JsonFlattener {
           Matcher m = pattern.matcher(tmpPath);
 
           if (m.find()) {
-            String tmp1[] = tmpPath.replace("$", "").split("(\\[[0-9]*\\]$)");
+            String[] tmp1 = tmpPath.replace("$", "").split("(\\[[0-9]*\\]$)");
             tmp1[0] = tmp1[0].replaceAll("(\\[[0-9]*\\])", "");
             tmpPath =
                 ((tmp1[0] + m.group())
@@ -342,14 +329,12 @@ public class JsonFlattener {
   private boolean isInnerArray(JsonElement element) {
 
     for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
-      if (entry.getValue().isJsonArray()) {
-        if (entry.getValue().getAsJsonArray().size() > 0)
-          for (JsonElement checkPrimitive : entry.getValue().getAsJsonArray()) {
-
-            if (checkPrimitive.isJsonObject()) {
-              return true;
-            }
+      if (entry.getValue().isJsonArray() && entry.getValue().getAsJsonArray().size() > 0) {
+        for (JsonElement checkPrimitive : entry.getValue().getAsJsonArray()) {
+          if (checkPrimitive.isJsonObject()) {
+            return true;
           }
+        }
       }
     }
     return false;
@@ -363,7 +348,7 @@ public class JsonFlattener {
    * @return JFlat
    * @throws Exception
    */
-  public JsonFlattener headerSeparator(String separator) throws Exception {
+  public JsonFlattener headerSeparator(String separator) throws IllegalArgumentException {
     try {
 
       int sheetMatrixLen = this.sheetMatrix.get(0).length;
@@ -380,7 +365,7 @@ public class JsonFlattener {
       }
 
     } catch (NullPointerException nullex) {
-      throw new Exception(
+      throw new IllegalArgumentException(
           "The JSON document hasn't been transformed yet. Try using json2Sheet() before using headerSeparator");
     }
     return this;
@@ -401,7 +386,7 @@ public class JsonFlattener {
    * @return List<Row>
    */
   public List<String> getJsonAsSpreadsheet() {
-    List<String> spreadsheet = new ArrayList<String>();
+    List<String> spreadsheet = new ArrayList<>();
     for (Object[] sheetRow : this.sheetMatrix) {
       spreadsheet.add(Row.toSpreadsheetRow(sheetRow));
     }
@@ -453,7 +438,7 @@ public class JsonFlattener {
    */
   public String write2csv(char delimiter) {
     boolean comma = false;
-    StringBuffer buffer = new StringBuffer();
+    StringBuilder buffer = new StringBuilder();
     for (Object[] o : this.sheetMatrix) {
       comma = false;
       for (Object t : o) {
