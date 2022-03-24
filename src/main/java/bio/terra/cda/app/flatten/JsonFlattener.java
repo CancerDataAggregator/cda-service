@@ -329,10 +329,8 @@ public class JsonFlattener {
   private boolean isInnerArray(JsonElement element) {
 
     for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
-      if (entry.getValue().isJsonArray()) {
-        if (entry.getValue().getAsJsonArray().size() > 0)
+      if (entry.getValue().isJsonArray() || entry.getValue().getAsJsonArray().size() > 0) {
           for (JsonElement checkPrimitive : entry.getValue().getAsJsonArray()) {
-
             if (checkPrimitive.isJsonObject()) {
               return true;
             }
