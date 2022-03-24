@@ -31,13 +31,9 @@ import java.util.regex.Pattern;
  */
 public class JsonFlattener {
 
-  private String jsonString = null;
-
   private List<Object[]> sheetMatrix = null;
 
   private List<String> pathList = null;
-
-  private String tmp[] = null;
 
   private HashSet<String> primitivePath = null;
   private HashSet<String> primitiveUniquePath = null;
@@ -50,8 +46,6 @@ public class JsonFlattener {
 
   private JsonElement element = null;
 
-  private String tmpPath = null;
-
   private OrderJson makeOrder = new OrderJson();
 
   public JsonFlattener() {}
@@ -63,7 +57,6 @@ public class JsonFlattener {
    * @return returns a JsonFlattener object
    */
   public JsonFlattener json2Sheet(String jsonString, String includeHeaders) {
-    this.jsonString = jsonString;
 
     Configuration.setDefaults(
         new Configuration.Defaults() {
@@ -100,11 +93,11 @@ public class JsonFlattener {
 
     sheetMatrix = new ArrayList<Object[]>();
 
-    element = new JsonParser().parse(this.jsonString);
+    element = new JsonParser().parse(jsonString);
 
-    pathList = JsonPath.using(pathConf).parse(this.jsonString).read("$..*");
+    pathList = JsonPath.using(pathConf).parse(jsonString).read("$..*");
 
-    parse = JsonPath.using(conf).parse(this.jsonString);
+    parse = JsonPath.using(conf).parse(jsonString);
 
     primitivePath = new LinkedHashSet<>();
     primitiveUniquePath = new LinkedHashSet<>();
@@ -134,7 +127,7 @@ public class JsonFlattener {
       Matcher m = pattern.matcher(o);
 
       if (m.find()) {
-        tmp = o.replace("$", "").split(INDEX_REGEX_EOL);
+        String[] tmp = o.replace("$", "").split(INDEX_REGEX_EOL);
         tmp[0] = tmp[0].replaceAll(ARRAY_INDEX_REGEX, "");
         primitiveUniquePath.add(
             (tmp[0] + m.group())
@@ -172,8 +165,8 @@ public class JsonFlattener {
     // adding all the content of csv
     sheetMatrix.add(make2D(new Object[unique.size()], new Object[unique.size()], element, "$"));
 
-    Object last[] = sheetMatrix.get(sheetMatrix.size() - 1);
-    Object secondLast[] = sheetMatrix.get(sheetMatrix.size() - 2);
+    Object [] last = sheetMatrix.get(sheetMatrix.size() - 1);
+    Object [] secondLast = sheetMatrix.get(sheetMatrix.size() - 2);
 
     boolean delete = true;
 
@@ -209,7 +202,7 @@ public class JsonFlattener {
    * @return
    */
   private Object[] make2D(Object[] current, Object[] old, JsonElement element, String path) {
-
+    String tmpPath = null;
     current = old.clone();
 
     boolean gotArray = false;
@@ -283,7 +276,7 @@ public class JsonFlattener {
           Matcher m = pattern.matcher(tmpPath);
 
           if (m.find()) {
-            String tmp1[] = tmpPath.replace("$", "").split(INDEX_REGEX_EOL);
+            String [] tmp1 = tmpPath.replace("$", "").split(INDEX_REGEX_EOL);
             tmp1[0] = tmp1[0].replaceAll(ARRAY_INDEX_REGEX, "");
             tmpPath =
                 ((tmp1[0] + m.group())
