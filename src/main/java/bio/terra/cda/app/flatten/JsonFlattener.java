@@ -155,7 +155,7 @@ public class JsonFlattener {
     }
 
     // adding all the content of csv
-    sheetMatrix.add(make2D(new Object[unique.size()], new Object[unique.size()], element, "$"));
+    sheetMatrix.add(make2D(new Object[unique.size()], element, "$"));
 
     Object[] last = sheetMatrix.get(sheetMatrix.size() - 1);
     Object[] secondLast = sheetMatrix.get(sheetMatrix.size() - 2);
@@ -187,15 +187,14 @@ public class JsonFlattener {
   /**
    * This function transforms the JSON document to its equivalent 2D representation.
    *
-   * @param current its the logical current row of the Json being processed
    * @param old it keeps the old row which is always assigned to the current row.
    * @param element this keeps the part of json being parsed to 2D.
    * @param path this mantains the path of the Json element being processed.
    * @return
    */
-  private Object[] make2D(Object[] current, Object[] old, JsonElement element, String path) {
+  private Object[] make2D(Object[] old, JsonElement element, String path) {
 
-    current = old.clone();
+    Object[] current = old.clone();
 
     boolean gotArray = false;
 
@@ -244,17 +243,11 @@ public class JsonFlattener {
         } else if (entry.getValue().isJsonObject()) {
           current =
               make2D(
-                  new Object[unique.size()],
-                  current,
-                  entry.getValue().getAsJsonObject(),
-                  path + "['" + entry.getKey() + "']");
+                  current, entry.getValue().getAsJsonObject(), path + "['" + entry.getKey() + "']");
         } else if (entry.getValue().isJsonArray()) {
           current =
               make2D(
-                  new Object[unique.size()],
-                  current,
-                  entry.getValue().getAsJsonArray(),
-                  path + "['" + entry.getKey() + "']");
+                  current, entry.getValue().getAsJsonArray(), path + "['" + entry.getKey() + "']");
         }
       }
 
@@ -297,21 +290,12 @@ public class JsonFlattener {
           if (tmp.isJsonObject()) {
             gotArray = isInnerArray(tmp);
 
-            sheetMatrix.add(
-                make2D(
-                    new Object[unique.size()],
-                    current,
-                    tmp.getAsJsonObject(),
-                    path + "[" + arrIndex + "]"));
+            sheetMatrix.add(make2D(current, tmp.getAsJsonObject(), path + "[" + arrIndex + "]"));
             if (gotArray) {
               sheetMatrix.remove(sheetMatrix.size() - 1);
             }
           } else if (tmp.isJsonArray()) {
-            make2D(
-                new Object[unique.size()],
-                current,
-                tmp.getAsJsonArray(),
-                path + "[" + arrIndex + "]");
+            make2D(current, tmp.getAsJsonArray(), path + "[" + arrIndex + "]");
           }
         }
         arrIndex++;
@@ -360,7 +344,7 @@ public class JsonFlattener {
                 .get(0)[I]
                 .toString()
                 .replaceFirst("^\\/", "")
-                .replaceAll(".", separator)
+                .replaceAll("\\.", separator)
                 .trim();
       }
 
