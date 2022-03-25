@@ -344,7 +344,7 @@ public class JsonFlattener {
                 .get(0)[I]
                 .toString()
                 .replaceFirst("^\\/", "")
-                .replaceAll("\\.", separator)
+                .replace("\\.", separator)
                 .trim();
       }
 
