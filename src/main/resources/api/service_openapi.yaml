@@ -278,7 +278,7 @@ components:
       required: true
       schema:
         type: string
-        default: all_v3_0_subjects_meta
+        default: all_v3_Subjects_meta
       description: Dataset version
     SystemValue:
       in: query
@@ -291,7 +291,7 @@ components:
       name: table name
       schema:
         type: string
-        default: gdc-bq-sample.dev
+        default: broad-dsde-dev.cda_dev
       description: Filter on system for results
     ResultOffset:
       in: query
@@ -319,7 +319,7 @@ components:
       name: table
       schema:
         type: string
-        default: gdc-bq-sample.dev
+        default: broad-dsde-dev.cda_dev
       description: tablename
 
   schemas:

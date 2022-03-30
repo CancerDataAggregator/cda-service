@@ -150,8 +150,7 @@ jib {
 		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
 	}
 	container {
-		environment = [ 'spring.profiles.active':'local' ]
-
+		environment = [ 'spring.profiles.active':'dev' ]
 	}
 }
 
@@ -217,6 +216,7 @@ jacoco {
 
 jacocoTestReport {
 	reports {
+        html.enabled = true
 		xml.enabled true
 	}
 }
