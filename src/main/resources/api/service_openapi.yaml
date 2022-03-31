@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 2.1.0
+  version: 3.0.0_RC
   title: CDA API
   license:
     name: Apache 2.0
@@ -278,7 +278,7 @@ components:
       required: true
       schema:
         type: string
-        default: all_v3_Subjects_meta
+        default: all_v3_0_subjects_meta
       description: Dataset version
     SystemValue:
       in: query
