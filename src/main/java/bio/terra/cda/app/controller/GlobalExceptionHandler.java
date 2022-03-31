@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
     if (causes == null) {
       causes = collectCauses;
     }
-    
+
     ErrorReport errorReport = null;
     if (ex != null) {
       errorReport =
