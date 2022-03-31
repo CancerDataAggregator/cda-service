@@ -40,7 +40,8 @@ public class GlobalExceptionHandler {
     return buildErrorReport(ex, HttpStatus.BAD_REQUEST, null);
   }
 
-  // -- catchall - log so we can understand what we have missed in the handlers above
+  // -- catchall - log so we can understand what we have missed in the handlers
+  // above
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorReport> catchallHandler(Exception ex) {
     logger.error("Exception caught by catchall hander", ex);
@@ -60,10 +61,11 @@ public class GlobalExceptionHandler {
     if (causes == null) {
       causes = collectCauses;
     }
-
-    ErrorReport errorReport = new ErrorReport();
+    
+    ErrorReport errorReport = null;
     if (ex != null) {
-      errorReport.message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
+      errorReport =
+          new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
     }
     return new ResponseEntity<>(errorReport, statusCode);
   }

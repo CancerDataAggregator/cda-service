@@ -2,14 +2,20 @@ package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
+import bio.terra.cda.app.generators.CountsSqlGenerator;
+import bio.terra.cda.app.generators.FileSqlGenerator;
+import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.service.QueryService;
+import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.app.util.NestedColumn;
-import bio.terra.cda.app.util.QueryTranslator;
+import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
+import com.google.cloud.bigquery.BigQueryException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -26,6 +32,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class QueryApiController implements QueryApi {
   private static final Logger logger = LoggerFactory.getLogger(QueryApiController.class);
+  private static final String INVALID_DATABASE = "Unable to find schema for that version.";
 
   private final QueryService queryService;
   private final ApplicationConfiguration applicationConfiguration;
@@ -66,6 +73,7 @@ public class QueryApiController implements QueryApi {
     if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
       response.nextUrl(createNextUrl(id, nextPage, limit));
     }
+
     return ResponseEntity.ok(response);
   }
 
@@ -79,22 +87,57 @@ public class QueryApiController implements QueryApi {
 
   private ResponseEntity<QueryCreatedData> sendQuery(String querySql, boolean dryRun) {
     var response = new QueryCreatedData().querySql(querySql);
+    //    if (!querySql.contains(applicationConfiguration.getProject())) {
+    //      throw new IllegalArgumentException("Your database is outside of the project");
+    //    }
+    var lowerCaseQuery = querySql.toLowerCase();
+
+    try {
+      var supportedSchemas = TableSchema.supportedSchemas();
+      var found = false;
+
+      for (String schema : supportedSchemas) {
+        if (lowerCaseQuery.contains(schema)) {
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        throw new IllegalArgumentException(INVALID_DATABASE);
+      }
+    } catch (Exception e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    }
+
+    if (lowerCaseQuery.contains("create table")
+        || lowerCaseQuery.contains("delete from")
+        || lowerCaseQuery.contains("drop table")
+        || lowerCaseQuery.contains("update")
+        || lowerCaseQuery.contains("alter table")) {
+      throw new IllegalArgumentException("Those actions are not available in sql");
+    }
     if (!dryRun) {
-      response.queryId(queryService.startQuery(querySql));
+      try {
+        response.queryId(queryService.startQuery(querySql));
+      } catch (BigQueryException e) {
+        throw new BadQueryException("Could not create job");
+      }
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> bulkData(String version) {
-    String querySql = "SELECT * FROM " + applicationConfiguration.getBqTable() + "." + version;
+  public ResponseEntity<QueryCreatedData> bulkData(String version, String table) {
+    String querySql = "SELECT * FROM " + table + "." + version;
     return sendQuery(querySql, false);
   }
 
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> sqlQuery(String querySql) {
+
     return sendQuery(querySql, false);
   }
 
@@ -102,9 +145,14 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    String querySql = QueryTranslator.sql(table + "." + version, body);
-
-    return sendQuery(querySql, dryRun);
+    try {
+      String querySql = new SqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
   }
 
   @TrackExecutionTime
@@ -125,14 +173,15 @@ public class QueryApiController implements QueryApi {
     if (system != null && system.length() > 0) {
       NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
       whereClause = " WHERE " + whereColumns.getColumn() + " = '" + system + "'";
-      // add any additional 'where' unnest partials that aren't already included in columns-unnest
+      // add any additional 'where' unnest partials that aren't already included in
+      // columns-unnest
       // clauses
       unnestClauses.addAll(whereColumns.getUnnestClauses());
     } else {
       whereClause = "";
     }
-    StringBuffer unnestConcat = new StringBuffer();
-    unnestClauses.stream().forEach((k) -> unnestConcat.append(k));
+    StringBuilder unnestConcat = new StringBuilder();
+    unnestClauses.forEach(unnestConcat::append);
 
     String querySql =
         "SELECT DISTINCT "
@@ -166,5 +215,33 @@ public class QueryApiController implements QueryApi {
     logger.debug("columns: " + querySql);
 
     return sendQuery(querySql, false);
+  }
+
+  @Override
+  public ResponseEntity<QueryCreatedData> globalCounts(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new CountsSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> files(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    String querySql = "";
+    try {
+      querySql = new FileSqlGenerator(table + "." + version, body, version).generate();
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+    return sendQuery(querySql, dryRun);
   }
 }

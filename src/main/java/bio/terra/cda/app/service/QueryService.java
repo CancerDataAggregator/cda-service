@@ -2,6 +2,7 @@ package bio.terra.cda.app.service;
 
 import static java.lang.Thread.currentThread;
 
+import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.SystemStatus;
@@ -29,6 +30,8 @@ import org.springframework.stereotype.Component;
 @Component
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
+  @Autowired public ApplicationConfiguration applicationConfiguration;
+  Map<String, String> jobCreationStatus = new HashMap<>();
 
   @Value("${project}")
   private String project;
@@ -83,6 +86,7 @@ public class QueryService {
 
     return systemStatus;
   }
+
   /**
    * Convert a BQ value to a json node.
    *
@@ -138,6 +142,10 @@ public class QueryService {
     return getJobResults(job, offset, pageSize);
   }
 
+  public void setBigQuery(BigQuery bigQuery) {
+    this.bigQuery = bigQuery;
+  }
+
   public static class QueryResult {
     public final List<Object> items;
     public final Long totalRowCount;
@@ -175,8 +183,10 @@ public class QueryService {
                 FieldValue.of(FieldValue.Attribute.RECORD, row),
                 Field.of("root", LegacySQLTypeName.RECORD, fields)));
 
-        // This check is required because pageSize is the number of rows BQ retrieves at a time,
-        // not the total number of rows returned by iterateAll(). Without this check, this loop
+        // This check is required because pageSize is the number of rows BQ retrieves at
+        // a time,
+        // not the total number of rows returned by iterateAll(). Without this check,
+        // this loop
         // would return all rows in the result table.
         if (++rowCount == pageSize) {
           break;
@@ -210,8 +220,10 @@ public class QueryService {
     }
   }
 
-  // For now, hardcode the known list of systems. In the future, we will get this from the
-  // database itself, as each published dataset will have a list of contributing systems.
+  // For now, hardcode the known list of systems. In the future, we will get this
+  // from the
+  // database itself, as each published dataset will have a list of contributing
+  // systems.
   private enum Source {
     GDC,
     PDC
@@ -241,7 +253,8 @@ public class QueryService {
   }
 
   private static String getSqlFromJob(Job queryJob) {
-    // This cast is safe because it's only done on queries that have been generated using
+    // This cast is safe because it's only done on queries that have been generated
+    // using
     // startQuery() below.
     return ((QueryJobConfiguration) queryJob.getConfiguration()).getQuery();
   }
@@ -264,7 +277,8 @@ public class QueryService {
     // Log usage data for this response.
     final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
     float elapsed = 0;
-    // In some cases endTime is null, even though startTime and creationTime are non-null and the
+    // In some cases endTime is null, even though startTime and creationTime are
+    // non-null and the
     // job is complete.
     if (queryJob.getStatistics().getEndTime() != null
         && queryJob.getStatistics().getStartTime() != null) {
@@ -281,12 +295,27 @@ public class QueryService {
   }
 
   public String startQuery(String query) {
-    var queryConfig = QueryJobConfiguration.newBuilder(query).setUseLegacySql(false);
+    String jobID = UUID.randomUUID().toString();
+    //    String destinationDataset = "Job_Queue";
+    //    String destinationTable = String.format("Job_%s", jobID);
+    //    TableId tableId = TableId.of(destinationDataset, destinationTable);
+    //    TableDefinition tableDefinition = StandardTableDefinition.of(Schema.of());
+    //    TableInfo tableInfo =
+    //        TableInfo.newBuilder(tableId, tableDefinition)
+    //            .setExpirationTime(Instant.now().toEpochMilli() + TimeUnit.MINUTES.toMillis(10))
+    //            .build();
 
+    QueryJobConfiguration.Builder queryConfig =
+        QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).setUseQueryCache(true);
+    //            .setAllowLargeResults(true);
+    //            .setDestinationTable(tableInfo.getTableId());
     // Create a job ID so that we can safely retry.
-    JobId jobId = JobId.of(UUID.randomUUID().toString());
+    JobId jobId = JobId.of(jobID);
+    /**
+     * Biguery has a maximum wait time by default of 10 seconds this will update the max time to
+     * 1min.
+     */
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
-
     return queryJob.getJobId().getJob();
   }
 }

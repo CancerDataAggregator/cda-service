@@ -2,10 +2,10 @@
   "node_type": "=",
   "l": {
     "node_type": "column",
-    "value": "A.B.C.D.column"
+    "value": "B.BB.BBD.BBDD.BBDDE"
   },
   "r": {
     "node_type": "unquoted",
-    "value": "value"
+    "value": "50"
   }
 }

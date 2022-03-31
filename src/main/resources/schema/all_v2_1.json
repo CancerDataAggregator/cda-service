@@ -1,0 +1,567 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "id",
+    "type": "STRING"
+  },
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "system",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "value",
+        "type": "STRING"
+      }
+    ],
+    "mode": "REPEATED",
+    "name": "identifier",
+    "type": "RECORD"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "species",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "sex",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "race",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "ethnicity",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "days_to_birth",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "REPEATED",
+    "name": "subject_associated_project",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "vital_status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "age_at_death",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "cause_of_death",
+    "type": "STRING"
+  },
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "id",
+        "type": "STRING"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "system",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "value",
+            "type": "STRING"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "identifier",
+        "type": "RECORD"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "label",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "data_category",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "data_type",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "file_format",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "associated_project",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "drs_uri",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "byte_size",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "checksum",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "data_modality",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "imaging_modality",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "dbgap_accession_number",
+        "type": "STRING"
+      }
+    ],
+    "mode": "REPEATED",
+    "name": "File",
+    "type": "RECORD"
+  },
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "id",
+        "type": "STRING"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "system",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "value",
+            "type": "STRING"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "identifier",
+        "type": "RECORD"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "member_of_research_project",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "primary_diagnosis_condition",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "primary_diagnosis_site",
+        "type": "STRING"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "id",
+            "type": "STRING"
+          },
+          {
+            "fields": [
+              {
+                "mode": "NULLABLE",
+                "name": "system",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "value",
+                "type": "STRING"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "identifier",
+            "type": "RECORD"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "primary_diagnosis",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "age_at_diagnosis",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "morphology",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "stage",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "grade",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "method_of_diagnosis",
+            "type": "STRING"
+          },
+          {
+            "fields": [
+              {
+                "mode": "NULLABLE",
+                "name": "id",
+                "type": "STRING"
+              },
+              {
+                "fields": [
+                  {
+                    "mode": "NULLABLE",
+                    "name": "system",
+                    "type": "STRING"
+                  },
+                  {
+                    "mode": "NULLABLE",
+                    "name": "value",
+                    "type": "STRING"
+                  }
+                ],
+                "mode": "REPEATED",
+                "name": "identifier",
+                "type": "RECORD"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "treatment_type",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "treatment_outcome",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "days_to_treatment_start",
+                "type": "INTEGER"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "days_to_treatment_end",
+                "type": "INTEGER"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "therapeutic_agent",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "treatment_anatomic_site",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "treatment_effect",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "treatment_end_reason",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "number_of_cycles",
+                "type": "INTEGER"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "Treatment",
+            "type": "RECORD"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "Diagnosis",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "id",
+            "type": "STRING"
+          },
+          {
+            "fields": [
+              {
+                "mode": "NULLABLE",
+                "name": "system",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "value",
+                "type": "STRING"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "identifier",
+            "type": "RECORD"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "label",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "data_category",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "data_type",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "file_format",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "associated_project",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "drs_uri",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "byte_size",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "checksum",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "data_modality",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "imaging_modality",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "dbgap_accession_number",
+            "type": "STRING"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "File",
+        "type": "RECORD"
+      },
+      {
+        "fields": [
+          {
+            "mode": "NULLABLE",
+            "name": "id",
+            "type": "STRING"
+          },
+          {
+            "fields": [
+              {
+                "mode": "NULLABLE",
+                "name": "system",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "value",
+                "type": "STRING"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "identifier",
+            "type": "RECORD"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "associated_project",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "age_at_collection",
+            "type": "INTEGER"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "primary_disease_type",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "anatomical_site",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "source_material_type",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "specimen_type",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "derived_from_specimen",
+            "type": "STRING"
+          },
+          {
+            "mode": "NULLABLE",
+            "name": "derived_from_subject",
+            "type": "STRING"
+          },
+          {
+            "fields": [
+              {
+                "mode": "NULLABLE",
+                "name": "id",
+                "type": "STRING"
+              },
+              {
+                "fields": [
+                  {
+                    "mode": "NULLABLE",
+                    "name": "system",
+                    "type": "STRING"
+                  },
+                  {
+                    "mode": "NULLABLE",
+                    "name": "value",
+                    "type": "STRING"
+                  }
+                ],
+                "mode": "REPEATED",
+                "name": "identifier",
+                "type": "RECORD"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "label",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "data_category",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "data_type",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "file_format",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "associated_project",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "drs_uri",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "byte_size",
+                "type": "INTEGER"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "checksum",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "data_modality",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "imaging_modality",
+                "type": "STRING"
+              },
+              {
+                "mode": "NULLABLE",
+                "name": "dbgap_accession_number",
+                "type": "STRING"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "File",
+            "type": "RECORD"
+          }
+        ],
+        "mode": "REPEATED",
+        "name": "Specimen",
+        "type": "RECORD"
+      }
+    ],
+    "mode": "REPEATED",
+    "name": "ResearchSubject",
+    "type": "RECORD"
+  }
+]

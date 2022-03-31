@@ -12,7 +12,7 @@ buildscript {
 plugins {
 	id 'java'
 	id 'idea'
-	id 'org.springframework.boot' version '2.4.3'
+	id 'org.springframework.boot' version '2.5.4'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'com.google.cloud.tools.jib' version '2.8.0'
 	id 'org.openapi.generator' version '5.1.1'
@@ -111,13 +111,25 @@ openApiGenerate {
 	]
 }
 
+task GetSchema(type: Exec){
+	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:integration.all_v2_1 > schema.json"
+}
+
+task GetFilesSchema(type: Exec){
+	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.all_v3_0_Files > all_v3_0_Files.json"
+}
+
+task GetSubjectViewSchema(type: Exec){
+	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.all_v3_0_subjects_meta > all_v3_0_subjects_meta.json"
+}
+
 task buildPythonSdk(type: GenerateTask){
 	generatorName = "python"
 	packageName = "cda_client"
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
 	configOptions = [
-			"packageVersion" : "10.20.2021",
+			"packageVersion" : "3.15.2022",
 	]
 }
 
@@ -139,7 +151,6 @@ jib {
 	}
 	container {
 		environment = [ 'spring.profiles.active':'dev' ]
-
 	}
 }
 
