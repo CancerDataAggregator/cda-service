@@ -15,6 +15,15 @@ import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
 import com.google.cloud.bigquery.BigQueryException;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,9 +72,11 @@ public class QueryApiController implements QueryApi {
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
-    var result = queryService.getQueryResults(id, offset, limit);
-    var response =
+  public ResponseEntity<QueryResponseData> query(
+      String id, Integer offset, Integer limit, String format, String includeHeaders) {
+    QueryService.QueryResult result =
+        queryService.getQueryResults(id, offset, limit, format, includeHeaders);
+    QueryResponseData response =
         new QueryResponseData()
             .result(Collections.unmodifiableList(result.items))
             .totalRowCount(result.totalRowCount)

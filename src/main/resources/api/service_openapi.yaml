@@ -144,9 +144,11 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/QueryId"
-        - $ref: "#/components/parameters/ResultOffset"
-        - $ref: "#/components/parameters/ResultLimit"
+        - $ref: '#/components/parameters/QueryId'
+        - $ref: '#/components/parameters/ResultOffset'
+        - $ref: '#/components/parameters/ResultLimit'
+        - $ref: '#/components/parameters/Format'
+        - $ref: '#/components/parameters/Headers'
 
       responses:
         200:
@@ -228,7 +230,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
       requestBody:
         description: counts
         required: true
@@ -247,7 +248,6 @@ paths:
       operationId: files
       tags:
         - query
-
       parameters:
         - $ref: "#/components/parameters/DatasetVersion"
         - in: query
@@ -321,6 +321,21 @@ components:
         type: string
         default: broad-dsde-dev.cda_dev
       description: tablename
+    Format:
+      in: query
+      name: format
+      schema:
+        type: string
+        enum: ["JSON", "TSV"]
+        default: JSON
+      description: Output format
+    Headers:
+      in: query
+      name: includeHeaders
+      schema:
+        type: string
+        default: true
+      description: Include the column headers in TSV returns
 
   schemas:
     ErrorReport:
@@ -382,6 +397,15 @@ components:
           type: string
           nullable: true
           description: a URL to use to fetch the next page of data in the query. can be null if the query is not complete
+
+    Row:
+      type: object
+      properties:
+        cells:
+          type: array
+          items:
+            type: string
+            description: spreadsheet cell data
 
     DatasetDescription:
       type: object

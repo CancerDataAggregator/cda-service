@@ -6,6 +6,7 @@ local-dev/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**
 !**/src/test/**
+*.csv
 
 ### STS ###
 .apt_generated

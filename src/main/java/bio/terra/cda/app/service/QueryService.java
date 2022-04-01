@@ -3,6 +3,7 @@ package bio.terra.cda.app.service;
 import static java.lang.Thread.currentThread;
 
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
+import bio.terra.cda.app.flatten.JsonFlattener;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.SystemStatus;
@@ -130,7 +131,8 @@ public class QueryService {
     }
   }
 
-  public QueryResult getQueryResults(String queryId, int offset, int pageSize) {
+  public QueryResult getQueryResults(
+      String queryId, int offset, int pageSize, String format, String includeHeaders) {
     final Job job = bigQuery.getJob(queryId);
     if (job == null || !job.exists()) {
       throw new RuntimeException("Unknown query " + queryId);
@@ -139,26 +141,30 @@ public class QueryService {
       // If the Query is still running, return an empty result.
       return new QueryResult(Collections.emptyList(), null, getSqlFromJob(job));
     }
-    return getJobResults(job, offset, pageSize);
+    return getJobResults(job, offset, pageSize, format, includeHeaders);
   }
 
   public void setBigQuery(BigQuery bigQuery) {
     this.bigQuery = bigQuery;
   }
 
-  public static class QueryResult {
-    public final List<Object> items;
+  public static class QueryResult<T> {
+    public final List<T> items;
     public final Long totalRowCount;
     public final String querySql;
 
-    QueryResult(List<JsonNode> items, Long totalRowCount, String querySql) {
+    QueryResult(List<T> items, Long totalRowCount, String querySql) {
       this.items = new ArrayList<>(items);
       this.totalRowCount = totalRowCount;
       this.querySql = querySql;
     }
   }
 
-  private QueryResult getJobResults(Job queryJob, int offset, int pageSize) {
+  private QueryResult getJobResults(
+      Job queryJob, int offset, int pageSize, String format, String includeHeaders) {
+    if (!format.equals("JSON")) {
+      pageSize = 10;
+    }
     var options = new ArrayList<BigQuery.QueryResultsOption>();
     if (offset < 0) {
       throw new IllegalArgumentException("Invalid offset: " + offset);
@@ -192,10 +198,33 @@ public class QueryService {
           break;
         }
       }
+      // If we are returning CSV as a spreadsheet, pageSize is constrained to 10 json rows for
+      // now.
+      if (!format.equals("JSON")) {
+        List<Object> spreadsheet = new ArrayList<>();
+        JsonFlattener jflat = new JsonFlattener();
+        int bqResults = 0;
+        for (var jsonRow : jsonData) {
+          if (bqResults > 0) {
+            includeHeaders = "false";
+          }
+          List<String> csvRows =
+              jflat.json2Sheet(jsonRow.toString(), includeHeaders).getJsonAsSpreadsheet();
+          spreadsheet.addAll(csvRows);
+          bqResults++;
+        }
+
+        logQuery(queryJob, jsonData);
+
+        return new QueryResult<Object>(spreadsheet, result.getTotalRows(), getSqlFromJob(queryJob));
+      }
 
       logQuery(queryJob, jsonData);
 
-      return new QueryResult(jsonData, result.getTotalRows(), getSqlFromJob(queryJob));
+//      List<Object> jsonRowData = new ArrayList<>();
+//      jsonRowData.add(jsonData);
+      return new QueryResult<JsonNode>(jsonData, result.getTotalRows(), getSqlFromJob(queryJob));
+
     } catch (InterruptedException e) {
       currentThread().interrupt();
       throw new BadQueryException("Error while getting query results", e);
