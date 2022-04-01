@@ -267,7 +267,7 @@ public class QueryService {
     }
     JobStatusData data = new JobStatusData();
     data.setQueryId(queryId);
-    logger.info("***JobStatus: " + job.getStatus().toString());
+    logger.info("JobStatus: {}", job.getStatus());
     data.setStatus(job.getStatus().toString());
 
     return data;
