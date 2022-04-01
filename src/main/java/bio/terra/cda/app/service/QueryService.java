@@ -148,12 +148,12 @@ public class QueryService {
     this.bigQuery = bigQuery;
   }
 
-  public static class QueryResult {
-    public final List<Object> items;
+  public static class QueryResult<T> {
+    public final List<T> items;
     public final Long totalRowCount;
     public final String querySql;
 
-    QueryResult(List<Object> items, Long totalRowCount, String querySql) {
+    QueryResult(List<T> items, Long totalRowCount, String querySql) {
       this.items = new ArrayList<>(items);
       this.totalRowCount = totalRowCount;
       this.querySql = querySql;
@@ -204,7 +204,7 @@ public class QueryService {
         List<Object> spreadsheet = new ArrayList<>();
         JsonFlattener jflat = new JsonFlattener();
         int bqResults = 0;
-        for (JsonNode jsonRow : jsonData) {
+        for (var jsonRow : jsonData) {
           if (bqResults > 0) {
             includeHeaders = "false";
           }
@@ -216,14 +216,14 @@ public class QueryService {
 
         logQuery(queryJob, jsonData);
 
-        return new QueryResult(spreadsheet, result.getTotalRows(), getSqlFromJob(queryJob));
+        return new QueryResult<Object>(spreadsheet, result.getTotalRows(), getSqlFromJob(queryJob));
       }
 
       logQuery(queryJob, jsonData);
 
-      List<Object> jsonRowData = new ArrayList<>();
-      jsonRowData.add(jsonData);
-      return new QueryResult(jsonRowData, result.getTotalRows(), getSqlFromJob(queryJob));
+//      List<Object> jsonRowData = new ArrayList<>();
+//      jsonRowData.add(jsonData);
+      return new QueryResult<JsonNode>(jsonData, result.getTotalRows(), getSqlFromJob(queryJob));
 
     } catch (InterruptedException e) {
       currentThread().interrupt();
