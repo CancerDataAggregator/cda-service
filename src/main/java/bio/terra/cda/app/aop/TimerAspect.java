@@ -1,6 +1,7 @@
 package bio.terra.cda.app.aop;
 
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
@@ -18,8 +19,9 @@ public class TimerAspect {
     long start = System.currentTimeMillis();
     Object proceed = joinPoint.proceed();
     long executionTime = System.currentTimeMillis() - start;
+    Signature signature = joinPoint.getSignature();
     logger.info(
-        "--Execution Timer: " + joinPoint.getSignature() + " executed in " + executionTime + "ms");
+        "--Execution Timer: " + signature + " executed in " + executionTime + "ms");
     return proceed;
   }
 }
