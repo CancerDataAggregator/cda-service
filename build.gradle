@@ -25,7 +25,7 @@ ext['log4j2.version'] = '2.17.1'
 
 group = 'bio.terra.cda'
 
-version = '2.1.0'
+version = '3.0.2'
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
@@ -152,8 +152,7 @@ jib {
 		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'
 	}
 	container {
-		environment = [ 'spring.profiles.active':'local' ]
-
+		environment = [ 'spring.profiles.active':'dev' ]
 	}
 }
 
@@ -219,6 +218,7 @@ jacoco {
 
 jacocoTestReport {
 	reports {
+        html.enabled = true
 		xml.enabled true
 	}
 }

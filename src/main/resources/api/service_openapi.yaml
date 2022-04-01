@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 2.1.0
+  version: 3.0.0_RC
   title: CDA API
   license:
     name: Apache 2.0
@@ -230,7 +230,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
       requestBody:
         description: counts
         required: true
@@ -249,7 +248,6 @@ paths:
       operationId: files
       tags:
         - query
-
       parameters:
         - $ref: "#/components/parameters/DatasetVersion"
         - in: query
@@ -293,7 +291,7 @@ components:
       name: table name
       schema:
         type: string
-        default: gdc-bq-sample.dev
+        default: broad-dsde-dev.cda_dev
       description: Filter on system for results
     ResultOffset:
       in: query
@@ -321,7 +319,7 @@ components:
       name: table
       schema:
         type: string
-        default: gdc-bq-sample.dev
+        default: broad-dsde-dev.cda_dev
       description: tablename
     Format:
       in: query
@@ -338,7 +336,6 @@ components:
         type: string
         default: true
       description: Include the column headers in TSV returns
-
 
   schemas:
     ErrorReport:
