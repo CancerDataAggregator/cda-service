@@ -8,6 +8,10 @@ import org.springframework.context.ApplicationContext;
 public final class StartupInitializer {
   static final Logger logger = LoggerFactory.getLogger(StartupInitializer.class);
 
+  private StartupInitializer() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static void initialize(ApplicationContext applicationContext) {
     ApplicationConfiguration appConfig =
         (ApplicationConfiguration) applicationContext.getBean("applicationConfiguration");

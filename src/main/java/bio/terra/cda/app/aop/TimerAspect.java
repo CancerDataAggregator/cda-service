@@ -20,8 +20,7 @@ public class TimerAspect {
     Object proceed = joinPoint.proceed();
     long executionTime = System.currentTimeMillis() - start;
     Signature signature = joinPoint.getSignature();
-    logger.info(
-        "--Execution Timer: " + signature + " executed in " + executionTime + "ms");
+    logger.info("--Execution Timer: {} executed in {}ms", signature, executionTime);
     return proceed;
   }
 }
