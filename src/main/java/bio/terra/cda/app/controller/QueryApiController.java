@@ -15,19 +15,20 @@ import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
 import com.google.cloud.bigquery.BigQueryException;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collections;
-import java.util.Set;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Set;
 
 @Controller
 public class QueryApiController implements QueryApi {
@@ -81,7 +82,7 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<JobStatusData> jobStatus(String id) {
     var response = queryService.getQueryStatusFromJob(id);
-    logger.info("****JobStatusController:" + response);
+    logger.info("JobStatusController: {}", response);
     return ResponseEntity.ok(response);
   }
 
@@ -192,7 +193,7 @@ public class QueryApiController implements QueryApi {
             + whereClause
             + " ORDER BY "
             + nt.getColumn();
-    logger.debug("uniqueValues: " + querySql);
+    logger.debug("uniqueValues: {}", querySql);
 
     return sendQuery(querySql, false);
   }
@@ -212,7 +213,7 @@ public class QueryApiController implements QueryApi {
             + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
             + version
             + "'";
-    logger.debug("columns: " + querySql);
+    logger.debug("columns: {}", querySql);
 
     return sendQuery(querySql, false);
   }
