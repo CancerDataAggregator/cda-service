@@ -220,7 +220,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
+        - $ref: "#/components/parameters/FileDatasetVersion"
         - in: query
           description: If true, don't run the query, only generate and return it.
           name: dryRun
@@ -249,7 +249,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
+        - $ref: "#/components/parameters/FileDatasetVersion"
         - in: query
           description: If true, don't run the query, only generate and return it.
           name: dryRun
@@ -279,6 +279,14 @@ components:
       schema:
         type: string
         default: all_v3_0_subjects_meta
+      description: Dataset version
+    FileDatasetVersion:
+      in: path
+      name: version
+      required: true
+      schema:
+        type: string
+        default: all_v3_0_Files
       description: Dataset version
     SystemValue:
       in: query

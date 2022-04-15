@@ -74,7 +74,7 @@ public class CountsSqlGenerator extends SqlGenerator {
           // Entity count
           queries.add(getSubQuery(fromClause, whereClause, alias, field, field));
           // File count
-          queries.add(getSubQuery(fromClause, whereClause, filesAlias, field, "identifier"));
+          queries.add(getFileSubQuery(fromClause, whereClause, filesAlias, field));
         });
 
     return String.format("SELECT\n" + " identifiers.system,\n" + "%s", String.join(",\n ", selects))
@@ -86,6 +86,42 @@ public class CountsSqlGenerator extends SqlGenerator {
                 + ") as identifiers \n"
                 + "%3$s",
             tableOrSubClause, table, String.join(" \n ", queries));
+  }
+
+  private String getFileSubQuery(
+      Supplier<Stream<String>> currentUnnests,
+      String whereClause,
+      String alias,
+      String countByField) {
+    String identifierAlias = "_identifier";
+    var countBySplit = countByField.split("\\.");
+
+    var from =
+        Stream.concat(
+                currentUnnests
+                    .get()
+                    .filter(unnest -> !unnest.contains(String.format("AS %s", identifierAlias))),
+                SqlUtil.getUnnestsFromParts(table, countBySplit, true))
+            .distinct()
+            .collect(Collectors.joining(",\n"));
+
+    var newFrom =
+        String.format(
+            "%1$s\n" + " INNER JOIN UNNEST(%2$s.identifier) AS %3$s on %3$s.system = %4$s.system\n",
+            from, table, identifierAlias, SqlUtil.getAlias(countBySplit.length - 1, countBySplit));
+
+    return String.format(
+        "  LEFT OUTER JOIN (\n"
+            + "    SELECT\n"
+            + "      %1$s.system,\n"
+            + "      COUNT(DISTINCT %1$s.value) AS count\n"
+            + "    FROM\n"
+            + "      %2$s\n"
+            + "    %3$s"
+            + "    GROUP BY\n"
+            + "      %1$s.system\n"
+            + "  ) AS %4$s ON %4$s.system = identifiers.system\n",
+        identifierAlias, newFrom, whereClause, alias);
   }
 
   private String getSubQuery(
