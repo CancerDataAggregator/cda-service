@@ -47,17 +47,14 @@ public class SqlGenerator {
     var selects = ctx.getSelect();
     var orders = ctx.getOrderBy();
     return String.format(
-            "SELECT %s FROM %s WHERE %s%s",
-            selects.size() > 0
-              ? String.join(", ", selects)
-              : String.format("%s.*", table),
-            Stream.concat(
+        "SELECT %s FROM %s WHERE %s%s",
+        selects.size() > 0 ? String.join(", ", selects) : String.format("%s.*", table),
+        Stream.concat(
                 Stream.of(ctx.getTableOrSubClause() + " AS " + ctx.getTable()),
-                ctx.getUnnests().stream().distinct()).collect(Collectors.joining(", ")),
-            queryString,
-            orders.size() > 0
-              ? String.format(" ORDER BY %s", String.join(", ", orders))
-              : "");
+                ctx.getUnnests().stream().distinct())
+            .collect(Collectors.joining(", ")),
+        queryString,
+        orders.size() > 0 ? String.format(" ORDER BY %s", String.join(", ", orders)) : "");
   }
 
   protected Stream<String> queryToSelect(Query query) {
