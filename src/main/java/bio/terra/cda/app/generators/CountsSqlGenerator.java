@@ -1,11 +1,13 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,8 +19,7 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query)
-      throws UncheckedExecutionException, IllegalArgumentException {
+  protected String sql(String tableOrSubClause, Query query) {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
       // SQL version of
@@ -26,70 +27,64 @@ public class CountsSqlGenerator extends SqlGenerator {
       // level query.
       return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
     }
-    Supplier<Stream<String>> fromClause =
-        () -> {
-          try {
-            return Stream.concat(
-                Stream.of(tableOrSubClause + " AS " + table),
-                ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap).distinct());
-          } catch (Exception e) {
-            throw new UncheckedExecutionException(e);
-          }
-        };
-    String condition = ((BasicOperator) query).queryString(table, tableSchemaMap);
 
-    var whereClause =
-        condition != null && condition.length() > 0
-            ? String.format("WHERE\n" + "    %s\n", condition)
-            : "";
+        var ctx = new QueryContext(tableSchemaMap, tableOrSubClause, table);
+        String condition = ((BasicOperator) query).buildQuery(ctx);
+        List<String> fromClause = new java.util.ArrayList<>(List.of(String.format("%s AS %s", ctx.getTableOrSubClause(), ctx.getTable())));
+        fromClause.addAll(ctx.getUnnests().stream().distinct().collect(Collectors.toList()));
 
-    var countArrays =
-        tableSchemaMap.keySet().stream()
-            .filter(
+        var whereClause =
+                condition != null && condition.length() > 0
+                        ? String.format("WHERE\n" + "    %s\n", condition)
+                        : "";
+
+        var countArrays =
+                tableSchemaMap.keySet().stream()
+                        .filter(
+                                field -> {
+                                    var splitField = field.split("\\.");
+                                    if (splitField.length < 2) {
+                                        return false;
+                                    }
+
+                                    return splitField[1].equals("identifier");
+                                })
+                        .map(
+                                field -> {
+                                    var splitField = field.split("\\.");
+                                    return String.join(".", splitField[0], splitField[1]);
+                                })
+                        .distinct();
+
+        var selects = new LinkedList<String>();
+        var queries = new LinkedList<String>();
+
+        countArrays.forEach(
                 field -> {
-                  var splitField = field.split("\\.");
-                  if (splitField.length < 2) {
-                    return false;
-                  }
+                    var splitField = field.split("\\.");
+                    var alias = String.format("%s_count", splitField[0].toLowerCase());
+                    var filesAlias = String.format("%s_files_count", splitField[0].toLowerCase());
+                    selects.add(getSelectField(alias));
+                    selects.add(getSelectField(filesAlias));
+                    // Entity count
+                    queries.add(getSubQuery(fromClause, whereClause, alias, field, field));
+                    // File count
+                    queries.add(getFileSubQuery(fromClause, whereClause, filesAlias, field));
+                });
 
-                  return splitField[1].equals("identifier");
-                })
-            .map(
-                field -> {
-                  var splitField = field.split("\\.");
-                  return String.join(".", splitField[0], splitField[1]);
-                })
-            .distinct();
-
-    var selects = new LinkedList<String>();
-    var queries = new LinkedList<String>();
-
-    countArrays.forEach(
-        field -> {
-          var splitField = field.split("\\.");
-          var alias = String.format("%s_count", splitField[0].toLowerCase());
-          var filesAlias = String.format("%s_files_count", splitField[0].toLowerCase());
-          selects.add(getSelectField(alias));
-          selects.add(getSelectField(filesAlias));
-          // Entity count
-          queries.add(getSubQuery(fromClause, whereClause, alias, field, field));
-          // File count
-          queries.add(getFileSubQuery(fromClause, whereClause, filesAlias, field));
-        });
-
-    return String.format("SELECT\n" + " identifiers.system,\n" + "%s", String.join(",\n ", selects))
-        + String.format(
-            " FROM (\n"
-                + "    SELECT DISTINCT _Identifier.system\n"
-                + "    FROM %1$s AS %2$s,\n"
-                + "    UNNEST(identifier) AS _Identifier\n"
-                + ") as identifiers \n"
-                + "%3$s",
-            tableOrSubClause, table, String.join(" \n ", queries));
+        return String.format("SELECT\n" + " identifiers.system,\n" + "%s", String.join(",\n ", selects))
+                + String.format(
+                " FROM (\n"
+                        + "    SELECT DISTINCT _Identifier.system\n"
+                        + "    FROM %1$s AS %2$s,\n"
+                        + "    UNNEST(identifier) AS _Identifier\n"
+                        + ") as identifiers \n"
+                        + "%3$s",
+                tableOrSubClause, table, String.join(" \n ", queries));
   }
 
   private String getFileSubQuery(
-      Supplier<Stream<String>> currentUnnests,
+      List<String> currentUnnests,
       String whereClause,
       String alias,
       String countByField) {
@@ -99,7 +94,7 @@ public class CountsSqlGenerator extends SqlGenerator {
     var from =
         Stream.concat(
                 currentUnnests
-                    .get()
+                    .stream()
                     .filter(unnest -> !unnest.contains(String.format("AS %s", identifierAlias))),
                 SqlUtil.getUnnestsFromParts(table, countBySplit, true))
             .distinct()
@@ -125,14 +120,14 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   private String getSubQuery(
-      Supplier<Stream<String>> currentUnnests,
+      List<String> currentUnnests,
       String whereClause,
       String alias,
       String groupByField,
       String countByField) {
     var from =
         Stream.concat(
-                currentUnnests.get(),
+                currentUnnests.stream(),
                 Stream.concat(
                     SqlUtil.getUnnestsFromParts(table, groupByField.split("\\."), true),
                     SqlUtil.getUnnestsFromParts(table, countByField.split("\\."), true)))

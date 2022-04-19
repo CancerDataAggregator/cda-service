@@ -1,6 +1,7 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
@@ -27,11 +28,11 @@ public class SqlGenerator {
     this.tableSchemaMap = TableSchema.buildSchemaMap(this.tableSchema);
   }
 
-  public String generate() throws IllegalArgumentException {
+  public String generate() {
     return sql(qualifiedTable, rootQuery);
   }
 
-  protected String sql(String tableOrSubClause, Query query) throws IllegalArgumentException {
+  protected String sql(String tableOrSubClause, Query query) {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
       // SQL version of
@@ -40,23 +41,23 @@ public class SqlGenerator {
       return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
     }
 
-    var fromClause =
-        Stream.concat(
-                Stream.of(tableOrSubClause + " AS " + table),
-                ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap).distinct())
-            .collect(Collectors.joining(", "));
+    var ctx = new QueryContext(tableSchemaMap, tableOrSubClause, table);
+    var queryString = ((BasicOperator) query).buildQuery(ctx);
 
-    String condition = ((BasicOperator) query).queryString(table, tableSchemaMap);
-
-    return String.format("%s FROM %s WHERE %s", getSelect(query, table), fromClause, condition);
-  }
-
-  protected String getSelect(Query query, String table) {
-    if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
-      return String.format("SELECT %s", queryToSelect(query).collect(Collectors.joining(",")));
-    } else {
-      return String.format("SELECT %s.*", table);
-    }
+    var selects = ctx.getSelect();
+    var orders = ctx.getOrderBy();
+    return String.format(
+            "SELECT %s FROM %s WHERE %s%s",
+            selects.size() > 0
+              ? String.join(", ", selects)
+              : String.format("%s.*", table),
+            Stream.concat(
+                Stream.of(ctx.getTableOrSubClause() + " AS " + ctx.getTable()),
+                ctx.getUnnests().stream().distinct()).collect(Collectors.joining(", ")),
+            queryString,
+            orders.size() > 0
+              ? String.format(" ORDER BY %s", String.join(", ", orders))
+              : "");
   }
 
   protected Stream<String> queryToSelect(Query query) {

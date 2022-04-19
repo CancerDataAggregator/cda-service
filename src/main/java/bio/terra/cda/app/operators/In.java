@@ -1,5 +1,6 @@
 package bio.terra.cda.app.operators;
 
+import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import java.util.Arrays;
@@ -7,11 +8,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @QueryOperator(nodeType = Query.NodeTypeEnum.IN)
-public class In extends SingleSidedOperator {
+public class In extends BasicOperator {
   @Override
-  public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
+  public String buildQuery(QueryContext ctx)
       throws IllegalArgumentException {
-    String right = ((BasicOperator) getR()).queryString(table, tableSchemaMap);
+    String right = ((BasicOperator) getR()).buildQuery(ctx);
     if (right.contains("[") || right.contains("(")) {
       right =
           Arrays.stream(right.substring(1, right.length() - 1).replace("\"", "'").split(","))
@@ -28,7 +29,7 @@ public class In extends SingleSidedOperator {
       throw new IllegalArgumentException("To use IN you need to add [ or (");
     }
 
-    String left = ((BasicOperator) getL()).queryString(table, tableSchemaMap);
+    String left = ((BasicOperator) getL()).buildQuery(ctx);
     return String.format("(%s IN (%s))", left, right);
   }
 }

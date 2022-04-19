@@ -486,7 +486,9 @@ components:
               IN,
               SELECTVALUES,
               SELECT,
-              LIKE
+              LIKE,
+              ORDERBY,
+              ORDER
             ]
           description: >
             Query contents and behavior depends on `node_type`:
