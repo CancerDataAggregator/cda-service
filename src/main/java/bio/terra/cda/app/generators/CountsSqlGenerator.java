@@ -5,6 +5,7 @@ import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -26,38 +27,30 @@ public class CountsSqlGenerator extends SqlGenerator {
       // level query.
       return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
     }
-    Supplier<Stream<String>> fromClause =
-        () -> {
-          try {
-            return Stream.concat(
-                Stream.of(tableOrSubClause + " AS " + table),
-                ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap).distinct());
-          } catch (Exception e) {
-            throw new UncheckedExecutionException(e);
-          }
-        };
-    String condition = ((BasicOperator) query).queryString(table, tableSchemaMap);
 
-    var whereClause =
-        condition != null && condition.length() > 0
-            ? String.format("WHERE\n" + "    %s\n", condition)
-            : "";
+    String withAlias = "files_filtered";
+
+    String tempTableSql = super.sql(tableOrSubClause, query);
+    var withStatement = String.format("with %1$s as (\n"
+        + " %2$s\n"
+        + ")\n ", withAlias, tempTableSql);
 
     var countArrays =
         tableSchemaMap.keySet().stream()
-            .filter(
-                field -> {
-                  var splitField = field.split("\\.");
-                  if (splitField.length < 2) {
-                    return false;
-                  }
-
-                  return splitField[1].equals("identifier");
-                })
+            .filter(field -> field.equals("identifier") || field.contains(".identifier."))
             .map(
                 field -> {
                   var splitField = field.split("\\.");
-                  return String.join(".", splitField[0], splitField[1]);
+                  var indexOfIdentifier = 0;
+                  for (String sf: splitField) {
+                    indexOfIdentifier++;
+
+                    if (sf.equals("identifier")) {
+                      break;
+                    }
+                  }
+
+                  return Arrays.stream(splitField, 0, indexOfIdentifier).collect(Collectors.joining("."));
                 })
             .distinct();
 
@@ -67,17 +60,18 @@ public class CountsSqlGenerator extends SqlGenerator {
     countArrays.forEach(
         field -> {
           var splitField = field.split("\\.");
-          var alias = String.format("%s_count", splitField[0].toLowerCase());
-          var filesAlias = String.format("%s_files_count", splitField[0].toLowerCase());
+          var alias = splitField[0].equals("identifier")
+            ? table.contains("Files")
+              ? "file_count"
+              : "subject_count"
+            : String.format("%s_count", splitField[splitField.length - 2].toLowerCase());
+
           selects.add(getSelectField(alias));
-          selects.add(getSelectField(filesAlias));
           // Entity count
-          queries.add(getSubQuery(fromClause, whereClause, alias, field, field));
-          // File count
-          queries.add(getFileSubQuery(fromClause, whereClause, filesAlias, field));
+          queries.add(getSubQuery(withAlias, alias, field, field));
         });
 
-    return String.format("SELECT\n" + " identifiers.system,\n" + "%s", String.join(",\n ", selects))
+    return String.format("%sSELECT\n" + " identifiers.system,\n" + "%s", withStatement, String.join(",\n ", selects))
         + String.format(
             " FROM (\n"
                 + "    SELECT DISTINCT _Identifier.system\n"
@@ -88,54 +82,17 @@ public class CountsSqlGenerator extends SqlGenerator {
             tableOrSubClause, table, String.join(" \n ", queries));
   }
 
-  private String getFileSubQuery(
-      Supplier<Stream<String>> currentUnnests,
-      String whereClause,
-      String alias,
-      String countByField) {
-    String identifierAlias = "_identifier";
-    var countBySplit = countByField.split("\\.");
-
-    var from =
-        Stream.concat(
-                currentUnnests
-                    .get()
-                    .filter(unnest -> !unnest.contains(String.format("AS %s", identifierAlias))),
-                SqlUtil.getUnnestsFromParts(table, countBySplit, true))
-            .distinct()
-            .collect(Collectors.joining(",\n"));
-
-    var newFrom =
-        String.format(
-            "%1$s\n" + " INNER JOIN UNNEST(%2$s.identifier) AS %3$s on %3$s.system = %4$s.system\n",
-            from, table, identifierAlias, SqlUtil.getAlias(countBySplit.length - 1, countBySplit));
-
-    return String.format(
-        "  LEFT OUTER JOIN (\n"
-            + "    SELECT\n"
-            + "      %1$s.system,\n"
-            + "      COUNT(DISTINCT %1$s.value) AS count\n"
-            + "    FROM\n"
-            + "      %2$s\n"
-            + "    %3$s"
-            + "    GROUP BY\n"
-            + "      %1$s.system\n"
-            + "  ) AS %4$s ON %4$s.system = identifiers.system\n",
-        identifierAlias, newFrom, whereClause, alias);
-  }
-
   private String getSubQuery(
-      Supplier<Stream<String>> currentUnnests,
-      String whereClause,
+      String withAlias,
       String alias,
       String groupByField,
       String countByField) {
     var from =
         Stream.concat(
-                currentUnnests.get(),
+                Stream.of(withAlias),
                 Stream.concat(
-                    SqlUtil.getUnnestsFromParts(table, groupByField.split("\\."), true),
-                    SqlUtil.getUnnestsFromParts(table, countByField.split("\\."), true)))
+                    SqlUtil.getUnnestsFromParts(withAlias, groupByField.split("\\."), true),
+                    SqlUtil.getUnnestsFromParts(withAlias, countByField.split("\\."), true)))
             .distinct()
             .collect(Collectors.joining(",\n"));
 
@@ -149,14 +106,12 @@ public class CountsSqlGenerator extends SqlGenerator {
             + "      COUNT(DISTINCT %2$s.value) AS count\n"
             + "    FROM\n"
             + "      %3$s\n"
-            + "    %4$s"
             + "    GROUP BY\n"
             + "      %1$s.system\n"
-            + "  ) AS %5$s ON %5$s.system = identifiers.system\n",
+            + "  ) AS %4$s ON %4$s.system = identifiers.system\n",
         SqlUtil.getAlias(groupBySplit.length - 1, groupBySplit),
         SqlUtil.getAlias(countBySplit.length - 1, countBySplit),
         from,
-        whereClause,
         alias);
   }
 
