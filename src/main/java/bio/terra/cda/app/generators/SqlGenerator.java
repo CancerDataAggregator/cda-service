@@ -6,8 +6,12 @@ import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,33 +47,73 @@ public class SqlGenerator {
     var fromClause =
         Stream.concat(
                 Stream.of(tableOrSubClause + " AS " + table),
-                ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap).distinct())
-            .collect(Collectors.joining(", "));
+                        query.getNodeType() == Query.NodeTypeEnum.SELECT
+                                ? ((BasicOperator)query).getUnnestColumns(table, tableSchemaMap).distinct()
+                                : getAllUnnestColumns().distinct())
+            .collect(Collectors.joining(" "));
 
     String condition = ((BasicOperator) query).queryString(table, tableSchemaMap);
 
-    return String.format("%s FROM %s WHERE %s", getSelect(query, table), fromClause, condition);
+    return String.format("%s FROM %s WHERE %s", getSelect(query), fromClause, condition);
   }
 
-  protected String getSelect(Query query, String table) {
+  protected Stream<String> getAllUnnestColumns() {
+    AtomicReference<Stream<String>> unnests = new AtomicReference<>(Stream.of());
+    tableSchemaMap.keySet().forEach(key -> {
+      var definition = tableSchemaMap.get(key);
+      if (definition.getType().equals("RECORD") || definition.getMode().equals("REPEATED")) {
+        unnests.set(Stream.concat(
+                unnests.get(),
+                SqlUtil.getUnnestsFromParts(table, key.split("\\."), true)
+        ));
+      }
+    });
+
+    return unnests.get();
+  }
+
+  protected String getSelect(Query query) {
+    List<String> selects = null;
     if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
-      return String.format("SELECT %s", queryToSelect(query).collect(Collectors.joining(",")));
+      selects = queryToSelect(query).collect(Collectors.toList());
     } else {
-      return String.format("SELECT %s.*", table);
+      selects = new LinkedList<String>();
+      getSelectsFromSchema("", tableSchema, selects);
     }
+
+    return String.format("SELECT %s", String.join(", ", selects));
+  }
+
+  protected void getSelectsFromSchema(String prefix,
+                                      List<TableSchema.SchemaDefinition> definitions,
+                                      List<String> selects) {
+    definitions.forEach(
+            definition -> {
+              var prefixName =
+                      prefix.isEmpty() ? definition.getName() : String.format("%s.%s", prefix, definition.getName());
+
+              if (definition.getType().equals("RECORD")) {
+                getSelectsFromSchema(prefixName, List.of(definition.getFields()), selects);
+              } else {
+                selects.add(fieldToSelect(prefixName, definition.getMode().equals("REPEATED")));
+              }
+            });
   }
 
   protected Stream<String> queryToSelect(Query query) {
     return Arrays.stream(query.getL().getValue().split(","))
-        .map(
-            select -> {
-              var parts =
-                  Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
-              return String.format(
-                  "%s.%s AS %s",
-                  parts.length == 1 ? table : SqlUtil.getAlias(parts.length - 2, parts),
-                  parts[parts.length - 1],
-                  String.join("_", parts));
-            });
+        .map(field -> fieldToSelect(field, false));
+  }
+
+  protected String fieldToSelect(String select, Boolean repeated) {
+    var parts =
+            Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
+    return String.format(
+            "%s%s AS %s",
+            repeated ? "" : parts.length == 1
+              ? String.format("%s.", table)
+              : String.format("%s.", SqlUtil.getAlias(parts.length - 2, parts)),
+            repeated ? SqlUtil.getAlias(parts.length - 1, parts) : parts[parts.length - 1],
+            String.join("_", parts));
   }
 }

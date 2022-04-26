@@ -15,9 +15,9 @@ public class SqlUtil {
             i ->
                 i == 0
                     ? String.format(
-                        "UNNEST(%1$s.%2$s) AS %3$s", table, parts[i], getAlias(i, parts))
+                        "LEFT JOIN UNNEST(%1$s.%2$s) AS %3$s", table, parts[i], getAlias(i, parts))
                     : String.format(
-                        "UNNEST(%1$s.%2$s) AS %3$s",
+                        "LEFT JOIN UNNEST(%1$s.%2$s) AS %3$s",
                         getAlias(i - 1, parts), parts[i], getAlias(i, parts)));
   }
 
