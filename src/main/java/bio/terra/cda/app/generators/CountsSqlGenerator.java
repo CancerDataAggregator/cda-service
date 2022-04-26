@@ -102,16 +102,18 @@ public class CountsSqlGenerator extends SqlGenerator {
     return String.format(
         "  LEFT OUTER JOIN (\n"
             + "    SELECT\n"
-            + "      %1$s.system,\n"
-            + "      COUNT(DISTINCT %2$s.value) AS count\n"
+            + "      %1$s_system as system,\n"
+            + "      COUNT(DISTINCT %2$s_value) AS count\n"
             + "    FROM\n"
             + "      %3$s\n"
             + "    GROUP BY\n"
-            + "      %1$s.system\n"
+            + "      %1$s_system\n"
             + "  ) AS %4$s ON %4$s.system = identifiers.system\n",
-        SqlUtil.getAlias(groupBySplit.length - 1, groupBySplit),
-        SqlUtil.getAlias(countBySplit.length - 1, countBySplit),
-        from,
+        String.join("_", groupBySplit),
+        //SqlUtil.getAlias(groupBySplit.length - 1, groupBySplit),
+        String.join("_", countBySplit),
+        //SqlUtil.getAlias(countBySplit.length - 1, countBySplit),
+        withAlias,
         alias);
   }
 
