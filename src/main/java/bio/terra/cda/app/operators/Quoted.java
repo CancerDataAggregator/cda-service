@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 public class Quoted extends BasicOperator {
   @Override
   public Stream<String> getUnnestColumns(
-      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap, Boolean includeSelect) {
     return Stream.empty();
   }
 

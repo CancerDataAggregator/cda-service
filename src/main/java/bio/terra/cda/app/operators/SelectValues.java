@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 public class SelectValues extends BasicOperator {
   @Override
   public Stream<String> getUnnestColumns(
-      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
+      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap, Boolean includeSelect)
       throws IllegalArgumentException {
     return Arrays.stream(getValue().split(","))
         .flatMap(select -> SqlUtil.getUnnestsFromParts(table, select.trim().split("\\."), false));

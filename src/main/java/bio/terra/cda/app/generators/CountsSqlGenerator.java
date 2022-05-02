@@ -31,7 +31,7 @@ public class CountsSqlGenerator extends SqlGenerator {
           try {
             return Stream.concat(
                 Stream.of(tableOrSubClause + " AS " + table),
-                ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap).distinct());
+                ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap, true).distinct());
           } catch (Exception e) {
             throw new UncheckedExecutionException(e);
           }

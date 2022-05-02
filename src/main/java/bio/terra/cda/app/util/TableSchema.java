@@ -13,9 +13,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.google.cloud.Tuple;
 import org.springframework.core.io.ClassPathResource;
 
 public class TableSchema {
@@ -86,6 +89,33 @@ public class TableSchema {
     definitions.forEach(def -> hasColumn(def, columnName).ifPresent(newSchema::add));
 
     return newSchema;
+  }
+  
+  public static Tuple<String, SchemaDefinition> getDefinitionByName(
+          List<SchemaDefinition> definitions, String name) {
+    return TableSchema.getDefinitionTupleByName(definitions, name, "");
+  }
+
+  private static Tuple<String, SchemaDefinition> getDefinitionTupleByName(
+          List<SchemaDefinition> definitions, String name, String prefix) {
+    for (var definition: definitions) {
+      String newPrefix = prefix.equals("") ? prefix : String.format("%s.", prefix);
+      if (definition.getName().equals(name)) {
+        return Tuple.of(String.format("%s%s",
+                newPrefix,
+                definition.getName()), definition);
+      }
+
+      if (definition.getType().equals("RECORD") && definition.getMode().equals("REPEATED")) {
+        var result = TableSchema.getDefinitionTupleByName(Arrays.asList(definition.getFields()), name,
+                String.format("%s%s", newPrefix, definition.getName()));
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+
+    return null;
   }
 
   public static List<String> supportedSchemas() throws IOException {

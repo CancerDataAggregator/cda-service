@@ -7,11 +7,11 @@ import java.util.stream.Stream;
 
 public class BasicOperator extends Query {
   public Stream<String> getUnnestColumns(
-      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
+      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap, Boolean includeSelect)
       throws IllegalArgumentException {
     return Stream.concat(
-        ((BasicOperator) getL()).getUnnestColumns(table, tableSchemaMap),
-        ((BasicOperator) getR()).getUnnestColumns(table, tableSchemaMap));
+        ((BasicOperator) getL()).getUnnestColumns(table, tableSchemaMap, includeSelect),
+        ((BasicOperator) getR()).getUnnestColumns(table, tableSchemaMap, includeSelect));
   }
 
   public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)

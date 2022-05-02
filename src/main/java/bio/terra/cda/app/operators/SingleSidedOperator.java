@@ -7,8 +7,8 @@ import java.util.stream.Stream;
 public class SingleSidedOperator extends BasicOperator {
   @Override
   public Stream<String> getUnnestColumns(
-      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
+      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap, Boolean includeSelect)
       throws IllegalArgumentException {
-    return ((BasicOperator) getL()).getUnnestColumns(table, tableSchemaMap);
+    return ((BasicOperator) getL()).getUnnestColumns(table, tableSchemaMap, includeSelect);
   }
 }

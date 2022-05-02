@@ -3,8 +3,13 @@ package bio.terra.cda.app.controller;
 import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
+import bio.terra.cda.app.generators.DiagnosisSqlGenerator;
 import bio.terra.cda.app.generators.FileSqlGenerator;
+import bio.terra.cda.app.generators.ResearchSubjectSqlGenerator;
+import bio.terra.cda.app.generators.SpecimenSqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
+import bio.terra.cda.app.generators.SubjectSqlGenerator;
+import bio.terra.cda.app.generators.TreatmentSqlGenerator;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.app.util.NestedColumn;
@@ -147,6 +152,76 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new SqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> subjectQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new SubjectSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new ResearchSubjectSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new SpecimenSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> diagnosisQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> treatmentsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new TreatmentSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
