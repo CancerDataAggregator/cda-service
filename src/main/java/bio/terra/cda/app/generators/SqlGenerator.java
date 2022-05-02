@@ -21,6 +21,7 @@ public class SqlGenerator {
   final List<TableSchema.SchemaDefinition> tableSchema;
   final Tuple<String, TableSchema.SchemaDefinition> entitySchema;
   final List<String> filteredFields;
+  final Boolean modularEntity;
 
   public SqlGenerator(String qualifiedTable, Query rootQuery, String version) throws IOException {
     this.qualifiedTable = qualifiedTable;
@@ -31,6 +32,7 @@ public class SqlGenerator {
     this.tableSchemaMap = TableSchema.buildSchemaMap(this.tableSchema);
 
     QueryGenerator queryGenerator = this.getClass().getAnnotation(QueryGenerator.class);
+    this.modularEntity = queryGenerator != null;
     this.entitySchema = queryGenerator != null
             ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
             : null;
@@ -41,24 +43,23 @@ public class SqlGenerator {
   }
 
   public String generate() throws IllegalArgumentException {
-    return sql(qualifiedTable, rootQuery);
+    return sql(qualifiedTable, rootQuery, false);
   }
 
-  protected String sql(String tableOrSubClause, Query query) throws IllegalArgumentException {
-    var resultsQuery = resultsQuery(query, tableOrSubClause);
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery) throws IllegalArgumentException {
+    var resultsQuery = resultsQuery(query, tableOrSubClause, subQuery);
     var resultsAlias = "results";
-    var selects = getSelectsFromEntity(resultsAlias);
-    return String.format("SELECT %s FROM (%s) as %s WHERE rn = 1",
-            String.join(", ", selects), resultsQuery, resultsAlias);
+    return String.format("SELECT %1$s.* EXCEPT(rn) FROM (%2$s) as %1$s WHERE rn = 1",
+            resultsAlias, resultsQuery);
   }
 
-  protected String resultsQuery(Query query, String tableOrSubClause) {
+  protected String resultsQuery(Query query, String tableOrSubClause, Boolean subQuery) {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
       // SQL version of
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
-      return resultsQuery(query.getL(), String.format("(%s)", sql(tableOrSubClause, query.getR())));
+      return resultsQuery(query.getL(), String.format("(%s)", sql(tableOrSubClause, query.getR(), true)), subQuery);
     }
 
     String[] parts = entitySchema != null
@@ -75,47 +76,86 @@ public class SqlGenerator {
     var fromClause =
             Stream.concat(
                     Stream.concat(Stream.of(baseFromClause(tableOrSubClause)),
-                                  ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap, false)),
+                                  ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap, true)),
                     entityUnnests)
                     .distinct()
                     .collect(Collectors.joining(" "));
 
     String condition = ((BasicOperator) query).queryString(table, tableSchemaMap);
 
-    return String.format("SELECT ROW_NUMBER() OVER (PARTITION BY %1$s.id) as rn, %1$s.* FROM %2$s WHERE %3$s", prefix, fromClause, condition);
+    return String.format("SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
+            getPartitionByFields(query, prefix),
+            subQuery
+                    ? String.format("%s.*", table)
+                    : getSelect(query, table, !this.modularEntity),
+            fromClause, condition);
   }
 
   protected String baseFromClause(String tableOrSubClause) {
     return tableOrSubClause + " AS " + table;
   }
 
-  protected String getSelect(Query query, String table) {
+  protected String getPartitionByFields(Query query, String alias) {
     if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
-      return String.format("SELECT %s", queryToSelect(query).collect(Collectors.joining(",")));
+      return Stream.concat(Stream.of(String.format("%s.id", alias)),
+              Arrays.stream(query.getL().getValue().split(",")).map(String::trim)
+              .filter(select -> this.tableSchemaMap.get(select).getMode().equals("REPEATED")
+                || select.contains("."))
+              .map(
+                  select -> {
+                    var parts =
+                            Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
+
+                    if (this.tableSchemaMap.get(select).getMode().equals("REPEATED")) {
+                      return SqlUtil.getAlias(parts.length -1, parts);
+                    } else if (Arrays.asList(parts).contains("identifier")) {
+                      return String.format("%s.system", SqlUtil.getAlias(parts.length - 2, parts));
+                    } else {
+                      return String.format("%s.id", SqlUtil.getAlias(parts.length - 2, parts));
+                    }
+                  }
+              )).distinct().collect(Collectors.joining(", "));
     } else {
-      return String.format("SELECT %s.*", table);
+      return String.format("%s.id", alias);
+    }
+  }
+
+  protected String getSelect(Query query, String table, Boolean skipExcludes) {
+    if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
+      return queryToSelect(query).collect(Collectors.joining(","));
+    } else {
+      return String.join(", ", getSelectsFromEntity(table, skipExcludes));
     }
   }
 
   protected Stream<String> queryToSelect(Query query) {
-    return Arrays.stream(query.getL().getValue().split(","))
+    return Arrays.stream(query.getL().getValue().split(",")).map(String::trim)
         .map(
             select -> {
+              var mode = tableSchemaMap.get(select).getMode();
               var parts =
                   Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
               return String.format(
-                  "%s.%s AS %s",
-                  parts.length == 1 ? table : SqlUtil.getAlias(parts.length - 2, parts),
-                  parts[parts.length - 1],
-                  String.join("_", parts));
+                  "%1$s%2$s AS %3$s",
+                  mode.equals("REPEATED")
+                      ? ""
+                      : parts.length == 1
+                          ? String.format("%s.", table)
+                          : SqlUtil.getAlias(parts.length - 2, parts),
+                  mode.equals("REPEATED")
+                      ? SqlUtil.getAlias(parts.length -1, parts)
+                      : parts[parts.length - 1],
+                  this.modularEntity
+                      ? parts[parts.length - 1] 
+                      : String.join("_", parts));
             });
   }
 
-  protected List<String> getSelectsFromEntity(String prefix) {
+  protected List<String> getSelectsFromEntity(String prefix, Boolean skipExcludes) {
     return (entitySchema != null
             ? Arrays.asList(entitySchema.y().getFields())
             : tableSchema).stream()
-            .filter(definition -> !filteredFields.contains(definition.getName()))
+            .filter(definition -> skipExcludes || !filteredFields.contains(definition.getName()))
             .map(definition -> String.format("%1$s.%2$s AS %2$s",
                     prefix, definition.getName()))
             .collect(Collectors.toList());

@@ -17,14 +17,14 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query)
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
       // SQL version of
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
-      return sql(String.format("(%s)", sql(tableOrSubClause, query.getR())), query.getL());
+      return sql(String.format("(%s)", sql(tableOrSubClause, query.getR(), true)), query.getL(), false);
     }
     Supplier<Stream<String>> fromClause =
         () -> {

@@ -13,8 +13,9 @@ public class SelectValues extends BasicOperator {
   public Stream<String> getUnnestColumns(
       String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap, Boolean includeSelect)
       throws IllegalArgumentException {
-    return Arrays.stream(getValue().split(","))
-        .flatMap(select -> SqlUtil.getUnnestsFromParts(table, select.trim().split("\\."), false));
+    return Arrays.stream(getValue().split(",")).map(String::trim)
+        .flatMap(select -> SqlUtil.getUnnestsFromParts(table, select.trim().split("\\."),
+                tableSchemaMap.get(select).getMode().equals("REPEATED")));
   }
 
   @Override
