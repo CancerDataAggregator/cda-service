@@ -104,7 +104,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                     .filter(unnest -> !unnest.contains(String.format("AS %s", identifierAlias))),
                 SqlUtil.getUnnestsFromParts(table, countBySplit, true))
             .distinct()
-            .collect(Collectors.joining(",\n"));
+            .collect(Collectors.joining("\n"));
 
     var newFrom =
         String.format(
@@ -138,7 +138,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                     SqlUtil.getUnnestsFromParts(table, groupByField.split("\\."), true),
                     SqlUtil.getUnnestsFromParts(table, countByField.split("\\."), true)))
             .distinct()
-            .collect(Collectors.joining(",\n"));
+            .collect(Collectors.joining("\n"));
 
     var groupBySplit = groupByField.split("\\.");
     var countBySplit = countByField.split("\\.");
