@@ -163,7 +163,7 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> subjectQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new SubjectSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
@@ -177,9 +177,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> researchSubjectQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new ResearchSubjectSqlGenerator(table + "." + version, body, version).generate();
+      String querySql =
+          new ResearchSubjectSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -191,7 +192,7 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> specimenQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new SpecimenSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
@@ -205,7 +206,7 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> diagnosisQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
@@ -219,7 +220,7 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> treatmentsQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new TreatmentSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);

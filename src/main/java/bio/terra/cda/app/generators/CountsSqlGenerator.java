@@ -24,7 +24,8 @@ public class CountsSqlGenerator extends SqlGenerator {
       // SQL version of
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
-      return sql(String.format("(%s)", sql(tableOrSubClause, query.getR(), true)), query.getL(), false);
+      return sql(
+          String.format("(%s)", sql(tableOrSubClause, query.getR(), true)), query.getL(), false);
     }
     Supplier<Stream<String>> fromClause =
         () -> {

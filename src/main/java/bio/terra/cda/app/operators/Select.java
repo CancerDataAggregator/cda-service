@@ -9,11 +9,11 @@ import java.util.stream.Stream;
 public class Select extends BasicOperator {
   @Override
   public Stream<String> getUnnestColumns(
-          String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap, Boolean includeSelect)
-          throws IllegalArgumentException {
+      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap, Boolean includeSelect)
+      throws IllegalArgumentException {
     return includeSelect
-              ? super.getUnnestColumns(table, tableSchemaMap, includeSelect)
-              : ((BasicOperator) getR()).getUnnestColumns(table, tableSchemaMap, includeSelect);
+        ? super.getUnnestColumns(table, tableSchemaMap, includeSelect)
+        : ((BasicOperator) getR()).getUnnestColumns(table, tableSchemaMap, includeSelect);
   }
 
   @Override
