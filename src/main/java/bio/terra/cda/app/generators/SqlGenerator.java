@@ -83,7 +83,7 @@ public class SqlGenerator {
     return String.format(
         "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
         getPartitionByFields(query, prefix),
-        subQuery ? String.format("%s.*", table) : getSelect(query, table, !this.modularEntity),
+        subQuery ? String.format("%s.*", table) : getSelect(query, prefix, !this.modularEntity),
         fromClause,
         condition);
   }
