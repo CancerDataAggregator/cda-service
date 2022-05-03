@@ -6,18 +6,18 @@
       "node_type": ">=",
       "l": {
         "node_type": "column",
-        "value": "B.BA"
+        "value": "ResearchSubject.member_of_research_project"
       },
       "r": {
-        "node_type": "unquoted",
-        "value": "50"
+        "node_type": "quoted",
+        "value": "value"
       }
     },
     "r": {
       "node_type": "=",
       "l": {
         "node_type": "column",
-        "value": "B.BB.BBB"
+        "value": "ResearchSubject.Specimen.specimen_type"
       },
       "r": {
         "node_type": "quoted",
@@ -29,7 +29,7 @@
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "A1.A1A"
+      "value": "ResearchSubject.primary_diagnosis_condition"
     },
     "r": {
       "node_type": "quoted",

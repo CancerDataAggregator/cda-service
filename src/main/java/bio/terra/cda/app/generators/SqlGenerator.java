@@ -146,7 +146,7 @@ public class SqlGenerator {
                       ? SqlUtil.getAlias(parts.length -1, parts)
                       : parts[parts.length - 1],
                   this.modularEntity
-                      ? parts[parts.length - 1] 
+                      ? parts[parts.length - 1]
                       : String.join("_", parts));
             });
   }
