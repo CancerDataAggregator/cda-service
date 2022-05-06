@@ -1,6 +1,7 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
@@ -16,8 +17,12 @@ public class SqlGenerator {
   final String qualifiedTable;
   final Query rootQuery;
   final String table;
+  final String fileTable;
+  final String project;
   final Map<String, TableSchema.SchemaDefinition> tableSchemaMap;
+  final Map<String, TableSchema.SchemaDefinition> fileTableSchemaMap;
   final List<TableSchema.SchemaDefinition> tableSchema;
+  final List<TableSchema.SchemaDefinition> fileTableSchema;
   final Tuple<String, TableSchema.SchemaDefinition> entitySchema;
   final List<String> filteredFields;
   final Boolean modularEntity;
@@ -26,9 +31,15 @@ public class SqlGenerator {
     this.qualifiedTable = qualifiedTable;
     this.rootQuery = rootQuery;
     int dotPos = qualifiedTable.lastIndexOf('.');
+    this.project = dotPos == -1 ? "" : qualifiedTable.substring(0, dotPos);
     this.table = dotPos == -1 ? qualifiedTable : qualifiedTable.substring(dotPos + 1);
+    this.fileTable = dotPos == -1
+            ? qualifiedTable.replace("Subjects", "Files")
+            : qualifiedTable.substring(dotPos + 1).replace("Subjects", "Files");
     this.tableSchema = TableSchema.getSchema(version);
+    this.fileTableSchema = TableSchema.getSchema(fileTable);
     this.tableSchemaMap = TableSchema.buildSchemaMap(this.tableSchema);
+    this.fileTableSchemaMap = TableSchema.buildSchemaMap(this.fileTableSchema);
 
     QueryGenerator queryGenerator = this.getClass().getAnnotation(QueryGenerator.class);
     this.modularEntity = queryGenerator != null;
@@ -42,25 +53,33 @@ public class SqlGenerator {
   }
 
   public String generate() throws IllegalArgumentException {
-    return sql(qualifiedTable, rootQuery, false);
+    return sql(qualifiedTable, rootQuery, false, false);
   }
 
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
+  public String generateFiles() throws IllegalArgumentException {
+    return sql(qualifiedTable, rootQuery, false, true);
+  }
+
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
       throws IllegalArgumentException {
-    var resultsQuery = resultsQuery(query, tableOrSubClause, subQuery);
+    var resultsQuery = resultsQuery(query, tableOrSubClause, subQuery, filesQuery);
     var resultsAlias = "results";
     return String.format(
         "SELECT %1$s.* EXCEPT(rn) FROM (%2$s) as %1$s WHERE rn = 1", resultsAlias, resultsQuery);
   }
 
-  protected String resultsQuery(Query query, String tableOrSubClause, Boolean subQuery) {
+  protected String resultsQuery(
+      Query query, String tableOrSubClause, Boolean subQuery, Boolean filesQuery) {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
       // SQL version of
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
       return resultsQuery(
-          query.getL(), String.format("(%s)", sql(tableOrSubClause, query.getR(), true)), subQuery);
+          query.getL(),
+          String.format("(%s)", sql(tableOrSubClause, query.getR(), true, filesQuery)),
+          subQuery,
+          filesQuery);
     }
 
     String[] parts = entitySchema != null ? entitySchema.x().split("\\.") : new String[0];
@@ -69,22 +88,50 @@ public class SqlGenerator {
     Stream<String> entityUnnests =
         entitySchema != null ? SqlUtil.getUnnestsFromParts(table, parts, true) : Stream.empty();
 
+    String[] filesParts = Stream.concat(Arrays.stream(parts), Stream.of("Files"))
+            .toArray(String[]::new);
+    String filesAlias = SqlUtil.getAlias(filesParts.length -1, filesParts);
+
+    Stream<String> filesUnnests =
+        filesQuery
+            ? SqlUtil.getUnnestsFromParts(
+                table,
+                filesParts,
+                true)
+            : Stream.empty();
+
+    QueryContext ctx = new QueryContext(tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
+    ctx.setEntityPath(entitySchema != null ? entitySchema.x() : "")
+       .setFilesQuery(filesQuery)
+       .setIncludeSelect(!subQuery);
+    String condition = ((BasicOperator) query).buildQuery(ctx);
+
     var fromClause =
         Stream.concat(
                 Stream.concat(
-                    Stream.of(baseFromClause(tableOrSubClause)),
-                    ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap, true)),
-                entityUnnests)
-            .distinct()
-            .collect(Collectors.joining(" "));
+                    Stream.concat(
+                        Stream.of(baseFromClause(tableOrSubClause)),
+                        ctx.getUnnests().stream()),
+                    entityUnnests),
+                filesUnnests)
+            .distinct();
 
-    String condition = ((BasicOperator) query).queryString(table, tableSchemaMap);
+    if (filesQuery) {
+      fromClause = Stream.concat(
+                      fromClause,
+                      Stream.of(String.format(" LEFT JOIN %1$s AS %2$s ON %2$s.id = %3$s",
+                        String.format("%s.%s", this.project, this.fileTable),
+                        this.fileTable,
+                        filesAlias)));
+    }
+
+    var fromString = fromClause.distinct().collect(Collectors.joining(" "));
 
     return String.format(
         "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
-        getPartitionByFields(query, prefix),
-        subQuery ? String.format("%s.*", table) : getSelect(query, prefix, !this.modularEntity),
-        fromClause,
+        filesQuery ? String.format("%s.id", this.fileTable) : getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix),
+        subQuery ? String.format("%s.*", table) : getSelect(ctx, prefix, !this.modularEntity),
+        fromString,
         condition);
   }
 
@@ -92,73 +139,32 @@ public class SqlGenerator {
     return tableOrSubClause + " AS " + table;
   }
 
-  protected String getPartitionByFields(Query query, String alias) {
-    if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
-      return Stream.concat(
-              Stream.of(String.format("%s.id", alias)),
-              Arrays.stream(query.getL().getValue().split(","))
-                  .map(String::trim)
-                  .filter(
-                      select ->
-                          this.tableSchemaMap.get(select).getMode().equals("REPEATED")
-                              || select.contains("."))
-                  .map(
-                      select -> {
-                        var parts =
-                            Arrays.stream(select.split("\\."))
-                                .map(String::trim)
-                                .toArray(String[]::new);
+  protected String getPartitionByFields(QueryContext ctx, String alias) {
+    return Stream.concat(
+            Stream.of(String.format("%s.id", alias)),
+            ctx.getPartitions().stream())
+        .distinct()
+        .collect(Collectors.joining(", "));
+  }
 
-                        if (this.tableSchemaMap.get(select).getMode().equals("REPEATED")) {
-                          return SqlUtil.getAlias(parts.length - 1, parts);
-                        } else if (Arrays.asList(parts).contains("identifier")) {
-                          return String.format(
-                              "%s.system", SqlUtil.getAlias(parts.length - 2, parts));
-                        } else {
-                          return String.format("%s.id", SqlUtil.getAlias(parts.length - 2, parts));
-                        }
-                      }))
-          .distinct()
-          .collect(Collectors.joining(", "));
+  protected String getSelect(QueryContext ctx, String table, Boolean skipExcludes) {
+    if (ctx.getSelect().size() > 0) {
+      return String.join(",", ctx.getSelect());
     } else {
-      return String.format("%s.id", alias);
+      return String.join(", ", getSelectsFromEntity(ctx, ctx.getFilesQuery() ? fileTable : table, skipExcludes));
     }
   }
 
-  protected String getSelect(Query query, String table, Boolean skipExcludes) {
-    if (query.getNodeType() == Query.NodeTypeEnum.SELECT) {
-      return queryToSelect(query).collect(Collectors.joining(","));
-    } else {
-      return String.join(", ", getSelectsFromEntity(table, skipExcludes));
-    }
-  }
-
-  protected Stream<String> queryToSelect(Query query) {
-    return Arrays.stream(query.getL().getValue().split(","))
-        .map(String::trim)
-        .map(
-            select -> {
-              var mode = tableSchemaMap.get(select).getMode();
-              var parts =
-                  Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
-              return String.format(
-                  "%1$s%2$s AS %3$s",
-                  mode.equals("REPEATED")
-                      ? ""
-                      : parts.length == 1
-                          ? String.format("%s.", table)
-                          : SqlUtil.getAlias(parts.length - 2, parts),
-                  mode.equals("REPEATED")
-                      ? SqlUtil.getAlias(parts.length - 1, parts)
-                      : parts[parts.length - 1],
-                  this.modularEntity ? parts[parts.length - 1] : String.join("_", parts));
-            });
-  }
-
-  protected List<String> getSelectsFromEntity(String prefix, Boolean skipExcludes) {
-    return (entitySchema != null ? Arrays.asList(entitySchema.y().getFields()) : tableSchema)
+  protected List<String> getSelectsFromEntity(QueryContext ctx, String prefix, Boolean skipExcludes) {
+    return (ctx.getFilesQuery()
+              ? fileTableSchema
+              : entitySchema != null
+                ? Arrays.asList(entitySchema.y().getFields())
+                : tableSchema)
         .stream()
-            .filter(definition -> skipExcludes || !filteredFields.contains(definition.getName()))
+            .filter(definition -> !(ctx.getFilesQuery()
+                    && List.of("ResearchSubject", "Subject", "Specimen").contains(definition.getName()))
+                    && (skipExcludes || !filteredFields.contains(definition.getName())))
             .map(definition -> String.format("%1$s.%2$s AS %2$s", prefix, definition.getName()))
             .collect(Collectors.toList());
   }

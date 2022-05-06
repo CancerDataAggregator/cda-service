@@ -5,7 +5,7 @@ import java.io.IOException;
 
 @QueryGenerator(
     Entity = "ResearchSubject",
-    ExcludedFields = {"Diagnosis", "Specimen"})
+    ExcludedFields = {"Diagnosis", "Specimen", "File", "Files"})
 public class ResearchSubjectSqlGenerator extends SqlGenerator {
   public ResearchSubjectSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {

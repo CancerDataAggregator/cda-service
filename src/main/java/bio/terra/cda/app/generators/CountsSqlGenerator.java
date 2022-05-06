@@ -1,6 +1,7 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -17,7 +18,7 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
@@ -25,19 +26,26 @@ public class CountsSqlGenerator extends SqlGenerator {
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
       return sql(
-          String.format("(%s)", sql(tableOrSubClause, query.getR(), true)), query.getL(), false);
+          String.format("(%s)", sql(tableOrSubClause, query.getR(), true, false)),
+          query.getL(),
+          false,
+          false);
     }
+
+    QueryContext ctx = new QueryContext(tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
+    String condition = ((BasicOperator) query).buildQuery(ctx);
+
     Supplier<Stream<String>> fromClause =
         () -> {
           try {
             return Stream.concat(
                 Stream.of(tableOrSubClause + " AS " + table),
-                ((BasicOperator) query).getUnnestColumns(table, tableSchemaMap, true).distinct());
+                ctx.getUnnests().stream())
+                .distinct();
           } catch (Exception e) {
             throw new UncheckedExecutionException(e);
           }
         };
-    String condition = ((BasicOperator) query).queryString(table, tableSchemaMap);
 
     var whereClause =
         condition != null && condition.length() > 0

@@ -146,6 +146,39 @@ paths:
         200:
           $ref: "#/components/responses/QueryCreated"
 
+  /api/v1/subjects/files/{version}:
+    post:
+      summary: Execute Subject Files query
+      description: |
+        Execute a Subject Files query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: subjectFilesQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The subject query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
   /api/v1/researchsubjects/{version}:
     post:
       summary: Execute Research Subject query
