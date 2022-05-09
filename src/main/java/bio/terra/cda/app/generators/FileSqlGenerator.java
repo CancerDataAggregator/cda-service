@@ -5,7 +5,7 @@ import java.io.IOException;
 
 @QueryGenerator(
     Entity = "File",
-    ExcludedFields = {"ResearchSubject", "Diagnosis", "Specimen"})
+    ExcludedFields = {})
 public class FileSqlGenerator extends SqlGenerator {
   public FileSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
