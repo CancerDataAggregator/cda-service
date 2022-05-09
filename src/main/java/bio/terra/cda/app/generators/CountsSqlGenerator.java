@@ -32,15 +32,16 @@ public class CountsSqlGenerator extends SqlGenerator {
           false);
     }
 
-    QueryContext ctx = new QueryContext(tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
+    QueryContext ctx =
+        new QueryContext(
+            tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
     String condition = ((BasicOperator) query).buildQuery(ctx);
 
     Supplier<Stream<String>> fromClause =
         () -> {
           try {
             return Stream.concat(
-                Stream.of(tableOrSubClause + " AS " + table),
-                ctx.getUnnests().stream())
+                    Stream.of(tableOrSubClause + " AS " + table), ctx.getUnnests().stream())
                 .distinct();
           } catch (Exception e) {
             throw new UncheckedExecutionException(e);

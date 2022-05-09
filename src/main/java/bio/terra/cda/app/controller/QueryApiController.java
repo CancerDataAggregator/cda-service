@@ -177,9 +177,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> subjectFilesQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new SubjectSqlGenerator(table + "." + version, body, version).generateFiles();
+      String querySql =
+          new SubjectSqlGenerator(table + "." + version, body, version).generateFiles();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -205,10 +206,40 @@ public class QueryApiController implements QueryApi {
 
   @TrackExecutionTime
   @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectFilesQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new ResearchSubjectSqlGenerator(table + "." + version, body, version).generateFiles();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
   public ResponseEntity<QueryCreatedData> specimenQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new SpecimenSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenFilesQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new SpecimenSqlGenerator(table + "." + version, body, version).generateFiles();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);

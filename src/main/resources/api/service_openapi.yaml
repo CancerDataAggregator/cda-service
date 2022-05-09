@@ -212,6 +212,39 @@ paths:
         200:
           $ref: "#/components/responses/QueryCreated"
 
+  /api/v1/researchsubjects/files/{version}:
+    post:
+      summary: Execute ResearchSubject Files query
+      description: |
+        Execute a ResearchSubject Files query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: researchSubjectFilesQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The research subject query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
   /api/v1/specimens/{version}:
     post:
       summary: Execute Specimens query
@@ -219,6 +252,39 @@ paths:
         Execute a query composed of conditions on columns combined with boolean operators. The
         generated SQL query is returned in the response.
       operationId: specimenQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The specimen query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/specimen/files/{version}:
+    post:
+      summary: Execute Specimen Files query
+      description: |
+        Execute a Specimen Files query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: specimenFilesQuery
       tags:
         - query
 

@@ -12,8 +12,7 @@ public class Column extends BasicOperator {
 
     var value = getValue();
     var isFileField = value.toLowerCase().startsWith("file.");
-    var schemaMap = isFileField
-            ? ctx.getFileTableSchemaMap() : ctx.getTableSchemaMap();
+    var schemaMap = isFileField ? ctx.getFileTableSchemaMap() : ctx.getTableSchemaMap();
     if (isFileField) {
       value = value.substring(value.indexOf(".") + 1);
     }
@@ -29,8 +28,8 @@ public class Column extends BasicOperator {
       columnText = String.format("%s.%s", isFileField ? ctx.getFileTable() : ctx.getTable(), value);
     } else {
       columnText =
-              String.format(
-                      "%s.%s", SqlUtil.getAlias(parts.length - 2, parts), parts[parts.length - 1]);
+          String.format(
+              "%s.%s", SqlUtil.getAlias(parts.length - 2, parts), parts[parts.length - 1]);
     }
 
     return tmpGetType.equals("STRING") ? String.format("UPPER(%s)", columnText) : columnText;
