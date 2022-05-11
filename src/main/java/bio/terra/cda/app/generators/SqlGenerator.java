@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 public class SqlGenerator {
   final String qualifiedTable;
   final Query rootQuery;
+  final String version;
   final String table;
   final String fileTable;
   final String project;
@@ -30,6 +31,7 @@ public class SqlGenerator {
   public SqlGenerator(String qualifiedTable, Query rootQuery, String version) throws IOException {
     this.qualifiedTable = qualifiedTable;
     this.rootQuery = rootQuery;
+    this.version = version;
     int dotPos = qualifiedTable.lastIndexOf('.');
     this.project = dotPos == -1 ? "" : qualifiedTable.substring(0, dotPos);
     this.table = dotPos == -1 ? qualifiedTable : qualifiedTable.substring(dotPos + 1);
@@ -129,9 +131,7 @@ public class SqlGenerator {
 
     return String.format(
         "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
-        filesQuery
-            ? String.format("%s.id", this.fileTable)
-            : getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix),
+        getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix),
         subQuery ? String.format("%s.*", table) : getSelect(ctx, prefix, !this.modularEntity),
         fromString,
         condition);

@@ -30,7 +30,9 @@ public class BasicOperator extends Query {
 
       if (isFileField) {
         var entityPath = ctx.getEntityPath();
-        var entityParts = entityPath.split("\\.");
+        var entityParts = entityPath != null
+         ? entityPath.split("\\.")
+         : new String[0];
         String[] filesParts =
             Stream.concat(Arrays.stream(entityParts), Stream.of("Files", "id"))
                 .filter(part -> !part.isEmpty())
