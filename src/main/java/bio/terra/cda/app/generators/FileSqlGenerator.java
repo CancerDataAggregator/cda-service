@@ -32,22 +32,22 @@ public class FileSqlGenerator extends SqlGenerator {
                     tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap)
                     .setFilesQuery(true)
                     .setIncludeSelect(!subQuery);
-    var queryString = ((BasicOperator) query).buildQuery(ctx);
+    ((BasicOperator) query).buildQuery(ctx);
 
     return String.format("SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY %s) as rn, "
             + "results.* FROM (%s) as results) as results where rn = 1",
-            getPartitionByFields(ctx, "results"),
+            getPartitionByFields(ctx, "results").collect(Collectors.joining(", ")),
             entityFileSql.collect(Collectors.joining(" UNION ALL ")));
   }
 
   @Override
-  protected String getPartitionByFields(QueryContext ctx, String alias) {
+  protected Stream<String> getPartitionByFields(QueryContext ctx, String alias) {
     return ctx.getSelect().size() > 0
       ? ctx.getSelect().stream().map(select -> {
           var split = select.split(" AS ");
           return String.format("%s.%s", alias, split[1]);
-        }).collect(Collectors.joining(", "))
-      : String.format("%s.id", alias);
+        })
+      : Stream.of(String.format("%s.id", alias));
   }
 
   private Stream<SqlGenerator> getFileClasses() {

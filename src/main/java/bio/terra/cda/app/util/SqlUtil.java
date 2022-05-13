@@ -8,17 +8,40 @@ import java.util.stream.Stream;
 public class SqlUtil {
   private SqlUtil() {}
 
+  public static enum JoinType {
+    LEFT("LEFT JOIN"),
+    RIGHT("RIGHT JOIN"),
+    CROSS("CROSS JOIN"),
+    INNER("INNER JOIN");
+
+    public final String value;
+
+    private JoinType(String value) {
+      this.value = value;
+    }
+  }
+
   public static Stream<String> getUnnestsFromParts(
-      String table, String[] parts, boolean includeLast) {
+          QueryContext ctx, String table, String[] parts, boolean includeLast) {
+    return getUnnestsFromParts(ctx, table, parts, includeLast, JoinType.LEFT);
+  }
+
+  public static Stream<String> getUnnestsFromParts(
+          QueryContext ctx, String table, String[] parts, boolean includeLast, JoinType JoinType) {
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
         .mapToObj(
-            i ->
-                i == 0
-                    ? String.format(
-                        "LEFT JOIN UNNEST(%1$s.%2$s) AS %3$s", table, parts[i], getAlias(i, parts))
-                    : String.format(
-                        "LEFT JOIN UNNEST(%1$s.%2$s) AS %3$s",
-                        getAlias(i - 1, parts), parts[i], getAlias(i, parts)));
+            i -> {
+                String alias = getAlias(i, parts);
+                ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1)
+                                          .collect(Collectors.joining(".")));
+                return
+                    i == 0
+                      ? String.format(
+                          "%1$s UNNEST(%2$s.%3$s) AS %4$s", JoinType.value.toUpperCase(), table, parts[i], alias)
+                      : String.format(
+                          "%1$s UNNEST(%2$s.%3$s) AS %4$s",
+                          JoinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
+            });
   }
 
   public static String getAlias(Integer index, String[] parts) {

@@ -6,10 +6,12 @@ import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.Tuple;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -88,22 +90,23 @@ public class SqlGenerator {
     String[] parts = entitySchema != null ? entitySchema.x().split("\\.") : new String[0];
     String prefix = entitySchema != null ? SqlUtil.getAlias(parts.length - 1, parts) : table;
 
+    QueryContext ctx =
+            new QueryContext(
+                    tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
+    ctx.setEntityPath(entitySchema != null ? entitySchema.x() : "")
+            .setFilesQuery(filesQuery)
+            .setIncludeSelect(!subQuery);
+
     Stream<String> entityUnnests =
-        entitySchema != null ? SqlUtil.getUnnestsFromParts(table, parts, true) : Stream.empty();
+        entitySchema != null ? SqlUtil.getUnnestsFromParts(ctx, table, parts, true) : Stream.empty();
 
     String[] filesParts =
         Stream.concat(Arrays.stream(parts), Stream.of("Files")).toArray(String[]::new);
     String filesAlias = SqlUtil.getAlias(filesParts.length - 1, filesParts);
 
     Stream<String> filesUnnests =
-        filesQuery ? SqlUtil.getUnnestsFromParts(table, filesParts, true) : Stream.empty();
+        filesQuery ? SqlUtil.getUnnestsFromParts(ctx, table, filesParts, true) : Stream.empty();
 
-    QueryContext ctx =
-        new QueryContext(
-            tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
-    ctx.setEntityPath(entitySchema != null ? entitySchema.x() : "")
-        .setFilesQuery(filesQuery)
-        .setIncludeSelect(!subQuery);
     String condition = ((BasicOperator) query).buildQuery(ctx);
 
     var fromClause =
@@ -127,36 +130,52 @@ public class SqlGenerator {
                       filesAlias)));
     }
 
-    var fromString = fromClause.distinct().collect(Collectors.joining(" "));
+    String fromString = fromClause.distinct().collect(Collectors.joining(" "));
+    Supplier<Stream<String>> selectFields = () -> getSelect(ctx, prefix, !this.modularEntity);
+
+    String finalCondition = String.format("(%1$s AND (%2$s))",
+            condition,
+            selectFields.get().map(select -> {
+              String[] selectParts = select.split(" AS ");
+              String fieldFromAlias = ctx.getAliasMap().get(selectParts[1]);
+              boolean fileField = fieldFromAlias.toLowerCase().startsWith("file.");
+
+              var fieldMode =
+                      (fileField ? fileTableSchemaMap : tableSchemaMap)
+                              .get(fieldFromAlias)
+                              .getMode();
+              var formatString = fieldMode.equals("REPEATED")
+                      ? "array_length(%s) > 0"
+                      : "%s is not null";
+              return String.format(formatString, selectParts[0]);
+            }).collect(Collectors.joining(" OR ")));
 
     return String.format(
         "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
-        getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix),
-        subQuery ? String.format("%s.*", table) : getSelect(ctx, prefix, !this.modularEntity),
+        getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix).collect(Collectors.joining(", ")),
+        subQuery ? String.format("%s.*", table) : selectFields.get().collect(Collectors.joining(", ")),
         fromString,
-        condition);
+        finalCondition);
   }
 
   protected String baseFromClause(String tableOrSubClause) {
     return tableOrSubClause + " AS " + table;
   }
 
-  protected String getPartitionByFields(QueryContext ctx, String alias) {
+  protected Stream<String> getPartitionByFields(QueryContext ctx, String alias) {
     return Stream.concat(Stream.of(String.format("%s.id", alias)), ctx.getPartitions().stream())
-        .distinct()
-        .collect(Collectors.joining(", "));
+        .distinct();
   }
 
-  protected String getSelect(QueryContext ctx, String table, Boolean skipExcludes) {
+  protected Stream<String> getSelect(QueryContext ctx, String table, Boolean skipExcludes) {
     if (ctx.getSelect().size() > 0) {
-      return String.join(",", ctx.getSelect());
+      return ctx.getSelect().stream();
     } else {
-      return String.join(
-          ", ", getSelectsFromEntity(ctx, ctx.getFilesQuery() ? fileTable : table, skipExcludes));
+      return getSelectsFromEntity(ctx, ctx.getFilesQuery() ? fileTable : table, skipExcludes);
     }
   }
 
-  protected List<String> getSelectsFromEntity(
+  protected Stream<String> getSelectsFromEntity(
       QueryContext ctx, String prefix, Boolean skipExcludes) {
     return (ctx.getFilesQuery()
             ? fileTableSchema
@@ -168,7 +187,6 @@ public class SqlGenerator {
                             && List.of("ResearchSubject", "Subject", "Specimen")
                                 .contains(definition.getName()))
                         && (skipExcludes || !filteredFields.contains(definition.getName())))
-            .map(definition -> String.format("%1$s.%2$s AS %2$s", prefix, definition.getName()))
-            .collect(Collectors.toList());
+            .map(definition -> String.format("%1$s.%2$s AS %2$s", prefix, definition.getName()));
   }
 }
