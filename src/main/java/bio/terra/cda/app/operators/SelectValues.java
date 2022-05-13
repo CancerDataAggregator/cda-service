@@ -73,14 +73,18 @@ public class SelectValues extends BasicOperator {
               var parts =
                   Arrays.stream(value.split("\\.")).map(String::trim).toArray(String[]::new);
               String alias = String.join("_", parts);
-              ctx.addAlias(alias, select)
-                 .addSelect(
-                      String.format(
-                          "%s.%s AS %s",
-                          parts.length == 1
+              String field = String.format("%s.%s",
+                      parts.length == 1
                               ? isFileField ? ctx.getFileTable() : ctx.getTable()
                               : SqlUtil.getAlias(parts.length - 2, parts),
-                          parts[parts.length - 1],
+                      parts[parts.length - 1]);
+              ctx.addAlias(alias, parts.length == 1
+                              ? String.format("%s.%s", isFileField ? ctx.getFileTable() : ctx.getTable(), value)
+                              : value)
+                 .addSelect(
+                      String.format(
+                          "%s AS %s",
+                          field,
                           alias));
             });
   }

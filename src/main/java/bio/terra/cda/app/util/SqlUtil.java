@@ -47,4 +47,16 @@ public class SqlUtil {
   public static String getAlias(Integer index, String[] parts) {
     return "_" + Arrays.stream(parts, 0, index + 1).collect(Collectors.joining("_"));
   }
+
+  public static String getAntiAlias(String alias) {
+    String antiAlias = alias;
+
+    if (antiAlias.startsWith("_")) {
+      antiAlias = antiAlias.substring(1);
+    }
+
+    antiAlias = antiAlias.replace("_", ".");
+
+    return antiAlias;
+  }
 }

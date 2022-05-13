@@ -138,11 +138,14 @@ public class SqlGenerator {
             selectFields.get().map(select -> {
               String[] selectParts = select.split(" AS ");
               String fieldFromAlias = ctx.getAliasMap().get(selectParts[1]);
-              boolean fileField = fieldFromAlias.toLowerCase().startsWith("file.");
+              boolean fileField = fieldFromAlias.toLowerCase().startsWith("file.") || fieldFromAlias.startsWith(fileTable);
 
+              String value = fieldFromAlias
+                      .replace(String.format("%s.", table), "")
+                      .replace(String.format("%s.", fileTable), "");
               var fieldMode =
                       (fileField ? fileTableSchemaMap : tableSchemaMap)
-                              .get(fieldFromAlias)
+                              .get(value)
                               .getMode();
               var formatString = fieldMode.equals("REPEATED")
                       ? "array_length(%s) > 0"
@@ -187,6 +190,13 @@ public class SqlGenerator {
                             && List.of("ResearchSubject", "Subject", "Specimen")
                                 .contains(definition.getName()))
                         && (skipExcludes || !filteredFields.contains(definition.getName())))
-            .map(definition -> String.format("%1$s.%2$s AS %2$s", prefix, definition.getName()));
+            .map(definition -> {
+              ctx.addAlias(definition.getName(),
+                      String.format("%s%s",
+                              List.of(table, fileTable).contains(prefix)
+                                      ? String.format("%s.", prefix)
+                                      : String.format("%s.", SqlUtil.getAntiAlias(prefix)), definition.getName()));
+              return String.format("%1$s.%2$s AS %2$s", prefix, definition.getName());
+            });
   }
 }
