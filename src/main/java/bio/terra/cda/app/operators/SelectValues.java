@@ -48,17 +48,20 @@ public class SelectValues extends BasicOperator {
                         String filesAlias = SqlUtil.getAlias(filesParts.length - 2, filesParts);
 
                         return Stream.concat(
-                                SqlUtil.getUnnestsFromParts(ctx, ctx.getTable(), filesParts, false),
+                                SqlUtil.getUnnestsFromPartsWithEntityPath(
+                                        ctx, ctx.getTable(), filesParts, false, String.join(".", filesParts)),
                                 Stream.of(String.format(
-                                            " LEFT JOIN %1$s AS %2$s ON %2$s.id = %3$s",
+                                            " %1$s %2$s AS %3$s ON %3$s.id = %4$s",
+                                            SqlUtil.JoinType.INNER.value,
                                             String.format("%s.%s", ctx.getProject(), ctx.getFileTable()),
                                             ctx.getFileTable(),
                                             filesAlias)));
                     } else {
-                        return SqlUtil.getUnnestsFromParts(ctx,
+                        return SqlUtil.getUnnestsFromPartsWithEntityPath(ctx,
                                 ctx.getFilesQuery() ? ctx.getFileTable() : ctx.getTable(),
                                 value.trim().split("\\."),
-                                false);
+                                false,
+                                String.join(".", entityParts));
                     }
                 }));
   }

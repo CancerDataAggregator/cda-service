@@ -23,9 +23,9 @@ public class FileSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery, Boolean globalQuery)
           throws IllegalArgumentException {
-    Stream<String> entityFileSql = getFileClasses().map(SqlGenerator::generateFiles);
+    Stream<String> entityFileSql = getFileClasses().map(sqlGenerator -> sqlGenerator.generateFiles(true));
 
     QueryContext ctx =
             new QueryContext(

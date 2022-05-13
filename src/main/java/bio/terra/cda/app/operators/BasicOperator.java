@@ -39,17 +39,20 @@ public class BasicOperator extends Query {
                 .toArray(String[]::new);
         String filesAlias = SqlUtil.getAlias(filesParts.length - 2, filesParts);
 
-        ctx.addUnnests(SqlUtil.getUnnestsFromParts(ctx, ctx.getTable(), filesParts, false));
+        ctx.addUnnests(SqlUtil.getUnnestsFromPartsWithEntityPath(
+                ctx, ctx.getTable(), filesParts, false, String.join(".", filesParts)));
         ctx.addUnnests(
             Stream.of(
                 String.format(
-                    " LEFT JOIN %1$s AS %2$s ON %2$s.id = %3$s",
+                    " %1$s %2$s AS %3$s ON %3$s.id = %4$s",
+                    SqlUtil.JoinType.INNER.value,
                     String.format("%s.%s", ctx.getProject(), ctx.getFileTable()),
                     ctx.getFileTable(),
                     filesAlias)));
       } else {
         ctx.addUnnests(
-            SqlUtil.getUnnestsFromParts(ctx, ctx.getTable(), parts, (tmpGetMode.equals("REPEATED"))));
+            SqlUtil.getUnnestsFromPartsWithEntityPath(
+                    ctx, ctx.getTable(), parts, (tmpGetMode.equals("REPEATED")), String.join(".", entityParts)));
       }
     } catch (NullPointerException e) {
       throw new IllegalArgumentException(
