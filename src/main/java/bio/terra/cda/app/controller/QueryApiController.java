@@ -23,7 +23,9 @@ import com.google.cloud.bigquery.BigQueryException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -293,18 +295,19 @@ public class QueryApiController implements QueryApi {
     }
     NestedColumn nt = NestedColumn.generate(tmp_body);
     Set<String> unnestClauses = nt.getUnnestClauses();
-    final String whereClause;
+
+    List<String> whereClauses = new ArrayList<>();
+    whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
 
     if (system != null && system.length() > 0) {
       NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
-      whereClause = " WHERE " + whereColumns.getColumn() + " = '" + system + "'";
+      whereClauses.add(whereColumns.getColumn() + " = '" + system + "'");
       // add any additional 'where' unnest partials that aren't already included in
       // columns-unnest
       // clauses
       unnestClauses.addAll(whereColumns.getUnnestClauses());
-    } else {
-      whereClause = "";
     }
+
     StringBuilder unnestConcat = new StringBuilder();
     unnestClauses.forEach(unnestConcat::append);
 
@@ -315,7 +318,7 @@ public class QueryApiController implements QueryApi {
             + " FROM "
             + tableName
             + unnestConcat
-            + whereClause
+            + " WHERE " + String.join(" AND ", whereClauses)
             + " ORDER BY "
             + nt.getColumn();
 
