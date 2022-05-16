@@ -18,7 +18,7 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery, Boolean globalQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
@@ -26,10 +26,11 @@ public class CountsSqlGenerator extends SqlGenerator {
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
       return sql(
-          String.format("(%s)", sql(tableOrSubClause, query.getR(), true, false)),
+          String.format("(%s)", sql(tableOrSubClause, query.getR(), true, false, globalQuery)),
           query.getL(),
           false,
-          false);
+          false,
+          globalQuery);
     }
 
     QueryContext ctx =
@@ -82,9 +83,9 @@ public class CountsSqlGenerator extends SqlGenerator {
           selects.add(getSelectField(alias));
           selects.add(getSelectField(filesAlias));
           // Entity count
-          queries.add(getSubQuery(fromClause, whereClause, alias, field, field));
+          queries.add(getSubQuery(ctx, fromClause, whereClause, alias, field, field));
           // File count
-          queries.add(getFileSubQuery(fromClause, whereClause, filesAlias, field));
+          queries.add(getFileSubQuery(ctx, fromClause, whereClause, filesAlias, field));
         });
 
     return String.format("SELECT\n" + " identifiers.system,\n" + "%s", String.join(",\n ", selects))
@@ -99,6 +100,7 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   private String getFileSubQuery(
+      QueryContext ctx,
       Supplier<Stream<String>> currentUnnests,
       String whereClause,
       String alias,
@@ -111,7 +113,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                 currentUnnests
                     .get()
                     .filter(unnest -> !unnest.contains(String.format("AS %s", identifierAlias))),
-                SqlUtil.getUnnestsFromParts(table, countBySplit, true))
+                SqlUtil.getUnnestsFromParts(ctx, table, countBySplit, true))
             .distinct()
             .collect(Collectors.joining("\n"));
 
@@ -135,6 +137,7 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   private String getSubQuery(
+      QueryContext ctx,
       Supplier<Stream<String>> currentUnnests,
       String whereClause,
       String alias,
@@ -144,8 +147,8 @@ public class CountsSqlGenerator extends SqlGenerator {
         Stream.concat(
                 currentUnnests.get(),
                 Stream.concat(
-                    SqlUtil.getUnnestsFromParts(table, groupByField.split("\\."), true),
-                    SqlUtil.getUnnestsFromParts(table, countByField.split("\\."), true)))
+                    SqlUtil.getUnnestsFromParts(ctx, table, groupByField.split("\\."), true),
+                    SqlUtil.getUnnestsFromParts(ctx, table, countByField.split("\\."), true)))
             .distinct()
             .collect(Collectors.joining("\n"));
 

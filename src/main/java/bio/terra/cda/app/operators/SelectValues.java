@@ -4,6 +4,7 @@ import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 @QueryOperator(nodeType = Query.NodeTypeEnum.SELECTVALUES)
 public class SelectValues extends BasicOperator {
@@ -24,19 +25,44 @@ public class SelectValues extends BasicOperator {
             .map(String::trim)
             .filter(
                 select -> {
+                  var isFileField = select.toLowerCase().startsWith("file.");
+                  var value = isFileField ? select.substring(select.indexOf(".") + 1) : select;
                   var tmp =
-                      (ctx.getFilesQuery() ? ctx.getFileTableSchemaMap() : ctx.getTableSchemaMap())
-                          .get(select);
+                      (isFileField ? ctx.getFileTableSchemaMap() : ctx.getTableSchemaMap())
+                          .get(value);
                   return !tmp.getMode().equals("REPEATED");
                 })
             .flatMap(
                 select -> {
-                  var isFileField = select.toLowerCase().startsWith("file.");
-                  var value = isFileField ? select.substring(select.indexOf(".") + 1) : select;
-                  return SqlUtil.getUnnestsFromParts(
-                      ctx.getFilesQuery() ? ctx.getFileTable() : ctx.getTable(),
-                      value.trim().split("\\."),
-                      false);
+                    var entityPath = ctx.getEntityPath();
+                    var entityParts = entityPath != null
+                            ? entityPath.split("\\.")
+                            : new String[0];
+                    var isFileField = select.toLowerCase().startsWith("file.");
+                    var value = isFileField ? select.substring(select.indexOf(".") + 1) : select;
+                    if (isFileField) {
+                        String[] filesParts =
+                                Stream.concat(Arrays.stream(entityParts), Stream.of("Files", "id"))
+                                        .filter(part -> !part.isEmpty())
+                                        .toArray(String[]::new);
+                        String filesAlias = SqlUtil.getAlias(filesParts.length - 2, filesParts);
+
+                        return Stream.concat(
+                                SqlUtil.getUnnestsFromPartsWithEntityPath(
+                                        ctx, ctx.getTable(), filesParts, false, String.join(".", filesParts)),
+                                Stream.of(String.format(
+                                            " %1$s %2$s AS %3$s ON %3$s.id = %4$s",
+                                            SqlUtil.JoinType.INNER.value,
+                                            String.format("%s.%s", ctx.getProject(), ctx.getFileTable()),
+                                            ctx.getFileTable(),
+                                            filesAlias)));
+                    } else {
+                        return SqlUtil.getUnnestsFromPartsWithEntityPath(ctx,
+                                ctx.getFilesQuery() ? ctx.getFileTable() : ctx.getTable(),
+                                value.trim().split("\\."),
+                                false,
+                                String.join(".", entityParts));
+                    }
                 }));
   }
 
@@ -47,19 +73,22 @@ public class SelectValues extends BasicOperator {
             select -> {
               var isFileField = select.toLowerCase().startsWith("file.");
               var value = isFileField ? select.substring(select.indexOf(".") + 1) : select;
-              var tmp =
-                  (ctx.getFilesQuery() ? ctx.getFileTableSchemaMap() : ctx.getTableSchemaMap())
-                      .get(select);
               var parts =
                   Arrays.stream(value.split("\\.")).map(String::trim).toArray(String[]::new);
-              ctx.addSelect(
-                  String.format(
-                      "%s.%s AS %s",
+              String alias = String.join("_", parts);
+              String field = String.format("%s.%s",
                       parts.length == 1
-                          ? ctx.getFilesQuery() ? ctx.getFileTable() : ctx.getTable()
-                          : SqlUtil.getAlias(parts.length - 2, parts),
-                      parts[parts.length - 1],
-                      String.join("_", parts)));
+                              ? isFileField ? ctx.getFileTable() : ctx.getTable()
+                              : SqlUtil.getAlias(parts.length - 2, parts),
+                      parts[parts.length - 1]);
+              ctx.addAlias(alias, parts.length == 1
+                              ? String.format("%s.%s", isFileField ? ctx.getFileTable() : ctx.getTable(), value)
+                              : value)
+                 .addSelect(
+                      String.format(
+                          "%s AS %s",
+                          field,
+                          alias));
             });
   }
 
@@ -67,26 +96,19 @@ public class SelectValues extends BasicOperator {
     ctx.addPartitions(
         Arrays.stream(getValue().split(","))
             .map(String::trim)
-            .filter(
-                select -> {
-                  var tmp =
-                      (ctx.getFilesQuery() ? ctx.getFileTableSchemaMap() : ctx.getTableSchemaMap())
-                          .get(select);
-                  return select.contains(".") && !tmp.getMode().equals("REPEATED");
-                })
+            .filter(select -> select.contains("."))
             .map(
                 select -> {
                   var parts =
                       Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
+                  var isFileField = select.toLowerCase().startsWith("file.");
 
-                  var tmp =
-                      (ctx.getFilesQuery() ? ctx.getFileTableSchemaMap() : ctx.getTableSchemaMap())
-                          .get(select);
                   if (Arrays.asList(parts).contains("identifier")
                       && !parts[parts.length - 1].equals("identifier")) {
                     return String.format("%s.system", SqlUtil.getAlias(parts.length - 2, parts));
                   } else {
-                    return String.format("%s.id", SqlUtil.getAlias(parts.length - 2, parts));
+                    return String.format("%s.id", isFileField
+                            ? ctx.getFileTable() : SqlUtil.getAlias(parts.length - 2, parts));
                   }
                 }));
   }

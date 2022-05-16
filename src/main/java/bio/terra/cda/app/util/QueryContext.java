@@ -1,6 +1,7 @@
 package bio.terra.cda.app.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ public class QueryContext {
   private String entityPath;
   private final Map<String, TableSchema.SchemaDefinition> tableSchemaMap;
   private final Map<String, TableSchema.SchemaDefinition> fileTableSchemaMap;
+  private Map<String, String> aliasMap;
   private Boolean includeSelect;
   private Boolean modularEntity;
   private Boolean filesQuery;
@@ -38,6 +40,7 @@ public class QueryContext {
     this.unnests = new ArrayList<>();
     this.select = new ArrayList<>();
     this.partitions = new ArrayList<>();
+    this.aliasMap = new HashMap<>();
   }
 
   public QueryContext setFilesQuery(Boolean value) {
@@ -126,4 +129,11 @@ public class QueryContext {
   public String getTableOrSubClause() {
     return this.tableOrSubClause;
   }
+
+  public QueryContext addAlias(String key, String value) {
+    this.aliasMap.put(key, value);
+    return this;
+  }
+
+  public Map<String, String> getAliasMap() { return this.aliasMap; }
 }
