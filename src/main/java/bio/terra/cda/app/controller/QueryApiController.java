@@ -286,8 +286,12 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table + "." + version;
     }
-
-    NestedColumn nt = NestedColumn.generate(body);
+    var tmp_body = body;
+    if(tmp_body.toLowerCase().startsWith("file.")) {
+      tmp_body =  tmp_body.replace("File.","");
+      tableName = tableName.replace("Subjects", "Files");
+    }
+    NestedColumn nt = NestedColumn.generate(tmp_body);
     Set<String> unnestClauses = nt.getUnnestClauses();
     final String whereClause;
 
@@ -304,8 +308,9 @@ public class QueryApiController implements QueryApi {
     StringBuilder unnestConcat = new StringBuilder();
     unnestClauses.forEach(unnestConcat::append);
 
-    String querySql =
-        "SELECT DISTINCT "
+
+
+    var querySql = "SELECT DISTINCT "
             + nt.getColumn()
             + " FROM "
             + tableName
@@ -313,7 +318,10 @@ public class QueryApiController implements QueryApi {
             + whereClause
             + " ORDER BY "
             + nt.getColumn();
+
     logger.debug("uniqueValues: " + querySql);
+
+
 
     return sendQuery(querySql, false);
   }
@@ -327,12 +335,24 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table;
     }
+
+    var fileTable = version.replace("Subjects", "Files");
+
     String querySql =
-        "SELECT field_path FROM "
-            + tableName
-            + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
-            + version
-            + "'";
+            String.format("\nWITH Subjects as " +
+                    "(SELECT\n  field_path\nFROM\n  " +
+                    "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n  " +
+                    "table_name = '%s'\n  AND \n  " +
+                    "NOT CONTAINS_SUBSTR(field_path, \"Files\")\n),Files AS " +
+                    "(SELECT\n  \"File.\"|| field_path AS  field_path\nFROM\n  " +
+                    "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n " +
+                    " table_name = '%s'\n  AND \n  " +
+                    "NOT starts_with(field_path, \"Subject\")\n  " +
+                    "AND \n  NOT starts_with(field_path, " +
+                    "\"ResearchSubject\")\n  " +
+                    "AND \n  NOT starts_with(field_path, \"Specimen\")\n\n)\n\n\n" +
+                    "SELECT * FROM Subjects UNION ALL (SELECT * FROM Files)\n\n",tableName,version,tableName,fileTable);
+
     logger.debug("columns: " + querySql);
 
     return sendQuery(querySql, false);
