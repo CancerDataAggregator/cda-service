@@ -75,6 +75,7 @@ public class SqlUtil {
               String tmp = getAlias(i, parts).substring(1).toLowerCase();
               String alias = String.format("%s_id", tmp);
               String value = String.format("%s.id", getAlias(i ,parts));
+
               ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1)
                       .collect(Collectors.joining(".")));
               return String.format("%s AS %s", value, alias);

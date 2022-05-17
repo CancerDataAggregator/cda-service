@@ -182,7 +182,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-          new SubjectSqlGenerator(table + "." + version, body, version).generateFiles(false);
+          new SubjectSqlGenerator(table + "." + version, body, version).generateFiles();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -212,7 +212,7 @@ public class QueryApiController implements QueryApi {
           String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new ResearchSubjectSqlGenerator(table + "." + version, body, version).generateFiles(false);
+              new ResearchSubjectSqlGenerator(table + "." + version, body, version).generateFiles();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -241,7 +241,7 @@ public class QueryApiController implements QueryApi {
           String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new SpecimenSqlGenerator(table + "." + version, body, version).generateFiles(false);
+              new SpecimenSqlGenerator(table + "." + version, body, version).generateFiles();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -380,7 +380,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     String querySql = "";
     try {
-      querySql = new FileSqlGenerator(table + "." + version, body, version).generate();
+      querySql = new FileSqlGenerator(table + "." + version, body, version).generateFiles();
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
