@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -213,7 +212,7 @@ public class SqlGenerator {
             idSelects);
   }
 
-  protected Stream<SqlGenerator> getFileClasses() {
+  protected Stream<? extends Class<?>> getQueryGeneratorClasses() {
     ClassPathScanningCandidateComponentProvider scanner =
             new ClassPathScanningCandidateComponentProvider(false);
 
@@ -228,7 +227,11 @@ public class SqlGenerator {
                         return null;
                       }
                     })
-            .filter(Objects::nonNull)
+            .filter(Objects::nonNull);
+  }
+
+  protected Stream<? extends Class<?>> getFileClasses() {
+    return getQueryGeneratorClasses()
             .filter(
                     cls -> {
                       QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
@@ -241,19 +244,6 @@ public class SqlGenerator {
                       return schema != null && schema.y() != null
                               && Arrays.stream(schema.y().getFields()).map(TableSchema.SchemaDefinition::getName)
                               .anyMatch(s -> s.equals("Files"));
-                    })
-            .map(cls -> {
-              Constructor<?> ctor = null;
-              try {
-                ctor = cls.getConstructor(String.class, Query.class, String.class);
-              } catch (NoSuchMethodException e) {
-                return null;
-              }
-              try {
-                return (SqlGenerator) ctor.newInstance(this.qualifiedTable, this.rootQuery, this.version);
-              } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                return null;
-              }
-            }).filter(Objects::nonNull);
+                    });
   }
 }
