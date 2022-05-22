@@ -3,12 +3,17 @@ package bio.terra.cda.app.controller;
 import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
+import bio.terra.cda.app.generators.DiagnosisCountSqlGenerator;
 import bio.terra.cda.app.generators.DiagnosisSqlGenerator;
 import bio.terra.cda.app.generators.FileSqlGenerator;
+import bio.terra.cda.app.generators.ResearchSubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.ResearchSubjectSqlGenerator;
+import bio.terra.cda.app.generators.SpecimenCountSqlGenerator;
 import bio.terra.cda.app.generators.SpecimenSqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
+import bio.terra.cda.app.generators.SubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.SubjectSqlGenerator;
+import bio.terra.cda.app.generators.TreatmentCountSqlGenerator;
 import bio.terra.cda.app.generators.TreatmentSqlGenerator;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.service.exception.BadQueryException;
@@ -55,6 +60,7 @@ public class QueryApiController implements QueryApi {
     this.webRequest = webRequest;
   }
 
+  // region Query Endpoints/Helpers
   private String createNextUrl(String jobId, int offset, int limit) {
     var path = String.format("/api/v1/query/%s?offset=%s&limit=%s", jobId, offset, limit);
 
@@ -133,7 +139,9 @@ public class QueryApiController implements QueryApi {
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
+  // endregion
 
+  // region Global Queries
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> bulkData(String version, String table) {
@@ -154,122 +162,6 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new SqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> subjectQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      String querySql = new SubjectSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> subjectFilesQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      String querySql =
-          new SubjectSqlGenerator(table + "." + version, body, version).generateFiles();
-      return sendQuery(querySql, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> researchSubjectQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      String querySql =
-          new ResearchSubjectSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> researchSubjectFilesQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      String querySql =
-              new ResearchSubjectSqlGenerator(table + "." + version, body, version).generateFiles();
-      return sendQuery(querySql, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> specimenQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      String querySql = new SpecimenSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> specimenFilesQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      String querySql =
-              new SpecimenSqlGenerator(table + "." + version, body, version).generateFiles();
-      return sendQuery(querySql, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> diagnosisQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      String querySql = new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> treatmentsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      String querySql = new TreatmentSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -388,4 +280,206 @@ public class QueryApiController implements QueryApi {
     }
     return sendQuery(querySql, dryRun);
   }
+  // endregion
+
+  // region Subject Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> subjectQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new SubjectSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> subjectFilesQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new SubjectSqlGenerator(table + "." + version, body, version).generateFiles();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> subjectCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new SubjectCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region ResearchSubject Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new ResearchSubjectSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectFilesQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new ResearchSubjectSqlGenerator(table + "." + version, body, version).generateFiles();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new ResearchSubjectCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region Specimen Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new SpecimenSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenFilesQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new SpecimenSqlGenerator(table + "." + version, body, version).generateFiles();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new SpecimenCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region Diagnosis Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> diagnosisQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> diagnosisCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new DiagnosisCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region Treatment Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> treatmentsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new TreatmentSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> treatmentCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new TreatmentCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
 }

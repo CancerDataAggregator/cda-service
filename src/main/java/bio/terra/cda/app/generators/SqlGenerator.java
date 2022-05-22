@@ -10,8 +10,6 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -31,9 +29,9 @@ public class SqlGenerator {
   final Map<String, TableSchema.SchemaDefinition> fileTableSchemaMap;
   final List<TableSchema.SchemaDefinition> tableSchema;
   final List<TableSchema.SchemaDefinition> fileTableSchema;
-  final Tuple<String, TableSchema.SchemaDefinition> entitySchema;
-  final List<String> filteredFields;
-  final Boolean modularEntity;
+  Tuple<String, TableSchema.SchemaDefinition> entitySchema;
+  List<String> filteredFields;
+  Boolean modularEntity;
 
   public SqlGenerator(String qualifiedTable, Query rootQuery, String version) throws IOException {
     this.qualifiedTable = qualifiedTable;
@@ -51,15 +49,19 @@ public class SqlGenerator {
     this.tableSchemaMap = TableSchema.buildSchemaMap(this.tableSchema);
     this.fileTableSchemaMap = TableSchema.buildSchemaMap(this.fileTableSchema);
 
+    initializeEntityFields();
+  }
+
+  protected void initializeEntityFields() {
     QueryGenerator queryGenerator = this.getClass().getAnnotation(QueryGenerator.class);
     this.modularEntity = queryGenerator != null;
     this.entitySchema =
-        queryGenerator != null
-            ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
-            : null;
+            queryGenerator != null
+                    ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
+                    : null;
 
     this.filteredFields =
-        queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
+            queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
   }
 
   public String generate() throws IllegalArgumentException {
@@ -117,7 +119,8 @@ public class SqlGenerator {
                 : Stream.empty();
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
-    Stream<String> selectFields = getSelect(ctx, prefix, !this.modularEntity);
+    String selectFields = getSelect(ctx, prefix, !this.modularEntity)
+            .collect(Collectors.joining(", "));
 
     var fromClause =
         Stream.concat(
@@ -146,7 +149,7 @@ public class SqlGenerator {
     return String.format(
         "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
         getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix).collect(Collectors.joining(", ")),
-        subQuery ? String.format("%s.*", table) : selectFields.collect(Collectors.joining(", ")),
+        subQuery ? String.format("%s.*", table) : selectFields,
         fromString,
         condition);
   }
