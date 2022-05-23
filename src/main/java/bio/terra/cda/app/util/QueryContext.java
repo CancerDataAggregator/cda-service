@@ -135,5 +135,7 @@ public class QueryContext {
     return this;
   }
 
-  public Map<String, String> getAliasMap() { return this.aliasMap; }
+  public Map<String, String> getAliasMap() {
+    return this.aliasMap;
+  }
 }

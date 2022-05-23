@@ -22,62 +22,60 @@ public class SqlUtil {
   }
 
   public static Stream<String> getUnnestsFromParts(
-          QueryContext ctx, String table, String[] parts, boolean includeLast) {
+      QueryContext ctx, String table, String[] parts, boolean includeLast) {
     return getUnnestsFromParts(ctx, table, parts, includeLast, JoinType.LEFT);
   }
 
   public static Stream<String> getUnnestsFromParts(
-          QueryContext ctx, String table, String[] parts, boolean includeLast, JoinType JoinType) {
+      QueryContext ctx, String table, String[] parts, boolean includeLast, JoinType JoinType) {
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
         .mapToObj(
             i -> {
-                String alias = getAlias(i, parts);
-                ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1)
-                                          .collect(Collectors.joining(".")));
-                return
-                    i == 0
-                      ? String.format(
-                          "%1$s UNNEST(%2$s.%3$s) AS %4$s", JoinType.value.toUpperCase(), table, parts[i], alias)
-                      : String.format(
-                          "%1$s UNNEST(%2$s.%3$s) AS %4$s",
-                          JoinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
+              String alias = getAlias(i, parts);
+              ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1).collect(Collectors.joining(".")));
+              return i == 0
+                  ? String.format(
+                      "%1$s UNNEST(%2$s.%3$s) AS %4$s",
+                      JoinType.value.toUpperCase(), table, parts[i], alias)
+                  : String.format(
+                      "%1$s UNNEST(%2$s.%3$s) AS %4$s",
+                      JoinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
             });
   }
 
   public static Stream<String> getUnnestsFromPartsWithEntityPath(
-          QueryContext ctx, String table, String[] parts, boolean includeLast, String entityPath) {
+      QueryContext ctx, String table, String[] parts, boolean includeLast, String entityPath) {
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
-            .mapToObj(
-                    i -> {
-                      String alias = getAlias(i, parts);
-                      String partsSub = Arrays.stream(parts, 0, i + 1)
-                              .collect(Collectors.joining("."));
+        .mapToObj(
+            i -> {
+              String alias = getAlias(i, parts);
+              String partsSub = Arrays.stream(parts, 0, i + 1).collect(Collectors.joining("."));
 
-                      ctx.addAlias(alias, partsSub);
+              ctx.addAlias(alias, partsSub);
 
-                      JoinType joinType = entityPath.startsWith(partsSub)
-                        ? JoinType.INNER
-                        : JoinType.LEFT;
+              JoinType joinType = entityPath.startsWith(partsSub) ? JoinType.INNER : JoinType.LEFT;
 
-                      return i == 0
-                                  ? String.format(
-                                  "%1$s UNNEST(%2$s.%3$s) AS %4$s", joinType.value.toUpperCase(), table, parts[i], alias)
-                                  : String.format(
-                                  "%1$s UNNEST(%2$s.%3$s) AS %4$s",
-                                  joinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
-                    });
+              return i == 0
+                  ? String.format(
+                      "%1$s UNNEST(%2$s.%3$s) AS %4$s",
+                      joinType.value.toUpperCase(), table, parts[i], alias)
+                  : String.format(
+                      "%1$s UNNEST(%2$s.%3$s) AS %4$s",
+                      joinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
+            });
   }
 
-  public static Stream<String> getIdSelectsFromPath(QueryContext ctx, String path, Boolean includeLast) {
+  public static Stream<String> getIdSelectsFromPath(
+      QueryContext ctx, String path, Boolean includeLast) {
     String[] parts = path.split("\\.");
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
-            .mapToObj(i -> {
+        .mapToObj(
+            i -> {
               String tmp = getAlias(i, parts).substring(1).toLowerCase();
               String alias = String.format("%s_id", tmp);
-              String value = String.format("%s.id", getAlias(i ,parts));
+              String value = String.format("%s.id", getAlias(i, parts));
 
-              ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1)
-                      .collect(Collectors.joining(".")));
+              ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1).collect(Collectors.joining(".")));
               return String.format("%s AS %s", value, alias);
             });
   }

@@ -6,7 +6,6 @@ import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -14,107 +13,124 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class EntityCountSqlGenerator extends SqlGenerator {
-    private List<String> countFields;
+  private List<String> countFields;
 
-    public EntityCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
-            throws IOException {
-        super(qualifiedTable, rootQuery, version);
-    }
+  public EntityCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
+      throws IOException {
+    super(qualifiedTable, rootQuery, version);
+  }
 
-    @Override
-    protected void initializeEntityFields() {
-        CountQueryGenerator queryGenerator = this.getClass().getAnnotation(CountQueryGenerator.class);
-        this.modularEntity = queryGenerator != null;
-        this.entitySchema =
-                queryGenerator != null
-                        ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
-                        : null;
+  @Override
+  protected void initializeEntityFields() {
+    CountQueryGenerator queryGenerator = this.getClass().getAnnotation(CountQueryGenerator.class);
+    this.modularEntity = queryGenerator != null;
+    this.entitySchema =
+        queryGenerator != null
+            ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
+            : null;
 
-        this.filteredFields =
-                queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
+    this.filteredFields =
+        queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
 
-        this.countFields =
-                queryGenerator != null ? Arrays.asList(queryGenerator.FieldsToCount()) : List.of();
-    }
+    this.countFields =
+        queryGenerator != null ? Arrays.asList(queryGenerator.FieldsToCount()) : List.of();
+  }
 
-    protected List<String> getCountFields() {
-        return countFields;
-    }
+  protected List<String> getCountFields() {
+    return countFields;
+  }
 
-    @Override
-    protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
-            throws UncheckedExecutionException, IllegalArgumentException {
-        String viewSql = super.sql(tableOrSubClause, QueryUtil.DeSelectifyQuery(query), subQuery, filesQuery);
-        String tableAlias = "flattened_result";
-        return String.format("with %s as (%s) select %s",
-                tableAlias, viewSql, getCountSelects(tableAlias));
-    }
+  @Override
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
+      throws UncheckedExecutionException, IllegalArgumentException {
+    String viewSql =
+        super.sql(tableOrSubClause, QueryUtil.DeSelectifyQuery(query), subQuery, filesQuery);
+    String tableAlias = "flattened_result";
+    return String.format(
+        "with %s as (%s) select %s", tableAlias, viewSql, getCountSelects(tableAlias));
+  }
 
-    protected String getCountSelects(String tableAlias) {
-        String formatString = "(select ARRAY(select as STRUCT %1$s, count(distinct id) as count " +
-                "from %2$s " +
-                "group by %1$s)) as %3$s";
+  protected String getCountSelects(String tableAlias) {
+    String formatString =
+        "(select ARRAY(select as STRUCT %1$s, count(distinct id) as count "
+            + "from %2$s "
+            + "group by %1$s)) as %3$s";
 
-        return Stream.concat(
-                    Stream.of("id"),
-                    countFields.stream())
-                .distinct()
-                .map(field -> {
-                    String[] parts = field.equals("Files")
-                        ? Stream.concat(
-                                entitySchema != null
-                                        ? Arrays.stream(entitySchema.x().split("\\."))
-                                        : Stream.of(),
-                            Arrays.stream(field.split("\\."))
-                        ).collect(Collectors.toList()).toArray(String[]::new)
-                        : field.split("\\.");
-                    String name = field.equals("id") ? "total" : parts[parts.length - 1].toLowerCase();
-                    TableSchema.SchemaDefinition schemaDefinition = tableSchemaMap.get(field);
+    return Stream.concat(Stream.of("id"), countFields.stream())
+        .distinct()
+        .map(
+            field -> {
+              String[] parts =
+                  field.equals("Files")
+                      ? Stream.concat(
+                              entitySchema != null
+                                  ? Arrays.stream(entitySchema.x().split("\\."))
+                                  : Stream.of(),
+                              Arrays.stream(field.split("\\.")))
+                          .collect(Collectors.toList())
+                          .toArray(String[]::new)
+                      : field.split("\\.");
+              String name = field.equals("id") ? "total" : parts[parts.length - 1].toLowerCase();
+              TableSchema.SchemaDefinition schemaDefinition = tableSchemaMap.get(field);
 
-                    return List.of("id", "Files", "File").contains(field)
-                        ? String.format("(SELECT COUNT(DISTINCT %s) from %s) as %s",
-                            field.equals("id") ? "id" : SqlUtil.getAlias(parts.length - 1, parts), tableAlias, name)
-                        : String.format(formatString, parts[parts.length - 1], tableAlias, name);
-                })
-                .collect(Collectors.joining(", "));
-    }
+              return List.of("id", "Files", "File").contains(field)
+                  ? String.format(
+                      "(SELECT COUNT(DISTINCT %s) from %s) as %s",
+                      field.equals("id") ? "id" : SqlUtil.getAlias(parts.length - 1, parts),
+                      tableAlias,
+                      name)
+                  : String.format(formatString, parts[parts.length - 1], tableAlias, name);
+            })
+        .collect(Collectors.joining(", "));
+  }
 
-    @Override
-    protected Stream<String> getSelectsFromEntity(
-            QueryContext ctx, String prefix, Boolean skipExcludes) {
-        return (entitySchema != null
-                ? List.of(entitySchema.y().getFields())
-                : tableSchema)
-                .stream()
-                .filter(definition -> (skipExcludes || !filteredFields.contains(definition.getName())))
-                .flatMap(definition -> {
-                    String[] parts = String.format("%s%s",
-                            entitySchema != null
-                                    ? String.format("%s.", entitySchema.x())
-                                    : "",
-                            definition.getName()).split("\\.");
+  @Override
+  protected Stream<String> getSelectsFromEntity(
+      QueryContext ctx, String prefix, Boolean skipExcludes) {
+    return (entitySchema != null ? List.of(entitySchema.y().getFields()) : tableSchema)
+        .stream()
+            .filter(definition -> (skipExcludes || !filteredFields.contains(definition.getName())))
+            .flatMap(
+                definition -> {
+                  String[] parts =
+                      String.format(
+                              "%s%s",
+                              entitySchema != null ? String.format("%s.", entitySchema.x()) : "",
+                              definition.getName())
+                          .split("\\.");
 
-                    if (definition.getMode().equals("REPEATED")) {
-                        ctx.addUnnests(
-                                SqlUtil.getUnnestsFromParts(ctx,
-                                        table, parts, true, SqlUtil.JoinType.INNER));
+                  if (definition.getMode().equals("REPEATED")) {
+                    ctx.addUnnests(
+                        SqlUtil.getUnnestsFromParts(
+                            ctx, table, parts, true, SqlUtil.JoinType.INNER));
 
-                        return !definition.getType().equals("RECORD")
-                                ? Stream.of(String.format("%s", SqlUtil.getAlias(parts.length - 1, parts)))
-                                : Arrays.stream(definition.getFields()).map(fieldDefinition -> {
-                                    String fieldPrefix = SqlUtil.getAlias(parts.length - 1, parts);
-                                    ctx.addAlias(fieldDefinition.getName(),
-                                            String.format("%s.%s",SqlUtil.getAntiAlias(fieldPrefix), fieldDefinition.getName()));
-                                    return String.format("%1$s.%2$s AS %2$s", fieldPrefix, fieldDefinition.getName());
+                    return !definition.getType().equals("RECORD")
+                        ? Stream.of(String.format("%s", SqlUtil.getAlias(parts.length - 1, parts)))
+                        : Arrays.stream(definition.getFields())
+                            .map(
+                                fieldDefinition -> {
+                                  String fieldPrefix = SqlUtil.getAlias(parts.length - 1, parts);
+                                  ctx.addAlias(
+                                      fieldDefinition.getName(),
+                                      String.format(
+                                          "%s.%s",
+                                          SqlUtil.getAntiAlias(fieldPrefix),
+                                          fieldDefinition.getName()));
+                                  return String.format(
+                                      "%1$s.%2$s AS %2$s", fieldPrefix, fieldDefinition.getName());
                                 });
-                    } else {
-                        ctx.addAlias(definition.getName(),
-                                String.format("%s%s",
-                                        prefix.equals(table)
-                                                ? String.format("%s.", prefix)
-                                                : String.format("%s.", SqlUtil.getAntiAlias(prefix)), definition.getName()));
-                        return Stream.of(String.format("%1$s.%2$s AS %2$s", prefix, definition.getName()));
-                    }
+                  } else {
+                    ctx.addAlias(
+                        definition.getName(),
+                        String.format(
+                            "%s%s",
+                            prefix.equals(table)
+                                ? String.format("%s.", prefix)
+                                : String.format("%s.", SqlUtil.getAntiAlias(prefix)),
+                            definition.getName()));
+                    return Stream.of(
+                        String.format("%1$s.%2$s AS %2$s", prefix, definition.getName()));
+                  }
                 });
-    }
+  }
 }

@@ -181,8 +181,8 @@ public class QueryApiController implements QueryApi {
       tableName = table + "." + version;
     }
     var tmp_body = body;
-    if(tmp_body.toLowerCase().startsWith("file.")) {
-      tmp_body =  tmp_body.replace("File.","");
+    if (tmp_body.toLowerCase().startsWith("file.")) {
+      tmp_body = tmp_body.replace("File.", "");
       tableName = tableName.replace("Subjects", "Files");
     }
     NestedColumn nt = NestedColumn.generate(tmp_body);
@@ -203,20 +203,18 @@ public class QueryApiController implements QueryApi {
     StringBuilder unnestConcat = new StringBuilder();
     unnestClauses.forEach(unnestConcat::append);
 
-
-
-    var querySql = "SELECT DISTINCT "
+    var querySql =
+        "SELECT DISTINCT "
             + nt.getColumn()
             + " FROM "
             + tableName
             + unnestConcat
-            + " WHERE " + String.join(" AND ", whereClauses)
+            + " WHERE "
+            + String.join(" AND ", whereClauses)
             + " ORDER BY "
             + nt.getColumn();
 
     logger.debug("uniqueValues: " + querySql);
-
-
 
     return sendQuery(querySql, false);
   }
@@ -234,19 +232,21 @@ public class QueryApiController implements QueryApi {
     var fileTable = version.replace("Subjects", "Files");
 
     String querySql =
-            String.format("\nWITH Subjects as " +
-                    "(SELECT\n  field_path\nFROM\n  " +
-                    "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n  " +
-                    "table_name = '%s'\n  AND \n  " +
-                    "NOT CONTAINS_SUBSTR(field_path, \"Files\")\n),Files AS " +
-                    "(SELECT\n  \"File.\"|| field_path AS  field_path\nFROM\n  " +
-                    "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n " +
-                    " table_name = '%s'\n  AND \n  " +
-                    "NOT starts_with(field_path, \"Subject\")\n  " +
-                    "AND \n  NOT starts_with(field_path, " +
-                    "\"ResearchSubject\")\n  " +
-                    "AND \n  NOT starts_with(field_path, \"Specimen\")\n\n)\n\n\n" +
-                    "SELECT * FROM Subjects UNION ALL (SELECT * FROM Files)\n\n",tableName,version,tableName,fileTable);
+        String.format(
+            "\nWITH Subjects as "
+                + "(SELECT\n  field_path\nFROM\n  "
+                + "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n  "
+                + "table_name = '%s'\n  AND \n  "
+                + "NOT CONTAINS_SUBSTR(field_path, \"Files\")\n),Files AS "
+                + "(SELECT\n  \"File.\"|| field_path AS  field_path\nFROM\n  "
+                + "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n "
+                + " table_name = '%s'\n  AND \n  "
+                + "NOT starts_with(field_path, \"Subject\")\n  "
+                + "AND \n  NOT starts_with(field_path, "
+                + "\"ResearchSubject\")\n  "
+                + "AND \n  NOT starts_with(field_path, \"Specimen\")\n\n)\n\n\n"
+                + "SELECT * FROM Subjects UNION ALL (SELECT * FROM Files)\n\n",
+            tableName, version, tableName, fileTable);
 
     logger.debug("columns: " + querySql);
 
@@ -286,7 +286,7 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> subjectQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new SubjectSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
@@ -300,10 +300,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> subjectFilesQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new SubjectSqlGenerator(table + "." + version, body, version).generateFiles();
+          new SubjectSqlGenerator(table + "." + version, body, version).generateFiles();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -315,10 +315,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> subjectCountsQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new SubjectCountSqlGenerator(table + "." + version, body, version).generate();
+          new SubjectCountSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -332,10 +332,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> researchSubjectQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new ResearchSubjectSqlGenerator(table + "." + version, body, version).generate();
+          new ResearchSubjectSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -347,10 +347,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> researchSubjectFilesQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new ResearchSubjectSqlGenerator(table + "." + version, body, version).generateFiles();
+          new ResearchSubjectSqlGenerator(table + "." + version, body, version).generateFiles();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -362,10 +362,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> researchSubjectCountsQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new ResearchSubjectCountSqlGenerator(table + "." + version, body, version).generate();
+          new ResearchSubjectCountSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -379,7 +379,7 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> specimenQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new SpecimenSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
@@ -393,10 +393,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> specimenFilesQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new SpecimenSqlGenerator(table + "." + version, body, version).generateFiles();
+          new SpecimenSqlGenerator(table + "." + version, body, version).generateFiles();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -408,10 +408,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> specimenCountsQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new SpecimenCountSqlGenerator(table + "." + version, body, version).generate();
+          new SpecimenCountSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -425,7 +425,7 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> diagnosisQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
@@ -439,10 +439,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> diagnosisCountsQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new DiagnosisCountSqlGenerator(table + "." + version, body, version).generate();
+          new DiagnosisCountSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -456,7 +456,7 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> treatmentsQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql = new TreatmentSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
@@ -470,10 +470,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> treatmentCountsQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-              new TreatmentCountSqlGenerator(table + "." + version, body, version).generate();
+          new TreatmentCountSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);

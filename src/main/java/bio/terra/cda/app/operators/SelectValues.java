@@ -34,35 +34,35 @@ public class SelectValues extends BasicOperator {
                 })
             .flatMap(
                 select -> {
-                    var entityPath = ctx.getEntityPath();
-                    var entityParts = entityPath != null
-                            ? entityPath.split("\\.")
-                            : new String[0];
-                    var isFileField = select.toLowerCase().startsWith("file.");
-                    var value = isFileField ? select.substring(select.indexOf(".") + 1) : select;
-                    if (isFileField) {
-                        String[] filesParts =
-                                Stream.concat(Arrays.stream(entityParts), Stream.of("Files", "id"))
-                                        .filter(part -> !part.isEmpty())
-                                        .toArray(String[]::new);
-                        String filesAlias = SqlUtil.getAlias(filesParts.length - 2, filesParts);
+                  var entityPath = ctx.getEntityPath();
+                  var entityParts = entityPath != null ? entityPath.split("\\.") : new String[0];
+                  var isFileField = select.toLowerCase().startsWith("file.");
+                  var value = isFileField ? select.substring(select.indexOf(".") + 1) : select;
+                  if (isFileField) {
+                    String[] filesParts =
+                        Stream.concat(Arrays.stream(entityParts), Stream.of("Files", "id"))
+                            .filter(part -> !part.isEmpty())
+                            .toArray(String[]::new);
+                    String filesAlias = SqlUtil.getAlias(filesParts.length - 2, filesParts);
 
-                        return Stream.concat(
-                                SqlUtil.getUnnestsFromPartsWithEntityPath(
-                                        ctx, ctx.getTable(), filesParts, false, String.join(".", filesParts)),
-                                Stream.of(String.format(
-                                            " %1$s %2$s AS %3$s ON %3$s.id = %4$s",
-                                            SqlUtil.JoinType.INNER.value,
-                                            String.format("%s.%s", ctx.getProject(), ctx.getFileTable()),
-                                            ctx.getFileTable(),
-                                            filesAlias)));
-                    } else {
-                        return SqlUtil.getUnnestsFromPartsWithEntityPath(ctx,
-                                ctx.getFilesQuery() ? ctx.getFileTable() : ctx.getTable(),
-                                value.trim().split("\\."),
-                                false,
-                                String.join(".", entityParts));
-                    }
+                    return Stream.concat(
+                        SqlUtil.getUnnestsFromPartsWithEntityPath(
+                            ctx, ctx.getTable(), filesParts, false, String.join(".", filesParts)),
+                        Stream.of(
+                            String.format(
+                                " %1$s %2$s AS %3$s ON %3$s.id = %4$s",
+                                SqlUtil.JoinType.INNER.value,
+                                String.format("%s.%s", ctx.getProject(), ctx.getFileTable()),
+                                ctx.getFileTable(),
+                                filesAlias)));
+                  } else {
+                    return SqlUtil.getUnnestsFromPartsWithEntityPath(
+                        ctx,
+                        ctx.getFilesQuery() ? ctx.getFileTable() : ctx.getTable(),
+                        value.trim().split("\\."),
+                        false,
+                        String.join(".", entityParts));
+                  }
                 }));
   }
 
@@ -76,19 +76,20 @@ public class SelectValues extends BasicOperator {
               var parts =
                   Arrays.stream(value.split("\\.")).map(String::trim).toArray(String[]::new);
               String alias = String.join("_", parts);
-              String field = String.format("%s.%s",
+              String field =
+                  String.format(
+                      "%s.%s",
                       parts.length == 1
-                              ? isFileField ? ctx.getFileTable() : ctx.getTable()
-                              : SqlUtil.getAlias(parts.length - 2, parts),
+                          ? isFileField ? ctx.getFileTable() : ctx.getTable()
+                          : SqlUtil.getAlias(parts.length - 2, parts),
                       parts[parts.length - 1]);
-              ctx.addAlias(alias, parts.length == 1
-                              ? String.format("%s.%s", isFileField ? ctx.getFileTable() : ctx.getTable(), value)
-                              : value)
-                 .addSelect(
-                      String.format(
-                          "%s AS %s",
-                          field,
-                          alias));
+              ctx.addAlias(
+                      alias,
+                      parts.length == 1
+                          ? String.format(
+                              "%s.%s", isFileField ? ctx.getFileTable() : ctx.getTable(), value)
+                          : value)
+                  .addSelect(String.format("%s AS %s", field, alias));
             });
   }
 
@@ -107,8 +108,11 @@ public class SelectValues extends BasicOperator {
                       && !parts[parts.length - 1].equals("identifier")) {
                     return String.format("%s.system", SqlUtil.getAlias(parts.length - 2, parts));
                   } else {
-                    return String.format("%s.id", isFileField
-                            ? ctx.getFileTable() : SqlUtil.getAlias(parts.length - 2, parts));
+                    return String.format(
+                        "%s.id",
+                        isFileField
+                            ? ctx.getFileTable()
+                            : SqlUtil.getAlias(parts.length - 2, parts));
                   }
                 }));
   }

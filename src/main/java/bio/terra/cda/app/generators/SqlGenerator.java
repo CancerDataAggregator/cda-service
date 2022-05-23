@@ -6,9 +6,6 @@ import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.Tuple;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +14,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 public class SqlGenerator {
   final String qualifiedTable;
@@ -56,12 +55,12 @@ public class SqlGenerator {
     QueryGenerator queryGenerator = this.getClass().getAnnotation(QueryGenerator.class);
     this.modularEntity = queryGenerator != null;
     this.entitySchema =
-            queryGenerator != null
-                    ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
-                    : null;
+        queryGenerator != null
+            ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
+            : null;
 
     this.filteredFields =
-            queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
+        queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
   }
 
   public String generate() throws IllegalArgumentException {
@@ -98,16 +97,16 @@ public class SqlGenerator {
     String prefix = entitySchema != null ? SqlUtil.getAlias(parts.length - 1, parts) : table;
 
     QueryContext ctx =
-            new QueryContext(
-                    tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
+        new QueryContext(
+            tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
     ctx.setEntityPath(entitySchema != null ? entitySchema.x() : "")
-            .setFilesQuery(filesQuery)
-            .setIncludeSelect(!subQuery);
+        .setFilesQuery(filesQuery)
+        .setIncludeSelect(!subQuery);
 
     Stream<String> entityUnnests =
         entitySchema != null
-                ? SqlUtil.getUnnestsFromParts(ctx, table, parts, true, SqlUtil.JoinType.INNER)
-                : Stream.empty();
+            ? SqlUtil.getUnnestsFromParts(ctx, table, parts, true, SqlUtil.JoinType.INNER)
+            : Stream.empty();
 
     String[] filesParts =
         Stream.concat(Arrays.stream(parts), Stream.of("Files")).toArray(String[]::new);
@@ -115,12 +114,12 @@ public class SqlGenerator {
 
     Stream<String> filesUnnests =
         filesQuery
-                ? SqlUtil.getUnnestsFromParts(ctx, table, filesParts, true, SqlUtil.JoinType.INNER)
-                : Stream.empty();
+            ? SqlUtil.getUnnestsFromParts(ctx, table, filesParts, true, SqlUtil.JoinType.INNER)
+            : Stream.empty();
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
-    String selectFields = getSelect(ctx, prefix, !this.modularEntity)
-            .collect(Collectors.joining(", "));
+    String selectFields =
+        getSelect(ctx, prefix, !this.modularEntity).collect(Collectors.joining(", "));
 
     var fromClause =
         Stream.concat(
@@ -148,7 +147,8 @@ public class SqlGenerator {
 
     return String.format(
         "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
-        getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix).collect(Collectors.joining(", ")),
+        getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix)
+            .collect(Collectors.joining(", ")),
         subQuery ? String.format("%s.*", table) : selectFields,
         fromString,
         condition);
@@ -178,75 +178,82 @@ public class SqlGenerator {
     Stream<String> idSelects = Stream.of();
     if (entitySchema != null || ctx.getFilesQuery()) {
       var path = entitySchema != null ? entitySchema.x() : "";
-      idSelects = Stream.concat(
-                    Stream.of(String.format("%s.id AS subject_id", table)),
-                    SqlUtil.getIdSelectsFromPath(ctx, path, entitySchema != null && ctx.getFilesQuery()));
+      idSelects =
+          Stream.concat(
+              Stream.of(String.format("%s.id AS subject_id", table)),
+              SqlUtil.getIdSelectsFromPath(ctx, path, entitySchema != null && ctx.getFilesQuery()));
 
       var parts = path.split("\\.");
       ctx.addPartitions(Stream.of(String.format("%s.id", table)));
-      ctx.addPartitions(IntStream.range(0, parts.length)
+      ctx.addPartitions(
+          IntStream.range(0, parts.length)
               .mapToObj(i -> String.format("%s.id", SqlUtil.getAlias(i, parts))));
     }
     return combinedSelects(ctx, prefix, skipExcludes, idSelects);
   }
 
-  protected Stream<String> combinedSelects(QueryContext ctx, String prefix, Boolean skipExcludes, Stream<String> idSelects) {
+  protected Stream<String> combinedSelects(
+      QueryContext ctx, String prefix, Boolean skipExcludes, Stream<String> idSelects) {
     return Stream.concat(
-            (ctx.getFilesQuery()
-                    ? fileTableSchema
-                    : entitySchema != null
-                    ? List.of(entitySchema.y().getFields())
-                    : tableSchema)
-                    .stream()
-                    .filter(
-                            definition ->
-                                    !(ctx.getFilesQuery()
-                                            && List.of("ResearchSubject", "Subject", "Specimen")
-                                            .contains(definition.getName()))
-                                            && (skipExcludes || !filteredFields.contains(definition.getName())))
-                    .map(definition -> {
-                      ctx.addAlias(definition.getName(),
-                              String.format("%s%s",
-                                      List.of(table, fileTable).contains(prefix)
-                                              ? String.format("%s.", prefix)
-                                              : String.format("%s.", SqlUtil.getAntiAlias(prefix)), definition.getName()));
+        (ctx.getFilesQuery()
+                ? fileTableSchema
+                : entitySchema != null ? List.of(entitySchema.y().getFields()) : tableSchema)
+            .stream()
+                .filter(
+                    definition ->
+                        !(ctx.getFilesQuery()
+                                && List.of("ResearchSubject", "Subject", "Specimen")
+                                    .contains(definition.getName()))
+                            && (skipExcludes || !filteredFields.contains(definition.getName())))
+                .map(
+                    definition -> {
+                      ctx.addAlias(
+                          definition.getName(),
+                          String.format(
+                              "%s%s",
+                              List.of(table, fileTable).contains(prefix)
+                                  ? String.format("%s.", prefix)
+                                  : String.format("%s.", SqlUtil.getAntiAlias(prefix)),
+                              definition.getName()));
                       return String.format("%1$s.%2$s AS %2$s", prefix, definition.getName());
                     }),
-            idSelects);
+        idSelects);
   }
 
   protected Stream<? extends Class<?>> getQueryGeneratorClasses() {
     ClassPathScanningCandidateComponentProvider scanner =
-            new ClassPathScanningCandidateComponentProvider(false);
+        new ClassPathScanningCandidateComponentProvider(false);
 
     scanner.addIncludeFilter(new AnnotationTypeFilter(QueryGenerator.class));
 
     return scanner.findCandidateComponents("bio.terra.cda.app.generators").stream()
-            .map(
-                    cls -> {
-                      try {
-                        return Class.forName(cls.getBeanClassName());
-                      } catch (ClassNotFoundException e) {
-                        return null;
-                      }
-                    })
-            .filter(Objects::nonNull);
+        .map(
+            cls -> {
+              try {
+                return Class.forName(cls.getBeanClassName());
+              } catch (ClassNotFoundException e) {
+                return null;
+              }
+            })
+        .filter(Objects::nonNull);
   }
 
   protected Stream<? extends Class<?>> getFileClasses() {
     return getQueryGeneratorClasses()
-            .filter(
-                    cls -> {
-                      QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
-                      var schema = TableSchema.getDefinitionByName(tableSchema, generator.Entity());
-                      if (schema == null && generator.Entity().equals("Subject")) {
-                        var schemaDef = new TableSchema.SchemaDefinition();
-                        schemaDef.setFields(tableSchema.toArray(TableSchema.SchemaDefinition[]::new));
-                        schema = Tuple.of("Subject", schemaDef);
-                      }
-                      return schema != null && schema.y() != null
-                              && Arrays.stream(schema.y().getFields()).map(TableSchema.SchemaDefinition::getName)
-                              .anyMatch(s -> s.equals("Files"));
-                    });
+        .filter(
+            cls -> {
+              QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
+              var schema = TableSchema.getDefinitionByName(tableSchema, generator.Entity());
+              if (schema == null && generator.Entity().equals("Subject")) {
+                var schemaDef = new TableSchema.SchemaDefinition();
+                schemaDef.setFields(tableSchema.toArray(TableSchema.SchemaDefinition[]::new));
+                schema = Tuple.of("Subject", schemaDef);
+              }
+              return schema != null
+                  && schema.y() != null
+                  && Arrays.stream(schema.y().getFields())
+                      .map(TableSchema.SchemaDefinition::getName)
+                      .anyMatch(s -> s.equals("Files"));
+            });
   }
 }

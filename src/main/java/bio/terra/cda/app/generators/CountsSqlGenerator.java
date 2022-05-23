@@ -22,54 +22,66 @@ public class CountsSqlGenerator extends SqlGenerator {
 
   @Override
   protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
-          throws UncheckedExecutionException, IllegalArgumentException {
-      Map<String, Tuple<String, TableSchema.SchemaDefinition>> entityMap = new HashMap<>();
+      throws UncheckedExecutionException, IllegalArgumentException {
+    Map<String, Tuple<String, TableSchema.SchemaDefinition>> entityMap = new HashMap<>();
 
-      getQueryGeneratorClasses().forEach(clazz -> {
-          var annotation = clazz.getAnnotation(QueryGenerator.class);
-          var entitySchema = TableSchema.getDefinitionByName(tableSchema, annotation.Entity());
+    getQueryGeneratorClasses()
+        .forEach(
+            clazz -> {
+              var annotation = clazz.getAnnotation(QueryGenerator.class);
+              var entitySchema = TableSchema.getDefinitionByName(tableSchema, annotation.Entity());
 
-          entityMap.put(annotation.Entity(), entitySchema);
-      });
+              entityMap.put(annotation.Entity(), entitySchema);
+            });
 
-      // Add a select node to completely flatten out the result set
-      Query newQuery = new Select().nodeType(Query.NodeTypeEnum.SELECT)
-              .l(new SelectValues().nodeType(Query.NodeTypeEnum.SELECTVALUES)
-                      .value(entityMap.keySet().stream()
-                              .map(key -> {
+    // Add a select node to completely flatten out the result set
+    Query newQuery =
+        new Select()
+            .nodeType(Query.NodeTypeEnum.SELECT)
+            .l(
+                new SelectValues()
+                    .nodeType(Query.NodeTypeEnum.SELECTVALUES)
+                    .value(
+                        entityMap.keySet().stream()
+                            .map(
+                                key -> {
                                   var entitySchema = entityMap.get(key);
-                                  String path = entitySchema != null
-                                          ? entitySchema.x()
-                                          : "Subject";
+                                  String path = entitySchema != null ? entitySchema.x() : "Subject";
 
                                   return path.equals("Subject")
-                                          ? "id"
-                                          : String.format("%s.id", path);
-                              })
-                              .collect(Collectors.joining(","))))
-              .r(QueryUtil.DeSelectifyQuery(query));
+                                      ? "id"
+                                      : String.format("%s.id", path);
+                                })
+                            .collect(Collectors.joining(","))))
+            .r(QueryUtil.DeSelectifyQuery(query));
 
-      try {
-          String resultsAlias = "flattened_results";
-          return String.format("%s SELECT %s FROM %s",
-                  String.format("with %s as (%s)",
-                          resultsAlias,
-                          new SqlGenerator(this.qualifiedTable, newQuery, this.version).generate()),
-                  entityMap.keySet().stream().map(key -> {
-                      var entitySchema = entityMap.get(key);
-                      var parts = entitySchema != null
-                          ? Stream.concat(
-                              Arrays.stream(entitySchema.x().split("\\.")),
-                              Stream.of("id")).toArray(String[]::new)
-                          : new String[]{"id"};
+    try {
+      String resultsAlias = "flattened_results";
+      return String.format(
+          "%s SELECT %s FROM %s",
+          String.format(
+              "with %s as (%s)",
+              resultsAlias,
+              new SqlGenerator(this.qualifiedTable, newQuery, this.version).generate()),
+          entityMap.keySet().stream()
+              .map(
+                  key -> {
+                    var entitySchema = entityMap.get(key);
+                    var parts =
+                        entitySchema != null
+                            ? Stream.concat(
+                                    Arrays.stream(entitySchema.x().split("\\.")), Stream.of("id"))
+                                .toArray(String[]::new)
+                            : new String[] {"id"};
 
-                      return String.format("COUNT(DISTINCT %s) AS %s",
-                              String.join("_", parts),
-                              String.format("%s_count", key.toLowerCase()));
-                  }).collect(Collectors.joining(", ")),
-                  resultsAlias);
-      } catch (IOException e) {
-          throw new UncheckedExecutionException(e);
-      }
+                    return String.format(
+                        "COUNT(DISTINCT %s) AS %s",
+                        String.join("_", parts), String.format("%s_count", key.toLowerCase()));
+                  })
+              .collect(Collectors.joining(", ")),
+          resultsAlias);
+    } catch (IOException e) {
+      throw new UncheckedExecutionException(e);
+    }
   }
 }

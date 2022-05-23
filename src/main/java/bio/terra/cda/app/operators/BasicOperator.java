@@ -29,9 +29,7 @@ public class BasicOperator extends Query {
       var parts = value.split("\\.");
 
       var entityPath = ctx.getEntityPath();
-      var entityParts = entityPath != null
-              ? entityPath.split("\\.")
-              : new String[0];
+      var entityParts = entityPath != null ? entityPath.split("\\.") : new String[0];
       if (isFileField) {
         String[] filesParts =
             Stream.concat(Arrays.stream(entityParts), Stream.of("Files", "id"))
@@ -39,7 +37,8 @@ public class BasicOperator extends Query {
                 .toArray(String[]::new);
         String filesAlias = SqlUtil.getAlias(filesParts.length - 2, filesParts);
 
-        ctx.addUnnests(SqlUtil.getUnnestsFromPartsWithEntityPath(
+        ctx.addUnnests(
+            SqlUtil.getUnnestsFromPartsWithEntityPath(
                 ctx, ctx.getTable(), filesParts, false, String.join(".", filesParts)));
         ctx.addUnnests(
             Stream.of(
@@ -52,7 +51,11 @@ public class BasicOperator extends Query {
       } else {
         ctx.addUnnests(
             SqlUtil.getUnnestsFromPartsWithEntityPath(
-                    ctx, ctx.getTable(), parts, (tmpGetMode.equals("REPEATED")), String.join(".", entityParts)));
+                ctx,
+                ctx.getTable(),
+                parts,
+                (tmpGetMode.equals("REPEATED")),
+                String.join(".", entityParts)));
       }
     } catch (NullPointerException e) {
       throw new IllegalArgumentException(

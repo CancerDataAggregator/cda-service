@@ -8,9 +8,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface CountQueryGenerator {
-    public String Entity();
+  public String Entity();
 
-    public String[] FieldsToCount();
+  public String[] FieldsToCount();
 
-    public String[] ExcludedFields();
+  public String[] ExcludedFields();
 }
