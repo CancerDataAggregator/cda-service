@@ -65,7 +65,7 @@ class QueryApiControllerTest {
     String table = "default.dev";
 
     var expected =
-        "SELECT DISTINCT sex FROM default.dev.all_v3_0_subjects_meta, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE _identifier.system = 'GDC' ORDER BY sex";
+        "SELECT DISTINCT sex FROM default.dev.all_v3_0_subjects_meta, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE IFNULL(sex, '') <> '' AND _identifier.system = 'GDC' ORDER BY sex";
     var result =
         mvc.perform(
                 post("/api/v1/unique-values/{version}", version)
