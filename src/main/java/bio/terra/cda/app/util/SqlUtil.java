@@ -80,6 +80,23 @@ public class SqlUtil {
             });
   }
 
+  public static Stream<String> getIdSelectsFromPathWithEmpties(
+          QueryContext ctx, String path, Boolean includeLast, String[] realPath) {
+      String[] parts = path.split("\\.");
+      return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
+              .mapToObj(
+                      i -> {
+                          String tmp = getAlias(i, parts).substring(1).toLowerCase();
+                          String alias = String.format("%s_id", tmp);
+                          String value = realPath.length < parts.length
+                                ? "''"
+                                : String.format("%s.id", getAlias(i, parts));
+
+                          ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1).collect(Collectors.joining(".")));
+                          return String.format("%s AS %s", value, alias);
+                      });
+  }
+
   public static String getAlias(Integer index, String[] parts) {
     return "_" + Arrays.stream(parts, 0, index + 1).collect(Collectors.joining("_"));
   }

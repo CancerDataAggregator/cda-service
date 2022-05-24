@@ -161,7 +161,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new SqlGenerator(table + "." + version, body, version).generate();
+      String querySql = new SubjectSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
