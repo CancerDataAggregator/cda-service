@@ -98,7 +98,7 @@ class SqlGeneratorTest {
                 + "all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, "
                 + "all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS "
                 + "ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN "
-                + "UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject WHERE (NOT (UPPER('cancer') = "
+                + "UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject WHERE NOT ((UPPER('cancer') = "
                 + "UPPER(_ResearchSubject.primary_diagnosis_condition)))) as results WHERE rn = 1"),
         Arguments.of(
             "query-ambiguous.json",
