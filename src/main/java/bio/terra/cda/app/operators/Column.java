@@ -4,7 +4,7 @@ import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
 
-@QueryOperator(nodeType = Query.NodeTypeEnum.COLUMN)
+@QueryOperator(nodeType = {Query.NodeTypeEnum.COLUMN})
 public class Column extends BasicOperator {
   @Override
   public String buildQuery(QueryContext ctx) {

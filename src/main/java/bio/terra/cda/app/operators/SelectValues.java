@@ -6,7 +6,7 @@ import bio.terra.cda.generated.model.Query;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-@QueryOperator(nodeType = Query.NodeTypeEnum.SELECTVALUES)
+@QueryOperator(nodeType = {Query.NodeTypeEnum.SELECTVALUES})
 public class SelectValues extends BasicOperator {
   @Override
   public String buildQuery(QueryContext ctx) throws IllegalArgumentException {

@@ -915,7 +915,11 @@ components:
               IN,
               SELECTVALUES,
               SELECT,
-              LIKE
+              LIKE,
+              IS,
+              "IS NOT",
+              "NOT IN",
+              "NOT LIKE"
             ]
           description: >
             Query contents and behavior depends on `node_type`:

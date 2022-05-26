@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface QueryOperator {
-  public Query.NodeTypeEnum nodeType();
+  public Query.NodeTypeEnum[] nodeType();
 }
