@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class EntityCountSqlGenerator extends SqlGenerator {
@@ -46,7 +47,9 @@ public class EntityCountSqlGenerator extends SqlGenerator {
     String viewSql =
         super.sql(tableOrSubClause, QueryUtil.DeSelectifyQuery(query), subQuery, filesQuery);
     String tableAlias = "flattened_result";
-    return String.format(
+    return subQuery
+            ? viewSql
+            : String.format(
         "with %s as (%s) select %s", tableAlias, viewSql, getCountSelects(tableAlias));
   }
 
@@ -99,7 +102,28 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                   if (definition.getMode().equals("REPEATED")) {
                     ctx.addUnnests(
                         SqlUtil.getUnnestsFromParts(
-                            ctx, table, parts, true, SqlUtil.JoinType.INNER));
+                            ctx, table, parts, !parts[parts.length - 1].equals("Files"), SqlUtil.JoinType.INNER));
+
+                    if (parts[parts.length - 1].equals("Files")) {
+                        ctx.addUnnests(Stream.of(String.format(
+                                "%1$s UNNEST(%2$s.%3$s) AS %4$s",
+                                SqlUtil.JoinType.LEFT.value.toUpperCase(),
+                                SqlUtil.getAlias(parts.length - 2, parts),
+                                parts[parts.length - 1], SqlUtil.getAlias(parts.length - 1, parts))));
+                    }
+
+                    ctx.addPartitions(
+                        IntStream.range(0, parts.length)
+                            .mapToObj(i -> {
+                                if (parts[i].equals("identifier")) {
+                                    return String.format("%s.system", SqlUtil.getAlias(i, parts));
+                                } else if (!tableSchemaMap.get(
+                                        Arrays.stream(parts, 0, i + 1)
+                                                .collect(Collectors.joining("."))).getType().equals("RECORD")){
+                                    return SqlUtil.getAlias(i, parts);
+                                }
+                                return String.format("%s.id", SqlUtil.getAlias(i, parts));
+                            }));
 
                     return !definition.getType().equals("RECORD")
                         ? Stream.of(String.format("%s", SqlUtil.getAlias(parts.length - 1, parts)))
