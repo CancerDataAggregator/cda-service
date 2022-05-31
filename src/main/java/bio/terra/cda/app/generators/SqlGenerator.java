@@ -58,7 +58,7 @@ public class SqlGenerator {
     this.entitySchema =
         queryGenerator != null
             ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
-            : null;
+            : new EntitySchema();
 
     this.filteredFields =
         queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
