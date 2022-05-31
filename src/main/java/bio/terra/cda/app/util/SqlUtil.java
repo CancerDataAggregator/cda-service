@@ -1,6 +1,7 @@
 package bio.terra.cda.app.util;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -67,7 +68,7 @@ public class SqlUtil {
 
   public static Stream<String> getIdSelectsFromPath(
       QueryContext ctx, String path, Boolean includeLast) {
-    String[] parts = path.split("\\.");
+    String[] parts = SqlUtil.getParts(path);
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
         .mapToObj(
             i -> {
@@ -111,5 +112,12 @@ public class SqlUtil {
     antiAlias = antiAlias.replace("_", ".");
 
     return antiAlias;
+  }
+
+  public static String[] getParts(String path) {
+      if (Objects.isNull(path)) {
+          return new String[0];
+      }
+      return path.trim().split("\\.");
   }
 }

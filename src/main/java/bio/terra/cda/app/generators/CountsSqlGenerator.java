@@ -2,7 +2,9 @@ package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.operators.Select;
 import bio.terra.cda.app.operators.SelectValues;
+import bio.terra.cda.app.util.EntitySchema;
 import bio.terra.cda.app.util.QueryUtil;
+import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.Tuple;
@@ -11,6 +13,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,7 +26,7 @@ public class CountsSqlGenerator extends SqlGenerator {
   @Override
   protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
-    Map<String, Tuple<String, TableSchema.SchemaDefinition>> entityMap = new HashMap<>();
+    Map<String, EntitySchema> entityMap = new HashMap<>();
 
     getQueryGeneratorClasses()
         .forEach(
@@ -46,7 +49,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                             .map(
                                 key -> {
                                   var entitySchema = entityMap.get(key);
-                                  String path = entitySchema != null ? entitySchema.x() : "Subject";
+                                  String path = entitySchema.getPath();
 
                                   return path.equals("Subject")
                                       ? "id"
@@ -68,9 +71,9 @@ public class CountsSqlGenerator extends SqlGenerator {
                   key -> {
                     var entitySchema = entityMap.get(key);
                     var parts =
-                        entitySchema != null
+                        entitySchema.wasFound()
                             ? Stream.concat(
-                                    Arrays.stream(entitySchema.x().split("\\.")), Stream.of("id"))
+                                    entitySchema.getPartsStream(), Stream.of("id"))
                                 .toArray(String[]::new)
                             : new String[] {"id"};
 

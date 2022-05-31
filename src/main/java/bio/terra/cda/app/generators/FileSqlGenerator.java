@@ -1,6 +1,7 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.util.EntitySchema;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
@@ -19,7 +20,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class FileSqlGenerator extends SqlGenerator {
-  private final List<Tuple<String, TableSchema.SchemaDefinition>> schemaList;
+  private final List<EntitySchema> schemaList;
 
   public FileSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
@@ -39,9 +40,9 @@ public class FileSqlGenerator extends SqlGenerator {
               .filter(Objects::nonNull) // null = subject, don't need that here as subjects are a superset of researchsubject and specimen
               .forEach(entitySchema -> {
           var resultsQuery = resultsQuery(query, tableOrSubClause, subQuery, filesQuery, entitySchema);
-          var resultsAlias = String.format("%s_files", entitySchema.x().replace(".", "_"));
+          var resultsAlias = String.format("%s_files", entitySchema.getPath().replace(".", "_"));
 
-          var realParts = entitySchema.x().split("\\.");
+          var realParts = SqlUtil.getParts(entitySchema.getPath());
           List<String> aliases = IntStream.range(0, realParts.length)
                   .mapToObj(i -> {
                       String realAlias = SqlUtil.getAlias(i, realParts);
@@ -80,7 +81,7 @@ public class FileSqlGenerator extends SqlGenerator {
 
   protected String resultsQuery(
           Query query, String tableOrSubClause, Boolean subQuery, Boolean filesQuery,
-          Tuple<String, TableSchema.SchemaDefinition> actualSchema) {
+          EntitySchema actualSchema) {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
         // A SUBQUERY is built differently from other queries. The FROM clause is the
         // SQL version of
@@ -94,18 +95,18 @@ public class FileSqlGenerator extends SqlGenerator {
                 actualSchema);
     }
 
-    String[] parts = actualSchema != null ? actualSchema.x().split("\\.") : new String[0];
-    String prefix = actualSchema != null ? SqlUtil.getAlias(parts.length - 1, parts) : table;
+    String[] parts = actualSchema.getParts();
+    String prefix = actualSchema.wasFound() ? SqlUtil.getAlias(parts.length - 1, parts) : table;
 
     QueryContext ctx =
             new QueryContext(
                     tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
-    ctx.setEntityPath(actualSchema != null ? actualSchema.x() : "")
+    ctx.setEntityPath(actualSchema.wasFound() ? actualSchema.getPath() : "")
             .setFilesQuery(filesQuery)
             .setIncludeSelect(!subQuery);
 
     Stream<String> entityUnnests =
-            actualSchema != null
+            actualSchema.wasFound()
                     ? SqlUtil.getUnnestsFromParts(ctx, table, parts, true, SqlUtil.JoinType.INNER)
                     : Stream.empty();
 
@@ -156,7 +157,7 @@ public class FileSqlGenerator extends SqlGenerator {
   }
 
   protected Stream<String> getSelect(
-          QueryContext ctx, String table, Tuple<String, TableSchema.SchemaDefinition> actualSchema) {
+          QueryContext ctx, String table, EntitySchema actualSchema) {
       if (ctx.getSelect().size() > 0) {
           return ctx.getSelect().stream();
       } else {
@@ -165,19 +166,17 @@ public class FileSqlGenerator extends SqlGenerator {
   }
 
   protected Stream<String> getSelectsFromEntity(
-          QueryContext ctx, String prefix, Tuple<String, TableSchema.SchemaDefinition> actualSchema) {
+          QueryContext ctx, String prefix, EntitySchema actualSchema) {
     ctx.addAlias("subject_id", String.format("%s.id", table));
 
     List<String> idSelects = new ArrayList<>();
     schemaList
         .forEach(
             entitySchema -> {
-              String path = entitySchema != null ? entitySchema.x() : "Subject";
+              String path = entitySchema.getPath();
 
-              var pathParts = path.split("\\.");
-              var realParts = actualSchema != null
-                      ? actualSchema.x().split("\\.")
-                      : new String[0];
+              var pathParts = SqlUtil.getParts(path);
+              var realParts = actualSchema.getParts();
               String realAlias = SqlUtil.getAlias(pathParts.length - 1, pathParts);
               String tmp = realAlias.substring(1).toLowerCase();
               String alias = String.format("%s_id", tmp);
@@ -188,11 +187,11 @@ public class FileSqlGenerator extends SqlGenerator {
               ctx.addAlias(alias, path);
 
               idSelects.add(
-                  path.equals("Subject")
-                      ? String.format("%s.id as subject_id", table)
+                  path.equals(EntitySchema.DEFAULT_PATH)
+                      ? String.format("%s.id as %s_id", table, EntitySchema.DEFAULT_PATH.toLowerCase())
                       : String.format("%s AS %s", value, alias));
 
-              if (!path.equals("Subject")) {
+              if (!path.equals(EntitySchema.DEFAULT_PATH)) {
                 ctx.addPartitions(
                     IntStream.range(0, realParts.length)
                         .mapToObj(i -> String.format("%s.id", SqlUtil.getAlias(i, realParts))));
@@ -204,15 +203,15 @@ public class FileSqlGenerator extends SqlGenerator {
     return combinedSelects(ctx, prefix, true, idSelects.stream().distinct());
   }
 
-  private List<Tuple<String, TableSchema.SchemaDefinition>> getEntitySchemasAsSortedList() {
+  private List<EntitySchema> getEntitySchemasAsSortedList() {
       return getFileClasses()
               .map(clazz -> {
                   var annotation = clazz.getAnnotation(QueryGenerator.class);
                   return TableSchema.getDefinitionByName(tableSchema, annotation.Entity());
               })
               .sorted((schema1, schema2) -> {
-                  var firstSplit = schema1 != null ? schema1.x().split("\\.") : new String[0];
-                  var secondSplit = schema2 != null ? schema2.x().split("\\.") : new String[0];
+                  var firstSplit = schema1.getParts();
+                  var secondSplit = schema2.getParts();
 
                   return Integer.compare(secondSplit.length, firstSplit.length);
               }).collect(Collectors.toList());

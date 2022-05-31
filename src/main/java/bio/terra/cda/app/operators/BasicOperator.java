@@ -26,10 +26,10 @@ public class BasicOperator extends Query {
 
       var tmp = schemaMap.get(value);
       var tmpGetMode = tmp.getMode();
-      var parts = value.split("\\.");
+      var parts = SqlUtil.getParts(value);
 
       var entityPath = ctx.getEntityPath();
-      var entityParts = entityPath != null ? entityPath.split("\\.") : new String[0];
+      var entityParts = entityPath != null ? SqlUtil.getParts(entityPath) : new String[0];
       if (isFileField) {
         String[] filesParts =
             Stream.concat(Arrays.stream(entityParts), Stream.of("Files", "id"))

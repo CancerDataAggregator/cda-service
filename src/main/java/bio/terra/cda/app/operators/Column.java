@@ -20,7 +20,7 @@ public class Column extends BasicOperator {
     var tmp = schemaMap.get(value);
     var tmpGetMode = tmp.getMode();
     var tmpGetType = tmp.getType();
-    var parts = value.split("\\.");
+    var parts = SqlUtil.getParts(value);
     var columnText = "";
     if (tmpGetMode.equals("REPEATED")) {
       columnText = String.format("%s", SqlUtil.getAlias(parts.length - 1, parts));

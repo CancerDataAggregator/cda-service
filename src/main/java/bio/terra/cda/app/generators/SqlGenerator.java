@@ -1,6 +1,7 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.util.EntitySchema;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
@@ -28,7 +29,7 @@ public class SqlGenerator {
   final Map<String, TableSchema.SchemaDefinition> fileTableSchemaMap;
   final List<TableSchema.SchemaDefinition> tableSchema;
   final List<TableSchema.SchemaDefinition> fileTableSchema;
-  Tuple<String, TableSchema.SchemaDefinition> entitySchema;
+  EntitySchema entitySchema;
   List<String> filteredFields;
   Boolean modularEntity;
 
@@ -93,13 +94,13 @@ public class SqlGenerator {
           filesQuery);
     }
 
-    String[] parts = entitySchema != null ? entitySchema.x().split("\\.") : new String[0];
-    String prefix = entitySchema != null ? SqlUtil.getAlias(parts.length - 1, parts) : table;
+    String[] parts = entitySchema.getParts();
+    String prefix = entitySchema.wasFound() ? SqlUtil.getAlias(parts.length - 1, parts) : table;
 
     QueryContext ctx =
         new QueryContext(
             tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
-    ctx.setEntityPath(entitySchema != null ? entitySchema.x() : "")
+    ctx.setEntityPath(entitySchema.getPath())
         .setFilesQuery(filesQuery)
         .setIncludeSelect(!subQuery);
 
@@ -173,17 +174,18 @@ public class SqlGenerator {
 
   protected Stream<String> getSelectsFromEntity(
       QueryContext ctx, String prefix, Boolean skipExcludes) {
-    ctx.addAlias("subject_id", String.format("%s.id", table));
+    var defaultId = String.format("%s_id", EntitySchema.DEFAULT_PATH.toLowerCase());
+    ctx.addAlias(defaultId, String.format("%s.id", table));
 
     Stream<String> idSelects = Stream.of();
-    if (entitySchema != null || ctx.getFilesQuery()) {
-      var path = entitySchema != null ? entitySchema.x() : "";
+    if (entitySchema.wasFound() || ctx.getFilesQuery()) {
+      var path = entitySchema.getPath();
       idSelects =
           Stream.concat(
-              Stream.of(String.format("%s.id AS subject_id", table)),
+              Stream.of(String.format("%s.id AS %s", table, defaultId)),
               SqlUtil.getIdSelectsFromPath(ctx, path, entitySchema != null && ctx.getFilesQuery()));
 
-      var parts = path.split("\\.");
+      var parts = entitySchema.getParts();
       ctx.addPartitions(Stream.of(String.format("%s.id", table)));
       ctx.addPartitions(
           IntStream.range(0, parts.length)
@@ -197,7 +199,7 @@ public class SqlGenerator {
     return Stream.concat(
         (ctx.getFilesQuery()
                 ? fileTableSchema
-                : entitySchema != null ? List.of(entitySchema.y().getFields()) : tableSchema)
+                : entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema)
             .stream()
                 .filter(
                     definition ->
@@ -244,14 +246,9 @@ public class SqlGenerator {
             cls -> {
               QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
               var schema = TableSchema.getDefinitionByName(tableSchema, generator.Entity());
-              if (schema == null && generator.Entity().equals("Subject")) {
-                var schemaDef = new TableSchema.SchemaDefinition();
-                schemaDef.setFields(tableSchema.toArray(TableSchema.SchemaDefinition[]::new));
-                schema = Tuple.of("Subject", schemaDef);
-              }
-              return schema != null
-                  && schema.y() != null
-                  && Arrays.stream(schema.y().getFields())
+              TableSchema.SchemaDefinition[] fields = schema.wasFound()
+                      ? schema.getSchemaFields() : tableSchema.toArray(TableSchema.SchemaDefinition[]::new);
+              return Arrays.stream(fields)
                       .map(TableSchema.SchemaDefinition::getName)
                       .anyMatch(s -> s.equals("Files"));
             });

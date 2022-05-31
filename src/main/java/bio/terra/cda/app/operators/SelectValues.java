@@ -35,7 +35,7 @@ public class SelectValues extends BasicOperator {
             .flatMap(
                 select -> {
                   var entityPath = ctx.getEntityPath();
-                  var entityParts = entityPath != null ? entityPath.split("\\.") : new String[0];
+                  var entityParts = entityPath != null ? SqlUtil.getParts(entityPath) : new String[0];
                   var isFileField = select.toLowerCase().startsWith("file.");
                   var value = isFileField ? select.substring(select.indexOf(".") + 1) : select;
                   if (isFileField) {
@@ -59,7 +59,7 @@ public class SelectValues extends BasicOperator {
                     return SqlUtil.getUnnestsFromPartsWithEntityPath(
                         ctx,
                         ctx.getFilesQuery() ? ctx.getFileTable() : ctx.getTable(),
-                        value.trim().split("\\."),
+                        SqlUtil.getParts(value.trim()),
                         false,
                         String.join(".", entityParts));
                   }
@@ -74,7 +74,7 @@ public class SelectValues extends BasicOperator {
               var isFileField = select.toLowerCase().startsWith("file.");
               var value = isFileField ? select.substring(select.indexOf(".") + 1) : select;
               var parts =
-                  Arrays.stream(value.split("\\.")).map(String::trim).toArray(String[]::new);
+                  Arrays.stream(SqlUtil.getParts(value)).map(String::trim).toArray(String[]::new);
               String alias = String.join("_", parts);
               String field =
                   String.format(
@@ -101,7 +101,7 @@ public class SelectValues extends BasicOperator {
             .map(
                 select -> {
                   var parts =
-                      Arrays.stream(select.split("\\.")).map(String::trim).toArray(String[]::new);
+                      Arrays.stream(SqlUtil.getParts(select)).map(String::trim).toArray(String[]::new);
                   var isFileField = select.toLowerCase().startsWith("file.");
 
                   if (Arrays.asList(parts).contains("identifier")

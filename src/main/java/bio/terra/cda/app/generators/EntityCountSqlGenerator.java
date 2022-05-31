@@ -63,13 +63,11 @@ public class EntityCountSqlGenerator extends SqlGenerator {
               String[] parts =
                   field.equals("Files")
                       ? Stream.concat(
-                              entitySchema != null
-                                  ? Arrays.stream(entitySchema.x().split("\\."))
-                                  : Stream.of(),
-                              Arrays.stream(field.split("\\.")))
+                              entitySchema.getPartsStream(),
+                              Arrays.stream(SqlUtil.getParts(field)))
                           .collect(Collectors.toList())
                           .toArray(String[]::new)
-                      : field.split("\\.");
+                      : SqlUtil.getParts(field);
               String name = field.equals("id") ? "total" : parts[parts.length - 1].toLowerCase();
               TableSchema.SchemaDefinition schemaDefinition = tableSchemaMap.get(field);
 
@@ -87,17 +85,16 @@ public class EntityCountSqlGenerator extends SqlGenerator {
   @Override
   protected Stream<String> getSelectsFromEntity(
       QueryContext ctx, String prefix, Boolean skipExcludes) {
-    return (entitySchema != null ? List.of(entitySchema.y().getFields()) : tableSchema)
+    return (entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema)
         .stream()
             .filter(definition -> (skipExcludes || !filteredFields.contains(definition.getName())))
             .flatMap(
                 definition -> {
                   String[] parts =
-                      String.format(
+                      SqlUtil.getParts(String.format(
                               "%s%s",
-                              entitySchema != null ? String.format("%s.", entitySchema.x()) : "",
-                              definition.getName())
-                          .split("\\.");
+                              entitySchema.wasFound() ? String.format("%s.", entitySchema.getPath()) : "",
+                              definition.getName()));
 
                   if (definition.getMode().equals("REPEATED")) {
                     ctx.addUnnests(
