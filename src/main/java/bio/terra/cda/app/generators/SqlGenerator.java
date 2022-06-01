@@ -183,7 +183,7 @@ public class SqlGenerator {
       idSelects =
           Stream.concat(
               Stream.of(String.format("%s.id AS %s", table, defaultId)),
-              SqlUtil.getIdSelectsFromPath(ctx, path, entitySchema != null && ctx.getFilesQuery()));
+              SqlUtil.getIdSelectsFromPath(ctx, path, entitySchema.wasFound() && ctx.getFilesQuery()));
 
       var parts = entitySchema.getParts();
       ctx.addPartitions(Stream.of(String.format("%s.id", table)));

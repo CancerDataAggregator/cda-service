@@ -108,8 +108,9 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                         ctx.addUnnests(Stream.of(String.format(
                                 "%1$s UNNEST(%2$s.%3$s) AS %4$s",
                                 SqlUtil.JoinType.LEFT.value.toUpperCase(),
-                                SqlUtil.getAlias(parts.length - 2, parts),
-                                parts[parts.length - 1], SqlUtil.getAlias(parts.length - 1, parts))));
+                                parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table,
+                                parts[parts.length - 1],
+                                SqlUtil.getAlias(parts.length - 1, parts))));
                     }
 
                     ctx.addPartitions(
