@@ -12,6 +12,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DecimalNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.*;
@@ -121,6 +124,10 @@ public class QueryService {
             return DecimalNode.valueOf(value.getNumericValue());
           case BOOL:
             return BooleanNode.valueOf(value.getBooleanValue());
+          case INT64:
+            return IntNode.valueOf(value.getNumericValue().intValue());
+          case TIMESTAMP:
+            return LongNode.valueOf(value.getLongValue());
           default:
             // Primitive types other than boolean and numeric are represented as strings.
             return TextNode.valueOf(value.getStringValue());
