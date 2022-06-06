@@ -3,10 +3,10 @@ package bio.terra.cda.app.generators;
 import bio.terra.cda.app.operators.BasicOperator;
 import bio.terra.cda.app.util.EntitySchema;
 import bio.terra.cda.app.util.QueryContext;
+import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
-import com.google.cloud.Tuple;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.IOException;
@@ -54,8 +54,7 @@ public class FileSqlGenerator extends SqlGenerator {
           sb.append(String.format("%1$s%2$s as (%3$s),",
                   previousAlias.get().equals("") ? "with": "",
                   String.format(" %s", resultsAlias),
-                  String.format("SELECT results.* EXCEPT(rn) FROM (%s) as results WHERE rn = 1%s",
-                          resultsQuery,
+                  String.format("%s%s", SqlTemplate.resultsWrapper(resultsQuery),
                           previousAlias.get().equals("")
                                   ? ""
                                   : String.format(" AND CONCAT(results.id, %1$s) not in (SELECT CONCAT(%2$s.id, %3$s) FROM %2$s)",
@@ -147,8 +146,7 @@ public class FileSqlGenerator extends SqlGenerator {
 
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
 
-    return String.format(
-            "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
+    return SqlTemplate.resultsQuery(
             getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix)
                     .collect(Collectors.joining(", ")),
             subQuery ? String.format("%s.*", table) : selectFields,

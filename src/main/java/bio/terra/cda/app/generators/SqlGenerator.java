@@ -3,10 +3,10 @@ package bio.terra.cda.app.generators;
 import bio.terra.cda.app.operators.BasicOperator;
 import bio.terra.cda.app.util.EntitySchema;
 import bio.terra.cda.app.util.QueryContext;
+import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
-import com.google.cloud.Tuple;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -74,10 +74,7 @@ public class SqlGenerator {
 
   protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
       throws IllegalArgumentException {
-    var resultsQuery = resultsQuery(query, tableOrSubClause, subQuery, filesQuery);
-    var resultsAlias = "results";
-    return String.format(
-        "SELECT %1$s.* EXCEPT(rn) FROM (%2$s) as %1$s WHERE rn = 1", resultsAlias, resultsQuery);
+    return SqlTemplate.resultsWrapper(resultsQuery(query, tableOrSubClause, subQuery, filesQuery));
   }
 
   protected String resultsQuery(
@@ -146,8 +143,7 @@ public class SqlGenerator {
 
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
 
-    return String.format(
-        "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
+    return SqlTemplate.resultsQuery(
         getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix)
             .collect(Collectors.joining(", ")),
         subQuery ? String.format("%s.*", table) : selectFields,

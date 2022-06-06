@@ -35,12 +35,8 @@ public class SqlUtil {
               String alias = getAlias(i, parts);
               ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1).collect(Collectors.joining(".")));
               return i == 0
-                  ? String.format(
-                      "%1$s UNNEST(%2$s.%3$s) AS %4$s",
-                      JoinType.value.toUpperCase(), table, parts[i], alias)
-                  : String.format(
-                      "%1$s UNNEST(%2$s.%3$s) AS %4$s",
-                      JoinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
+                  ? SqlTemplate.unnest(JoinType.value.toUpperCase(), table, parts[i], alias)
+                  : SqlTemplate.unnest(JoinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
             });
   }
 
@@ -57,12 +53,8 @@ public class SqlUtil {
               JoinType joinType = entityPath.startsWith(partsSub) ? JoinType.INNER : JoinType.LEFT;
 
               return i == 0
-                  ? String.format(
-                      "%1$s UNNEST(%2$s.%3$s) AS %4$s",
-                      joinType.value.toUpperCase(), table, parts[i], alias)
-                  : String.format(
-                      "%1$s UNNEST(%2$s.%3$s) AS %4$s",
-                      joinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
+                  ? SqlTemplate.unnest(joinType.value.toUpperCase(), table, parts[i], alias)
+                  : SqlTemplate.unnest(joinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
             });
   }
 

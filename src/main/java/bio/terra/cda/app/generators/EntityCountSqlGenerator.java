@@ -2,6 +2,7 @@ package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.QueryUtil;
+import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
@@ -107,12 +108,13 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                             ctx, table, parts, !parts[parts.length - 1].equals("Files"), SqlUtil.JoinType.INNER));
 
                     if (parts[parts.length - 1].equals("Files")) {
-                        ctx.addUnnests(Stream.of(String.format(
-                                "%1$s UNNEST(%2$s.%3$s) AS %4$s",
-                                SqlUtil.JoinType.LEFT.value.toUpperCase(),
-                                parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table,
-                                parts[parts.length - 1],
-                                SqlUtil.getAlias(parts.length - 1, parts))));
+                        ctx.addUnnests(
+                                Stream.of(
+                                        SqlTemplate.unnest(
+                                            SqlUtil.JoinType.LEFT.value.toUpperCase(),
+                                            parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table,
+                                            parts[parts.length - 1],
+                                            SqlUtil.getAlias(parts.length - 1, parts))));
                     }
 
                     ctx.addPartitions(
