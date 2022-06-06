@@ -5,6 +5,8 @@ import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.util.Arrays;
@@ -99,7 +101,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                               entitySchema.wasFound() ? String.format("%s.", entitySchema.getPath()) : "",
                               definition.getName()));
 
-                  if (definition.getMode().equals("REPEATED")) {
+                  if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
                     ctx.addUnnests(
                         SqlUtil.getUnnestsFromParts(
                             ctx, table, parts, !parts[parts.length - 1].equals("Files"), SqlUtil.JoinType.INNER));
@@ -120,13 +122,14 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                                     return String.format("%s.system", SqlUtil.getAlias(i, parts));
                                 } else if (!tableSchemaMap.get(
                                         Arrays.stream(parts, 0, i + 1)
-                                                .collect(Collectors.joining("."))).getType().equals("RECORD")){
+                                                .collect(Collectors.joining(".")))
+                                        .getType().equals(LegacySQLTypeName.RECORD.toString())){
                                     return SqlUtil.getAlias(i, parts);
                                 }
                                 return String.format("%s.id", SqlUtil.getAlias(i, parts));
                             }));
 
-                    return !definition.getType().equals("RECORD")
+                    return !definition.getType().equals(LegacySQLTypeName.RECORD.toString())
                         ? Stream.of(String.format("%s", SqlUtil.getAlias(parts.length - 1, parts)))
                         : Arrays.stream(definition.getFields())
                             .map(

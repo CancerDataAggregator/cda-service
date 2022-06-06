@@ -3,6 +3,8 @@ package bio.terra.cda.app.operators;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
+import com.google.cloud.bigquery.Field;
+
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -30,7 +32,7 @@ public class SelectValues extends BasicOperator {
                   var tmp =
                       (isFileField ? ctx.getFileTableSchemaMap() : ctx.getTableSchemaMap())
                           .get(value);
-                  return !tmp.getMode().equals("REPEATED");
+                  return !tmp.getMode().equals(Field.Mode.REPEATED.toString());
                 })
             .flatMap(
                 select -> {

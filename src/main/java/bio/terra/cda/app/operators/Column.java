@@ -3,6 +3,7 @@ package bio.terra.cda.app.operators;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
+import com.google.cloud.bigquery.Field;
 
 @QueryOperator(nodeType = {Query.NodeTypeEnum.COLUMN})
 public class Column extends BasicOperator {
@@ -22,7 +23,7 @@ public class Column extends BasicOperator {
     var tmpGetType = tmp.getType();
     var parts = SqlUtil.getParts(value);
     var columnText = "";
-    if (tmpGetMode.equals("REPEATED")) {
+    if (tmpGetMode.equals(Field.Mode.REPEATED.toString())) {
       columnText = String.format("%s", SqlUtil.getAlias(parts.length - 1, parts));
     } else if (parts.length == 1) {
       columnText = String.format("%s.%s", isFileField ? ctx.getFileTable() : ctx.getTable(), value);

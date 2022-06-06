@@ -2,7 +2,6 @@ package bio.terra.cda.app.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
-import com.google.cloud.Tuple;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -14,11 +13,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import org.springframework.core.io.ClassPathResource;
+import com.google.cloud.bigquery.Field;
 
 public class TableSchema {
   // region SchemaDefinition
@@ -131,7 +132,8 @@ public class TableSchema {
                 .setSchema(definition);
       }
 
-      if (definition.getType().equals("RECORD") && definition.getMode().equals("REPEATED")) {
+      if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())
+              && definition.getMode().equals(Field.Mode.REPEATED.toString())) {
         var result =
                 TableSchema.getDefinitionTupleByName(
                         Arrays.asList(definition.getFields()),
@@ -199,7 +201,7 @@ public class TableSchema {
           var mapName =
               prefix.isEmpty() ? definition.name : String.format("%s.%s", prefix, definition.name);
           definitionMap.put(mapName, definition);
-          if (definition.type.equals("RECORD")) {
+          if (definition.type.equals(LegacySQLTypeName.RECORD.toString())) {
             addToMap(mapName, List.of(definition.fields), definitionMap);
           }
         });
