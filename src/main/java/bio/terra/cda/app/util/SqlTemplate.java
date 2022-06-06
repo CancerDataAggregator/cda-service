@@ -8,7 +8,7 @@ public class SqlTemplate {
     }
 
     public static String resultsWrapper(String resultsQuery) {
-        return "SELECT results.* EXCEPT(rn) FROM (%1$s) as results WHERE rn = 1";
+        return String.format("SELECT results.* EXCEPT(rn) FROM (%1$s) as results WHERE rn = 1", resultsQuery);
     }
 
     public static String resultsQuery(String partitionByFields, String selectFields, String from, String where) {
