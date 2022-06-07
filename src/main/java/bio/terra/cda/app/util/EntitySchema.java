@@ -8,14 +8,30 @@ public class EntitySchema {
     // region properties
     private String path;
     private TableSchema.SchemaDefinition schema;
+    private String table;
     public static final String DEFAULT_PATH = "Subject";
+    private String[] parts;
+    private String prefix;
     // endregion
 
     // region constructor
     public EntitySchema() {}
+
+    public EntitySchema(String path, TableSchema.SchemaDefinition schemaDefinition) {
+        setPath(path);
+        setSchema(schemaDefinition);
+    }
     // endregion
 
     // region getters and setters
+    public String getTable() {
+        return this.table;
+    }
+    public EntitySchema setTable(String table) {
+        this.table = table;
+        return this;
+    }
+
     public String getPath(){
         if (Objects.isNull(this.path)) {
             return DEFAULT_PATH;
@@ -26,6 +42,8 @@ public class EntitySchema {
 
     public EntitySchema setPath(String path) {
         this.path = path;
+        setParts();
+        setPrefix();
         return this;
     }
 
@@ -43,9 +61,23 @@ public class EntitySchema {
     }
 
     public String[] getParts() {
-        return Objects.nonNull(path)
+        return wasFound() ? this.parts : new String[0];
+    }
+
+    private void setParts() {
+        this.parts = Objects.nonNull(path)
                 ? SqlUtil.getParts(path)
                 : new String[0];
+    }
+
+    public String getPrefix() {
+        return wasFound() ? this.prefix : getTable();
+    }
+
+    private void setPrefix() {
+        this.prefix = wasFound()
+            ? SqlUtil.getAlias(this.parts.length - 1, this.parts)
+            : table;
     }
 
     public TableSchema.SchemaDefinition[] getSchemaFields() {
@@ -56,6 +88,12 @@ public class EntitySchema {
 
     public Stream<String> getPartsStream() {
         return Arrays.stream(getParts());
+    }
+
+    public Stream<String> getUnnests(QueryContext ctx) {
+        return wasFound()
+                ? SqlUtil.getUnnestsFromParts(ctx, table, getParts(), true, SqlUtil.JoinType.INNER)
+                : Stream.empty();
     }
     // endregion
 }

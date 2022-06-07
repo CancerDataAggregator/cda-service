@@ -161,7 +161,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new SubjectSqlGenerator(table + "." + version, body, version).generate();
+      String querySql = new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -272,7 +272,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     String querySql = "";
     try {
-      querySql = new FileSqlGenerator(table + "." + version, body, version).generateFiles();
+      querySql = new FileSqlGenerator(table + "." + version, body, version).generate();
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -288,7 +288,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> subjectQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new SubjectSqlGenerator(table + "." + version, body, version).generate();
+      String querySql = new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -303,7 +303,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-          new SubjectSqlGenerator(table + "." + version, body, version).generateFiles();
+          new SubjectSqlGenerator(table + "." + version, body, version, true).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -335,7 +335,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-          new ResearchSubjectSqlGenerator(table + "." + version, body, version).generate();
+          new ResearchSubjectSqlGenerator(table + "." + version, body, version, false).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -350,7 +350,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-          new ResearchSubjectSqlGenerator(table + "." + version, body, version).generateFiles();
+          new ResearchSubjectSqlGenerator(table + "." + version, body, version, true).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -381,7 +381,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> specimenQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new SpecimenSqlGenerator(table + "." + version, body, version).generate();
+      String querySql = new SpecimenSqlGenerator(table + "." + version, body, version, false).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -396,7 +396,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       String querySql =
-          new SpecimenSqlGenerator(table + "." + version, body, version).generateFiles();
+          new SpecimenSqlGenerator(table + "." + version, body, version, true).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);

@@ -7,8 +7,8 @@ import java.io.IOException;
     Entity = "ResearchSubject",
     ExcludedFields = {"Diagnosis", "Specimen", "File", "Files"})
 public class ResearchSubjectSqlGenerator extends SqlGenerator {
-  public ResearchSubjectSqlGenerator(String qualifiedTable, Query rootQuery, String version)
+  public ResearchSubjectSqlGenerator(String qualifiedTable, Query rootQuery, String version, Boolean filesQuery)
       throws IOException {
-    super(qualifiedTable, rootQuery, version);
+    super(qualifiedTable, rootQuery, version, filesQuery);
   }
 }

@@ -127,9 +127,7 @@ public class TableSchema {
     for (var definition : definitions) {
       String newPrefix = prefix.equals("") ? prefix : String.format("%s.", prefix);
       if (definition.getName().equals(name)) {
-        return new EntitySchema()
-                .setPath(String.format("%s%s", newPrefix, definition.getName()))
-                .setSchema(definition);
+        return new EntitySchema(String.format("%s%s", newPrefix, definition.getName()), definition);
       }
 
       if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())

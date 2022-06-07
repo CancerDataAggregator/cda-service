@@ -15,7 +15,7 @@ public class QueryContext {
   private List<String> select;
   private List<String> partitions;
   private final String fileTable;
-  private String entityPath;
+  private EntitySchema entitySchema;
   private final Map<String, TableSchema.SchemaDefinition> tableSchemaMap;
   private final Map<String, TableSchema.SchemaDefinition> fileTableSchemaMap;
   private Map<String, String> aliasMap;
@@ -60,13 +60,13 @@ public class QueryContext {
     return this.fileTable;
   }
 
-  public QueryContext setEntityPath(String value) {
-    this.entityPath = value;
+  public QueryContext setEntitySchema(EntitySchema schema) {
+    this.entitySchema = schema;
     return this;
   }
 
-  public String getEntityPath() {
-    return this.entityPath;
+  public EntitySchema getEntitySchema() {
+    return this.entitySchema;
   }
 
   public QueryContext setModularEntity(Boolean value) {
@@ -137,5 +137,29 @@ public class QueryContext {
 
   public Map<String, String> getAliasMap() {
     return this.aliasMap;
+  }
+
+  public Boolean entityFound() {
+    return this.entitySchema.wasFound();
+  }
+
+  public String getEntityPath() {
+    return this.entitySchema.getPath();
+  }
+
+  public String[] getEntityParts() {
+    return this.entitySchema.getParts();
+  }
+
+  public Stream<String> getEntityPartsStream() {
+    return this.entitySchema.getPartsStream();
+  }
+
+  public String getEntityPrefix() {
+    return this.entitySchema.getPrefix();
+  }
+
+  public TableSchema.SchemaDefinition[] getEntitySchemaFields() {
+    return this.entitySchema.getSchemaFields();
   }
 }

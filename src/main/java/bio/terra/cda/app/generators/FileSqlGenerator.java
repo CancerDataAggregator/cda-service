@@ -24,13 +24,13 @@ public class FileSqlGenerator extends SqlGenerator {
 
   public FileSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version);
+    super(qualifiedTable, rootQuery, version, true);
 
     schemaList = getEntitySchemasAsSortedList();
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
           throws UncheckedExecutionException, IllegalArgumentException {
       StringBuilder sb = new StringBuilder();
       AtomicReference<String> previousAlias = new AtomicReference<>("");
@@ -39,10 +39,14 @@ public class FileSqlGenerator extends SqlGenerator {
               .stream()
               .filter(Objects::nonNull) // null = subject, don't need that here as subjects are a superset of researchsubject and specimen
               .forEach(entitySchema -> {
-          var resultsQuery = resultsQuery(query, tableOrSubClause, subQuery, filesQuery, entitySchema);
+          var resultsQuery = resultsQuery(
+                  query,
+                  tableOrSubClause,
+                  subQuery,
+                  buildQueryContext(entitySchema, true, subQuery));
           var resultsAlias = String.format("%s_files", entitySchema.getPath().replace(".", "_"));
 
-          var realParts = SqlUtil.getParts(entitySchema.getPath());
+          var realParts = entitySchema.getParts();
           List<String> aliases = IntStream.range(0, realParts.length)
                   .mapToObj(i -> {
                       String realAlias = SqlUtil.getAlias(i, realParts);
@@ -78,93 +82,9 @@ public class FileSqlGenerator extends SqlGenerator {
       return sb.toString();
   }
 
-  protected String resultsQuery(
-          Query query, String tableOrSubClause, Boolean subQuery, Boolean filesQuery,
-          EntitySchema actualSchema) {
-    if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
-        // A SUBQUERY is built differently from other queries. The FROM clause is the
-        // SQL version of
-        // the right subtree, instead of using table. The left subtree is now the top
-        // level query.
-        return resultsQuery(
-                query.getL(),
-                String.format("(%s)", sql(tableOrSubClause, query.getR(), true, filesQuery)),
-                subQuery,
-                filesQuery,
-                actualSchema);
-    }
-
-    String[] parts = actualSchema.getParts();
-    String prefix = actualSchema.wasFound() ? SqlUtil.getAlias(parts.length - 1, parts) : table;
-
-    QueryContext ctx =
-            new QueryContext(
-                    tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
-    ctx.setEntityPath(actualSchema.wasFound() ? actualSchema.getPath() : "")
-            .setFilesQuery(filesQuery)
-            .setIncludeSelect(!subQuery);
-
-    Stream<String> entityUnnests =
-            actualSchema.wasFound()
-                    ? SqlUtil.getUnnestsFromParts(ctx, table, parts, true, SqlUtil.JoinType.INNER)
-                    : Stream.empty();
-
-    String[] filesParts =
-            Stream.concat(Arrays.stream(parts), Stream.of("Files")).toArray(String[]::new);
-    String filesAlias = SqlUtil.getAlias(filesParts.length - 1, filesParts);
-
-    Stream<String> filesUnnests =
-            filesQuery
-                    ? SqlUtil.getUnnestsFromParts(ctx, table, filesParts, true, SqlUtil.JoinType.INNER)
-                    : Stream.empty();
-
-    String condition = ((BasicOperator) query).buildQuery(ctx);
-    String selectFields =
-            getSelect(ctx, prefix, actualSchema).collect(Collectors.joining(", "));
-
-    var fromClause =
-            Stream.concat(
-                            Stream.concat(
-                                    Stream.concat(
-                                            Stream.of(baseFromClause(tableOrSubClause)), ctx.getUnnests().stream()),
-                                    entityUnnests),
-                            filesUnnests)
-                    .distinct();
-
-    if (filesQuery) {
-        fromClause =
-                Stream.concat(
-                        fromClause,
-                        Stream.of(
-                                String.format(
-                                        " %1$s %2$s AS %3$s ON %3$s.id = %4$s",
-                                        SqlUtil.JoinType.INNER.value,
-                                        String.format("%s.%s", this.project, this.fileTable),
-                                        this.fileTable,
-                                        filesAlias)));
-    }
-
-    String fromString = fromClause.distinct().collect(Collectors.joining(" "));
-
-    return SqlTemplate.resultsQuery(
-            getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix)
-                    .collect(Collectors.joining(", ")),
-            subQuery ? String.format("%s.*", table) : selectFields,
-            fromString,
-            condition);
-  }
-
-  protected Stream<String> getSelect(
-          QueryContext ctx, String table, EntitySchema actualSchema) {
-      if (ctx.getSelect().size() > 0) {
-          return ctx.getSelect().stream();
-      } else {
-          return getSelectsFromEntity(ctx, ctx.getFilesQuery() ? fileTable : table, actualSchema);
-      }
-  }
-
+  @Override
   protected Stream<String> getSelectsFromEntity(
-          QueryContext ctx, String prefix, EntitySchema actualSchema) {
+          QueryContext ctx, String prefix, Boolean skipExcludes) {
     ctx.addAlias("subject_id", String.format("%s.id", table));
 
     List<String> idSelects = new ArrayList<>();
@@ -173,8 +93,8 @@ public class FileSqlGenerator extends SqlGenerator {
             entitySchema -> {
               String path = entitySchema.getPath();
 
-              var pathParts = SqlUtil.getParts(path);
-              var realParts = actualSchema.getParts();
+              var pathParts = entitySchema.getParts();
+              var realParts = ctx.getEntityParts();
               String realAlias = SqlUtil.getAlias(pathParts.length - 1, pathParts);
               String tmp = realAlias.substring(1).toLowerCase();
               String alias = String.format("%s_id", tmp);
@@ -205,7 +125,8 @@ public class FileSqlGenerator extends SqlGenerator {
       return getFileClasses()
               .map(clazz -> {
                   var annotation = clazz.getAnnotation(QueryGenerator.class);
-                  return TableSchema.getDefinitionByName(tableSchema, annotation.Entity());
+                  return TableSchema.getDefinitionByName(tableSchema, annotation.Entity())
+                                    .setTable(table);
               })
               .sorted((schema1, schema2) -> {
                   var firstSplit = schema1.getParts();

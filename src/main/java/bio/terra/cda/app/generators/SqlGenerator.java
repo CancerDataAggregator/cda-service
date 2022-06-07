@@ -29,14 +29,16 @@ public class SqlGenerator {
   final Map<String, TableSchema.SchemaDefinition> fileTableSchemaMap;
   final List<TableSchema.SchemaDefinition> tableSchema;
   final List<TableSchema.SchemaDefinition> fileTableSchema;
+  final Boolean filesQuery;
   EntitySchema entitySchema;
   List<String> filteredFields;
   Boolean modularEntity;
 
-  public SqlGenerator(String qualifiedTable, Query rootQuery, String version) throws IOException {
+  public SqlGenerator(String qualifiedTable, Query rootQuery, String version, Boolean filesQuery) throws IOException {
     this.qualifiedTable = qualifiedTable;
     this.rootQuery = rootQuery;
     this.version = version;
+    this.filesQuery = filesQuery;
     int dotPos = qualifiedTable.lastIndexOf('.');
     this.project = dotPos == -1 ? "" : qualifiedTable.substring(0, dotPos);
     this.table = dotPos == -1 ? qualifiedTable : qualifiedTable.substring(dotPos + 1);
@@ -60,25 +62,35 @@ public class SqlGenerator {
             ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
             : new EntitySchema();
 
+    this.entitySchema.setTable(table);
+
     this.filteredFields =
         queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
   }
 
+  protected QueryContext buildQueryContext(EntitySchema entitySchema, Boolean filesQuery, Boolean subQuery) {
+    return new QueryContext(tableSchemaMap, qualifiedTable, table, project, fileTable, fileTableSchemaMap)
+              .setFilesQuery(filesQuery)
+              .setEntitySchema(entitySchema)
+              .setIncludeSelect(!subQuery);
+  }
+
   public String generate() throws IllegalArgumentException {
-    return sql(qualifiedTable, rootQuery, false, false);
+    return sql(qualifiedTable, rootQuery, false);
   }
 
-  public String generateFiles() throws IllegalArgumentException {
-    return sql(qualifiedTable, rootQuery, false, true);
-  }
-
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
       throws IllegalArgumentException {
-    return SqlTemplate.resultsWrapper(resultsQuery(query, tableOrSubClause, subQuery, filesQuery));
+    return SqlTemplate.resultsWrapper(
+            resultsQuery(
+                    query,
+                    tableOrSubClause,
+                    subQuery,
+                    buildQueryContext(this.entitySchema, filesQuery, subQuery)));
   }
 
   protected String resultsQuery(
-      Query query, String tableOrSubClause, Boolean subQuery, Boolean filesQuery) {
+      Query query, String tableOrSubClause, Boolean subQuery, QueryContext ctx) {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
       // SQL version of
@@ -86,28 +98,15 @@ public class SqlGenerator {
       // level query.
       return resultsQuery(
           query.getL(),
-          String.format("(%s)", sql(tableOrSubClause, query.getR(), true, filesQuery)),
+          String.format("(%s)", sql(tableOrSubClause, query.getR(), true)),
           subQuery,
-          filesQuery);
+          buildQueryContext(ctx.getEntitySchema(), filesQuery, subQuery));
     }
 
-    String[] parts = entitySchema.getParts();
-    String prefix = entitySchema.wasFound() ? SqlUtil.getAlias(parts.length - 1, parts) : table;
-
-    QueryContext ctx =
-        new QueryContext(
-            tableSchemaMap, tableOrSubClause, table, project, fileTable, fileTableSchemaMap);
-    ctx.setEntityPath(entitySchema.getPath())
-        .setFilesQuery(filesQuery)
-        .setIncludeSelect(!subQuery);
-
-    Stream<String> entityUnnests =
-        entitySchema != null
-            ? SqlUtil.getUnnestsFromParts(ctx, table, parts, true, SqlUtil.JoinType.INNER)
-            : Stream.empty();
+    EntitySchema schema = ctx.getEntitySchema();
 
     String[] filesParts =
-        Stream.concat(Arrays.stream(parts), Stream.of("Files")).toArray(String[]::new);
+        Stream.concat(schema.getPartsStream(), Stream.of("Files")).toArray(String[]::new);
     String filesAlias = SqlUtil.getAlias(filesParts.length - 1, filesParts);
 
     Stream<String> filesUnnests =
@@ -117,14 +116,14 @@ public class SqlGenerator {
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
     String selectFields =
-        getSelect(ctx, prefix, !this.modularEntity).collect(Collectors.joining(", "));
+        getSelect(ctx, schema.getPrefix(), !this.modularEntity).collect(Collectors.joining(", "));
 
     var fromClause =
         Stream.concat(
                 Stream.concat(
                     Stream.concat(
                         Stream.of(baseFromClause(tableOrSubClause)), ctx.getUnnests().stream()),
-                    entityUnnests),
+                        schema.getUnnests(ctx)),
                 filesUnnests)
             .distinct();
 
@@ -144,7 +143,7 @@ public class SqlGenerator {
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
 
     return SqlTemplate.resultsQuery(
-        getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : prefix)
+        getPartitionByFields(ctx, ctx.getFilesQuery() ? fileTable : schema.getPrefix())
             .collect(Collectors.joining(", ")),
         subQuery ? String.format("%s.*", table) : selectFields,
         fromString,

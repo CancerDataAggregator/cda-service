@@ -20,11 +20,11 @@ import java.util.stream.Stream;
 public class CountsSqlGenerator extends SqlGenerator {
   public CountsSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version);
+    super(qualifiedTable, rootQuery, version, false);
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
     Map<String, EntitySchema> entityMap = new HashMap<>();
 
@@ -65,7 +65,7 @@ public class CountsSqlGenerator extends SqlGenerator {
           String.format(
               "with %s as (%s)",
               resultsAlias,
-              new SqlGenerator(this.qualifiedTable, newQuery, this.version).generate()),
+              new SqlGenerator(this.qualifiedTable, newQuery, this.version, false).generate()),
           entityMap.keySet().stream()
               .map(
                   key -> {

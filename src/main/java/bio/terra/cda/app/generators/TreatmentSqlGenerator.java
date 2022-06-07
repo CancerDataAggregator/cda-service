@@ -9,6 +9,6 @@ import java.io.IOException;
 public class TreatmentSqlGenerator extends SqlGenerator {
   public TreatmentSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version);
+    super(qualifiedTable, rootQuery, version, false);
   }
 }

@@ -30,8 +30,7 @@ public class BasicOperator extends Query {
       var tmpGetMode = tmp.getMode();
       var parts = SqlUtil.getParts(value);
 
-      var entityPath = ctx.getEntityPath();
-      var entityParts = entityPath != null ? SqlUtil.getParts(entityPath) : new String[0];
+      var entityParts = ctx.getEntityParts();
       if (isFileField) {
         String[] filesParts =
             Stream.concat(Arrays.stream(entityParts), Stream.of("Files", "id"))

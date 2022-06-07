@@ -1,5 +1,6 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.util.EntitySchema;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.app.util.SqlTemplate;
@@ -21,17 +22,20 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
   public EntityCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version);
+    super(qualifiedTable, rootQuery, version, false);
   }
 
   @Override
   protected void initializeEntityFields() {
     CountQueryGenerator queryGenerator = this.getClass().getAnnotation(CountQueryGenerator.class);
     this.modularEntity = queryGenerator != null;
+
     this.entitySchema =
-        queryGenerator != null
-            ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
-            : null;
+            queryGenerator != null
+                    ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
+                    : new EntitySchema();
+
+    this.entitySchema.setTable(table);
 
     this.filteredFields =
         queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
@@ -45,10 +49,10 @@ public class EntityCountSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery, Boolean filesQuery)
+  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
     String viewSql =
-        super.sql(tableOrSubClause, QueryUtil.DeSelectifyQuery(query), subQuery, filesQuery);
+        super.sql(tableOrSubClause, QueryUtil.DeSelectifyQuery(query), subQuery);
     String tableAlias = "flattened_result";
     return subQuery
             ? viewSql
@@ -75,7 +79,6 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                           .toArray(String[]::new)
                       : SqlUtil.getParts(field);
               String name = field.equals("id") ? "total" : parts[parts.length - 1].toLowerCase();
-              TableSchema.SchemaDefinition schemaDefinition = tableSchemaMap.get(field);
 
               return List.of("id", "Files", "File").contains(field)
                   ? String.format(

@@ -36,8 +36,7 @@ public class SelectValues extends BasicOperator {
                 })
             .flatMap(
                 select -> {
-                  var entityPath = ctx.getEntityPath();
-                  var entityParts = entityPath != null ? SqlUtil.getParts(entityPath) : new String[0];
+                  var entityParts = ctx.getEntityParts();
                   var isFileField = select.toLowerCase().startsWith("file.");
                   var value = isFileField ? select.substring(select.indexOf(".") + 1) : select;
                   if (isFileField) {
