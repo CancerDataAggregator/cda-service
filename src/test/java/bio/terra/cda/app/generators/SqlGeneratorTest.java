@@ -126,7 +126,7 @@ class SqlGeneratorTest {
     String expectedSql = String.format(expectedQueryFormat, qualifiedTable, table);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery = new SqlGenerator(qualifiedTable, query, table).generate();
+    String translatedQuery = new SqlGenerator(qualifiedTable, query, table, false).generate();
 
     assertEquals(expectedSql, translatedQuery);
   }
