@@ -72,6 +72,12 @@ public class TableSchema {
   }
   // endregion
 
+  public static final String FILE_PREFIX = "File";
+  public static final String ID_COLUMN = "id";
+  public static final String FILES_COLUMN = "Files";
+  public static final String IDENTIFIER_COLUMN = "identifier";
+  public static final String SYSTEM_IDENTIFIER = "identifier.system";
+
   private TableSchema() {}
 
   public static List<SchemaDefinition> getSchema(String version) throws IOException {

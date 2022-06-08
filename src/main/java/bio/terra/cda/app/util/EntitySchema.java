@@ -90,7 +90,7 @@ public class EntitySchema {
         return Arrays.stream(getParts());
     }
 
-    public Stream<String> getUnnests(QueryContext ctx) {
+    public Stream<Unnest> getUnnests(QueryContext ctx) {
         return wasFound()
                 ? SqlUtil.getUnnestsFromParts(ctx, table, getParts(), true, SqlUtil.JoinType.INNER)
                 : Stream.empty();

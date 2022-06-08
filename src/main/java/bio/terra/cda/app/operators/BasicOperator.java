@@ -2,6 +2,8 @@ package bio.terra.cda.app.operators;
 
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
+import bio.terra.cda.app.util.TableSchema;
+import bio.terra.cda.app.util.Unnest;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.Field;
 
@@ -33,7 +35,7 @@ public class BasicOperator extends Query {
       var entityParts = ctx.getEntityParts();
       if (isFileField) {
         String[] filesParts =
-            Stream.concat(Arrays.stream(entityParts), Stream.of("Files", "id"))
+            Stream.concat(Arrays.stream(entityParts), Stream.of(TableSchema.FILES_COLUMN, TableSchema.ID_COLUMN))
                 .filter(part -> !part.isEmpty())
                 .toArray(String[]::new);
         String filesAlias = SqlUtil.getAlias(filesParts.length - 2, filesParts);
@@ -43,12 +45,12 @@ public class BasicOperator extends Query {
                 ctx, ctx.getTable(), filesParts, false, String.join(".", filesParts)));
         ctx.addUnnests(
             Stream.of(
-                String.format(
-                    " %1$s %2$s AS %3$s ON %3$s.id = %4$s",
-                    SqlUtil.JoinType.INNER.value,
-                    String.format("%s.%s", ctx.getProject(), ctx.getFileTable()),
-                    ctx.getFileTable(),
-                    filesAlias)));
+                    new Unnest(SqlUtil.JoinType.INNER,
+                            String.format("%s.%s", ctx.getProject(), ctx.getFileTable()),
+                            ctx.getFileTable())
+                            .setIsJoin(true)
+                            .setFirstJoinPath(String.format("%s.id", ctx.getFileTable()))
+                            .setSecondJoinPath(filesAlias)));
       } else {
         ctx.addUnnests(
             SqlUtil.getUnnestsFromPartsWithEntityPath(

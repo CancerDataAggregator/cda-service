@@ -125,7 +125,6 @@ public class QueryService {
           case BOOL:
             return BooleanNode.valueOf(value.getBooleanValue());
           case INT64:
-            return IntNode.valueOf(value.getNumericValue().intValue());
           case TIMESTAMP:
             return LongNode.valueOf(value.getLongValue());
           default:

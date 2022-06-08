@@ -6,6 +6,7 @@ import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
+import bio.terra.cda.app.util.Unnest;
 import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,8 +45,8 @@ public class SqlGenerator {
     this.table = dotPos == -1 ? qualifiedTable : qualifiedTable.substring(dotPos + 1);
     this.fileTable =
         dotPos == -1
-            ? qualifiedTable.replace("Subjects", "Files")
-            : qualifiedTable.substring(dotPos + 1).replace("Subjects", "Files");
+            ? qualifiedTable.replace("Subjects", TableSchema.FILES_COLUMN)
+            : qualifiedTable.substring(dotPos + 1).replace("Subjects", TableSchema.FILES_COLUMN);
     this.tableSchema = TableSchema.getSchema(version);
     this.fileTableSchema = TableSchema.getSchema(fileTable);
     this.tableSchemaMap = TableSchema.buildSchemaMap(this.tableSchema);
@@ -106,10 +107,10 @@ public class SqlGenerator {
     EntitySchema schema = ctx.getEntitySchema();
 
     String[] filesParts =
-        Stream.concat(schema.getPartsStream(), Stream.of("Files")).toArray(String[]::new);
+        Stream.concat(schema.getPartsStream(), Stream.of(TableSchema.FILES_COLUMN)).toArray(String[]::new);
     String filesAlias = SqlUtil.getAlias(filesParts.length - 1, filesParts);
 
-    Stream<String> filesUnnests =
+    Stream<Unnest> filesUnnests =
         filesQuery
             ? SqlUtil.getUnnestsFromParts(ctx, table, filesParts, true, SqlUtil.JoinType.INNER)
             : Stream.empty();
@@ -122,9 +123,9 @@ public class SqlGenerator {
         Stream.concat(
                 Stream.concat(
                     Stream.concat(
-                        Stream.of(baseFromClause(tableOrSubClause)), ctx.getUnnests().stream()),
-                        schema.getUnnests(ctx)),
-                filesUnnests)
+                        Stream.of(baseFromClause(tableOrSubClause)), ctx.getUnnests().stream().map(Unnest::toString)),
+                        schema.getUnnests(ctx).map(Unnest::toString)),
+                filesUnnests.map(Unnest::toString))
             .distinct();
 
     if (filesQuery) {
@@ -245,7 +246,7 @@ public class SqlGenerator {
                       ? schema.getSchemaFields() : tableSchema.toArray(TableSchema.SchemaDefinition[]::new);
               return Arrays.stream(fields)
                       .map(TableSchema.SchemaDefinition::getName)
-                      .anyMatch(s -> s.equals("Files"));
+                      .anyMatch(s -> s.equals(TableSchema.FILES_COLUMN));
             });
   }
 }

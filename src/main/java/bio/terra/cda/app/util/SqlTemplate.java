@@ -1,10 +1,12 @@
 package bio.terra.cda.app.util;
 
-import java.util.stream.Collectors;
-
 public class SqlTemplate {
-    public static String unnest(String joinType, String alias, String value, String resultingAlias) {
-        return String.format("%1$s UNNEST(%2$s.%3$s) AS %4$s", joinType, alias, value, resultingAlias);
+    public static String unnest(String joinType, String path, String resultingAlias) {
+        return String.format("%1$s UNNEST(%2$s) AS %3$s", joinType, path, resultingAlias);
+    }
+
+    public static String join(String joinType, String path, String alias, String firstJoinPath, String secondJoinPath) {
+        return String.format("%1$s %2$s AS %3$s ON %4$s = %5$s", joinType, path, alias, firstJoinPath, secondJoinPath);
     }
 
     public static String resultsWrapper(String resultsQuery) {

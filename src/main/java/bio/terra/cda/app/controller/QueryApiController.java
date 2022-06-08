@@ -181,9 +181,9 @@ public class QueryApiController implements QueryApi {
       tableName = table + "." + version;
     }
     var tmp_body = body;
-    if (tmp_body.toLowerCase().startsWith("file.")) {
+    if (tmp_body.toLowerCase().startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
       tmp_body = tmp_body.replace("File.", "");
-      tableName = tableName.replace("Subjects", "Files");
+      tableName = tableName.replace("Subjects", TableSchema.FILES_COLUMN);
     }
     NestedColumn nt = NestedColumn.generate(tmp_body);
     Set<String> unnestClauses = nt.getUnnestClauses();
@@ -229,7 +229,7 @@ public class QueryApiController implements QueryApi {
       tableName = table;
     }
 
-    var fileTable = version.replace("Subjects", "Files");
+    var fileTable = version.replace("Subjects", TableSchema.FILES_COLUMN);
 
     String querySql =
         String.format(

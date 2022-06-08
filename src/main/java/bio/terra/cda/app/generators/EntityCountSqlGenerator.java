@@ -6,6 +6,7 @@ import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
+import bio.terra.cda.app.util.Unnest;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
@@ -71,7 +72,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
         .map(
             field -> {
               String[] parts =
-                  field.equals("Files")
+                  field.equals(TableSchema.FILES_COLUMN)
                       ? Stream.concat(
                               entitySchema.getPartsStream(),
                               Arrays.stream(SqlUtil.getParts(field)))
@@ -80,7 +81,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                       : SqlUtil.getParts(field);
               String name = field.equals("id") ? "total" : parts[parts.length - 1].toLowerCase();
 
-              return List.of("id", "Files", "File").contains(field)
+              return List.of("id", TableSchema.FILES_COLUMN, TableSchema.FILE_PREFIX).contains(field)
                   ? String.format(
                       "(SELECT COUNT(DISTINCT %s) from %s) as %s",
                       field.equals("id") ? "id" : SqlUtil.getAlias(parts.length - 1, parts),
@@ -108,22 +109,23 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                   if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
                     ctx.addUnnests(
                         SqlUtil.getUnnestsFromParts(
-                            ctx, table, parts, !parts[parts.length - 1].equals("Files"), SqlUtil.JoinType.INNER));
+                            ctx, table, parts, !parts[parts.length - 1].equals(TableSchema.FILES_COLUMN), SqlUtil.JoinType.INNER));
 
-                    if (parts[parts.length - 1].equals("Files")) {
+                    if (parts[parts.length - 1].equals(TableSchema.FILES_COLUMN)) {
                         ctx.addUnnests(
                                 Stream.of(
-                                        SqlTemplate.unnest(
-                                            SqlUtil.JoinType.LEFT.value.toUpperCase(),
-                                            parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table,
-                                            parts[parts.length - 1],
+                                        new Unnest(
+                                            SqlUtil.JoinType.LEFT,
+                                            String.format("%s.%s",
+                                                    parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table,
+                                                    parts[parts.length - 1]),
                                             SqlUtil.getAlias(parts.length - 1, parts))));
                     }
 
                     ctx.addPartitions(
                         IntStream.range(0, parts.length)
                             .mapToObj(i -> {
-                                if (parts[i].equals("identifier")) {
+                                if (parts[i].equals(TableSchema.IDENTIFIER_COLUMN)) {
                                     return String.format("%s.system", SqlUtil.getAlias(i, parts));
                                 } else if (!tableSchemaMap.get(
                                         Arrays.stream(parts, 0, i + 1)

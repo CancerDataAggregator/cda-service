@@ -22,12 +22,12 @@ public class SqlUtil {
     }
   }
 
-  public static Stream<String> getUnnestsFromParts(
+  public static Stream<Unnest> getUnnestsFromParts(
       QueryContext ctx, String table, String[] parts, boolean includeLast) {
     return getUnnestsFromParts(ctx, table, parts, includeLast, JoinType.LEFT);
   }
 
-  public static Stream<String> getUnnestsFromParts(
+  public static Stream<Unnest> getUnnestsFromParts(
       QueryContext ctx, String table, String[] parts, boolean includeLast, JoinType JoinType) {
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
         .mapToObj(
@@ -35,12 +35,12 @@ public class SqlUtil {
               String alias = getAlias(i, parts);
               ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1).collect(Collectors.joining(".")));
               return i == 0
-                  ? SqlTemplate.unnest(JoinType.value.toUpperCase(), table, parts[i], alias)
-                  : SqlTemplate.unnest(JoinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
+                  ? new Unnest(JoinType, String.format("%s.%s", table, parts[i]), alias)
+                  : new Unnest(JoinType, String.format("%s.%s", getAlias(i - 1, parts), parts[i]), alias);
             });
   }
 
-  public static Stream<String> getUnnestsFromPartsWithEntityPath(
+  public static Stream<Unnest> getUnnestsFromPartsWithEntityPath(
       QueryContext ctx, String table, String[] parts, boolean includeLast, String entityPath) {
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
         .mapToObj(
@@ -53,8 +53,8 @@ public class SqlUtil {
               JoinType joinType = entityPath.startsWith(partsSub) ? JoinType.INNER : JoinType.LEFT;
 
               return i == 0
-                  ? SqlTemplate.unnest(joinType.value.toUpperCase(), table, parts[i], alias)
-                  : SqlTemplate.unnest(joinType.value.toUpperCase(), getAlias(i - 1, parts), parts[i], alias);
+                  ? new Unnest(joinType, String.format("%s.%s", table, parts[i]), alias)
+                  : new Unnest(joinType, String.format("%s.%s", getAlias(i - 1, parts), parts[i]), alias);
             });
   }
 
