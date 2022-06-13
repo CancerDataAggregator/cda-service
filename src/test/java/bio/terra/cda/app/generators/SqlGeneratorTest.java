@@ -36,7 +36,7 @@ class SqlGeneratorTest {
                 + "AS subject_associated_project, all_v3_0_subjects_meta.vital_status AS vital_status, "
                 + "all_v3_0_subjects_meta.age_at_death AS age_at_death, all_v3_0_subjects_meta.cause_of_death AS cause_of_death, "
                 + "all_v3_0_subjects_meta.ResearchSubject AS ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS "
-                + "all_v3_0_subjects_meta WHERE (UPPER(all_v3_0_subjects_meta.id) = UPPER('value'))) as results WHERE rn = 1"),
+                + "all_v3_0_subjects_meta WHERE (IFNULL(UPPER(all_v3_0_subjects_meta.id), '') = UPPER('value'))) as results WHERE rn = 1"),
         Arguments.of(
             "query2.json",
             QUALIFIED_TABLE,
@@ -50,9 +50,9 @@ class SqlGeneratorTest {
                 + "all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS "
                 + "ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN "
                 + "UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.Specimen) "
-                + "AS _ResearchSubject_Specimen WHERE (((UPPER(_ResearchSubject.member_of_research_project) >= "
-                + "UPPER('value')) AND (UPPER(_ResearchSubject_Specimen.specimen_type) = UPPER('value'))) AND "
-                + "(UPPER(_ResearchSubject.primary_diagnosis_condition) = UPPER('value')))) as results WHERE rn = 1"),
+                + "AS _ResearchSubject_Specimen WHERE (((IFNULL(UPPER(_ResearchSubject.member_of_research_project), '') >= "
+                + "UPPER('value')) AND (IFNULL(UPPER(_ResearchSubject_Specimen.specimen_type), '') = UPPER('value'))) AND "
+                + "(IFNULL(UPPER(_ResearchSubject.primary_diagnosis_condition), '') = UPPER('value')))) as results WHERE rn = 1"),
         Arguments.of(
             "query3.json",
             QUALIFIED_TABLE,
@@ -82,10 +82,10 @@ class SqlGeneratorTest {
                 + "all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.* FROM GROUP.all_v3_0_subjects_meta AS "
                 + "all_v3_0_subjects_meta LEFT JOIN UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN "
                 + "UNNEST(_ResearchSubject.identifier) AS _ResearchSubject_identifier WHERE "
-                + "(UPPER(_ResearchSubject_identifier.system) = UPPER('PDC'))) as results WHERE rn = 1) AS all_v3_0_subjects_meta "
+                + "(IFNULL(UPPER(_ResearchSubject_identifier.system), '') = UPPER('PDC'))) as results WHERE rn = 1) AS all_v3_0_subjects_meta "
                 + "LEFT JOIN UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN "
                 + "UNNEST(_ResearchSubject.identifier) AS _ResearchSubject_identifier WHERE "
-                + "(UPPER(_ResearchSubject_identifier.system) = UPPER('GDC'))) as results WHERE rn = 1"),
+                + "(IFNULL(UPPER(_ResearchSubject_identifier.system), '') = UPPER('GDC'))) as results WHERE rn = 1"),
         Arguments.of(
             "query-not.json",
             QUALIFIED_TABLE,
@@ -99,7 +99,7 @@ class SqlGeneratorTest {
                 + "all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS "
                 + "ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN "
                 + "UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject WHERE NOT ((UPPER('cancer') = "
-                + "UPPER(_ResearchSubject.primary_diagnosis_condition)))) as results WHERE rn = 1"),
+                + "IFNULL(UPPER(_ResearchSubject.primary_diagnosis_condition), '')))) as results WHERE rn = 1"),
         Arguments.of(
             "query-ambiguous.json",
             QUALIFIED_TABLE,
@@ -113,8 +113,8 @@ class SqlGeneratorTest {
                 + "all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS "
                 + "ResearchSubject FROM (SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY "
                 + "all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.* FROM GROUP.all_v3_0_subjects_meta AS "
-                + "all_v3_0_subjects_meta WHERE (UPPER(all_v3_0_subjects_meta.species) = UPPER('dog'))) as results WHERE rn = 1) "
-                + "AS all_v3_0_subjects_meta WHERE (UPPER(all_v3_0_subjects_meta.species) = UPPER('human'))) as results WHERE rn = 1"));
+                + "all_v3_0_subjects_meta WHERE (IFNULL(UPPER(all_v3_0_subjects_meta.species), '') = UPPER('dog'))) as results WHERE rn = 1) "
+                + "AS all_v3_0_subjects_meta WHERE (IFNULL(UPPER(all_v3_0_subjects_meta.species), '') = UPPER('human'))) as results WHERE rn = 1"));
   }
 
   @ParameterizedTest

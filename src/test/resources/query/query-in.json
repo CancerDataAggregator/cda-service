@@ -1,0 +1,11 @@
+{
+  "node_type": "IN",
+  "l": {
+    "node_type": "column",
+    "value": "ResearchSubject.primary_diagnosis_condition"
+  },
+  "r": {
+    "node_type": "unquoted",
+    "value": "('test', 'test2')"
+  }
+}

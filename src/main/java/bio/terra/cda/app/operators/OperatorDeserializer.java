@@ -74,7 +74,19 @@ public class OperatorDeserializer extends JsonDeserializer<Query> {
 
     query.setNodeType(type);
     query.setL(codec.treeToValue(node.get("l"), Query.class));
+
+    Query left = query.getL();
+    if (Objects.nonNull(left)) {
+      ((BasicOperator)left).setParent((BasicOperator) query);
+    }
+
     query.setR(codec.treeToValue(node.get("r"), Query.class));
+
+    Query right = query.getR();
+    if (Objects.nonNull(right)) {
+      ((BasicOperator)right).setParent((BasicOperator) query);
+    }
+
     query.setValue(node.hasNonNull("value") ? node.get("value").textValue() : null);
 
     return query;
