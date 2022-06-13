@@ -1,4 +1,8 @@
-package bio.terra.cda.app.util;
+package bio.terra.cda.app.models;
+
+import bio.terra.cda.app.util.QueryContext;
+import bio.terra.cda.app.util.SqlUtil;
+import bio.terra.cda.app.util.TableSchema;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -88,12 +92,6 @@ public class EntitySchema {
 
     public Stream<String> getPartsStream() {
         return Arrays.stream(getParts());
-    }
-
-    public Stream<Unnest> getUnnests(QueryContext ctx) {
-        return wasFound()
-                ? SqlUtil.getUnnestsFromParts(ctx, table, getParts(), true, SqlUtil.JoinType.INNER)
-                : Stream.empty();
     }
     // endregion
 }

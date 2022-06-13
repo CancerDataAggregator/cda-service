@@ -2,18 +2,14 @@ package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.operators.Select;
 import bio.terra.cda.app.operators.SelectValues;
-import bio.terra.cda.app.util.EntitySchema;
+import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.util.QueryUtil;
-import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
-import com.google.cloud.Tuple;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 

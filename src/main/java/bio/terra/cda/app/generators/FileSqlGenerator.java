@@ -1,7 +1,6 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.operators.BasicOperator;
-import bio.terra.cda.app.util.EntitySchema;
+import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
@@ -11,7 +10,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -85,7 +83,6 @@ public class FileSqlGenerator extends SqlGenerator {
   @Override
   protected Stream<String> getSelectsFromEntity(
           QueryContext ctx, String prefix, Boolean skipExcludes) {
-    ctx.addAlias("subject_id", String.format("%s.id", table));
 
     List<String> idSelects = new ArrayList<>();
     schemaList
@@ -102,19 +99,15 @@ public class FileSqlGenerator extends SqlGenerator {
                       ? "''"
                       : String.format("%s.id", realAlias);
 
-              ctx.addAlias(alias, path);
-
               idSelects.add(
                   path.equals(EntitySchema.DEFAULT_PATH)
                       ? String.format("%s.id as %s_id", table, EntitySchema.DEFAULT_PATH.toLowerCase())
                       : String.format("%s AS %s", value, alias));
 
               if (!path.equals(EntitySchema.DEFAULT_PATH)) {
-                ctx.addPartitions(
-                    IntStream.range(0, realParts.length)
-                        .mapToObj(i -> String.format("%s.id", SqlUtil.getAlias(i, realParts))));
+                ctx.addPartitions(this.partitionBuilder.fromParts(realParts, tableSchemaMap));
               } else {
-                ctx.addPartitions(Stream.of(String.format("%s.id", table)));
+                ctx.addPartitions(Stream.of(this.partitionBuilder.of("id", String.format("%s.id", table))));
               }
             });
 

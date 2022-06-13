@@ -22,42 +22,6 @@ public class SqlUtil {
     }
   }
 
-  public static Stream<Unnest> getUnnestsFromParts(
-      QueryContext ctx, String table, String[] parts, boolean includeLast) {
-    return getUnnestsFromParts(ctx, table, parts, includeLast, JoinType.LEFT);
-  }
-
-  public static Stream<Unnest> getUnnestsFromParts(
-      QueryContext ctx, String table, String[] parts, boolean includeLast, JoinType JoinType) {
-    return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
-        .mapToObj(
-            i -> {
-              String alias = getAlias(i, parts);
-              ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1).collect(Collectors.joining(".")));
-              return i == 0
-                  ? new Unnest(JoinType, String.format("%s.%s", table, parts[i]), alias)
-                  : new Unnest(JoinType, String.format("%s.%s", getAlias(i - 1, parts), parts[i]), alias);
-            });
-  }
-
-  public static Stream<Unnest> getUnnestsFromPartsWithEntityPath(
-      QueryContext ctx, String table, String[] parts, boolean includeLast, String entityPath) {
-    return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
-        .mapToObj(
-            i -> {
-              String alias = getAlias(i, parts);
-              String partsSub = Arrays.stream(parts, 0, i + 1).collect(Collectors.joining("."));
-
-              ctx.addAlias(alias, partsSub);
-
-              JoinType joinType = entityPath.startsWith(partsSub) ? JoinType.INNER : JoinType.LEFT;
-
-              return i == 0
-                  ? new Unnest(joinType, String.format("%s.%s", table, parts[i]), alias)
-                  : new Unnest(joinType, String.format("%s.%s", getAlias(i - 1, parts), parts[i]), alias);
-            });
-  }
-
   public static Stream<String> getIdSelectsFromPath(
       QueryContext ctx, String path, Boolean includeLast) {
     String[] parts = SqlUtil.getParts(path);
@@ -68,7 +32,6 @@ public class SqlUtil {
               String alias = String.format("%s_id", tmp);
               String value = String.format("%s.id", getAlias(i, parts));
 
-              ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1).collect(Collectors.joining(".")));
               return String.format("%s AS %s", value, alias);
             });
   }
@@ -85,9 +48,12 @@ public class SqlUtil {
                                 ? "''"
                                 : String.format("%s.id", getAlias(i, parts));
 
-                          ctx.addAlias(alias, Arrays.stream(parts, 0, i + 1).collect(Collectors.joining(".")));
                           return String.format("%s AS %s", value, alias);
                       });
+  }
+
+  public static String getPathFromParts(Integer index, String[] parts) {
+      return Arrays.stream(parts, 0, index + 1).collect(Collectors.joining("."));
   }
 
   public static String getAlias(Integer index, String[] parts) {

@@ -1,12 +1,11 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.util.EntitySchema;
+import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.QueryUtil;
-import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
-import bio.terra.cda.app.util.Unnest;
+import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
@@ -15,7 +14,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class EntityCountSqlGenerator extends SqlGenerator {
@@ -43,10 +41,6 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
     this.countFields =
         queryGenerator != null ? Arrays.asList(queryGenerator.FieldsToCount()) : List.of();
-  }
-
-  protected List<String> getCountFields() {
-    return countFields;
   }
 
   @Override
@@ -108,33 +102,24 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
                   if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
                     ctx.addUnnests(
-                        SqlUtil.getUnnestsFromParts(
-                            ctx, table, parts, !parts[parts.length - 1].equals(TableSchema.FILES_COLUMN), SqlUtil.JoinType.INNER));
+                        this.unnestBuilder.fromParts(
+                            table, parts, !parts[parts.length - 1].equals(TableSchema.FILES_COLUMN), SqlUtil.JoinType.INNER));
 
                     if (parts[parts.length - 1].equals(TableSchema.FILES_COLUMN)) {
                         ctx.addUnnests(
                                 Stream.of(
-                                        new Unnest(
+                                        this.unnestBuilder.of(
                                             SqlUtil.JoinType.LEFT,
                                             String.format("%s.%s",
                                                     parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table,
                                                     parts[parts.length - 1]),
-                                            SqlUtil.getAlias(parts.length - 1, parts))));
+                                            SqlUtil.getAlias(parts.length - 1, parts),
+                                            false,
+                                            "",
+                                            "")));
                     }
 
-                    ctx.addPartitions(
-                        IntStream.range(0, parts.length)
-                            .mapToObj(i -> {
-                                if (parts[i].equals(TableSchema.IDENTIFIER_COLUMN)) {
-                                    return String.format("%s.system", SqlUtil.getAlias(i, parts));
-                                } else if (!tableSchemaMap.get(
-                                        Arrays.stream(parts, 0, i + 1)
-                                                .collect(Collectors.joining(".")))
-                                        .getType().equals(LegacySQLTypeName.RECORD.toString())){
-                                    return SqlUtil.getAlias(i, parts);
-                                }
-                                return String.format("%s.id", SqlUtil.getAlias(i, parts));
-                            }));
+                    ctx.addPartitions(this.partitionBuilder.fromParts(parts, tableSchemaMap));
 
                     return !definition.getType().equals(LegacySQLTypeName.RECORD.toString())
                         ? Stream.of(String.format("%s", SqlUtil.getAlias(parts.length - 1, parts)))
@@ -142,24 +127,10 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                             .map(
                                 fieldDefinition -> {
                                   String fieldPrefix = SqlUtil.getAlias(parts.length - 1, parts);
-                                  ctx.addAlias(
-                                      fieldDefinition.getName(),
-                                      String.format(
-                                          "%s.%s",
-                                          SqlUtil.getAntiAlias(fieldPrefix),
-                                          fieldDefinition.getName()));
                                   return String.format(
                                       "%1$s.%2$s AS %2$s", fieldPrefix, fieldDefinition.getName());
                                 });
                   } else {
-                    ctx.addAlias(
-                        definition.getName(),
-                        String.format(
-                            "%s%s",
-                            prefix.equals(table)
-                                ? String.format("%s.", prefix)
-                                : String.format("%s.", SqlUtil.getAntiAlias(prefix)),
-                            definition.getName()));
                     return Stream.of(
                         String.format("%1$s.%2$s AS %2$s", prefix, definition.getName()));
                   }

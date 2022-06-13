@@ -1,5 +1,6 @@
 package bio.terra.cda.app.util;
 
+import bio.terra.cda.app.models.EntitySchema;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import java.io.IOException;
