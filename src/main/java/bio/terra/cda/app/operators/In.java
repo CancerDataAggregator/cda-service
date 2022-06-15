@@ -5,9 +5,7 @@ import bio.terra.cda.generated.model.Query;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-@QueryOperator(nodeType = {
-        Query.NodeTypeEnum.IN,
-        Query.NodeTypeEnum.NOT_IN})
+@QueryOperator(nodeType = {Query.NodeTypeEnum.IN, Query.NodeTypeEnum.NOT_IN})
 public class In extends BasicOperator {
   @Override
   public String buildQuery(QueryContext ctx) {

@@ -8,11 +8,9 @@ import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.Unnest;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,9 +28,7 @@ public class QueryContext {
   private UnnestBuilder unnestBuilder;
   private PartitionBuilder partitionBuilder;
 
-  public QueryContext(
-      String table,
-      String project) {
+  public QueryContext(String table, String project) {
     this.table = table;
     this.project = project;
 
@@ -111,42 +107,44 @@ public class QueryContext {
   public QueryContext addUnnests(Stream<Unnest> newUnnests) {
     var aliasIndexes = new HashMap<String, Integer>();
 
-    newUnnests.forEach(unnest -> {
-      Integer index = 0;
-      boolean add = true;
+    newUnnests.forEach(
+        unnest -> {
+          Integer index = 0;
+          boolean add = true;
 
-      if (aliasIndexes.containsKey(unnest.getAlias())) {
-        index = aliasIndexes.get(unnest.getAlias());
+          if (aliasIndexes.containsKey(unnest.getAlias())) {
+            index = aliasIndexes.get(unnest.getAlias());
 
-        // inner joins take precedence over all other join types
-        this.unnests.set(
+            // inner joins take precedence over all other join types
+            this.unnests.set(
                 index,
                 this.unnests.get(index).getJoinType().equals(SqlUtil.JoinType.INNER)
-                        ? this.unnests.get(index) : unnest);
-      } else {
-        for (var current : this.unnests) {
-          aliasIndexes.put(current.getAlias(), index);
+                    ? this.unnests.get(index)
+                    : unnest);
+          } else {
+            for (var current : this.unnests) {
+              aliasIndexes.put(current.getAlias(), index);
 
-          if (current.getAlias().equals(unnest.getAlias())) {
-            if (current.getJoinType().equals(SqlUtil.JoinType.INNER)) {
-              add = false;
+              if (current.getAlias().equals(unnest.getAlias())) {
+                if (current.getJoinType().equals(SqlUtil.JoinType.INNER)) {
+                  add = false;
+                }
+
+                break;
+              }
+
+              index++;
             }
 
-            break;
+            if (add) {
+              if (index.equals(this.unnests.size())) {
+                this.unnests.add(unnest);
+              } else {
+                this.unnests.set(index, unnest);
+              }
+            }
           }
-
-          index++;
-        }
-
-        if (add) {
-          if (index.equals(this.unnests.size())) {
-            this.unnests.add(unnest);
-          } else {
-            this.unnests.set(index, unnest);
-          }
-        }
-      }
-    });
+        });
 
     return this;
   }

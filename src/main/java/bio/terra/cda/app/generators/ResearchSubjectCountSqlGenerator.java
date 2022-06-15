@@ -7,15 +7,21 @@ import java.io.IOException;
 @CountQueryGenerator(
     Entity = "ResearchSubject",
     FieldsToCount = {
-        TableSchema.FILES_COLUMN,
-        TableSchema.SYSTEM_IDENTIFIER,
-        "primary_diagnosis_condition",
-        "primary_diagnosis_site"
+      TableSchema.FILES_COLUMN,
+      TableSchema.SYSTEM_IDENTIFIER,
+      "primary_diagnosis_condition",
+      "primary_diagnosis_site"
     },
     ExcludedFields = {"Specimen", "Diagnosis"})
 public class ResearchSubjectCountSqlGenerator extends EntityCountSqlGenerator {
   public ResearchSubjectCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version);
+    super(qualifiedTable, rootQuery, version, false);
+  }
+
+  public ResearchSubjectCountSqlGenerator(
+      String qualifiedTable, Query rootQuery, String version, Boolean filesQuery)
+      throws IOException {
+    super(qualifiedTable, rootQuery, version, filesQuery);
   }
 }

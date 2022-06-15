@@ -11,6 +11,6 @@ import java.io.IOException;
 public class DiagnosisCountSqlGenerator extends EntityCountSqlGenerator {
   public DiagnosisCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version);
+    super(qualifiedTable, rootQuery, version, false);
   }
 }

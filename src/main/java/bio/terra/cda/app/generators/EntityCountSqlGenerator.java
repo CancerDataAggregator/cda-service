@@ -5,7 +5,6 @@ import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
-import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
@@ -19,9 +18,10 @@ import java.util.stream.Stream;
 public class EntityCountSqlGenerator extends SqlGenerator {
   private List<String> countFields;
 
-  public EntityCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
+  public EntityCountSqlGenerator(
+      String qualifiedTable, Query rootQuery, String version, Boolean filesQuery)
       throws IOException {
-    super(qualifiedTable, rootQuery, version, false);
+    super(qualifiedTable, rootQuery, version, filesQuery);
   }
 
   @Override
@@ -30,9 +30,9 @@ public class EntityCountSqlGenerator extends SqlGenerator {
     this.modularEntity = queryGenerator != null;
 
     this.entitySchema =
-            queryGenerator != null
-                    ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
-                    : new EntitySchema();
+        queryGenerator != null
+            ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
+            : new EntitySchema();
 
     this.entitySchema.setTable(table);
 
@@ -41,18 +41,22 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
     this.countFields =
         queryGenerator != null ? Arrays.asList(queryGenerator.FieldsToCount()) : List.of();
+
+    if (filesQuery) {
+      this.countFields =
+          List.of(TableSchema.SYSTEM_IDENTIFIER, "data_category", "file_format", "data_type");
+    }
   }
 
   @Override
   protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
-    String viewSql =
-        super.sql(tableOrSubClause, QueryUtil.DeSelectifyQuery(query), subQuery);
+    String viewSql = super.sql(tableOrSubClause, QueryUtil.DeSelectifyQuery(query), subQuery);
     String tableAlias = "flattened_result";
     return subQuery
-            ? viewSql
-            : String.format(
-        "with %s as (%s) select %s", tableAlias, viewSql, getCountSelects(tableAlias));
+        ? viewSql
+        : String.format(
+            "with %s as (%s) select %s", tableAlias, viewSql, getCountSelects(tableAlias));
   }
 
   protected String getCountSelects(String tableAlias) {
@@ -68,14 +72,14 @@ public class EntityCountSqlGenerator extends SqlGenerator {
               String[] parts =
                   field.equals(TableSchema.FILES_COLUMN)
                       ? Stream.concat(
-                              entitySchema.getPartsStream(),
-                              Arrays.stream(SqlUtil.getParts(field)))
+                              entitySchema.getPartsStream(), Arrays.stream(SqlUtil.getParts(field)))
                           .collect(Collectors.toList())
                           .toArray(String[]::new)
                       : SqlUtil.getParts(field);
               String name = field.equals("id") ? "total" : parts[parts.length - 1].toLowerCase();
 
-              return List.of("id", TableSchema.FILES_COLUMN, TableSchema.FILE_PREFIX).contains(field)
+              return List.of("id", TableSchema.FILES_COLUMN, TableSchema.FILE_PREFIX)
+                      .contains(field)
                   ? String.format(
                       "(SELECT COUNT(DISTINCT %s) from %s) as %s",
                       field.equals("id") ? "id" : SqlUtil.getAlias(parts.length - 1, parts),
@@ -89,37 +93,57 @@ public class EntityCountSqlGenerator extends SqlGenerator {
   @Override
   protected Stream<String> getSelectsFromEntity(
       QueryContext ctx, String prefix, Boolean skipExcludes) {
-    return (entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema)
+    return (ctx.getFilesQuery()
+            ? fileTableSchema
+            : entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema)
         .stream()
-            .filter(definition -> (skipExcludes || !filteredFields.contains(definition.getName())))
+            .filter(
+                definition ->
+                    !(ctx.getFilesQuery()
+                            && List.of("ResearchSubject", "Subject", "Specimen")
+                                .contains(definition.getName()))
+                        && (skipExcludes || !filteredFields.contains(definition.getName())))
             .flatMap(
                 definition -> {
                   String[] parts =
-                      SqlUtil.getParts(String.format(
-                              "%s%s",
-                              entitySchema.wasFound() ? String.format("%s.", entitySchema.getPath()) : "",
-                              definition.getName()));
+                      ctx.getFilesQuery()
+                          ? SqlUtil.getParts(definition.getName())
+                          : SqlUtil.getParts(
+                              String.format(
+                                  "%s%s",
+                                  entitySchema.wasFound()
+                                      ? String.format("%s.", entitySchema.getPath())
+                                      : "",
+                                  definition.getName()));
 
                   if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
                     ctx.addUnnests(
                         this.unnestBuilder.fromParts(
-                            table, parts, !parts[parts.length - 1].equals(TableSchema.FILES_COLUMN), SqlUtil.JoinType.INNER));
+                            ctx.getFilesQuery() ? fileTable : table,
+                            parts,
+                            !parts[parts.length - 1].equals(TableSchema.FILES_COLUMN),
+                            SqlUtil.JoinType.INNER));
 
                     if (parts[parts.length - 1].equals(TableSchema.FILES_COLUMN)) {
-                        ctx.addUnnests(
-                                Stream.of(
-                                        this.unnestBuilder.of(
-                                            SqlUtil.JoinType.LEFT,
-                                            String.format("%s.%s",
-                                                    parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table,
-                                                    parts[parts.length - 1]),
-                                            SqlUtil.getAlias(parts.length - 1, parts),
-                                            false,
-                                            "",
-                                            "")));
+                      ctx.addUnnests(
+                          Stream.of(
+                              this.unnestBuilder.of(
+                                  SqlUtil.JoinType.LEFT,
+                                  String.format(
+                                      "%s.%s",
+                                      parts.length > 1
+                                          ? SqlUtil.getAlias(parts.length - 2, parts)
+                                          : table,
+                                      parts[parts.length - 1]),
+                                  SqlUtil.getAlias(parts.length - 1, parts),
+                                  false,
+                                  "",
+                                  "")));
                     }
 
-                    ctx.addPartitions(this.partitionBuilder.fromParts(parts, tableSchemaMap));
+                    ctx.addPartitions(
+                        this.partitionBuilder.fromParts(
+                            parts, ctx.getFilesQuery() ? fileTableSchemaMap : tableSchemaMap));
 
                     return !definition.getType().equals(LegacySQLTypeName.RECORD.toString())
                         ? Stream.of(String.format("%s", SqlUtil.getAlias(parts.length - 1, parts)))

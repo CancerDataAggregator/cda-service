@@ -10,7 +10,6 @@ import bio.terra.cda.app.generators.ResearchSubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.ResearchSubjectSqlGenerator;
 import bio.terra.cda.app.generators.SpecimenCountSqlGenerator;
 import bio.terra.cda.app.generators.SpecimenSqlGenerator;
-import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.generators.SubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.SubjectSqlGenerator;
 import bio.terra.cda.app.generators.TreatmentCountSqlGenerator;
@@ -161,7 +160,8 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
+      String querySql =
+          new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -181,7 +181,9 @@ public class QueryApiController implements QueryApi {
       tableName = table + "." + version;
     }
     var tmp_body = body;
-    if (tmp_body.toLowerCase().startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
+    if (tmp_body
+        .toLowerCase()
+        .startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
       tmp_body = tmp_body.replace("File.", "");
       tableName = tableName.replace("Subjects", TableSchema.FILES_COLUMN);
     }
@@ -280,6 +282,21 @@ public class QueryApiController implements QueryApi {
     }
     return sendQuery(querySql, dryRun);
   }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> fileCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    String querySql = "";
+    try {
+      querySql = new SubjectCountSqlGenerator(table + "." + version, body, version, true).generate();
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+    return sendQuery(querySql, dryRun);
+  }
   // endregion
 
   // region Subject Queries
@@ -288,7 +305,8 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> subjectQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
+      String querySql =
+          new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -319,6 +337,21 @@ public class QueryApiController implements QueryApi {
     try {
       String querySql =
           new SubjectCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> subjectFileCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new SubjectCountSqlGenerator(table + "." + version, body, version, true).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -373,6 +406,21 @@ public class QueryApiController implements QueryApi {
       throw new IllegalArgumentException(e.getMessage());
     }
   }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectFileCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new ResearchSubjectCountSqlGenerator(table + "." + version, body, version, true).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
   // endregion
 
   // region Specimen Queries
@@ -381,7 +429,8 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> specimenQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new SpecimenSqlGenerator(table + "." + version, body, version, false).generate();
+      String querySql =
+          new SpecimenSqlGenerator(table + "." + version, body, version, false).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -412,6 +461,21 @@ public class QueryApiController implements QueryApi {
     try {
       String querySql =
           new SpecimenCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenFileCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+              new SpecimenCountSqlGenerator(table + "." + version, body, version, true).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);

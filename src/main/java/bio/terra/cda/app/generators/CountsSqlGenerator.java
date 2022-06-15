@@ -1,8 +1,8 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.operators.Select;
 import bio.terra.cda.app.operators.SelectValues;
-import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
@@ -68,8 +68,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                     var entitySchema = entityMap.get(key);
                     var parts =
                         entitySchema.wasFound()
-                            ? Stream.concat(
-                                    entitySchema.getPartsStream(), Stream.of("id"))
+                            ? Stream.concat(entitySchema.getPartsStream(), Stream.of("id"))
                                 .toArray(String[]::new)
                             : new String[] {"id"};
 
