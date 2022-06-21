@@ -40,6 +40,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Set;
+
 @Controller
 public class QueryApiController implements QueryApi {
   private static final Logger logger = LoggerFactory.getLogger(QueryApiController.class);
@@ -93,7 +101,7 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<JobStatusData> jobStatus(String id) {
     var response = queryService.getQueryStatusFromJob(id);
-    logger.info("****JobStatusController:" + response);
+    logger.info("JobStatusController: {}", response);
     return ResponseEntity.ok(response);
   }
 
@@ -215,8 +223,7 @@ public class QueryApiController implements QueryApi {
             + String.join(" AND ", whereClauses)
             + " ORDER BY "
             + nt.getColumn();
-
-    logger.debug("uniqueValues: " + querySql);
+    logger.debug("uniqueValues: {}", querySql);
 
     return sendQuery(querySql, false);
   }
@@ -250,7 +257,7 @@ public class QueryApiController implements QueryApi {
                 + "SELECT * FROM Subjects UNION ALL (SELECT * FROM Files)\n\n",
             tableName, version, tableName, fileTable);
 
-    logger.debug("columns: " + querySql);
+    logger.debug("columns: {}", querySql);
 
     return sendQuery(querySql, false);
   }
