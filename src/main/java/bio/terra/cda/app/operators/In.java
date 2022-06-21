@@ -10,20 +10,17 @@ public class In extends BasicOperator {
   @Override
   public String buildQuery(QueryContext ctx) {
     String right = ((BasicOperator) getR()).buildQuery(ctx);
-    if (right.contains("[") || right.contains("(")) {
-      right =
-          Arrays.stream(right.substring(1, right.length() - 1).replace("\"", "'").split(","))
-              .map(
-                  value -> {
-                    if (value.contains("'")) {
-                      return String.format("UPPER(%s)", value);
-                    }
+    if (!right.contains("[") && !right.contains("("))
+        throw new IllegalArgumentException("To use IN you need to add [ or (");
 
-                    return value;
-                  })
-              .collect(Collectors.joining(", "));
-    } else {
-      throw new IllegalArgumentException("To use IN you need to add [ or (");
+    right = right.substring(1, right.length() - 1);
+
+    if (right.contains("\"") || right.contains("'")) {
+        right = right.substring(1, right.length() - 1);
+
+        right = Arrays.stream(right.split("(\"|')(\\s)*,(\\s)*(\"|')"))
+                .map(value -> String.format("UPPER('%s')", value))
+                .collect(Collectors.joining(", "));
     }
 
     String left = ((BasicOperator) getL()).buildQuery(ctx);
