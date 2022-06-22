@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API definition for the CDA
-  version: 3.0.0_RC
+  version: 3.0.0
   title: CDA API
   license:
     name: Apache 2.0

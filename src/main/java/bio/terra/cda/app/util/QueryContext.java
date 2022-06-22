@@ -37,12 +37,12 @@ public class QueryContext {
     this.partitions = new ArrayList<>();
   }
 
-  public QueryContext setFilesQuery(Boolean value) {
+  public QueryContext setFilesQuery(boolean value) {
     filesQuery = value;
     return this;
   }
 
-  public Boolean getFilesQuery() {
+  public boolean getFilesQuery() {
     return filesQuery;
   }
 

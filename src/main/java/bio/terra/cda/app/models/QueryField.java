@@ -9,7 +9,7 @@ public class QueryField {
   private final String[] parts;
   private final String alias;
   private final String columnText;
-  private final Boolean fileField;
+  private final boolean fileField;
   private final TableSchema.SchemaDefinition schemaDefinition;
   // endregion
 
@@ -20,7 +20,7 @@ public class QueryField {
       String[] parts,
       String alias,
       String columnText,
-      Boolean fileField,
+      boolean fileField,
       TableSchema.SchemaDefinition schemaDefinition) {
     this.name = name;
     this.path = path;
@@ -45,7 +45,7 @@ public class QueryField {
     return this.parts;
   }
 
-  public Boolean isFileField() {
+  public boolean isFileField() {
     return this.fileField;
   }
 

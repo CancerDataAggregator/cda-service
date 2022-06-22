@@ -7,7 +7,7 @@ public class Unnest {
   private final SqlUtil.JoinType joinType;
   private final String path;
   private final String alias;
-  private final Boolean isJoin;
+  private final boolean isJoin;
   private final String firstJoinPath;
   private final String secondJoinPath;
 
@@ -15,7 +15,7 @@ public class Unnest {
       SqlUtil.JoinType joinType,
       String path,
       String alias,
-      Boolean isJoin,
+      boolean isJoin,
       String firstJoinPath,
       String secondJoinPath) {
     this.joinType = joinType;
@@ -54,7 +54,7 @@ public class Unnest {
         : SqlTemplate.unnest(joinType.value, path, alias);
   }
 
-  public Boolean getIsJoin() {
+  public boolean getIsJoin() {
     return isJoin;
   }
 }

@@ -129,7 +129,7 @@ task buildPythonSdk(type: GenerateTask){
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
 	configOptions = [
-			"packageVersion" : "6.21.2022",
+			"packageVersion" : "6.22.2022",
 	]
 }
 
@@ -141,7 +141,7 @@ task integrationTest(type: Test) {
     classpath = sourceSets.integrationTest.runtimeClasspath
 
     outputs.upToDateWhen { false } // other way: inputs.upToDateWhen { false }
-    
+
     mustRunAfter test
 }
 

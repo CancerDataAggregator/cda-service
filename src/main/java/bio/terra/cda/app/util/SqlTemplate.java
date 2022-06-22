@@ -1,6 +1,8 @@
 package bio.terra.cda.app.util;
 
 public class SqlTemplate {
+  private SqlTemplate() {}
+
   public static String unnest(String joinType, String path, String resultingAlias) {
     return String.format("%1$s UNNEST(%2$s) AS %3$s", joinType, path, resultingAlias);
   }

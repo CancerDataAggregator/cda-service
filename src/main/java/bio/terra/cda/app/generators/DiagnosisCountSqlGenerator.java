@@ -5,9 +5,9 @@ import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 
 @CountQueryGenerator(
-    Entity = "Diagnosis",
-    FieldsToCount = {TableSchema.SYSTEM_IDENTIFIER, "primary_diagnosis", "stage", "grade"},
-    ExcludedFields = {"Treatment"})
+    entity = "Diagnosis",
+    fieldsToCount = {TableSchema.SYSTEM_IDENTIFIER, "primary_diagnosis", "stage", "grade"},
+    excludedFields = {"Treatment"})
 public class DiagnosisCountSqlGenerator extends EntityCountSqlGenerator {
   public DiagnosisCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {

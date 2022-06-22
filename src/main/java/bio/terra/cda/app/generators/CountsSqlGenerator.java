@@ -20,7 +20,7 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
+  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
     Map<String, EntitySchema> entityMap = new HashMap<>();
 
@@ -28,9 +28,9 @@ public class CountsSqlGenerator extends SqlGenerator {
         .forEach(
             clazz -> {
               var annotation = clazz.getAnnotation(QueryGenerator.class);
-              var entitySchema = TableSchema.getDefinitionByName(tableSchema, annotation.Entity());
+              var entitySchema = TableSchema.getDefinitionByName(tableSchema, annotation.entity());
 
-              entityMap.put(annotation.Entity(), entitySchema);
+              entityMap.put(annotation.entity(), entitySchema);
             });
 
     // Add a select node to completely flatten out the result set
@@ -52,7 +52,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                                       : String.format("%s.id", path);
                                 })
                             .collect(Collectors.joining(","))))
-            .r(QueryUtil.DeSelectifyQuery(query));
+            .r(QueryUtil.deSelectifyQuery(query));
 
     try {
       String resultsAlias = "flattened_results";

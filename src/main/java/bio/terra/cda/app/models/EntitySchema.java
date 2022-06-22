@@ -61,7 +61,7 @@ public class EntitySchema {
   // endregion
 
   // region public methods
-  public Boolean wasFound() {
+  public boolean wasFound() {
     return Objects.nonNull(path);
   }
 

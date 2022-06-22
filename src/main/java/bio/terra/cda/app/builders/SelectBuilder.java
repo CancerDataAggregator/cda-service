@@ -16,12 +16,11 @@ public class SelectBuilder {
   public Select fromQueryField(QueryField queryField) {
     var parts = queryField.getParts();
     String alias = String.join("_", parts);
+    String tbl = queryField.isFileField() ? fileTable : table;
     String field =
         String.format(
-            "%s.%s",
-            parts.length == 1
-                ? queryField.isFileField() ? fileTable : table
-                : SqlUtil.getAlias(parts.length - 2, parts),
+            SqlUtil.ALIAS_FIELD_FORMAT,
+            parts.length == 1 ? tbl : SqlUtil.getAlias(parts.length - 2, parts),
             parts[parts.length - 1]);
     return new Select(field, alias);
   }

@@ -35,16 +35,16 @@ public class SqlGenerator {
   final Map<String, TableSchema.SchemaDefinition> fileTableSchemaMap;
   final List<TableSchema.SchemaDefinition> tableSchema;
   final List<TableSchema.SchemaDefinition> fileTableSchema;
-  final Boolean filesQuery;
+  final boolean filesQuery;
   EntitySchema entitySchema;
   List<String> filteredFields;
-  Boolean modularEntity;
+  boolean modularEntity;
   UnnestBuilder unnestBuilder;
   SelectBuilder selectBuilder;
   QueryFieldBuilder queryFieldBuilder;
   PartitionBuilder partitionBuilder;
 
-  public SqlGenerator(String qualifiedTable, Query rootQuery, String version, Boolean filesQuery)
+  public SqlGenerator(String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
     this.qualifiedTable = qualifiedTable;
     this.rootQuery = rootQuery;
@@ -71,26 +71,25 @@ public class SqlGenerator {
     this.modularEntity = queryGenerator != null;
     this.entitySchema =
         queryGenerator != null
-            ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
+            ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.entity())
             : new EntitySchema();
 
     this.entitySchema.setTable(table);
 
     this.filteredFields =
-        queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
+        queryGenerator != null ? Arrays.asList(queryGenerator.excludedFields()) : List.of();
   }
 
   protected void initializeBuilders() {
     this.queryFieldBuilder =
         new QueryFieldBuilder(tableSchemaMap, fileTableSchemaMap, table, fileTable);
     this.selectBuilder = new SelectBuilder(table, fileTable);
-    this.unnestBuilder =
-        new UnnestBuilder(table, fileTable, entitySchema.getParts(), project, filesQuery);
+    this.unnestBuilder = new UnnestBuilder(table, fileTable, entitySchema.getParts(), project);
     this.partitionBuilder = new PartitionBuilder(fileTable);
   }
 
   protected QueryContext buildQueryContext(
-      EntitySchema entitySchema, Boolean filesQuery, Boolean subQuery) {
+      EntitySchema entitySchema, boolean filesQuery, boolean subQuery) {
     return new QueryContext(table, project)
         .setFilesQuery(filesQuery)
         .setEntitySchema(entitySchema)
@@ -105,7 +104,7 @@ public class SqlGenerator {
     return sql(qualifiedTable, rootQuery, false);
   }
 
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
+  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
       throws IllegalArgumentException {
     return SqlTemplate.resultsWrapper(
         resultsQuery(
@@ -116,7 +115,7 @@ public class SqlGenerator {
   }
 
   protected String resultsQuery(
-      Query query, String tableOrSubClause, Boolean subQuery, QueryContext ctx) {
+      Query query, String tableOrSubClause, boolean subQuery, QueryContext ctx) {
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
       // SQL version of
@@ -174,8 +173,8 @@ public class SqlGenerator {
         .distinct();
   }
 
-  protected Stream<String> getSelect(QueryContext ctx, String table, Boolean skipExcludes) {
-    if (ctx.getSelect().size() > 0) {
+  protected Stream<String> getSelect(QueryContext ctx, String table, boolean skipExcludes) {
+    if (!ctx.getSelect().isEmpty()) {
       return ctx.getSelect().stream().map(Select::toString);
     } else {
       return getSelectsFromEntity(ctx, ctx.getFilesQuery() ? fileTable : table, skipExcludes);
@@ -183,7 +182,7 @@ public class SqlGenerator {
   }
 
   protected Stream<String> getSelectsFromEntity(
-      QueryContext ctx, String prefix, Boolean skipExcludes) {
+      QueryContext ctx, String prefix, boolean skipExcludes) {
     var defaultId = String.format("%s_id", EntitySchema.DEFAULT_PATH.toLowerCase());
 
     Stream<String> idSelects = Stream.of();
@@ -192,8 +191,7 @@ public class SqlGenerator {
       idSelects =
           Stream.concat(
               Stream.of(String.format("%s.id AS %s", table, defaultId)),
-              SqlUtil.getIdSelectsFromPath(
-                  ctx, path, entitySchema.wasFound() && ctx.getFilesQuery()));
+              SqlUtil.getIdSelectsFromPath(path, entitySchema.wasFound() && ctx.getFilesQuery()));
 
       var parts = entitySchema.getParts();
       ctx.addPartitions(Stream.of(this.partitionBuilder.of("id", String.format("%s.id", table))));
@@ -203,11 +201,13 @@ public class SqlGenerator {
   }
 
   protected Stream<String> combinedSelects(
-      QueryContext ctx, String prefix, Boolean skipExcludes, Stream<String> idSelects) {
+      QueryContext ctx, String prefix, boolean skipExcludes, Stream<String> idSelects) {
+
+    List<TableSchema.SchemaDefinition> schema =
+        entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema;
+
     return Stream.concat(
-        (ctx.getFilesQuery()
-                ? fileTableSchema
-                : entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema)
+        (ctx.getFilesQuery() ? fileTableSchema : schema)
             .stream()
                 .filter(
                     definition ->
@@ -243,7 +243,7 @@ public class SqlGenerator {
         .filter(
             cls -> {
               QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
-              var schema = TableSchema.getDefinitionByName(tableSchema, generator.Entity());
+              var schema = TableSchema.getDefinitionByName(tableSchema, generator.entity());
               TableSchema.SchemaDefinition[] fields =
                   schema.wasFound()
                       ? schema.getSchemaFields()

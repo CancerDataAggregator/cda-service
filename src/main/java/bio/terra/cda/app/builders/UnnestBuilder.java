@@ -15,22 +15,19 @@ public class UnnestBuilder {
   private final String fileTable;
   private final String[] entityParts;
   private final String project;
-  private final Boolean filesQuery;
 
-  public UnnestBuilder(
-      String table, String fileTable, String[] entityParts, String project, Boolean filesQuery) {
+  public UnnestBuilder(String table, String fileTable, String[] entityParts, String project) {
     this.table = table;
     this.fileTable = fileTable;
     this.entityParts = entityParts;
     this.project = project;
-    this.filesQuery = filesQuery;
   }
 
   public Unnest of(
       SqlUtil.JoinType joinType,
       String path,
       String alias,
-      Boolean isJoin,
+      boolean isJoin,
       String firstJoinPath,
       String secondJoinPath) {
     return new Unnest(joinType, path, alias, isJoin, firstJoinPath, secondJoinPath);
@@ -39,7 +36,7 @@ public class UnnestBuilder {
   public Unnest fileJoin(SqlUtil.JoinType joinType, String joinAlias) {
     return of(
         joinType,
-        String.format("%s.%s", project, fileTable),
+        String.format(SqlUtil.ALIAS_FIELD_FORMAT, project, fileTable),
         fileTable,
         true,
         String.format("%s.id", fileTable),
@@ -50,12 +47,12 @@ public class UnnestBuilder {
     return buildUnnestsFromQueryField(queryField, false);
   }
 
-  public Stream<Unnest> fromQueryField(QueryField queryField, Boolean includeRepeated) {
+  public Stream<Unnest> fromQueryField(QueryField queryField, boolean includeRepeated) {
     return buildUnnestsFromQueryField(queryField, includeRepeated);
   }
 
   private Stream<Unnest> buildUnnestsFromQueryField(
-      QueryField queryField, Boolean includeRepeated) {
+      QueryField queryField, boolean includeRepeated) {
     if (queryField.isFileField()) {
       String[] filesParts =
           Stream.concat(
@@ -89,25 +86,29 @@ public class UnnestBuilder {
                   entityPath.startsWith(partsSub) ? SqlUtil.JoinType.INNER : SqlUtil.JoinType.LEFT;
 
               return i == 0
-                  ? new Unnest(joinType, String.format("%s.%s", table, parts[i]), alias)
+                  ? new Unnest(
+                      joinType, String.format(SqlUtil.ALIAS_FIELD_FORMAT, table, parts[i]), alias)
                   : new Unnest(
                       joinType,
-                      String.format("%s.%s", SqlUtil.getAlias(i - 1, parts), parts[i]),
+                      String.format(
+                          SqlUtil.ALIAS_FIELD_FORMAT, SqlUtil.getAlias(i - 1, parts), parts[i]),
                       alias);
             });
   }
 
   public Stream<Unnest> fromParts(
-      String table, String[] parts, boolean includeLast, SqlUtil.JoinType JoinType) {
+      String table, String[] parts, boolean includeLast, SqlUtil.JoinType joinType) {
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
         .mapToObj(
             i -> {
               String alias = SqlUtil.getAlias(i, parts);
               return i == 0
-                  ? new Unnest(JoinType, String.format("%s.%s", table, parts[i]), alias)
+                  ? new Unnest(
+                      joinType, String.format(SqlUtil.ALIAS_FIELD_FORMAT, table, parts[i]), alias)
                   : new Unnest(
-                      JoinType,
-                      String.format("%s.%s", SqlUtil.getAlias(i - 1, parts), parts[i]),
+                      joinType,
+                      String.format(
+                          SqlUtil.ALIAS_FIELD_FORMAT, SqlUtil.getAlias(i - 1, parts), parts[i]),
                       alias);
             });
   }

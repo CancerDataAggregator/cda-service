@@ -27,7 +27,7 @@ public class FileSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
+  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
     StringBuilder sb = new StringBuilder();
     AtomicReference<String> previousAlias = new AtomicReference<>("");
@@ -72,11 +72,17 @@ public class FileSqlGenerator extends SqlGenerator {
                               : String.format(
                                   " AND CONCAT(results.id, %1$s) not in (SELECT CONCAT(%2$s.id, %3$s) FROM %2$s)",
                                   aliases.stream()
-                                      .map(a -> String.format("%s.%s", "results", a))
+                                      .map(
+                                          a ->
+                                              String.format(
+                                                  SqlUtil.ALIAS_FIELD_FORMAT, "results", a))
                                       .collect(Collectors.joining(", ")),
                                   previousAlias,
                                   aliases.stream()
-                                      .map(a -> String.format("%s.%s", previousAlias, a))
+                                      .map(
+                                          a ->
+                                              String.format(
+                                                  SqlUtil.ALIAS_FIELD_FORMAT, previousAlias, a))
                                       .collect(Collectors.joining(", "))))));
               previousAlias.set(resultsAlias);
               tables.add(resultsAlias);
@@ -96,7 +102,7 @@ public class FileSqlGenerator extends SqlGenerator {
 
   @Override
   protected Stream<String> getSelectsFromEntity(
-      QueryContext ctx, String prefix, Boolean skipExcludes) {
+      QueryContext ctx, String prefix, boolean skipExcludes) {
 
     List<String> idSelects = new ArrayList<>();
     schemaList.forEach(
@@ -132,7 +138,7 @@ public class FileSqlGenerator extends SqlGenerator {
         .map(
             clazz -> {
               var annotation = clazz.getAnnotation(QueryGenerator.class);
-              return TableSchema.getDefinitionByName(tableSchema, annotation.Entity())
+              return TableSchema.getDefinitionByName(tableSchema, annotation.entity())
                   .setTable(table);
             })
         .sorted(

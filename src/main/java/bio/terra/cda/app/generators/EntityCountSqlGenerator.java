@@ -19,7 +19,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
   private List<String> countFields;
 
   public EntityCountSqlGenerator(
-      String qualifiedTable, Query rootQuery, String version, Boolean filesQuery)
+      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
     super(qualifiedTable, rootQuery, version, filesQuery);
   }
@@ -31,16 +31,16 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
     this.entitySchema =
         queryGenerator != null
-            ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
+            ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.entity())
             : new EntitySchema();
 
     this.entitySchema.setTable(table);
 
     this.filteredFields =
-        queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
+        queryGenerator != null ? Arrays.asList(queryGenerator.excludedFields()) : List.of();
 
     this.countFields =
-        queryGenerator != null ? Arrays.asList(queryGenerator.FieldsToCount()) : List.of();
+        queryGenerator != null ? Arrays.asList(queryGenerator.fieldsToCount()) : List.of();
 
     if (filesQuery) {
       this.countFields =
@@ -49,9 +49,9 @@ public class EntityCountSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
+  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
-    String viewSql = super.sql(tableOrSubClause, QueryUtil.DeSelectifyQuery(query), subQuery);
+    String viewSql = super.sql(tableOrSubClause, QueryUtil.deSelectifyQuery(query), subQuery);
     String tableAlias = "flattened_result";
     return subQuery
         ? viewSql
@@ -78,13 +78,13 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                       : SqlUtil.getParts(field);
               String name = field.equals("id") ? "total" : parts[parts.length - 1].toLowerCase();
 
+              String countField =
+                  field.equals("id") ? "id" : SqlUtil.getAlias(parts.length - 1, parts);
+
               return List.of("id", TableSchema.FILES_COLUMN, TableSchema.FILE_PREFIX)
                       .contains(field)
                   ? String.format(
-                      "(SELECT COUNT(DISTINCT %s) from %s) as %s",
-                      field.equals("id") ? "id" : SqlUtil.getAlias(parts.length - 1, parts),
-                      tableAlias,
-                      name)
+                      "(SELECT COUNT(DISTINCT %s) from %s) as %s", countField, tableAlias, name)
                   : String.format(formatString, parts[parts.length - 1], tableAlias, name);
             })
         .collect(Collectors.joining(", "));
@@ -92,7 +92,8 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
   @Override
   protected Stream<String> getSelectsFromEntity(
-      QueryContext ctx, String prefix, Boolean skipExcludes) {
+      QueryContext ctx, String prefix, boolean skipExcludes) {
+
     return (ctx.getFilesQuery()
             ? fileTableSchema
             : entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema)
@@ -125,16 +126,15 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                             SqlUtil.JoinType.INNER));
 
                     if (parts[parts.length - 1].equals(TableSchema.FILES_COLUMN)) {
+                      String filesPrefix =
+                          parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table;
+
                       ctx.addUnnests(
                           Stream.of(
                               this.unnestBuilder.of(
                                   SqlUtil.JoinType.LEFT,
                                   String.format(
-                                      "%s.%s",
-                                      parts.length > 1
-                                          ? SqlUtil.getAlias(parts.length - 2, parts)
-                                          : table,
-                                      parts[parts.length - 1]),
+                                      SqlUtil.ALIAS_FIELD_FORMAT, filesPrefix, parts[parts.length - 1]),
                                   SqlUtil.getAlias(parts.length - 1, parts),
                                   false,
                                   "",

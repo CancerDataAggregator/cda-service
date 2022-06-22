@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface QueryGenerator {
-  public String Entity();
+  public String entity();
 
-  public String[] ExcludedFields();
+  public String[] excludedFields();
 }

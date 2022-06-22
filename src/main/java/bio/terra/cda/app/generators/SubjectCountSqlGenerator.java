@@ -5,8 +5,8 @@ import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 
 @CountQueryGenerator(
-    Entity = "Subject",
-    FieldsToCount = {
+    entity = "Subject",
+    fieldsToCount = {
       TableSchema.FILES_COLUMN,
       TableSchema.SYSTEM_IDENTIFIER,
       "sex",
@@ -14,7 +14,7 @@ import java.io.IOException;
       "ethnicity",
       "cause_of_death"
     },
-    ExcludedFields = {"ResearchSubject"})
+    excludedFields = {"ResearchSubject"})
 public class SubjectCountSqlGenerator extends EntityCountSqlGenerator {
   public SubjectCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
@@ -22,7 +22,7 @@ public class SubjectCountSqlGenerator extends EntityCountSqlGenerator {
   }
 
   public SubjectCountSqlGenerator(
-      String qualifiedTable, Query rootQuery, String version, Boolean filesQuery)
+      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
     super(qualifiedTable, rootQuery, version, filesQuery);
   }

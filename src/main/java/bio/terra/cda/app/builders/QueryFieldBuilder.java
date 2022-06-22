@@ -26,7 +26,7 @@ public class QueryFieldBuilder {
   }
 
   public QueryField fromPath(String path) {
-    Boolean fileField = path.toLowerCase().startsWith(FILE_MATCH);
+    boolean fileField = path.toLowerCase().startsWith(FILE_MATCH);
 
     String realPath = fileField ? path.substring(path.indexOf(".") + 1) : path;
     String[] parts = SqlUtil.getParts(realPath);
@@ -55,10 +55,13 @@ public class QueryFieldBuilder {
     if (mode.equals(Field.Mode.REPEATED.toString())) {
       return alias;
     } else if (parts.length == 1) {
-      return String.format("%s.%s", fileField ? fileTable : table, schemaDefinition.getName());
+      return String.format(
+          SqlUtil.ALIAS_FIELD_FORMAT, fileField ? fileTable : table, schemaDefinition.getName());
     } else {
       return String.format(
-          "%s.%s", SqlUtil.getAlias(parts.length - 2, parts), schemaDefinition.getName());
+          SqlUtil.ALIAS_FIELD_FORMAT,
+          SqlUtil.getAlias(parts.length - 2, parts),
+          schemaDefinition.getName());
     }
   }
 }

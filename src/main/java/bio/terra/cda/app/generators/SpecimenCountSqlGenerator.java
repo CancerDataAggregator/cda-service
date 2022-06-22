@@ -5,15 +5,15 @@ import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 
 @CountQueryGenerator(
-    Entity = "Specimen",
-    FieldsToCount = {
+    entity = "Specimen",
+    fieldsToCount = {
       TableSchema.FILES_COLUMN,
       TableSchema.SYSTEM_IDENTIFIER,
       "primary_disease_type",
       "source_material_type",
       "specimen_type"
     },
-    ExcludedFields = {})
+    excludedFields = {})
 public class SpecimenCountSqlGenerator extends EntityCountSqlGenerator {
   public SpecimenCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
@@ -21,7 +21,7 @@ public class SpecimenCountSqlGenerator extends EntityCountSqlGenerator {
   }
 
   public SpecimenCountSqlGenerator(
-      String qualifiedTable, Query rootQuery, String version, Boolean filesQuery)
+      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
     super(qualifiedTable, rootQuery, version, filesQuery);
   }
