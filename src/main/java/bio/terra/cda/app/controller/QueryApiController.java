@@ -10,7 +10,6 @@ import bio.terra.cda.app.generators.ResearchSubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.ResearchSubjectSqlGenerator;
 import bio.terra.cda.app.generators.SpecimenCountSqlGenerator;
 import bio.terra.cda.app.generators.SpecimenSqlGenerator;
-import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.generators.SubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.SubjectSqlGenerator;
 import bio.terra.cda.app.generators.TreatmentCountSqlGenerator;
@@ -40,14 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collections;
-import java.util.Set;
 
 @Controller
 public class QueryApiController implements QueryApi {
@@ -188,12 +179,12 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table + "." + version;
     }
-    var tmp_body = body;
-    if (tmp_body.toLowerCase().startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
-      tmp_body = tmp_body.replace("File.", "");
+    var tmpBody = body;
+    if (tmpBody.toLowerCase().startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
+      tmpBody = tmpBody.replace("File.", "");
       tableName = tableName.replace("Subjects", TableSchema.FILES_COLUMN);
     }
-    NestedColumn nt = NestedColumn.generate(tmp_body);
+    NestedColumn nt = NestedColumn.generate(tmpBody);
     Set<String> unnestClauses = nt.getUnnestClauses();
 
     List<String> whereClauses = new ArrayList<>();

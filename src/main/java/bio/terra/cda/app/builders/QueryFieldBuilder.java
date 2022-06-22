@@ -26,7 +26,7 @@ public class QueryFieldBuilder {
     }
 
     public QueryField fromPath(String path) {
-        Boolean fileField = path.toLowerCase().startsWith(FILE_MATCH);
+        boolean fileField = path.toLowerCase().startsWith(FILE_MATCH);
 
         String realPath = fileField ? path.substring(path.indexOf(".") + 1) : path;
         String[] parts = SqlUtil.getParts(realPath);

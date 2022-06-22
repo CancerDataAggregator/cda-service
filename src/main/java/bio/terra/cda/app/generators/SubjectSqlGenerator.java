@@ -5,10 +5,10 @@ import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 
 @QueryGenerator(
-    Entity = "Subject",
-    ExcludedFields = {"ResearchSubject", TableSchema.FILE_PREFIX, TableSchema.FILES_COLUMN})
+    entity = "Subject",
+    excludedFields = {"ResearchSubject", TableSchema.FILE_PREFIX, TableSchema.FILES_COLUMN})
 public class SubjectSqlGenerator extends SqlGenerator {
-  public SubjectSqlGenerator(String qualifiedTable, Query rootQuery, String version, Boolean filesQuery)
+  public SubjectSqlGenerator(String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
     super(qualifiedTable, rootQuery, version, filesQuery);
   }

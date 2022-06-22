@@ -28,7 +28,7 @@ public class FileSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
+  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
           throws UncheckedExecutionException, IllegalArgumentException {
       StringBuilder sb = new StringBuilder();
       AtomicReference<String> previousAlias = new AtomicReference<>("");
@@ -82,7 +82,7 @@ public class FileSqlGenerator extends SqlGenerator {
 
   @Override
   protected Stream<String> getSelectsFromEntity(
-          QueryContext ctx, String prefix, Boolean skipExcludes) {
+          QueryContext ctx, String prefix, boolean skipExcludes) {
 
     List<String> idSelects = new ArrayList<>();
     schemaList
@@ -118,7 +118,7 @@ public class FileSqlGenerator extends SqlGenerator {
       return getFileClasses()
               .map(clazz -> {
                   var annotation = clazz.getAnnotation(QueryGenerator.class);
-                  return TableSchema.getDefinitionByName(tableSchema, annotation.Entity())
+                  return TableSchema.getDefinitionByName(tableSchema, annotation.entity())
                                     .setTable(table);
               })
               .sorted((schema1, schema2) -> {

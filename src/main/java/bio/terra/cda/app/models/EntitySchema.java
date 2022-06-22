@@ -1,6 +1,5 @@
 package bio.terra.cda.app.models;
 
-import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 
@@ -60,7 +59,7 @@ public class EntitySchema {
     // endregion
 
     // region public methods
-    public Boolean wasFound() {
+    public boolean wasFound() {
         return Objects.nonNull(path);
     }
 

@@ -5,7 +5,6 @@ import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
-import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
@@ -31,23 +30,23 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
     this.entitySchema =
             queryGenerator != null
-                    ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.Entity())
+                    ? TableSchema.getDefinitionByName(tableSchema, queryGenerator.entity())
                     : new EntitySchema();
 
     this.entitySchema.setTable(table);
 
     this.filteredFields =
-        queryGenerator != null ? Arrays.asList(queryGenerator.ExcludedFields()) : List.of();
+        queryGenerator != null ? Arrays.asList(queryGenerator.excludedFields()) : List.of();
 
     this.countFields =
-        queryGenerator != null ? Arrays.asList(queryGenerator.FieldsToCount()) : List.of();
+        queryGenerator != null ? Arrays.asList(queryGenerator.fieldsToCount()) : List.of();
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, Boolean subQuery)
+  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
       throws UncheckedExecutionException, IllegalArgumentException {
     String viewSql =
-        super.sql(tableOrSubClause, QueryUtil.DeSelectifyQuery(query), subQuery);
+        super.sql(tableOrSubClause, QueryUtil.deSelectifyQuery(query), subQuery);
     String tableAlias = "flattened_result";
     return subQuery
             ? viewSql
@@ -90,7 +89,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
   @Override
   protected Stream<String> getSelectsFromEntity(
-      QueryContext ctx, String prefix, Boolean skipExcludes) {
+      QueryContext ctx, String prefix, boolean skipExcludes) {
       List<TableSchema.SchemaDefinition> schema = entitySchema.wasFound()
               ? List.of(entitySchema.getSchemaFields())
               : tableSchema;

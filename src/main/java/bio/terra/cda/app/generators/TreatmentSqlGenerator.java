@@ -4,8 +4,8 @@ import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 
 @QueryGenerator(
-    Entity = "Treatment",
-    ExcludedFields = {})
+    entity = "Treatment",
+    excludedFields = {})
 public class TreatmentSqlGenerator extends SqlGenerator {
   public TreatmentSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {

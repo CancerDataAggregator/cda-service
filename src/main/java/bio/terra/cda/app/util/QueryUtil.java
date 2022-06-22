@@ -6,20 +6,20 @@ import java.util.Objects;
 public class QueryUtil {
   private QueryUtil() {}
 
-  public static Query DeSelectifyQuery(Query query) {
-    return RemoveSelectsFromQuery(query);
+  public static Query deSelectifyQuery(Query query) {
+    return removeSelectsFromQuery(query);
   }
 
-  private static Query RemoveSelectsFromQuery(Query currentQuery) {
+  private static Query removeSelectsFromQuery(Query currentQuery) {
     if (Objects.isNull(currentQuery)) {
       return null;
     }
 
     if (currentQuery.getNodeType().equals(Query.NodeTypeEnum.SELECT)) {
-      return RemoveSelectsFromQuery(currentQuery.getR());
+      return removeSelectsFromQuery(currentQuery.getR());
     } else {
-      currentQuery.setL(RemoveSelectsFromQuery(currentQuery.getL()));
-      currentQuery.setR(RemoveSelectsFromQuery(currentQuery.getR()));
+      currentQuery.setL(removeSelectsFromQuery(currentQuery.getL()));
+      currentQuery.setR(removeSelectsFromQuery(currentQuery.getR()));
       return currentQuery;
     }
   }

@@ -18,7 +18,7 @@ public class QueryUtilTest {
                     .l(new Query().nodeType(Query.NodeTypeEnum.COLUMN).value("test_column"))
                     .r(new Query().nodeType(Query.NodeTypeEnum.QUOTED).value("test_value")));
 
-    Query newQuery = QueryUtil.DeSelectifyQuery(query);
+    Query newQuery = QueryUtil.deSelectifyQuery(query);
 
     assertEquals(Query.NodeTypeEnum.EQUAL, newQuery.getNodeType());
     assertEquals("test_column", newQuery.getL().getValue());
@@ -36,7 +36,7 @@ public class QueryUtilTest {
                     .l(new Query().nodeType(Query.NodeTypeEnum.SELECTVALUES).value("test_column"))
                     .r(new Query().nodeType(Query.NodeTypeEnum.QUOTED).value("test_value")));
 
-    Query newQuery = QueryUtil.DeSelectifyQuery(query);
+    Query newQuery = QueryUtil.deSelectifyQuery(query);
 
     assertEquals(Query.NodeTypeEnum.EQUAL, newQuery.getNodeType());
     assertEquals("test_value", newQuery.getR().getValue());
@@ -50,7 +50,7 @@ public class QueryUtilTest {
             .l(new Query().nodeType(Query.NodeTypeEnum.COLUMN).value("test_column"))
             .r(new Query().nodeType(Query.NodeTypeEnum.QUOTED).value("test_value"));
 
-    Query newQuery = QueryUtil.DeSelectifyQuery(query);
+    Query newQuery = QueryUtil.deSelectifyQuery(query);
 
     assertEquals(Query.NodeTypeEnum.EQUAL, newQuery.getNodeType());
     assertEquals("test_value", newQuery.getR().getValue());
@@ -78,7 +78,7 @@ public class QueryUtilTest {
                                     .nodeType(Query.NodeTypeEnum.QUOTED)
                                     .value("test_value"))));
 
-    Query newQuery = QueryUtil.DeSelectifyQuery(query);
+    Query newQuery = QueryUtil.deSelectifyQuery(query);
 
     assertEquals(Query.NodeTypeEnum.EQUAL, newQuery.getNodeType());
     assertEquals("test_value", newQuery.getR().getValue());
