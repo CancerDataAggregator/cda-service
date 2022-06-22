@@ -75,10 +75,12 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                       : SqlUtil.getParts(field);
               String name = field.equals("id") ? "total" : parts[parts.length - 1].toLowerCase();
 
+              String countField = field.equals("id") ? "id" : SqlUtil.getAlias(parts.length - 1, parts);
+
               return List.of("id", TableSchema.FILES_COLUMN, TableSchema.FILE_PREFIX).contains(field)
                   ? String.format(
                       "(SELECT COUNT(DISTINCT %s) from %s) as %s",
-                      field.equals("id") ? "id" : SqlUtil.getAlias(parts.length - 1, parts),
+                      countField,
                       tableAlias,
                       name)
                   : String.format(formatString, parts[parts.length - 1], tableAlias, name);
@@ -89,9 +91,15 @@ public class EntityCountSqlGenerator extends SqlGenerator {
   @Override
   protected Stream<String> getSelectsFromEntity(
       QueryContext ctx, String prefix, Boolean skipExcludes) {
-    return (entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema)
-        .stream()
-            .filter(definition -> (skipExcludes || !filteredFields.contains(definition.getName())))
+      List<TableSchema.SchemaDefinition> schema = entitySchema.wasFound()
+              ? List.of(entitySchema.getSchemaFields())
+              : tableSchema;
+
+      Stream<TableSchema.SchemaDefinition> definitionStream = skipExcludes
+              ? schema.stream()
+              : schema.stream().filter(definition -> !filteredFields.contains(definition.getName()));
+
+    return definitionStream
             .flatMap(
                 definition -> {
                   String[] parts =
@@ -106,12 +114,15 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                             table, parts, !parts[parts.length - 1].equals(TableSchema.FILES_COLUMN), SqlUtil.JoinType.INNER));
 
                     if (parts[parts.length - 1].equals(TableSchema.FILES_COLUMN)) {
+                        String filesPrefix = parts.length > 1
+                                ? SqlUtil.getAlias(parts.length - 2, parts) : table;
+
                         ctx.addUnnests(
                                 Stream.of(
                                         this.unnestBuilder.of(
                                             SqlUtil.JoinType.LEFT,
-                                            String.format("%s.%s",
-                                                    parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table,
+                                            String.format(SqlUtil.ALIAS_FIELD_FORMAT,
+                                                    filesPrefix,
                                                     parts[parts.length - 1]),
                                             SqlUtil.getAlias(parts.length - 1, parts),
                                             false,

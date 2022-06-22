@@ -61,11 +61,11 @@ public class FileSqlGenerator extends SqlGenerator {
                                   ? ""
                                   : String.format(" AND CONCAT(results.id, %1$s) not in (SELECT CONCAT(%2$s.id, %3$s) FROM %2$s)",
                                   aliases.stream()
-                                          .map(a -> String.format("%s.%s", "results", a))
+                                          .map(a -> String.format(SqlUtil.ALIAS_FIELD_FORMAT, "results", a))
                                           .collect(Collectors.joining(", ")),
                                   previousAlias,
                                   aliases.stream()
-                                          .map(a -> String.format("%s.%s", previousAlias, a))
+                                          .map(a -> String.format(SqlUtil.ALIAS_FIELD_FORMAT, previousAlias, a))
                                           .collect(Collectors.joining(", "))))));
           previousAlias.set(resultsAlias);
           tables.add(resultsAlias);

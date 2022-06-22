@@ -16,14 +16,12 @@ public class UnnestBuilder {
     private final String fileTable;
     private final String[] entityParts;
     private final String project;
-    private final Boolean filesQuery;
 
-    public UnnestBuilder(String table, String fileTable, String[] entityParts, String project, Boolean filesQuery) {
+    public UnnestBuilder(String table, String fileTable, String[] entityParts, String project) {
         this.table = table;
         this.fileTable = fileTable;
         this.entityParts = entityParts;
         this.project = project;
-        this.filesQuery = filesQuery;
     }
 
     public Unnest of(
@@ -38,7 +36,7 @@ public class UnnestBuilder {
 
     public Unnest fileJoin(SqlUtil.JoinType joinType, String joinAlias) {
         return of(joinType,
-                String.format("%s.%s", project, fileTable),
+                String.format(SqlUtil.ALIAS_FIELD_FORMAT, project, fileTable),
                 fileTable,
                 true,
                 String.format("%s.id", fileTable),
@@ -85,8 +83,8 @@ public class UnnestBuilder {
                             SqlUtil.JoinType joinType = entityPath.startsWith(partsSub) ? SqlUtil.JoinType.INNER : SqlUtil.JoinType.LEFT;
 
                             return i == 0
-                                    ? new Unnest(joinType, String.format("%s.%s", table, parts[i]), alias)
-                                    : new Unnest(joinType, String.format("%s.%s", SqlUtil.getAlias(i - 1, parts), parts[i]), alias);
+                                    ? new Unnest(joinType, String.format(SqlUtil.ALIAS_FIELD_FORMAT, table, parts[i]), alias)
+                                    : new Unnest(joinType, String.format(SqlUtil.ALIAS_FIELD_FORMAT, SqlUtil.getAlias(i - 1, parts), parts[i]), alias);
                         });
     }
 
@@ -97,8 +95,8 @@ public class UnnestBuilder {
                         i -> {
                             String alias = SqlUtil.getAlias(i, parts);
                             return i == 0
-                                    ? new Unnest(JoinType, String.format("%s.%s", table, parts[i]), alias)
-                                    : new Unnest(JoinType, String.format("%s.%s", SqlUtil.getAlias(i - 1, parts), parts[i]), alias);
+                                    ? new Unnest(JoinType, String.format(SqlUtil.ALIAS_FIELD_FORMAT, table, parts[i]), alias)
+                                    : new Unnest(JoinType, String.format(SqlUtil.ALIAS_FIELD_FORMAT, SqlUtil.getAlias(i - 1, parts), parts[i]), alias);
                         });
     }
 }

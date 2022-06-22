@@ -20,7 +20,7 @@ public class In extends BasicOperator {
     if (right.contains("\"") || right.contains("'")) {
         right = right.substring(1, right.length() - 1);
 
-        right = Arrays.stream(right.split("(\"|')(\\s)*,(\\s)*(\"|')"))
+        right = Arrays.stream(right.split("[\"|'](\\s)*,(\\s)*[\"|']"))
                 .map(value -> String.format("UPPER('%s')", value))
                 .collect(Collectors.joining(", "));
     }

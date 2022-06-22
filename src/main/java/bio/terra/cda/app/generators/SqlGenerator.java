@@ -86,8 +86,7 @@ public class SqlGenerator {
             table,
             fileTable,
             entitySchema.getParts(),
-            project,
-            filesQuery);
+            project);
     this.partitionBuilder = new PartitionBuilder(fileTable);
   }
 
@@ -190,7 +189,7 @@ public class SqlGenerator {
       idSelects =
           Stream.concat(
               Stream.of(String.format("%s.id AS %s", table, defaultId)),
-              SqlUtil.getIdSelectsFromPath(ctx, path, entitySchema.wasFound() && ctx.getFilesQuery()));
+              SqlUtil.getIdSelectsFromPath(path, entitySchema.wasFound() && ctx.getFilesQuery()));
 
       var parts = entitySchema.getParts();
       ctx.addPartitions(Stream.of(this.partitionBuilder.of("id", String.format("%s.id", table))));
@@ -201,10 +200,14 @@ public class SqlGenerator {
 
   protected Stream<String> combinedSelects(
       QueryContext ctx, String prefix, Boolean skipExcludes, Stream<String> idSelects) {
+
+    List<TableSchema.SchemaDefinition> schema = entitySchema.wasFound()
+            ? List.of(entitySchema.getSchemaFields()) : tableSchema;
+
     return Stream.concat(
         (ctx.getFilesQuery()
                 ? fileTableSchema
-                : entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema)
+                : schema)
             .stream()
                 .filter(
                     definition ->

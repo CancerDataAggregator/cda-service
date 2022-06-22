@@ -204,7 +204,7 @@ public class TableSchema {
     definitions.forEach(
         definition -> {
           var mapName =
-              prefix.isEmpty() ? definition.name : String.format("%s.%s", prefix, definition.name);
+              prefix.isEmpty() ? definition.name : String.format(SqlUtil.ALIAS_FIELD_FORMAT, prefix, definition.name);
           definitionMap.put(mapName, definition);
           if (definition.type.equals(LegacySQLTypeName.RECORD.toString())) {
             addToMap(mapName, List.of(definition.fields), definitionMap);
