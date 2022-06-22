@@ -172,7 +172,7 @@ public class SqlGenerator {
   }
 
   protected Stream<String> getSelect(QueryContext ctx, String table, boolean skipExcludes) {
-    if (ctx.getSelect().size() > 0) {
+    if (!ctx.getSelect().isEmpty()) {
       return ctx.getSelect().stream().map(Select::toString);
     } else {
       return getSelectsFromEntity(ctx, ctx.getFilesQuery() ? fileTable : table, skipExcludes);
