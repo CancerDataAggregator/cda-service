@@ -7,10 +7,10 @@ import java.io.IOException;
 @CountQueryGenerator(
     entity = "ResearchSubject",
     fieldsToCount = {
-        TableSchema.FILES_COLUMN,
-        TableSchema.SYSTEM_IDENTIFIER,
-        "primary_diagnosis_condition",
-        "primary_diagnosis_site"
+      TableSchema.FILES_COLUMN,
+      TableSchema.SYSTEM_IDENTIFIER,
+      "primary_diagnosis_condition",
+      "primary_diagnosis_site"
     },
     excludedFields = {"Specimen", "Diagnosis"})
 public class ResearchSubjectCountSqlGenerator extends EntityCountSqlGenerator {

@@ -6,11 +6,7 @@ import java.io.IOException;
 
 @CountQueryGenerator(
     entity = "Treatment",
-    fieldsToCount = {
-            TableSchema.SYSTEM_IDENTIFIER,
-            "treatment_type",
-            "treatment_effect"
-    },
+    fieldsToCount = {TableSchema.SYSTEM_IDENTIFIER, "treatment_type", "treatment_effect"},
     excludedFields = {})
 public class TreatmentCountSqlGenerator extends EntityCountSqlGenerator {
   public TreatmentCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)

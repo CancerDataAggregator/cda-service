@@ -8,7 +8,8 @@ import java.io.IOException;
     entity = "Specimen",
     excludedFields = {TableSchema.FILE_PREFIX, TableSchema.FILES_COLUMN, "derived_from_subject"})
 public class SpecimenSqlGenerator extends SqlGenerator {
-  public SpecimenSqlGenerator(String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
+  public SpecimenSqlGenerator(
+      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
     super(qualifiedTable, rootQuery, version, filesQuery);
   }

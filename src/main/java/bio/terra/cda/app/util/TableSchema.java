@@ -3,6 +3,8 @@ package bio.terra.cda.app.util;
 import bio.terra.cda.app.models.EntitySchema;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -17,10 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import org.springframework.core.io.ClassPathResource;
-import com.google.cloud.bigquery.Field;
 
 public class TableSchema {
   // region SchemaDefinition
@@ -100,8 +99,7 @@ public class TableSchema {
     return newSchema;
   }
 
-  public static EntitySchema getDefinitionByName(
-      List<SchemaDefinition> definitions, String name) {
+  public static EntitySchema getDefinitionByName(List<SchemaDefinition> definitions, String name) {
     return TableSchema.getDefinitionTupleByName(definitions, name, "");
   }
 
@@ -130,7 +128,7 @@ public class TableSchema {
 
   // region private helpers
   private static EntitySchema getDefinitionTupleByName(
-          List<SchemaDefinition> definitions, String name, String prefix) {
+      List<SchemaDefinition> definitions, String name, String prefix) {
     for (var definition : definitions) {
       String newPrefix = prefix.equals("") ? prefix : String.format("%s.", prefix);
       if (definition.getName().equals(name)) {
@@ -138,12 +136,12 @@ public class TableSchema {
       }
 
       if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())
-              && definition.getMode().equals(Field.Mode.REPEATED.toString())) {
+          && definition.getMode().equals(Field.Mode.REPEATED.toString())) {
         var result =
-                TableSchema.getDefinitionTupleByName(
-                        Arrays.asList(definition.getFields()),
-                        name,
-                        String.format("%s%s", newPrefix, definition.getName()));
+            TableSchema.getDefinitionTupleByName(
+                Arrays.asList(definition.getFields()),
+                name,
+                String.format("%s%s", newPrefix, definition.getName()));
         if (result.wasFound()) {
           return result;
         }
@@ -204,7 +202,9 @@ public class TableSchema {
     definitions.forEach(
         definition -> {
           var mapName =
-              prefix.isEmpty() ? definition.name : String.format(SqlUtil.ALIAS_FIELD_FORMAT, prefix, definition.name);
+              prefix.isEmpty()
+                  ? definition.name
+                  : String.format(SqlUtil.ALIAS_FIELD_FORMAT, prefix, definition.name);
           definitionMap.put(mapName, definition);
           if (definition.type.equals(LegacySQLTypeName.RECORD.toString())) {
             addToMap(mapName, List.of(definition.fields), definitionMap);

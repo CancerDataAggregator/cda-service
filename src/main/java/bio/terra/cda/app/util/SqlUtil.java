@@ -24,8 +24,7 @@ public class SqlUtil {
 
   public static final String ALIAS_FIELD_FORMAT = "%s.%s";
 
-  public static Stream<String> getIdSelectsFromPath(
-      String path, boolean includeLast) {
+  public static Stream<String> getIdSelectsFromPath(String path, boolean includeLast) {
     String[] parts = SqlUtil.getParts(path);
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
         .mapToObj(
@@ -39,7 +38,7 @@ public class SqlUtil {
   }
 
   public static String getPathFromParts(Integer index, String[] parts) {
-      return Arrays.stream(parts, 0, index + 1).collect(Collectors.joining("."));
+    return Arrays.stream(parts, 0, index + 1).collect(Collectors.joining("."));
   }
 
   public static String getAlias(Integer index, String[] parts) {
@@ -59,9 +58,9 @@ public class SqlUtil {
   }
 
   public static String[] getParts(String path) {
-      if (Objects.isNull(path)) {
-          return new String[0];
-      }
-      return path.trim().split("\\.");
+    if (Objects.isNull(path)) {
+      return new String[0];
+    }
+    return path.trim().split("\\.");
   }
 }
