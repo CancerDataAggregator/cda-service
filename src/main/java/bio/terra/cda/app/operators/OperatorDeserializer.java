@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Objects;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -49,7 +50,7 @@ public class OperatorDeserializer extends JsonDeserializer<Query> {
             .filter(
                 cls -> {
                   QueryOperator operator = cls.getAnnotation(QueryOperator.class);
-                  return operator.nodeType().equals(type);
+                  return Arrays.asList(operator.nodeType()).contains(type);
                 })
             .findFirst();
 
@@ -73,7 +74,19 @@ public class OperatorDeserializer extends JsonDeserializer<Query> {
 
     query.setNodeType(type);
     query.setL(codec.treeToValue(node.get("l"), Query.class));
+
+    Query left = query.getL();
+    if (Objects.nonNull(left)) {
+      ((BasicOperator)left).setParent((BasicOperator) query);
+    }
+
     query.setR(codec.treeToValue(node.get("r"), Query.class));
+
+    Query right = query.getR();
+    if (Objects.nonNull(right)) {
+      ((BasicOperator)right).setParent((BasicOperator) query);
+    }
+
     query.setValue(node.hasNonNull("value") ? node.get("value").textValue() : null);
 
     return query;

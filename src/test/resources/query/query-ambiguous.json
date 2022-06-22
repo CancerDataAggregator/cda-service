@@ -4,22 +4,22 @@
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "A"
+      "value": "species"
     },
     "r": {
       "node_type": "quoted",
-      "value": "this"
+      "value": "human"
     }
   },
   "r": {
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "A"
+      "value": "species"
     },
     "r": {
       "node_type": "quoted",
-      "value": "that"
+      "value": "dog"
     }
   }
 }

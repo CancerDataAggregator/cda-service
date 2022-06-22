@@ -2,7 +2,7 @@
   "node_type": "=",
   "l": {
     "node_type": "column",
-    "value": "A"
+    "value": "id"
   },
   "r": {
     "node_type": "quoted",

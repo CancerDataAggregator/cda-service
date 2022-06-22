@@ -113,6 +113,435 @@ paths:
         200:
           $ref: "#/components/responses/QueryCreated"
 
+  /api/v1/subjects/{version}:
+    post:
+      summary: Execute Subject query
+      description: |
+        Execute a Subject query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: subjectQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The subject query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/subjects/files/{version}:
+    post:
+      summary: Execute Subject Files query
+      description: |
+        Execute a Subject Files query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: subjectFilesQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The subject query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/subjects/counts/{version}:
+    post:
+      summary: Execute Subjects Counts query
+      description: |
+        Execute a Subjects Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: subjectCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The subjects query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/researchsubjects/{version}:
+    post:
+      summary: Execute Research Subject query
+      description: |
+        Execute a query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: researchSubjectQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The Research Subject query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/researchsubjects/files/{version}:
+    post:
+      summary: Execute ResearchSubject Files query
+      description: |
+        Execute a ResearchSubject Files query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: researchSubjectFilesQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The research subject query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/researchsubjects/counts/{version}:
+    post:
+      summary: Execute ResearchSubjects Counts query
+      description: |
+        Execute a ResearchSubjects Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: researchSubjectCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The research subjects query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/specimens/{version}:
+    post:
+      summary: Execute Specimens query
+      description: |
+        Execute a query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: specimenQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The specimen query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/specimen/files/{version}:
+    post:
+      summary: Execute Specimen Files query
+      description: |
+        Execute a Specimen Files query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: specimenFilesQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The specimen query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/specimen/counts/{version}:
+    post:
+      summary: Execute Specimen Counts query
+      description: |
+        Execute a Specimen Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: specimenCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The specimen query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/diagnosis/{version}:
+    post:
+      summary: Execute Diagnosis query
+      description: |
+        Execute a query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: diagnosisQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The diagnosis query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/diagnosis/counts/{version}:
+    post:
+      summary: Execute Diagnosis Counts query
+      description: |
+        Execute a Diagnosis Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: diagnosisCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The diagnosis query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/treatments/{version}:
+    post:
+      summary: Execute Treatments query
+      description: |
+        Execute a query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: treatmentsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The treatments query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/treatments/counts/{version}:
+    post:
+      summary: Execute Treatments Counts query
+      description: |
+        Execute a Treatments Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: treatmentCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The treatment query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
   /api/v1/sql-query:
     post:
       summary: Execute SQL directly on a version of the dataset
@@ -486,7 +915,11 @@ components:
               IN,
               SELECTVALUES,
               SELECT,
-              LIKE
+              LIKE,
+              IS,
+              "IS NOT",
+              "NOT IN",
+              "NOT LIKE"
             ]
           description: >
             Query contents and behavior depends on `node_type`:
