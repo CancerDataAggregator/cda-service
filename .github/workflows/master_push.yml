@@ -19,8 +19,7 @@ jobs:
       uses: actions/checkout@master
     - name: Bump version and push tag
       id: tag
-      uses: databiosphere/github-actions/actions/bumper@bumper-0.0.4
-      env:
+      uses: databiosphere/github-actions/actions/bumper@bumper-0.0.6
         DEFAULT_BUMP: patch
         GITHUB_TOKEN: ${{ secrets.BROADBOT_TOKEN }}
         RELEASE_BRANCHES: master
