@@ -213,6 +213,39 @@ paths:
         200:
           $ref: "#/components/responses/QueryCreated"
 
+  /api/v1/subjects/files/counts/{version}:
+    post:
+      summary: Execute Subjects File Counts query
+      description: |
+        Execute a Subjects File Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: subjectFileCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The subjects query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
   /api/v1/researchsubjects/{version}:
     post:
       summary: Execute Research Subject query
@@ -312,6 +345,39 @@ paths:
         200:
           $ref: "#/components/responses/QueryCreated"
 
+  /api/v1/researchsubjects/files/counts/{version}:
+    post:
+      summary: Execute ResearchSubjects File Counts query
+      description: |
+        Execute a ResearchSubjects File Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: researchSubjectFileCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The research subjects query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
   /api/v1/specimens/{version}:
     post:
       summary: Execute Specimens query
@@ -385,6 +451,39 @@ paths:
         Execute a Specimen Counts query composed of conditions on columns combined with boolean operators. The
         generated SQL query is returned in the response.
       operationId: specimenCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The specimen query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/specimen/files/counts/{version}:
+    post:
+      summary: Execute Specimen File Counts query
+      description: |
+        Execute a Specimen File Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: specimenFileCountsQuery
       tags:
         - query
 
@@ -690,6 +789,39 @@ paths:
 
       requestBody:
         description: The boolean query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/files/counts/{version}:
+    post:
+      summary: Execute File Counts query
+      description: |
+        Execute a File Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: fileCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The files query
         required: true
         content:
           application/json:

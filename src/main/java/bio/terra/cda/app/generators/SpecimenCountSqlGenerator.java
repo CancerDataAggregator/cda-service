@@ -17,6 +17,12 @@ import java.io.IOException;
 public class SpecimenCountSqlGenerator extends EntityCountSqlGenerator {
   public SpecimenCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version);
+    super(qualifiedTable, rootQuery, version, false);
+  }
+
+  public SpecimenCountSqlGenerator(
+      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
+      throws IOException {
+    super(qualifiedTable, rootQuery, version, filesQuery);
   }
 }

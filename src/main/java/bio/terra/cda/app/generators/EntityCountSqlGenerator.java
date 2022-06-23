@@ -18,9 +18,10 @@ import java.util.stream.Stream;
 public class EntityCountSqlGenerator extends SqlGenerator {
   private List<String> countFields;
 
-  public EntityCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
+  public EntityCountSqlGenerator(
+      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
-    super(qualifiedTable, rootQuery, version, false);
+    super(qualifiedTable, rootQuery, version, filesQuery);
   }
 
   @Override
@@ -40,6 +41,11 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
     this.countFields =
         queryGenerator != null ? Arrays.asList(queryGenerator.fieldsToCount()) : List.of();
+
+    if (filesQuery) {
+      this.countFields =
+          List.of(TableSchema.SYSTEM_IDENTIFIER, "data_category", "file_format", "data_type");
+    }
   }
 
   @Override
@@ -87,61 +93,71 @@ public class EntityCountSqlGenerator extends SqlGenerator {
   @Override
   protected Stream<String> getSelectsFromEntity(
       QueryContext ctx, String prefix, boolean skipExcludes) {
-    List<TableSchema.SchemaDefinition> schema =
-        entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema;
 
-    Stream<TableSchema.SchemaDefinition> definitionStream =
-        skipExcludes
-            ? schema.stream()
-            : schema.stream().filter(definition -> !filteredFields.contains(definition.getName()));
+    return (ctx.getFilesQuery()
+            ? fileTableSchema
+            : entitySchema.wasFound() ? List.of(entitySchema.getSchemaFields()) : tableSchema)
+        .stream()
+            .filter(
+                definition ->
+                    !(ctx.getFilesQuery()
+                            && List.of("ResearchSubject", "Subject", "Specimen")
+                                .contains(definition.getName()))
+                        && (skipExcludes || !filteredFields.contains(definition.getName())))
+            .flatMap(
+                definition -> {
+                  String[] parts =
+                      ctx.getFilesQuery()
+                          ? SqlUtil.getParts(definition.getName())
+                          : SqlUtil.getParts(
+                              String.format(
+                                  "%s%s",
+                                  entitySchema.wasFound()
+                                      ? String.format("%s.", entitySchema.getPath())
+                                      : "",
+                                  definition.getName()));
 
-    return definitionStream.flatMap(
-        definition -> {
-          String[] parts =
-              SqlUtil.getParts(
-                  String.format(
-                      "%s%s",
-                      entitySchema.wasFound() ? String.format("%s.", entitySchema.getPath()) : "",
-                      definition.getName()));
+                  if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
+                    ctx.addUnnests(
+                        this.unnestBuilder.fromParts(
+                            ctx.getFilesQuery() ? fileTable : table,
+                            parts,
+                            !parts[parts.length - 1].equals(TableSchema.FILES_COLUMN),
+                            SqlUtil.JoinType.INNER));
 
-          if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
-            ctx.addUnnests(
-                this.unnestBuilder.fromParts(
-                    table,
-                    parts,
-                    !parts[parts.length - 1].equals(TableSchema.FILES_COLUMN),
-                    SqlUtil.JoinType.INNER));
+                    if (parts[parts.length - 1].equals(TableSchema.FILES_COLUMN)) {
+                      String filesPrefix =
+                          parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table;
 
-            if (parts[parts.length - 1].equals(TableSchema.FILES_COLUMN)) {
-              String filesPrefix =
-                  parts.length > 1 ? SqlUtil.getAlias(parts.length - 2, parts) : table;
+                      ctx.addUnnests(
+                          Stream.of(
+                              this.unnestBuilder.of(
+                                  SqlUtil.JoinType.LEFT,
+                                  String.format(
+                                      SqlUtil.ALIAS_FIELD_FORMAT, filesPrefix, parts[parts.length - 1]),
+                                  SqlUtil.getAlias(parts.length - 1, parts),
+                                  false,
+                                  "",
+                                  "")));
+                    }
 
-              ctx.addUnnests(
-                  Stream.of(
-                      this.unnestBuilder.of(
-                          SqlUtil.JoinType.LEFT,
-                          String.format(
-                              SqlUtil.ALIAS_FIELD_FORMAT, filesPrefix, parts[parts.length - 1]),
-                          SqlUtil.getAlias(parts.length - 1, parts),
-                          false,
-                          "",
-                          "")));
-            }
+                    ctx.addPartitions(
+                        this.partitionBuilder.fromParts(
+                            parts, ctx.getFilesQuery() ? fileTableSchemaMap : tableSchemaMap));
 
-            ctx.addPartitions(this.partitionBuilder.fromParts(parts, tableSchemaMap));
-
-            return !definition.getType().equals(LegacySQLTypeName.RECORD.toString())
-                ? Stream.of(String.format("%s", SqlUtil.getAlias(parts.length - 1, parts)))
-                : Arrays.stream(definition.getFields())
-                    .map(
-                        fieldDefinition -> {
-                          String fieldPrefix = SqlUtil.getAlias(parts.length - 1, parts);
-                          return String.format(
-                              "%1$s.%2$s AS %2$s", fieldPrefix, fieldDefinition.getName());
-                        });
-          } else {
-            return Stream.of(String.format("%1$s.%2$s AS %2$s", prefix, definition.getName()));
-          }
-        });
+                    return !definition.getType().equals(LegacySQLTypeName.RECORD.toString())
+                        ? Stream.of(String.format("%s", SqlUtil.getAlias(parts.length - 1, parts)))
+                        : Arrays.stream(definition.getFields())
+                            .map(
+                                fieldDefinition -> {
+                                  String fieldPrefix = SqlUtil.getAlias(parts.length - 1, parts);
+                                  return String.format(
+                                      "%1$s.%2$s AS %2$s", fieldPrefix, fieldDefinition.getName());
+                                });
+                  } else {
+                    return Stream.of(
+                        String.format("%1$s.%2$s AS %2$s", prefix, definition.getName()));
+                  }
+                });
   }
 }

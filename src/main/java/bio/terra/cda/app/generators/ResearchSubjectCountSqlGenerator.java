@@ -16,6 +16,12 @@ import java.io.IOException;
 public class ResearchSubjectCountSqlGenerator extends EntityCountSqlGenerator {
   public ResearchSubjectCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version);
+    super(qualifiedTable, rootQuery, version, false);
+  }
+
+  public ResearchSubjectCountSqlGenerator(
+      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
+      throws IOException {
+    super(qualifiedTable, rootQuery, version, filesQuery);
   }
 }
