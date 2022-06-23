@@ -1,0 +1,11 @@
+{
+  "node_type": "=",
+  "l": {
+    "node_type": "column",
+    "value": "File.data_modality"
+  },
+  "r": {
+    "node_type": "quoted",
+    "value": "Genomic"
+  }
+}

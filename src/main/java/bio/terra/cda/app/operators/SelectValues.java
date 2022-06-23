@@ -1,25 +1,46 @@
 package bio.terra.cda.app.operators;
 
-import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
+import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.generated.model.Query;
+import com.google.cloud.bigquery.Field;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Stream;
 
-@QueryOperator(nodeType = Query.NodeTypeEnum.SELECTVALUES)
+@QueryOperator(nodeType = {Query.NodeTypeEnum.SELECTVALUES})
 public class SelectValues extends BasicOperator {
   @Override
-  public Stream<String> getUnnestColumns(
-      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
-      throws IllegalArgumentException {
-    return Arrays.stream(getValue().split(","))
-        .flatMap(select -> SqlUtil.getUnnestsFromParts(table, select.trim().split("\\."), false));
+  public String buildQuery(QueryContext ctx) throws IllegalArgumentException {
+    if (ctx.getIncludeSelect()) {
+      addUnnests(ctx);
+      addSelects(ctx);
+      addPartitions(ctx);
+    }
+    return "";
   }
 
   @Override
-  public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
-      throws IllegalArgumentException {
-    return "";
+  public void addUnnests(QueryContext ctx) {
+    ctx.addUnnests(
+        Arrays.stream(getValue().split(","))
+            .map(String::trim)
+            .map(ctx.getQueryFieldBuilder()::fromPath)
+            .filter(field -> !field.getMode().equals(Field.Mode.REPEATED.toString()))
+            .flatMap(ctx.getUnnestBuilder()::fromQueryField));
+  }
+
+  private void addSelects(QueryContext ctx) {
+    ctx.addSelects(
+        Arrays.stream(getValue().split(","))
+            .map(String::trim)
+            .map(ctx.getQueryFieldBuilder()::fromPath)
+            .map(ctx.getSelectBuilder()::fromQueryField));
+  }
+
+  private void addPartitions(QueryContext ctx) {
+    ctx.addPartitions(
+        Arrays.stream(getValue().split(","))
+            .map(String::trim)
+            .filter(select -> select.contains("."))
+            .map(ctx.getQueryFieldBuilder()::fromPath)
+            .map(ctx.getPartitionBuilder()::fromQueryField));
   }
 }

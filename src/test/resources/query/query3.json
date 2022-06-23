@@ -2,7 +2,7 @@
   "node_type": "=",
   "l": {
     "node_type": "column",
-    "value": "B.BB.BBD.BBDD.BBDDE"
+    "value": "ResearchSubject.Specimen.age_at_collection"
   },
   "r": {
     "node_type": "unquoted",

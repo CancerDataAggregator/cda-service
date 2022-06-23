@@ -1,25 +1,36 @@
 package bio.terra.cda.app.operators;
 
-import bio.terra.cda.app.util.TableSchema;
+import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.generated.model.Query;
-import java.util.Map;
-import java.util.stream.Stream;
 
 public class BasicOperator extends Query {
-  public Stream<String> getUnnestColumns(
-      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
-      throws IllegalArgumentException {
-    return Stream.concat(
-        ((BasicOperator) getL()).getUnnestColumns(table, tableSchemaMap),
-        ((BasicOperator) getR()).getUnnestColumns(table, tableSchemaMap));
-  }
+  private BasicOperator parent;
 
-  public String queryString(String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
-      throws IllegalArgumentException {
+  public String buildQuery(QueryContext ctx) {
     return String.format(
         "(%s %s %s)",
-        ((BasicOperator) getL()).queryString(table, tableSchemaMap),
+        ((BasicOperator) getL()).buildQuery(ctx),
         this.getNodeType(),
-        ((BasicOperator) getR()).queryString(table, tableSchemaMap));
+        ((BasicOperator) getR()).buildQuery(ctx));
+  }
+
+  public BasicOperator setParent(BasicOperator operator) {
+    this.parent = operator;
+    return this;
+  }
+
+  protected BasicOperator getParent() {
+    return parent;
+  }
+
+  protected void addUnnests(QueryContext ctx) {
+    try {
+      ctx.addUnnests(
+          ctx.getUnnestBuilder()
+              .fromQueryField(ctx.getQueryFieldBuilder().fromPath(getValue()), true));
+    } catch (NullPointerException e) {
+      throw new IllegalArgumentException(
+          String.format("Column %s does not exist on table %s", getValue(), ctx.getTable()));
+    }
   }
 }

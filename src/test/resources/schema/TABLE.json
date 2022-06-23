@@ -1,7 +1,7 @@
 [
   {
     "mode": "NULLABLE",
-    "name": "A",
+    "name": "id",
     "type": "STRING"
   },
   {
@@ -11,7 +11,7 @@
     "fields": [
       {
         "mode": "NULLABLE",
-        "name": "A1A",
+        "name": "id",
         "type": "STRING"
       },
       {
@@ -28,7 +28,7 @@
     "fields": [
       {
         "mode": "NULLABLE",
-        "name": "BA",
+        "name": "id",
         "type": "INTEGER"
       },
       {
@@ -38,7 +38,7 @@
         "fields": [
           {
             "mode": "NULLABLE",
-            "name": "BBA",
+            "name": "id",
             "type": "INTEGER"
           },
           {
@@ -58,12 +58,12 @@
             "fields": [
               {
                 "mode": "REPEATED",
-                "name": "BBDD",
+                "name": "id",
                 "type": "RECORD",
                 "fields": [
                   {
                     "mode": "NULLABLE",
-                    "name": "BBDDE",
+                    "name": "id",
                     "type": "INTEGER"
                   }
                 ]

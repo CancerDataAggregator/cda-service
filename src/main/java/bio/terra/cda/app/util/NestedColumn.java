@@ -28,7 +28,7 @@ public class NestedColumn {
       Set<String> unnestClauses = new LinkedHashSet<String>();
       String newColumn = null;
       if (qualifiedColumnName != null) {
-        String[] c = qualifiedColumnName.split("\\.");
+        String[] c = SqlUtil.getParts(qualifiedColumnName);
         if (c.length > 1) {
           newColumn = "_" + c[c.length - 2] + "." + c[c.length - 1];
           unnestClauses.add(", UNNEST(" + c[0] + ") AS _" + c[0]);

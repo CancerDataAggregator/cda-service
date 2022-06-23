@@ -3,8 +3,17 @@ package bio.terra.cda.app.controller;
 import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
+import bio.terra.cda.app.generators.DiagnosisCountSqlGenerator;
+import bio.terra.cda.app.generators.DiagnosisSqlGenerator;
 import bio.terra.cda.app.generators.FileSqlGenerator;
-import bio.terra.cda.app.generators.SqlGenerator;
+import bio.terra.cda.app.generators.ResearchSubjectCountSqlGenerator;
+import bio.terra.cda.app.generators.ResearchSubjectSqlGenerator;
+import bio.terra.cda.app.generators.SpecimenCountSqlGenerator;
+import bio.terra.cda.app.generators.SpecimenSqlGenerator;
+import bio.terra.cda.app.generators.SubjectCountSqlGenerator;
+import bio.terra.cda.app.generators.SubjectSqlGenerator;
+import bio.terra.cda.app.generators.TreatmentCountSqlGenerator;
+import bio.terra.cda.app.generators.TreatmentSqlGenerator;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.app.util.NestedColumn;
@@ -15,20 +24,21 @@ import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
 import com.google.cloud.bigquery.BigQueryException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collections;
-import java.util.Set;
 
 @Controller
 public class QueryApiController implements QueryApi {
@@ -49,6 +59,7 @@ public class QueryApiController implements QueryApi {
     this.webRequest = webRequest;
   }
 
+  // region Query Endpoints/Helpers
   private String createNextUrl(String jobId, int offset, int limit) {
     var path = String.format("/api/v1/query/%s?offset=%s&limit=%s", jobId, offset, limit);
 
@@ -127,7 +138,9 @@ public class QueryApiController implements QueryApi {
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
+  // endregion
 
+  // region Global Queries
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> bulkData(String version, String table) {
@@ -147,7 +160,8 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new SqlGenerator(table + "." + version, body, version).generate();
+      String querySql =
+          new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -166,31 +180,39 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table + "." + version;
     }
-
-    NestedColumn nt = NestedColumn.generate(body);
+    var tmpBody = body;
+    if (tmpBody
+        .toLowerCase()
+        .startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
+      tmpBody = tmpBody.replace("File.", "");
+      tableName = tableName.replace("Subjects", TableSchema.FILES_COLUMN);
+    }
+    NestedColumn nt = NestedColumn.generate(tmpBody);
     Set<String> unnestClauses = nt.getUnnestClauses();
-    final String whereClause;
+
+    List<String> whereClauses = new ArrayList<>();
+    whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
 
     if (system != null && system.length() > 0) {
       NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
-      whereClause = " WHERE " + whereColumns.getColumn() + " = '" + system + "'";
+      whereClauses.add(whereColumns.getColumn() + " = '" + system + "'");
       // add any additional 'where' unnest partials that aren't already included in
       // columns-unnest
       // clauses
       unnestClauses.addAll(whereColumns.getUnnestClauses());
-    } else {
-      whereClause = "";
     }
+
     StringBuilder unnestConcat = new StringBuilder();
     unnestClauses.forEach(unnestConcat::append);
 
-    String querySql =
+    var querySql =
         "SELECT DISTINCT "
             + nt.getColumn()
             + " FROM "
             + tableName
             + unnestConcat
-            + whereClause
+            + " WHERE "
+            + String.join(" AND ", whereClauses)
             + " ORDER BY "
             + nt.getColumn();
     logger.debug("uniqueValues: {}", querySql);
@@ -207,12 +229,26 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table;
     }
+
+    var fileTable = version.replace("Subjects", TableSchema.FILES_COLUMN);
+
     String querySql =
-        "SELECT field_path FROM "
-            + tableName
-            + ".INFORMATION_SCHEMA.COLUMN_FIELD_PATHS WHERE table_name = '"
-            + version
-            + "'";
+        String.format(
+            "\nWITH Subjects as "
+                + "(SELECT\n  field_path\nFROM\n  "
+                + "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n  "
+                + "table_name = '%s'\n  AND \n  "
+                + "NOT CONTAINS_SUBSTR(field_path, \"Files\")\n AND NOT STARTS_WITH(data_type, 'ARRAY<STRUCT')\n),Files AS "
+                + "(SELECT\n  \"File.\"|| field_path AS  field_path\nFROM\n  "
+                + "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n "
+                + " table_name = '%s'\n  AND \n  "
+                + "NOT starts_with(field_path, \"Subject\")\n  "
+                + "AND \n  NOT starts_with(field_path, "
+                + "\"ResearchSubject\")\n  "
+                + "AND \n  NOT starts_with(field_path, \"Specimen\")\nAND NOT STARTS_WITH(data_type, 'ARRAY<STRUCT')\n)\n\n\n"
+                + "SELECT * FROM Subjects UNION ALL (SELECT * FROM Files)\n\n",
+            tableName, version, tableName, fileTable);
+
     logger.debug("columns: {}", querySql);
 
     return sendQuery(querySql, false);
@@ -245,4 +281,208 @@ public class QueryApiController implements QueryApi {
     }
     return sendQuery(querySql, dryRun);
   }
+  // endregion
+
+  // region Subject Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> subjectQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> subjectFilesQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new SubjectSqlGenerator(table + "." + version, body, version, true).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> subjectCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new SubjectCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region ResearchSubject Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new ResearchSubjectSqlGenerator(table + "." + version, body, version, false).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectFilesQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new ResearchSubjectSqlGenerator(table + "." + version, body, version, true).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new ResearchSubjectCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region Specimen Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new SpecimenSqlGenerator(table + "." + version, body, version, false).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenFilesQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new SpecimenSqlGenerator(table + "." + version, body, version, true).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new SpecimenCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region Diagnosis Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> diagnosisQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> diagnosisCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new DiagnosisCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region Treatment Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> treatmentsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql = new TreatmentSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> treatmentCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new TreatmentCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
 }

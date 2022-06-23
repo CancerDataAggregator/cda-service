@@ -1,46 +1,26 @@
 package bio.terra.cda.app.operators;
 
-import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
+import bio.terra.cda.app.models.QueryField;
+import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.generated.model.Query;
-import java.util.Map;
-import java.util.stream.Stream;
+import com.google.cloud.bigquery.LegacySQLTypeName;
+import java.util.List;
 
-@QueryOperator(nodeType = Query.NodeTypeEnum.COLUMN)
+@QueryOperator(nodeType = {Query.NodeTypeEnum.COLUMN})
 public class Column extends BasicOperator {
   @Override
-  public Stream<String> getUnnestColumns(
-      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
-    try {
-      var tmp = tableSchemaMap.get(getValue());
-      var tmpGetMode = tmp.getMode();
-      var parts = getValue().split("\\.");
-      return SqlUtil.getUnnestsFromParts(table, parts, (tmpGetMode.equals("REPEATED")));
-    } catch (NullPointerException e) {
-      throw new IllegalArgumentException(
-          String.format("Column %s does not exist on table %s", getValue(), table));
-    }
-  }
+  public String buildQuery(QueryContext ctx) {
+    addUnnests(ctx);
 
-  @Override
-  public String queryString(
-      String table, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
-    var tmp = tableSchemaMap.get(getValue());
-    var tmpGetMode = tmp.getMode();
-    var tmpGetType = tmp.getType();
-    var value = getValue();
-    var parts = value.split("\\.");
-    var columnText = "";
-    if (tmpGetMode.equals("REPEATED")) {
-      columnText = String.format("%s", SqlUtil.getAlias(parts.length - 1, parts));
-    } else if (parts.length == 1) {
-      columnText = String.format("%s.%s", table, value);
-    } else {
-      columnText =
-          String.format(
-              "%s.%s", SqlUtil.getAlias(parts.length - 2, parts), parts[parts.length - 1]);
-    }
+    QueryField queryField = ctx.getQueryFieldBuilder().fromPath(getValue());
 
-    return tmpGetType.equals("STRING") ? String.format("UPPER(%s)", columnText) : columnText;
+    var columnText = queryField.getColumnText();
+
+    BasicOperator parent = getParent();
+    NodeTypeEnum nodeType = parent.getNodeType();
+    return queryField.getType().equals(LegacySQLTypeName.STRING.toString())
+            && !List.of(NodeTypeEnum.IS, NodeTypeEnum.IS_NOT).contains(nodeType)
+        ? String.format("IFNULL(UPPER(%s), '')", columnText)
+        : columnText;
   }
 }
