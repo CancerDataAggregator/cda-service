@@ -840,7 +840,6 @@ components:
       required: true
       schema:
         type: string
-        default: all_v3_0_subjects_meta
       description: Dataset version
     FileDatasetVersion:
       in: path
@@ -848,7 +847,6 @@ components:
       required: true
       schema:
         type: string
-        default: all_v3_0_Files
       description: Dataset version
     SystemValue:
       in: query
@@ -861,7 +859,6 @@ components:
       name: table name
       schema:
         type: string
-        default: broad-dsde-dev.cda_dev
       description: Filter on system for results
     ResultOffset:
       in: query
@@ -889,7 +886,6 @@ components:
       name: table
       schema:
         type: string
-        default: broad-dsde-dev.cda_dev
       description: tablename
 
   schemas:

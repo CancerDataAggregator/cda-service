@@ -38,17 +38,17 @@ public class MetaApiController implements MetaApi {
   // For now, the dataset description is hardcoded. In the future, it will probably be read from a
   // table in bigquery.
   private DatasetDescription createDescription() {
-    var firstOfMarch =
-        OffsetDateTime.of(LocalDate.of(2021, 3, 1), LocalTime.MIN, ZoneOffset.UTC).toString();
+    var dateOfRelease =
+        OffsetDateTime.of(LocalDate.of(2022, 6, 28), LocalTime.MIN, ZoneOffset.UTC).toString();
     return new DatasetDescription()
         .addDatasetsItem(
             new DatasetInfo()
                 .version(applicationConfiguration.getDatasetVersion())
-                .source("PDC and GDC")
-                .date(firstOfMarch))
+                .source("IDC, PDC and GDC")
+                .date(dateOfRelease))
         .cdaVersion("MVP")
         .notes("CDA MVP release")
-        .releaseDate(firstOfMarch)
+        .releaseDate(dateOfRelease)
         .cdaModel(new Model());
   }
 
