@@ -134,7 +134,9 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                               this.unnestBuilder.of(
                                   SqlUtil.JoinType.LEFT,
                                   String.format(
-                                      SqlUtil.ALIAS_FIELD_FORMAT, filesPrefix, parts[parts.length - 1]),
+                                      SqlUtil.ALIAS_FIELD_FORMAT,
+                                      filesPrefix,
+                                      parts[parts.length - 1]),
                                   SqlUtil.getAlias(parts.length - 1, parts),
                                   false,
                                   "",
