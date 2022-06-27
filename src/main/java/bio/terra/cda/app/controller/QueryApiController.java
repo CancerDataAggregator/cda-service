@@ -180,6 +180,7 @@ public class QueryApiController implements QueryApi {
     } else {
       tableName = table + "." + version;
     }
+
     var tmpBody = body;
     if (tmpBody
         .toLowerCase()
@@ -281,6 +282,22 @@ public class QueryApiController implements QueryApi {
     }
     return sendQuery(querySql, dryRun);
   }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> fileCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    String querySql = "";
+    try {
+      querySql =
+          new SubjectCountSqlGenerator(table + "." + version, body, version, true).generate();
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+    return sendQuery(querySql, dryRun);
+  }
   // endregion
 
   // region Subject Queries
@@ -321,6 +338,21 @@ public class QueryApiController implements QueryApi {
     try {
       String querySql =
           new SubjectCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> subjectFileCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new SubjectCountSqlGenerator(table + "." + version, body, version, true).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -375,6 +407,22 @@ public class QueryApiController implements QueryApi {
       throw new IllegalArgumentException(e.getMessage());
     }
   }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> researchSubjectFileCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new ResearchSubjectCountSqlGenerator(table + "." + version, body, version, true)
+              .generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
   // endregion
 
   // region Specimen Queries
@@ -415,6 +463,21 @@ public class QueryApiController implements QueryApi {
     try {
       String querySql =
           new SpecimenCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(querySql, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> specimenFileCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      String querySql =
+          new SpecimenCountSqlGenerator(table + "." + version, body, version, true).generate();
       return sendQuery(querySql, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
