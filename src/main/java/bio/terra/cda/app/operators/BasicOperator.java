@@ -24,13 +24,8 @@ public class BasicOperator extends Query {
   }
 
   protected void addUnnests(QueryContext ctx) {
-    try {
-      ctx.addUnnests(
-          ctx.getUnnestBuilder()
-              .fromQueryField(ctx.getQueryFieldBuilder().fromPath(getValue()), true));
-    } catch (NullPointerException e) {
-      throw new IllegalArgumentException(
-          String.format("Column %s does not exist on table %s", getValue(), ctx.getTable()));
-    }
+    ctx.addUnnests(
+        ctx.getUnnestBuilder()
+            .fromQueryField(ctx.getQueryFieldBuilder().fromPath(getValue()), true));
   }
 }

@@ -5,6 +5,7 @@ import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
 import java.util.Map;
+import java.util.Objects;
 
 public class QueryFieldBuilder {
   private final Map<String, TableSchema.SchemaDefinition> baseSchema;
@@ -32,6 +33,12 @@ public class QueryFieldBuilder {
     String[] parts = SqlUtil.getParts(realPath);
     TableSchema.SchemaDefinition schemaDefinition =
         (fileField ? this.fileSchema : this.baseSchema).get(realPath);
+
+    if (Objects.isNull(schemaDefinition)) {
+      throw new IllegalArgumentException(
+          String.format("Column %s does not exist on table %s", path, this.table));
+    }
+
     String alias = SqlUtil.getAlias(parts.length - 1, parts);
     String columnText = getColumnText(schemaDefinition, parts, alias, fileField);
 
