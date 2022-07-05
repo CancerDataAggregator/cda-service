@@ -1,0 +1,11 @@
+{
+  "node_type": "=",
+  "l": {
+    "node_type": "column",
+    "value": "id"
+  },
+  "r": {
+    "node_type": "quoted",
+    "value": "test_id"
+  }
+}

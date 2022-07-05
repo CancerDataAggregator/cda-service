@@ -1,0 +1,11 @@
+{
+  "node_type": "=",
+  "l": {
+    "node_type": "column",
+    "value": "not_real"
+  },
+  "r": {
+    "node_type": "quoted",
+    "value": "shouldn't matter"
+  }
+}
