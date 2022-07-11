@@ -55,4 +55,4 @@ jobs:
         token: ${{ secrets.BROADBOT_TOKEN }}
         repository: broadinstitute/terra-helmfile
         event-type: update-service
-        client-payload: '{"service": "cancerdata", "version": "${{ steps.tag.outputs.tag }}"}'
+        client-payload: '{"service": "cancerdata", "version": "${{ steps.tag.outputs.tag }}", "dev_only": true}'
