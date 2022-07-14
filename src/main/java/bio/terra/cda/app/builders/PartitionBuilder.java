@@ -48,17 +48,28 @@ public class PartitionBuilder {
 
   public Partition fromQueryField(QueryField queryField) {
     String[] parts = queryField.getParts();
+    String prefix = SqlUtil.getAlias(parts.length - 2, parts);
+
+    if (queryField.isFileField()) {
+        if (parts.length > 1) {
+            parts = Stream.concat(
+                    Stream.of(TableSchema.FILE_PREFIX), Arrays.stream(parts))
+                    .toArray(String[]::new);
+            prefix = SqlUtil.getAlias(parts.length - 2, parts);
+        } else {
+            prefix = fileTable;
+        }
+    }
+
     if (Arrays.asList(parts).contains(TableSchema.IDENTIFIER_COLUMN)
         && !parts[parts.length - 1].equals(TableSchema.IDENTIFIER_COLUMN)) {
       return new Partition(
           queryField.getPath(),
-          String.format(SYSTEM_FORMAT, SqlUtil.getAlias(parts.length - 2, parts)));
+          String.format(SYSTEM_FORMAT, prefix));
     } else {
       return new Partition(
           queryField.getPath(),
-          String.format(
-              ID_FORMAT,
-              queryField.isFileField() ? fileTable : SqlUtil.getAlias(parts.length - 2, parts)));
+          String.format(ID_FORMAT, prefix));
     }
   }
 }

@@ -4,8 +4,11 @@ import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
+
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class QueryFieldBuilder {
   private final Map<String, TableSchema.SchemaDefinition> baseSchema;
@@ -36,11 +39,18 @@ public class QueryFieldBuilder {
 
     if (Objects.isNull(schemaDefinition)) {
       throw new IllegalArgumentException(
-          String.format("Column %s does not exist on table %s", path, this.table));
+          String.format("Column %s does not exist on table %s", realPath, fileField ? this.fileTable : this.table));
     }
 
-    String alias = SqlUtil.getAlias(parts.length - 1, parts);
-    String columnText = getColumnText(schemaDefinition, parts, alias, fileField);
+    String[] newParts = parts;
+    if (fileField && parts.length > 1) {
+      newParts = Stream.concat(
+              Stream.of(TableSchema.FILE_PREFIX),
+              Arrays.stream(parts)).toArray(String[]::new);
+    }
+
+    String alias = SqlUtil.getAlias(newParts.length - 1, newParts);
+    String columnText = getColumnText(schemaDefinition, newParts, alias, fileField);
 
     return new QueryField(
         schemaDefinition.getName(),
