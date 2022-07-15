@@ -62,9 +62,12 @@ public class UnnestBuilder {
               .toArray(String[]::new);
       String filesAlias = SqlUtil.getAlias(filesParts.length - 2, filesParts);
 
+      SqlUtil.JoinType joinType = queryField.isFilesQuery() ? SqlUtil.JoinType.INNER : SqlUtil.JoinType.LEFT;
+      String[] parts = queryField.isFilesQuery() ? filesParts : entityParts;
+
       Stream<Unnest> unnestStream = Stream.concat(
-          fromPartsWithEntityPath(table, filesParts, false, String.join(".", filesParts)),
-          Stream.of(fileJoin(SqlUtil.JoinType.INNER, filesAlias)));
+          fromPartsWithEntityPath(table, filesParts, false, String.join(".", parts)),
+          Stream.of(fileJoin(joinType, filesAlias)));
 
       if (queryField.getParts().length > 1) {
         unnestStream = Stream.concat(

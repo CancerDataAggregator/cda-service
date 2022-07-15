@@ -17,16 +17,19 @@ public class QueryFieldBuilder {
       String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase());
   private final String table;
   private final String fileTable;
+  private final boolean filesQuery;
 
   public QueryFieldBuilder(
       Map<String, TableSchema.SchemaDefinition> baseSchema,
       Map<String, TableSchema.SchemaDefinition> fileSchema,
       String table,
-      String fileTable) {
+      String fileTable,
+      boolean filesQuery) {
     this.baseSchema = baseSchema;
     this.fileSchema = fileSchema;
     this.table = table;
     this.fileTable = fileTable;
+    this.filesQuery = filesQuery;
   }
 
   public QueryField fromPath(String path) {
@@ -59,7 +62,8 @@ public class QueryFieldBuilder {
         alias,
         columnText,
         fileField,
-        schemaDefinition);
+        schemaDefinition,
+        filesQuery);
   }
 
   protected String getColumnText(
