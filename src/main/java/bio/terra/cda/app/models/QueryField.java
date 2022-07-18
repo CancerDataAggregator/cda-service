@@ -11,6 +11,7 @@ public class QueryField {
   private final String columnText;
   private final boolean fileField;
   private final TableSchema.SchemaDefinition schemaDefinition;
+  private final boolean filesQuery;
   // endregion
 
   // region constructors
@@ -21,7 +22,8 @@ public class QueryField {
       String alias,
       String columnText,
       boolean fileField,
-      TableSchema.SchemaDefinition schemaDefinition) {
+      TableSchema.SchemaDefinition schemaDefinition,
+      boolean filesQuery) {
     this.name = name;
     this.path = path;
     this.parts = parts;
@@ -29,6 +31,7 @@ public class QueryField {
     this.columnText = columnText;
     this.fileField = fileField;
     this.schemaDefinition = schemaDefinition;
+    this.filesQuery = filesQuery;
   }
   // endregion
 
@@ -67,6 +70,10 @@ public class QueryField {
 
   public TableSchema.SchemaDefinition[] getFields() {
     return this.schemaDefinition.getFields();
+  }
+
+  public boolean isFilesQuery() {
+    return filesQuery;
   }
   // endregion
 }
