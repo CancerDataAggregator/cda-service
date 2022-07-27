@@ -174,7 +174,6 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryCreatedData> uniqueValues(
       String version, String body, String system, String table, Boolean count) {
-
     String tableName;
     if (table == null) {
       tableName = applicationConfiguration.getBqTable() + "." + version;
@@ -207,7 +206,7 @@ public class QueryApiController implements QueryApi {
     StringBuilder unnestConcat = new StringBuilder();
     unnestClauses.forEach(unnestConcat::append);
     var querySql = "";
-    if (count) {
+    if (Boolean.TRUE.equals(count)) {
       querySql =
           "SELECT"
               + nt.getColumn()
