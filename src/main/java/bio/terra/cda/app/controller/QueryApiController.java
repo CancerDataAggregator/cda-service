@@ -173,7 +173,8 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> uniqueValues(
-      String version, String body, String system, String table) {
+      String version, String body, String system, String table, Boolean count) {
+
     String tableName;
     if (table == null) {
       tableName = applicationConfiguration.getBqTable() + "." + version;
@@ -205,27 +206,37 @@ public class QueryApiController implements QueryApi {
 
     StringBuilder unnestConcat = new StringBuilder();
     unnestClauses.forEach(unnestConcat::append);
-    var querySql = "SELECT\n" + nt.getColumn() +","+
-            "COUNT("+nt.getColumn()+") AS Count\n" +
-            "FROM\n" +
-             tableName+
-            unnestConcat+
-            " WHERE\n " +
-            String.join(" AND ", whereClauses)+
-            "GROUP BY "+nt.getColumn()+"\n" +
-            "ORDER BY\n" +
-            nt.getColumn();
-
-//    var querySql =
-//        "SELECT DISTINCT "
-//            + nt.getColumn()
-//            + " FROM "
-//            + tableName
-//            + unnestConcat
-//            + " WHERE "
-//            + String.join(" AND ", whereClauses)
-//            + " ORDER BY "
-//            + nt.getColumn();
+    var querySql = "";
+    if (count) {
+      querySql =
+          "SELECT"
+              + nt.getColumn()
+              + ","
+              + "COUNT("
+              + nt.getColumn()
+              + ") AS Count\n"
+              + "FROM\n"
+              + tableName
+              + unnestConcat
+              + " WHERE\n "
+              + String.join(" AND ", whereClauses)
+              + "GROUP BY "
+              + nt.getColumn()
+              + "\n"
+              + "ORDER BY\n"
+              + nt.getColumn();
+    } else {
+      querySql =
+          "SELECT DISTINCT "
+              + nt.getColumn()
+              + " FROM "
+              + tableName
+              + unnestConcat
+              + " WHERE "
+              + String.join(" AND ", whereClauses)
+              + " ORDER BY "
+              + nt.getColumn();
+    }
     logger.debug("uniqueValues: {}", querySql);
 
     return sendQuery(querySql, false);
@@ -559,7 +570,4 @@ public class QueryApiController implements QueryApi {
   }
   // endregion
 
-
-
 }
-

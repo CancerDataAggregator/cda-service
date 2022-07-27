@@ -63,6 +63,7 @@ class QueryApiControllerTest {
     String system = "GDC";
     String body = "sex";
     String table = "default.dev";
+    Boolean count = Boolean.FALSE;
 
     var expected =
         "SELECT DISTINCT sex FROM default.dev.all_v3_0_subjects_meta, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE IFNULL(sex, '') <> '' AND _identifier.system = 'GDC' ORDER BY sex";
@@ -71,6 +72,7 @@ class QueryApiControllerTest {
                 post("/api/v1/unique-values/{version}", version)
                     .param("system", system)
                     .param("table", table)
+                    .param("count", String.valueOf(count))
                     .contentType(MediaType.valueOf("text/plain"))
                     .content(body)
                     .accept(MediaType.APPLICATION_JSON))
