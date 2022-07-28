@@ -711,6 +711,7 @@ paths:
         - $ref: "#/components/parameters/DatasetVersion"
         - $ref: "#/components/parameters/SystemValue"
         - $ref: "#/components/parameters/Table"
+        - $ref: "#/components/parameters/Count"
 
       requestBody:
         description: column_name of table value being requested
@@ -854,6 +855,12 @@ components:
       schema:
         type: string
       description: Filter on system for results
+    Count:
+        in: query
+        name: count
+        schema:
+          type: boolean
+        description: Filter on system for results
     AddTable:
       in: query
       name: table name
