@@ -1,5 +1,6 @@
 package bio.terra.cda.app.util;
 
+import bio.terra.cda.app.builders.ParameterBuilder;
 import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
@@ -27,6 +28,7 @@ public class QueryContext {
   private SelectBuilder selectBuilder;
   private UnnestBuilder unnestBuilder;
   private PartitionBuilder partitionBuilder;
+  private ParameterBuilder parameterBuilder;
 
   public QueryContext(String table, String project) {
     this.table = table;
@@ -101,6 +103,15 @@ public class QueryContext {
 
   public QueryContext setPartitionBuilder(PartitionBuilder builder) {
     this.partitionBuilder = builder;
+    return this;
+  }
+
+  public ParameterBuilder getParameterBuilder() {
+    return this.parameterBuilder;
+  }
+
+  public QueryContext setParameterBuilder(ParameterBuilder builder) {
+    this.parameterBuilder = builder;
     return this;
   }
 
