@@ -11,6 +11,13 @@ import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.DatasetInfo;
+import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobConfiguration;
+import com.google.cloud.bigquery.JobId;
+import com.google.cloud.bigquery.JobInfo;
+import com.google.cloud.bigquery.QueryJobConfiguration;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -47,25 +54,26 @@ class QueryApiControllerTest {
     assertThat(response.getQuerySql(), equalTo(expected));
   }
 
-  @Disabled
-  void booleanQueryDryRun() throws Exception {
-    callQueryApi(true);
-    verify(queryService, never()).startQuery(anyString());
-
-    reset(queryService);
-    callQueryApi(false);
-    verify(queryService, only()).startQuery(anyString());
-  }
-
   @Test
   void uniqueValuesTest() throws Exception {
-    String version = "all_v3_0_subjects_meta";
+    String version = "all_Subjects_v3_0_final";
     String system = "GDC";
     String body = "sex";
-    String table = "default.dev";
+    String table = "gdc-bq-sample.dev";
+
+    // mock the startQuery to return the query that is passed to it as a response
+    when(queryService.startQuery((QueryJobConfiguration.Builder) any(), anyBoolean()))
+            .thenAnswer(a -> {
+              var response = new QueryCreatedData();
+
+              QueryJobConfiguration.Builder builder = a.getArgument(0);
+              response.setQuerySql(builder.build().getQuery());
+
+              return response;
+            });
 
     var expected =
-        "SELECT DISTINCT sex FROM default.dev.all_v3_0_subjects_meta, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE IFNULL(sex, '') <> '' AND _identifier.system = 'GDC' ORDER BY sex";
+        "SELECT DISTINCT sex FROM gdc-bq-sample.dev.all_Subjects_v3_0_final, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE IFNULL(sex, '') <> '' AND _identifier.system = 'GDC' ORDER BY sex";
     var result =
         mvc.perform(
                 post("/api/v1/unique-values/{version}", version)
@@ -77,6 +85,7 @@ class QueryApiControllerTest {
             .andReturn();
     var response =
         objectMapper.readValue(result.getResponse().getContentAsString(), QueryCreatedData.class);
+
     assertThat(response.getQuerySql(), equalTo(expected));
   }
 }

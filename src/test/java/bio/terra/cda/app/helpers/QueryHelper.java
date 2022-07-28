@@ -1,5 +1,6 @@
 package bio.terra.cda.app.helpers;
 
+import bio.terra.cda.app.builders.ParameterBuilder;
 import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
@@ -22,6 +23,7 @@ public class QueryHelper {
                 .setQueryFieldBuilder(new QueryFieldBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap(), table, fileTable))
                 .setUnnestBuilder(new UnnestBuilder(table, fileTable, entitySchema.getParts(), project))
                 .setPartitionBuilder(new PartitionBuilder(fileTable))
-                .setSelectBuilder(new SelectBuilder(table, fileTable));
+                .setSelectBuilder(new SelectBuilder(table, fileTable))
+                .setParameterBuilder(new ParameterBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap()));
     }
 }

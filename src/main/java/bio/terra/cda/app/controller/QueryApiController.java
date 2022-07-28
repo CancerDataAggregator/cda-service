@@ -30,9 +30,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+
+import com.google.cloud.bigquery.QueryJobConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,45 +100,15 @@ public class QueryApiController implements QueryApi {
     return ResponseEntity.ok(response);
   }
 
-  private ResponseEntity<QueryCreatedData> sendQuery(String querySql, boolean dryRun) {
-    var response = new QueryCreatedData().querySql(querySql);
-    //    if (!querySql.contains(applicationConfiguration.getProject())) {
-    //      throw new IllegalArgumentException("Your database is outside of the project");
-    //    }
-    var lowerCaseQuery = querySql.toLowerCase();
+  private ResponseEntity<QueryCreatedData> sendQuery(QueryJobConfiguration.Builder configBuilder, boolean dryRun) {
+    var response = new QueryCreatedData();
 
     try {
-      var supportedSchemas = TableSchema.supportedSchemas();
-      var found = false;
-
-      for (String schema : supportedSchemas) {
-        if (lowerCaseQuery.contains(schema)) {
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        throw new IllegalArgumentException(INVALID_DATABASE);
-      }
-    } catch (Exception e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
+      response = queryService.startQuery(configBuilder, dryRun);
+    } catch (BigQueryException e) {
+      throw new BadQueryException("Could not create job");
     }
 
-    if (lowerCaseQuery.contains("create table")
-        || lowerCaseQuery.contains("delete from")
-        || lowerCaseQuery.contains("drop table")
-        || lowerCaseQuery.contains("update")
-        || lowerCaseQuery.contains("alter table")) {
-      throw new IllegalArgumentException("Those actions are not available in sql");
-    }
-    if (!dryRun) {
-      try {
-        response.queryId(queryService.startQuery(querySql));
-      } catch (BigQueryException e) {
-        throw new BadQueryException("Could not create job");
-      }
-    }
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
   // endregion
@@ -145,14 +118,8 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryCreatedData> bulkData(String version, String table) {
     String querySql = "SELECT * FROM " + table + "." + version;
-    return sendQuery(querySql, false);
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> sqlQuery(String querySql) {
-
-    return sendQuery(querySql, false);
+    QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
+    return sendQuery(queryJobBuilder, false);
   }
 
   @TrackExecutionTime
@@ -160,9 +127,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> booleanQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -218,7 +185,9 @@ public class QueryApiController implements QueryApi {
             + nt.getColumn();
     logger.debug("uniqueValues: {}", querySql);
 
-    return sendQuery(querySql, false);
+    QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
+
+    return sendQuery(queryJobBuilder, false);
   }
 
   @TrackExecutionTime
@@ -252,15 +221,18 @@ public class QueryApiController implements QueryApi {
 
     logger.debug("columns: {}", querySql);
 
-    return sendQuery(querySql, false);
+    QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
+
+    return sendQuery(queryJobBuilder, false);
   }
 
   @Override
   public ResponseEntity<QueryCreatedData> globalCounts(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new CountsSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
+      QueryJobConfiguration.Builder configBuilder =
+              new CountsSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -272,31 +244,31 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryCreatedData> files(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    String querySql = "";
+    QueryJobConfiguration.Builder configBuilder;
     try {
-      querySql = new FileSqlGenerator(table + "." + version, body, version).generate();
+      configBuilder = new FileSqlGenerator(table + "." + version, body, version).generate();
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
-    return sendQuery(querySql, dryRun);
+    return sendQuery(configBuilder, dryRun);
   }
 
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> fileCountsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    String querySql = "";
+    QueryJobConfiguration.Builder configBuilder;
     try {
-      querySql =
+      configBuilder =
           new SubjectCountSqlGenerator(table + "." + version, body, version, true).generate();
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
-    return sendQuery(querySql, dryRun);
+    return sendQuery(configBuilder, dryRun);
   }
   // endregion
 
@@ -306,9 +278,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> subjectQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -321,9 +293,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> subjectFilesQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new SubjectSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -336,9 +308,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> subjectCountsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new SubjectCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -351,9 +323,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> subjectFileCountsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new SubjectCountSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -368,9 +340,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> researchSubjectQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new ResearchSubjectSqlGenerator(table + "." + version, body, version, false).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -383,9 +355,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> researchSubjectFilesQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new ResearchSubjectSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -398,9 +370,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> researchSubjectCountsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new ResearchSubjectCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -413,10 +385,10 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> researchSubjectFileCountsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new ResearchSubjectCountSqlGenerator(table + "." + version, body, version, true)
               .generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -431,9 +403,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> specimenQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new SpecimenSqlGenerator(table + "." + version, body, version, false).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -446,9 +418,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> specimenFilesQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new SpecimenSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -461,9 +433,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> specimenCountsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new SpecimenCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -476,9 +448,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> specimenFileCountsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new SpecimenCountSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -493,8 +465,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> diagnosisQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
+      QueryJobConfiguration.Builder configBuilder =
+              new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -507,9 +480,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> diagnosisCountsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new DiagnosisCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -524,8 +497,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> treatmentsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql = new TreatmentSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
+      QueryJobConfiguration.Builder configBuilder =
+              new TreatmentSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {
@@ -538,9 +512,9 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryCreatedData> treatmentCountsQuery(
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
-      String querySql =
+      QueryJobConfiguration.Builder configBuilder =
           new TreatmentCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(querySql, dryRun);
+      return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
     } catch (IllegalArgumentException e) {

@@ -28,93 +28,32 @@ class SqlGeneratorTest {
             "query1.json",
             QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, "
-                + "all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, "
-                + "all_v3_0_subjects_meta.species AS species, all_v3_0_subjects_meta.sex AS sex, "
-                + "all_v3_0_subjects_meta.race AS race, all_v3_0_subjects_meta.ethnicity AS ethnicity, "
-                + "all_v3_0_subjects_meta.days_to_birth AS days_to_birth, all_v3_0_subjects_meta.subject_associated_project "
-                + "AS subject_associated_project, all_v3_0_subjects_meta.vital_status AS vital_status, "
-                + "all_v3_0_subjects_meta.age_at_death AS age_at_death, all_v3_0_subjects_meta.cause_of_death AS cause_of_death, "
-                + "all_v3_0_subjects_meta.ResearchSubject AS ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS "
-                + "all_v3_0_subjects_meta WHERE (IFNULL(UPPER(all_v3_0_subjects_meta.id), '') = UPPER('value'))) as results WHERE rn = 1"),
+            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta WHERE (IFNULL(UPPER(all_v3_0_subjects_meta.id), '') = UPPER(@_id_1))) as results WHERE rn = 1"),
         Arguments.of(
             "query2.json",
             QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, "
-                + "all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, "
-                + "all_v3_0_subjects_meta.species AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS "
-                + "race, all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, "
-                + "all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, "
-                + "all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, "
-                + "all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS "
-                + "ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN "
-                + "UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.Specimen) "
-                + "AS _ResearchSubject_Specimen WHERE (((IFNULL(UPPER(_ResearchSubject.member_of_research_project), '') >= "
-                + "UPPER('value')) AND (IFNULL(UPPER(_ResearchSubject_Specimen.specimen_type), '') = UPPER('value'))) AND "
-                + "(IFNULL(UPPER(_ResearchSubject.primary_diagnosis_condition), '') = UPPER('value')))) as results WHERE rn = 1"),
+            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.Specimen) AS _ResearchSubject_Specimen WHERE (((IFNULL(UPPER(_ResearchSubject.member_of_research_project), '') >= UPPER(@_ResearchSubject_member_of_research_project_1)) AND (IFNULL(UPPER(_ResearchSubject_Specimen.specimen_type), '') = UPPER(@_ResearchSubject_Specimen_specimen_type_1))) AND (IFNULL(UPPER(_ResearchSubject.primary_diagnosis_condition), '') = UPPER(@_ResearchSubject_primary_diagnosis_condition_1)))) as results WHERE rn = 1"),
         Arguments.of(
             "query3.json",
             QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, "
-                + "all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species "
-                + "AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, "
-                + "all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, "
-                + "all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, "
-                + "all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, "
-                + "all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS "
-                + "ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN "
-                + "UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.Specimen) "
-                + "AS _ResearchSubject_Specimen WHERE (_ResearchSubject_Specimen.age_at_collection = 50)) as results WHERE rn = 1"),
+            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.Specimen) AS _ResearchSubject_Specimen WHERE (_ResearchSubject_Specimen.age_at_collection = @_ResearchSubject_Specimen_age_at_collection_1)) as results WHERE rn = 1"),
         Arguments.of(
             "query-subquery.json",
             "GROUP.all_v3_0_subjects_meta",
             "all_v3_0_subjects_meta",
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, "
-                + "all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species "
-                + "AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, "
-                + "all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, "
-                + "all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, "
-                + "all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, "
-                + "all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS "
-                + "ResearchSubject FROM (SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY "
-                + "all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.* FROM GROUP.all_v3_0_subjects_meta AS "
-                + "all_v3_0_subjects_meta LEFT JOIN UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN "
-                + "UNNEST(_ResearchSubject.identifier) AS _ResearchSubject_identifier WHERE "
-                + "(IFNULL(UPPER(_ResearchSubject_identifier.system), '') = UPPER('PDC'))) as results WHERE rn = 1) AS all_v3_0_subjects_meta "
-                + "LEFT JOIN UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN "
-                + "UNNEST(_ResearchSubject.identifier) AS _ResearchSubject_identifier WHERE "
-                + "(IFNULL(UPPER(_ResearchSubject_identifier.system), '') = UPPER('GDC'))) as results WHERE rn = 1"),
+            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS ResearchSubject FROM (SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.* FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.identifier) AS _ResearchSubject_identifier WHERE (IFNULL(UPPER(_ResearchSubject_identifier.system), '') = UPPER(@_ResearchSubject_identifier_system_1))) as results WHERE rn = 1) AS all_v3_0_subjects_meta LEFT JOIN UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.identifier) AS _ResearchSubject_identifier WHERE (IFNULL(UPPER(_ResearchSubject_identifier.system), '') = UPPER(@_ResearchSubject_identifier_system_2))) as results WHERE rn = 1"),
         Arguments.of(
             "query-not.json",
             QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, "
-                + "all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species "
-                + "AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, "
-                + "all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, "
-                + "all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, "
-                + "all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, "
-                + "all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS "
-                + "ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN "
-                + "UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject WHERE NOT ((UPPER('cancer') = "
-                + "IFNULL(UPPER(_ResearchSubject.primary_diagnosis_condition), '')))) as results WHERE rn = 1"),
+            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS ResearchSubject FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta LEFT JOIN UNNEST(all_v3_0_subjects_meta.ResearchSubject) AS _ResearchSubject WHERE NOT ((IFNULL(UPPER(_ResearchSubject.primary_diagnosis_condition), '') = UPPER(@_ResearchSubject_primary_diagnosis_condition_1)))) as results WHERE rn = 1"),
         Arguments.of(
             "query-ambiguous.json",
             QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, "
-                + "all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species "
-                + "AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, "
-                + "all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, "
-                + "all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, "
-                + "all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, "
-                + "all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS "
-                + "ResearchSubject FROM (SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY "
-                + "all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.* FROM GROUP.all_v3_0_subjects_meta AS "
-                + "all_v3_0_subjects_meta WHERE (IFNULL(UPPER(all_v3_0_subjects_meta.species), '') = UPPER('dog'))) as results WHERE rn = 1) "
-                + "AS all_v3_0_subjects_meta WHERE (IFNULL(UPPER(all_v3_0_subjects_meta.species), '') = UPPER('human'))) as results WHERE rn = 1"));
+            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.id AS id, all_v3_0_subjects_meta.identifier AS identifier, all_v3_0_subjects_meta.species AS species, all_v3_0_subjects_meta.sex AS sex, all_v3_0_subjects_meta.race AS race, all_v3_0_subjects_meta.ethnicity AS ethnicity, all_v3_0_subjects_meta.days_to_birth AS days_to_birth, all_v3_0_subjects_meta.subject_associated_project AS subject_associated_project, all_v3_0_subjects_meta.vital_status AS vital_status, all_v3_0_subjects_meta.age_at_death AS age_at_death, all_v3_0_subjects_meta.cause_of_death AS cause_of_death, all_v3_0_subjects_meta.ResearchSubject AS ResearchSubject FROM (SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY all_v3_0_subjects_meta.id) as rn, all_v3_0_subjects_meta.* FROM GROUP.all_v3_0_subjects_meta AS all_v3_0_subjects_meta WHERE (IFNULL(UPPER(all_v3_0_subjects_meta.species), '') = UPPER(@_species_1))) as results WHERE rn = 1) AS all_v3_0_subjects_meta WHERE (IFNULL(UPPER(all_v3_0_subjects_meta.species), '') = UPPER(@_species_2))) as results WHERE rn = 1"));
   }
 
   @ParameterizedTest
@@ -126,7 +65,7 @@ class SqlGeneratorTest {
     String expectedSql = String.format(expectedQueryFormat, qualifiedTable, table);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery = new SqlGenerator(qualifiedTable, query, table, false).generate();
+    String translatedQuery = new SqlGenerator(qualifiedTable, query, table, false).generate().build().getQuery();
 
     assertEquals(expectedSql, translatedQuery);
   }

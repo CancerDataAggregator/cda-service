@@ -6,6 +6,7 @@ import bio.terra.cda.app.operators.SelectValues;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.util.HashMap;
@@ -61,7 +62,8 @@ public class CountsSqlGenerator extends SqlGenerator {
           String.format(
               "with %s as (%s)",
               resultsAlias,
-              new SqlGenerator(this.qualifiedTable, newQuery, this.version, false).generate()),
+              new SqlGenerator(this.qualifiedTable, newQuery, this.version, false, this.parameterBuilder)
+                      .sql(this.qualifiedTable, newQuery, false)),
           entityMap.keySet().stream()
               .map(
                   key -> {

@@ -7,6 +7,15 @@ import bio.terra.cda.generated.model.Query;
 public class Unquoted extends BasicOperator {
   @Override
   public String buildQuery(QueryContext ctx) throws IllegalArgumentException {
-    return String.format("%s", getValue());
+    String value = getValue();
+
+    if (value.equalsIgnoreCase("null")) {
+      return value;
+    }
+
+    var parameterBuilder = ctx.getParameterBuilder();
+    return parameterBuilder.addParameterValue(
+            ctx.getQueryFieldBuilder().fromPath(this.getParent().getL().getValue()),
+            value);
   }
 }

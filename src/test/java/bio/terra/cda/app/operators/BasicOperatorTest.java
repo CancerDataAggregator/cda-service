@@ -37,7 +37,7 @@ public class BasicOperatorTest {
 
         assertEquals(0, ctx.getUnnests().size());
         assertEquals(0, ctx.getPartitions().size());
-        assertEquals("(IFNULL(UPPER(all_Subjects_v3_0_final.id), '') = UPPER('test_id'))", whereClause);
+        assertEquals("(IFNULL(UPPER(all_Subjects_v3_0_final.id), '') = UPPER(@_id_1))", whereClause);
     }
 
     @Test
@@ -51,7 +51,7 @@ public class BasicOperatorTest {
 
         assertEquals(2, ctx.getUnnests().size());
         assertEquals(0, ctx.getPartitions().size());
-        assertEquals("(((IFNULL(UPPER(_ResearchSubject_Diagnosis.stage), '') = UPPER('Stage I')) OR (IFNULL(UPPER(_ResearchSubject_Diagnosis.stage), '') = UPPER('Stage II'))) AND (IFNULL(UPPER(_ResearchSubject.primary_diagnosis_site), '') = UPPER('Kidney')))", whereClause);
+        assertEquals("(((IFNULL(UPPER(_ResearchSubject_Diagnosis.stage), '') = UPPER(@_ResearchSubject_Diagnosis_stage_1)) OR (IFNULL(UPPER(_ResearchSubject_Diagnosis.stage), '') = UPPER(@_ResearchSubject_Diagnosis_stage_2))) AND (IFNULL(UPPER(_ResearchSubject.primary_diagnosis_site), '') = UPPER(@_ResearchSubject_primary_diagnosis_site_1)))", whereClause);
 
         QueryContext ResearchSubjectContext = QueryHelper.getNewQueryContext(
                 "all_Subjects_v3_0_final", "all_Files_v3_0_final", "ResearchSubject", "project", true);

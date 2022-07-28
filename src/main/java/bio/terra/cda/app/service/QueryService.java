@@ -5,6 +5,7 @@ import static java.lang.Thread.currentThread;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.generated.model.JobStatusData;
+import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.SystemStatus;
 import bio.terra.cda.generated.model.SystemStatusSystems;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,6 +20,8 @@ import com.google.cloud.bigquery.*;
 import com.google.common.annotations.VisibleForTesting;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -260,7 +263,7 @@ public class QueryService {
     // This cast is safe because it's only done on queries that have been generated
     // using
     // startQuery() below.
-    return ((QueryJobConfiguration) queryJob.getConfiguration()).getQuery();
+    return getQuerySqlFromConfiguration(queryJob.getConfiguration());
   }
 
   @Cacheable
@@ -298,7 +301,9 @@ public class QueryService {
     }
   }
 
-  public String startQuery(String query) {
+  public QueryCreatedData startQuery(QueryJobConfiguration.Builder queryConfig, boolean dryRun) {
+    QueryCreatedData response = new QueryCreatedData();
+
     String jobID = UUID.randomUUID().toString();
     //    String destinationDataset = "Job_Queue";
     //    String destinationTable = String.format("Job_%s", jobID);
@@ -309,8 +314,7 @@ public class QueryService {
     //            .setExpirationTime(Instant.now().toEpochMilli() + TimeUnit.MINUTES.toMillis(10))
     //            .build();
 
-    QueryJobConfiguration.Builder queryConfig =
-        QueryJobConfiguration.newBuilder(query).setUseLegacySql(false).setUseQueryCache(true);
+    queryConfig.setUseLegacySql(false).setUseQueryCache(true);
     //            .setAllowLargeResults(true);
     //            .setDestinationTable(tableInfo.getTableId());
     // Create a job ID so that we can safely retry.
@@ -319,7 +323,51 @@ public class QueryService {
      * Biguery has a maximum wait time by default of 10 seconds this will update the max time to
      * 1min.
      */
-    Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig.build()).setJobId(jobId).build());
-    return queryJob.getJobId().getJob();
+    QueryJobConfiguration queryJobConfiguration = queryConfig.build();
+
+    response.setQuerySql(getQuerySqlFromConfiguration(queryJobConfiguration));
+
+    if (!dryRun) {
+      Job queryJob = bigQuery.create(JobInfo.newBuilder(queryJobConfiguration).setJobId(jobId).build());
+      response.setQueryId(queryJob.getJobId().getJob());
+    }
+
+    return response;
+  }
+
+  private static String getQuerySqlFromConfiguration(QueryJobConfiguration queryJobConfiguration) {
+    String querySql = queryJobConfiguration.getQuery();
+    var namedParameters = queryJobConfiguration.getNamedParameters();
+    for (Map.Entry<String, QueryParameterValue> entry: namedParameters.entrySet()) {
+      QueryParameterValue parameterValue = entry.getValue();
+      StandardSQLTypeName sqlTypeName = parameterValue.getType();
+
+      String replaceString = "";
+      if (sqlTypeName.equals(StandardSQLTypeName.ARRAY)) {
+        boolean stringType = Objects.equals(parameterValue.getArrayType(), StandardSQLTypeName.STRING);
+
+        String arrayString = Objects.requireNonNull(parameterValue.getArrayValues())
+                .stream().map(queryParameterValue -> {
+                  String formatString = stringType
+                          ? "UPPER('%s')" : "%s";
+                  return String.format(formatString, queryParameterValue.getValue());
+                }).collect(Collectors.joining(", "));
+        replaceString = String.format("(%s)", arrayString);
+
+        String formatString = stringType
+                ? "(SELECT UPPER(_%1$s) FROM UNNEST(@%1$s) as _%1$s)"
+                : "UNNEST(@%s)";
+
+        querySql = querySql.replace(String.format(formatString, entry.getKey()), replaceString);
+      } else {
+        replaceString = sqlTypeName.equals(StandardSQLTypeName.STRING)
+                ? String.format("'%s'", parameterValue.getValue())
+                : parameterValue.getValue();
+
+        querySql = querySql.replace(String.format("@%s", entry.getKey()), replaceString);
+      }
+    }
+
+    return querySql;
   }
 }
