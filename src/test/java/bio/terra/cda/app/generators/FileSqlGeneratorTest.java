@@ -39,7 +39,8 @@ public class FileSqlGeneratorTest {
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
 
-    String translatedQuery = new FileSqlGenerator(qualifiedTable, query, table).generate().build().getQuery();
+    String translatedQuery =
+        new FileSqlGenerator(qualifiedTable, query, table).generate().build().getQuery();
 
     assertEquals(expectedSql, translatedQuery);
   }

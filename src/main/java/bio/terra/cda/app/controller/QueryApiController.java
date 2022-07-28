@@ -24,18 +24,16 @@ import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
 import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-
-import com.google.cloud.bigquery.QueryJobConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,7 +98,8 @@ public class QueryApiController implements QueryApi {
     return ResponseEntity.ok(response);
   }
 
-  private ResponseEntity<QueryCreatedData> sendQuery(QueryJobConfiguration.Builder configBuilder, boolean dryRun) {
+  private ResponseEntity<QueryCreatedData> sendQuery(
+      QueryJobConfiguration.Builder configBuilder, boolean dryRun) {
     var response = new QueryCreatedData();
 
     try {
@@ -251,7 +250,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       QueryJobConfiguration.Builder configBuilder =
-              new CountsSqlGenerator(table + "." + version, body, version).generate();
+          new CountsSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -486,7 +485,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       QueryJobConfiguration.Builder configBuilder =
-              new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
+          new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -518,7 +517,7 @@ public class QueryApiController implements QueryApi {
       String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       QueryJobConfiguration.Builder configBuilder =
-              new TreatmentSqlGenerator(table + "." + version, body, version).generate();
+          new TreatmentSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);

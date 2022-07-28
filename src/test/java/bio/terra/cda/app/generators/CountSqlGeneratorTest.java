@@ -5,12 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import bio.terra.cda.app.operators.QueryModule;
 import bio.terra.cda.generated.model.Query;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
-
-import com.google.cloud.bigquery.QueryJobConfiguration;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -41,7 +40,8 @@ public class CountSqlGeneratorTest {
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
 
-    QueryJobConfiguration config = new CountsSqlGenerator(qualifiedTable, query, table).generate().build();
+    QueryJobConfiguration config =
+        new CountsSqlGenerator(qualifiedTable, query, table).generate().build();
     assertEquals(expectedSql, config.getQuery());
   }
 }

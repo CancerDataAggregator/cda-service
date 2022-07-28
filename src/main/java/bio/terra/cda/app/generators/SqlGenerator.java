@@ -15,6 +15,7 @@ import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
+import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -22,8 +23,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.google.cloud.bigquery.QueryJobConfiguration;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
@@ -70,8 +69,13 @@ public class SqlGenerator {
     initializeBuilders();
   }
 
-  public SqlGenerator(String qualifiedTable, Query rootQuery, String version, boolean filesQuery, ParameterBuilder parameterBuilder)
-          throws IOException {
+  public SqlGenerator(
+      String qualifiedTable,
+      Query rootQuery,
+      String version,
+      boolean filesQuery,
+      ParameterBuilder parameterBuilder)
+      throws IOException {
     this(qualifiedTable, rootQuery, version, filesQuery);
 
     this.parameterBuilder = parameterBuilder;
@@ -115,7 +119,8 @@ public class SqlGenerator {
 
   public QueryJobConfiguration.Builder generate() throws IllegalArgumentException {
     String querySql = sql(qualifiedTable, rootQuery, false);
-    QueryJobConfiguration.Builder queryJobConfigBuilder = QueryJobConfiguration.newBuilder(querySql);
+    QueryJobConfiguration.Builder queryJobConfigBuilder =
+        QueryJobConfiguration.newBuilder(querySql);
 
     this.parameterBuilder.getParameterValueMap().forEach(queryJobConfigBuilder::addNamedParameter);
     return queryJobConfigBuilder;

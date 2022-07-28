@@ -18,12 +18,15 @@ public class QueryHelper {
     var schemas = new Schemas.SchemaBuilder(table, fileTable).build();
     var entitySchema = TableSchema.getDefinitionByName(schemas.getSchema(), entity);
 
-        return new QueryContext(table, project)
-                .setIncludeSelect(includeSelect)
-                .setQueryFieldBuilder(new QueryFieldBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap(), table, fileTable, false))
-                .setUnnestBuilder(new UnnestBuilder(table, fileTable, entitySchema.getParts(), project))
-                .setPartitionBuilder(new PartitionBuilder(fileTable))
-                .setSelectBuilder(new SelectBuilder(table, fileTable))
-                .setParameterBuilder(new ParameterBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap()));
-    }
+    return new QueryContext(table, project)
+        .setIncludeSelect(includeSelect)
+        .setQueryFieldBuilder(
+            new QueryFieldBuilder(
+                schemas.getSchemaMap(), schemas.getFileSchemaMap(), table, fileTable, false))
+        .setUnnestBuilder(new UnnestBuilder(table, fileTable, entitySchema.getParts(), project))
+        .setPartitionBuilder(new PartitionBuilder(fileTable))
+        .setSelectBuilder(new SelectBuilder(table, fileTable))
+        .setParameterBuilder(
+            new ParameterBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap()));
+  }
 }

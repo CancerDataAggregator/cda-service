@@ -5,61 +5,65 @@ import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.StandardSQLTypeName;
-
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ParameterBuilder {
-    private final Map<String, QueryParameterValue> parameterValueMap;
-    private Map<String, TableSchema.SchemaDefinition> baseSchema;
-    private Map<String, TableSchema.SchemaDefinition> fileSchema;
+  private final Map<String, QueryParameterValue> parameterValueMap;
+  private Map<String, TableSchema.SchemaDefinition> baseSchema;
+  private Map<String, TableSchema.SchemaDefinition> fileSchema;
 
-    public ParameterBuilder(Map<String, TableSchema.SchemaDefinition> baseSchema,
-                            Map<String, TableSchema.SchemaDefinition> fileSchema) {
-        this.baseSchema = baseSchema;
-        this.fileSchema = fileSchema;
-        this.parameterValueMap = new HashMap<>();
+  public ParameterBuilder(
+      Map<String, TableSchema.SchemaDefinition> baseSchema,
+      Map<String, TableSchema.SchemaDefinition> fileSchema) {
+    this.baseSchema = baseSchema;
+    this.fileSchema = fileSchema;
+    this.parameterValueMap = new HashMap<>();
+  }
+
+  public Map<String, QueryParameterValue> getParameterValueMap() {
+    return parameterValueMap;
+  }
+
+  public String addParameterValue(QueryField queryField, Object value) {
+    String parameterName = String.format("%s_1", queryField.getAlias());
+
+    while (this.parameterValueMap.containsKey(parameterName)) {
+      String number = parameterName.substring(parameterName.length() - 1);
+      int index = Integer.parseInt(number);
+      parameterName =
+          String.format("%s%s", parameterName.substring(0, parameterName.length() - 1), ++index);
     }
 
-    public Map<String, QueryParameterValue> getParameterValueMap() {
-        return parameterValueMap;
+    QueryParameterValue queryParameterValue;
+
+    StandardSQLTypeName fieldType =
+        LegacySQLTypeName.valueOf(queryField.getType()).getStandardType();
+
+    if (value.getClass().isArray()) {
+      queryParameterValue =
+          QueryParameterValue.newBuilder()
+              .setArrayValues(
+                  Arrays.stream((String[]) value)
+                      .map(
+                          val ->
+                              QueryParameterValue.newBuilder()
+                                  .setType(fieldType)
+                                  .setValue(val)
+                                  .build())
+                      .collect(Collectors.toList()))
+              .setType(StandardSQLTypeName.ARRAY)
+              .setArrayType(fieldType)
+              .build();
+    } else {
+      queryParameterValue =
+          QueryParameterValue.newBuilder().setType(fieldType).setValue((String) value).build();
     }
 
-    public String addParameterValue(QueryField queryField, Object value) {
-        String parameterName = String.format("%s_1", queryField.getAlias());
+    this.parameterValueMap.put(parameterName, queryParameterValue);
 
-        while (this.parameterValueMap.containsKey(parameterName)) {
-            String number = parameterName.substring(parameterName.length() - 1);
-            int index = Integer.parseInt(number);
-            parameterName = String.format("%s%s", parameterName.substring(0, parameterName.length() - 1), ++index);
-        }
-
-        QueryParameterValue queryParameterValue;
-
-        StandardSQLTypeName fieldType = LegacySQLTypeName.valueOf(queryField.getType())
-                .getStandardType();
-
-        if (value.getClass().isArray()) {
-            queryParameterValue = QueryParameterValue.newBuilder()
-                    .setArrayValues(Arrays.stream((String[]) value).map(val -> QueryParameterValue.newBuilder()
-                            .setType(fieldType)
-                            .setValue(val)
-                            .build()).collect(Collectors.toList()))
-                    .setType(StandardSQLTypeName.ARRAY)
-                    .setArrayType(fieldType)
-                    .build();
-        } else {
-            queryParameterValue = QueryParameterValue.newBuilder()
-                    .setType(fieldType)
-                    .setValue((String) value)
-                    .build();
-        }
-
-        this.parameterValueMap.put(parameterName, queryParameterValue);
-
-        return String.format("@%s", parameterName);
-    }
+    return String.format("@%s", parameterName);
+  }
 }

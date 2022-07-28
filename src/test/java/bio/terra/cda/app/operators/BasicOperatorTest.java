@@ -13,23 +13,28 @@ import org.junit.jupiter.api.Test;
 public class BasicOperatorTest {
   @Test
   void testInvalidColumn() throws IOException {
-    BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-invalid-column.json");
+    BasicOperator query =
+        (BasicOperator) QueryFileReader.getQueryFromFile("query-invalid-column.json");
 
-    QueryContext ctx = QueryHelper.getNewQueryContext(
-        "all_Subjects_v3_0_final", "all_Files_v3_0_final", "Subject", "project", true);
+    QueryContext ctx =
+        QueryHelper.getNewQueryContext(
+            "all_Subjects_v3_0_final", "all_Files_v3_0_final", "Subject", "project", true);
 
-    IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> query.buildQuery(ctx),
-        "Expected query to throw IllegalArgumentException but didn't");
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> query.buildQuery(ctx),
+            "Expected query to throw IllegalArgumentException but didn't");
   }
 
   @Test
   void testEqualsQuoted() throws IOException {
-    BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-equals-quoted.json");
+    BasicOperator query =
+        (BasicOperator) QueryFileReader.getQueryFromFile("query-equals-quoted.json");
 
-    QueryContext ctx = QueryHelper.getNewQueryContext(
-        "all_Subjects_v3_0_final", "all_Files_v3_0_final", "Subject", "project", true);
+    QueryContext ctx =
+        QueryHelper.getNewQueryContext(
+            "all_Subjects_v3_0_final", "all_Files_v3_0_final", "Subject", "project", true);
 
     String whereClause = query.buildQuery(ctx);
 
@@ -42,8 +47,9 @@ public class BasicOperatorTest {
   void testAndOr() throws IOException {
     BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-kidney.json");
 
-    QueryContext ctx = QueryHelper.getNewQueryContext(
-        "all_Subjects_v3_0_final", "all_Files_v3_0_final", "Subject", "project", true);
+    QueryContext ctx =
+        QueryHelper.getNewQueryContext(
+            "all_Subjects_v3_0_final", "all_Files_v3_0_final", "Subject", "project", true);
 
     String whereClause = query.buildQuery(ctx);
 
@@ -53,8 +59,9 @@ public class BasicOperatorTest {
         "(((IFNULL(UPPER(_ResearchSubject_Diagnosis.stage), '') = UPPER(@_ResearchSubject_Diagnosis_stage_1)) OR (IFNULL(UPPER(_ResearchSubject_Diagnosis.stage), '') = UPPER(@_ResearchSubject_Diagnosis_stage_2))) AND (IFNULL(UPPER(_ResearchSubject.primary_diagnosis_site), '') = UPPER(@_ResearchSubject_primary_diagnosis_site_1)))",
         whereClause);
 
-    QueryContext ResearchSubjectContext = QueryHelper.getNewQueryContext(
-        "all_Subjects_v3_0_final", "all_Files_v3_0_final", "ResearchSubject", "project", true);
+    QueryContext ResearchSubjectContext =
+        QueryHelper.getNewQueryContext(
+            "all_Subjects_v3_0_final", "all_Files_v3_0_final", "ResearchSubject", "project", true);
 
     String rsWhere = query.buildQuery(ResearchSubjectContext);
 

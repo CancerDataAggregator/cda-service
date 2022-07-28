@@ -21,7 +21,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -328,7 +327,8 @@ public class QueryService {
     response.setQuerySql(getQuerySqlFromConfiguration(queryJobConfiguration));
 
     if (!dryRun) {
-      Job queryJob = bigQuery.create(JobInfo.newBuilder(queryJobConfiguration).setJobId(jobId).build());
+      Job queryJob =
+          bigQuery.create(JobInfo.newBuilder(queryJobConfiguration).setJobId(jobId).build());
       response.setQueryId(queryJob.getJobId().getJob());
     }
 
@@ -338,29 +338,32 @@ public class QueryService {
   private static String getQuerySqlFromConfiguration(QueryJobConfiguration queryJobConfiguration) {
     String querySql = queryJobConfiguration.getQuery();
     var namedParameters = queryJobConfiguration.getNamedParameters();
-    for (Map.Entry<String, QueryParameterValue> entry: namedParameters.entrySet()) {
+    for (Map.Entry<String, QueryParameterValue> entry : namedParameters.entrySet()) {
       QueryParameterValue parameterValue = entry.getValue();
       StandardSQLTypeName sqlTypeName = parameterValue.getType();
 
       String replaceString = "";
       if (sqlTypeName.equals(StandardSQLTypeName.ARRAY)) {
-        boolean stringType = Objects.equals(parameterValue.getArrayType(), StandardSQLTypeName.STRING);
+        boolean stringType =
+            Objects.equals(parameterValue.getArrayType(), StandardSQLTypeName.STRING);
 
-        String arrayString = Objects.requireNonNull(parameterValue.getArrayValues())
-                .stream().map(queryParameterValue -> {
-                  String formatString = stringType
-                          ? "UPPER('%s')" : "%s";
-                  return String.format(formatString, queryParameterValue.getValue());
-                }).collect(Collectors.joining(", "));
+        String arrayString =
+            Objects.requireNonNull(parameterValue.getArrayValues()).stream()
+                .map(
+                    queryParameterValue -> {
+                      String formatString = stringType ? "UPPER('%s')" : "%s";
+                      return String.format(formatString, queryParameterValue.getValue());
+                    })
+                .collect(Collectors.joining(", "));
         replaceString = String.format("(%s)", arrayString);
 
-        String formatString = stringType
-                ? "(SELECT UPPER(_%1$s) FROM UNNEST(@%1$s) as _%1$s)"
-                : "UNNEST(@%s)";
+        String formatString =
+            stringType ? "(SELECT UPPER(_%1$s) FROM UNNEST(@%1$s) as _%1$s)" : "UNNEST(@%s)";
 
         querySql = querySql.replace(String.format(formatString, entry.getKey()), replaceString);
       } else {
-        replaceString = sqlTypeName.equals(StandardSQLTypeName.STRING)
+        replaceString =
+            sqlTypeName.equals(StandardSQLTypeName.STRING)
                 ? String.format("'%s'", parameterValue.getValue())
                 : parameterValue.getValue();
 

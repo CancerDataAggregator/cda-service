@@ -62,22 +62,26 @@ public class UnnestBuilder {
               .toArray(String[]::new);
       String filesAlias = SqlUtil.getAlias(filesParts.length - 2, filesParts);
 
-      SqlUtil.JoinType joinType = queryField.isFilesQuery() ? SqlUtil.JoinType.INNER : SqlUtil.JoinType.LEFT;
+      SqlUtil.JoinType joinType =
+          queryField.isFilesQuery() ? SqlUtil.JoinType.INNER : SqlUtil.JoinType.LEFT;
       String[] parts = queryField.isFilesQuery() ? filesParts : entityParts;
 
-      Stream<Unnest> unnestStream = Stream.concat(
-          fromPartsWithEntityPath(table, filesParts, false, String.join(".", parts)),
-          Stream.of(fileJoin(joinType, filesAlias)));
+      Stream<Unnest> unnestStream =
+          Stream.concat(
+              fromPartsWithEntityPath(table, filesParts, false, String.join(".", parts)),
+              Stream.of(fileJoin(joinType, filesAlias)));
 
       if (queryField.getParts().length > 1) {
-        unnestStream = Stream.concat(
+        unnestStream =
+            Stream.concat(
                 unnestStream,
                 fromParts(
-                        fileTable,
-                        queryField.getParts(),
-                        includeRepeated && (queryField.getMode().equals(Field.Mode.REPEATED.toString())),
-                        SqlUtil.JoinType.LEFT,
-                        String.format("_%s", TableSchema.FILE_PREFIX)));
+                    fileTable,
+                    queryField.getParts(),
+                    includeRepeated
+                        && (queryField.getMode().equals(Field.Mode.REPEATED.toString())),
+                    SqlUtil.JoinType.LEFT,
+                    String.format("_%s", TableSchema.FILE_PREFIX)));
       }
 
       return unnestStream;
@@ -118,21 +122,21 @@ public class UnnestBuilder {
   }
 
   public Stream<Unnest> fromParts(
-          String table, String[] parts, boolean includeLast, SqlUtil.JoinType joinType, String prefix) {
+      String table, String[] parts, boolean includeLast, SqlUtil.JoinType joinType, String prefix) {
     return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
-            .mapToObj(
-                    i -> {
-                      String alias = SqlUtil.getAlias(i, parts);
-                      alias = prefix.isEmpty() ? alias : String.format("%s%s", prefix, alias);
+        .mapToObj(
+            i -> {
+              String alias = SqlUtil.getAlias(i, parts);
+              alias = prefix.isEmpty() ? alias : String.format("%s%s", prefix, alias);
 
-                      return i == 0
-                              ? new Unnest(
-                              joinType, String.format(SqlUtil.ALIAS_FIELD_FORMAT, table, parts[i]), alias)
-                              : new Unnest(
-                              joinType,
-                              String.format(
-                                      SqlUtil.ALIAS_FIELD_FORMAT, SqlUtil.getAlias(i - 1, parts), parts[i]),
-                              alias);
-                    });
+              return i == 0
+                  ? new Unnest(
+                      joinType, String.format(SqlUtil.ALIAS_FIELD_FORMAT, table, parts[i]), alias)
+                  : new Unnest(
+                      joinType,
+                      String.format(
+                          SqlUtil.ALIAS_FIELD_FORMAT, SqlUtil.getAlias(i - 1, parts), parts[i]),
+                      alias);
+            });
   }
 }
