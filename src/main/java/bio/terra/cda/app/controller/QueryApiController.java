@@ -28,12 +28,11 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,8 +138,14 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> uniqueValues(
-      String version, String body, String system, String table, Boolean count) {
+          String version, String body, String system, String table, Boolean count) {
     String tableName;
+    Map<String,TableSchema.SchemaDefinition> tableSchema;
+    try {
+       tableSchema = TableSchema.buildSchemaMap(TableSchema.getSchema(version));
+    }catch(IOException e){
+      throw new IllegalArgumentException(e.getMessage());
+    }
     if (table == null) {
       tableName = applicationConfiguration.getBqTable() + "." + version;
     } else {
@@ -158,7 +163,11 @@ public class QueryApiController implements QueryApi {
     Set<String> unnestClauses = nt.getUnnestClauses();
 
     List<String> whereClauses = new ArrayList<>();
-    whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
+    if(tableSchema.get(nt.getColumn()).getType().equals(LegacySQLTypeName.STRING.toString())){
+        whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
+    }else{
+        whereClauses.add(String.format("%s IS NOT NULL", nt.getColumn()));
+    }
 
     if (system != null && system.length() > 0) {
       NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
@@ -172,9 +181,10 @@ public class QueryApiController implements QueryApi {
     StringBuilder unnestConcat = new StringBuilder();
     unnestClauses.forEach(unnestConcat::append);
     var querySql = "";
+
     if (Boolean.TRUE.equals(count)) {
       querySql =
-          "SELECT"
+          "SELECT"+" "+"\n"
               + nt.getColumn()
               + ","
               + "COUNT("
@@ -185,7 +195,7 @@ public class QueryApiController implements QueryApi {
               + unnestConcat
               + " WHERE\n "
               + String.join(" AND ", whereClauses)
-              + "GROUP BY "
+              + " GROUP BY "
               + nt.getColumn()
               + "\n"
               + "ORDER BY\n"
