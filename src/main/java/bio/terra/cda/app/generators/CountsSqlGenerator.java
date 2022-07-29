@@ -61,7 +61,9 @@ public class CountsSqlGenerator extends SqlGenerator {
           String.format(
               "with %s as (%s)",
               resultsAlias,
-              new SqlGenerator(this.qualifiedTable, newQuery, this.version, false).generate()),
+              new SqlGenerator(
+                      this.qualifiedTable, newQuery, this.version, false, this.parameterBuilder)
+                  .sql(this.qualifiedTable, newQuery, false)),
           entityMap.keySet().stream()
               .map(
                   key -> {

@@ -1,5 +1,6 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.builders.ParameterBuilder;
 import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
@@ -14,6 +15,7 @@ import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
+import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +45,7 @@ public class SqlGenerator {
   SelectBuilder selectBuilder;
   QueryFieldBuilder queryFieldBuilder;
   PartitionBuilder partitionBuilder;
+  ParameterBuilder parameterBuilder;
 
   public SqlGenerator(String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
@@ -66,6 +69,18 @@ public class SqlGenerator {
     initializeBuilders();
   }
 
+  public SqlGenerator(
+      String qualifiedTable,
+      Query rootQuery,
+      String version,
+      boolean filesQuery,
+      ParameterBuilder parameterBuilder)
+      throws IOException {
+    this(qualifiedTable, rootQuery, version, filesQuery);
+
+    this.parameterBuilder = parameterBuilder;
+  }
+
   protected void initializeEntityFields() {
     QueryGenerator queryGenerator = this.getClass().getAnnotation(QueryGenerator.class);
     this.modularEntity = queryGenerator != null;
@@ -86,6 +101,7 @@ public class SqlGenerator {
     this.selectBuilder = new SelectBuilder(table, fileTable);
     this.unnestBuilder = new UnnestBuilder(table, fileTable, entitySchema.getParts(), project);
     this.partitionBuilder = new PartitionBuilder(fileTable);
+    this.parameterBuilder = new ParameterBuilder(tableSchemaMap, fileTableSchemaMap);
   }
 
   protected QueryContext buildQueryContext(
@@ -97,11 +113,17 @@ public class SqlGenerator {
         .setQueryFieldBuilder(queryFieldBuilder)
         .setSelectBuilder(selectBuilder)
         .setUnnestBuilder(unnestBuilder)
-        .setPartitionBuilder(partitionBuilder);
+        .setPartitionBuilder(partitionBuilder)
+        .setParameterBuilder(parameterBuilder);
   }
 
-  public String generate() throws IllegalArgumentException {
-    return sql(qualifiedTable, rootQuery, false);
+  public QueryJobConfiguration.Builder generate() throws IllegalArgumentException {
+    String querySql = sql(qualifiedTable, rootQuery, false);
+    QueryJobConfiguration.Builder queryJobConfigBuilder =
+        QueryJobConfiguration.newBuilder(querySql);
+
+    this.parameterBuilder.getParameterValueMap().forEach(queryJobConfigBuilder::addNamedParameter);
+    return queryJobConfigBuilder;
   }
 
   protected String sql(String tableOrSubClause, Query query, boolean subQuery)
