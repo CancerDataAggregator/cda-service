@@ -163,7 +163,7 @@ public class QueryApiController implements QueryApi {
     Set<String> unnestClauses = nt.getUnnestClauses();
 
     List<String> whereClauses = new ArrayList<>();
-    if(tableSchema.get(nt.getColumn()).getType().equals(LegacySQLTypeName.STRING.toString())){
+    if(tableSchema.get(tmpBody).getType().equals(LegacySQLTypeName.STRING.toString())){
         whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
     }else{
         whereClauses.add(String.format("%s IS NOT NULL", nt.getColumn()));
