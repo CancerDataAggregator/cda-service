@@ -164,18 +164,18 @@ public class QueryApiController implements QueryApi {
       throw new IllegalArgumentException(e.getMessage());
     }
 
-    NestedColumn nt = NestedColumn.generate(tmpBody);
+    NestedColumn nt = NestedColumn.generate(tmpBody, tableSchema);
     Set<String> unnestClauses = nt.getUnnestClauses();
-
     List<String> whereClauses = new ArrayList<>();
-    if(tableSchema.get(tmpBody).getType().equals(LegacySQLTypeName.STRING.toString())){
-        whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
-    }else{
-        whereClauses.add(String.format("%s IS NOT NULL", nt.getColumn()));
+
+    if (tableSchema.get(tmpBody).getType().equals(LegacySQLTypeName.STRING.toString())) {
+      whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
+    } else {
+      whereClauses.add(String.format("%s IS NOT NULL", nt.getColumn()));
     }
 
     if (system != null && system.length() > 0) {
-      NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
+      NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system", tableSchema);
       whereClauses.add(whereColumns.getColumn() + " = '" + system + "'");
       // add any additional 'where' unnest partials that aren't already included in
       // columns-unnest
@@ -189,21 +189,20 @@ public class QueryApiController implements QueryApi {
 
     if (Boolean.TRUE.equals(count)) {
       querySql =
-          "SELECT"+" "+"\n"
+          "SELECT "
               + nt.getColumn()
               + ","
               + "COUNT("
               + nt.getColumn()
-              + ") AS Count\n"
-              + "FROM\n"
+              + ") AS Count "
+              + "FROM "
               + tableName
               + unnestConcat
-              + " WHERE\n "
+              + " WHERE "
               + String.join(" AND ", whereClauses)
               + " GROUP BY "
               + nt.getColumn()
-              + "\n"
-              + "ORDER BY\n"
+              + " ORDER BY "
               + nt.getColumn();
     } else {
       querySql =
@@ -217,6 +216,7 @@ public class QueryApiController implements QueryApi {
               + " ORDER BY "
               + nt.getColumn();
     }
+
     logger.debug("uniqueValues: {}", querySql);
 
     QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
