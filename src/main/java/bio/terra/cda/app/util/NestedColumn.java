@@ -1,6 +1,7 @@
 package bio.terra.cda.app.util;
 
 import com.google.cloud.bigquery.Field;
+import org.springframework.util.StringUtils;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -30,7 +31,7 @@ public class NestedColumn {
         throws IllegalArgumentException {
       Set<String> unnestClauses = new LinkedHashSet<String>();
       String newColumn = null;
-      if (qualifiedColumnName != null) {
+      if (StringUtils.hasLength(qualifiedColumnName)) {
         String[] c = SqlUtil.getParts(qualifiedColumnName);
         int modifier = 1;
         boolean repeated = tableSchemaMap.get(qualifiedColumnName).getMode().equals(Field.Mode.REPEATED.toString());
