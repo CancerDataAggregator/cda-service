@@ -166,12 +166,22 @@ public class QueryApiController implements QueryApi {
 
     NestedColumn nt = NestedColumn.generate(tmpBody);
     Set<String> unnestClauses = nt.getUnnestClauses();
-
     List<String> whereClauses = new ArrayList<>();
-    if(tableSchema.get(tmpBody).getType().equals(LegacySQLTypeName.STRING.toString())){
-        whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
+    var tableSchemaCheck = tableSchema.get(tmpBody).getType().equals(LegacySQLTypeName.STRING.toString());
+    var tableSchemaMode = tableSchema.get(tmpBody).getMode();
+    if(tableSchemaMode.equals("REPEATED")){
+      unnestClauses.add(String.format("UNNEST(%s) AS _%s", nt.getColumn(),nt.getColumn()));
+      if (tableSchemaCheck) {
+        whereClauses.add(String.format("IFNULL(_%s, '') <> ''", nt.getColumn()));
+      } else {
+        whereClauses.add(String.format("_%s IS NOT NULL", nt.getColumn()));
+      }
     }else{
+      if (tableSchemaCheck) {
+        whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
+      } else {
         whereClauses.add(String.format("%s IS NOT NULL", nt.getColumn()));
+      }
     }
 
     if (system != null && system.length() > 0) {
@@ -196,7 +206,7 @@ public class QueryApiController implements QueryApi {
               + nt.getColumn()
               + ") AS Count\n"
               + "FROM\n"
-              + tableName
+              + tableName +" , "
               + unnestConcat
               + " WHERE\n "
               + String.join(" AND ", whereClauses)
@@ -210,13 +220,47 @@ public class QueryApiController implements QueryApi {
           "SELECT DISTINCT "
               + nt.getColumn()
               + " FROM "
-              + tableName
+              + tableName +" , "
               + unnestConcat
               + " WHERE "
               + String.join(" AND ", whereClauses)
               + " ORDER BY "
               + nt.getColumn();
     }
+
+    if(Boolean.TRUE.equals(count) & tableSchemaMode.equals("REPEATED") ){
+      querySql =
+              "SELECT"+" "+"\n"
+                      + "_"+nt.getColumn()
+                      + ","
+                      + "COUNT("
+                      + nt.getColumn()
+                      + ") AS Count\n"
+                      + "FROM\n"
+                      + tableName +" , "
+                      + unnestConcat
+                      + " WHERE\n "
+                      + String.join(" AND ", whereClauses)
+                      + " GROUP BY "
+                      + "_"+nt.getColumn()
+                      + "\n"
+                      + "ORDER BY\n"
+                      + "_"+nt.getColumn();
+    } else if(tableSchemaMode.equals("REPEATED")) {
+      querySql =
+              "SELECT DISTINCT "
+                      + "_" + nt.getColumn()
+                      + " FROM "
+                      + tableName + " , "
+                      + unnestConcat
+                      + " WHERE "
+                      + String.join(" AND ", whereClauses)
+                      + " ORDER BY "
+                      + "_" + nt.getColumn();
+    }
+
+
+
     logger.debug("uniqueValues: {}", querySql);
 
     QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
