@@ -164,28 +164,18 @@ public class QueryApiController implements QueryApi {
       throw new IllegalArgumentException(e.getMessage());
     }
 
-    NestedColumn nt = NestedColumn.generate(tmpBody);
+    NestedColumn nt = NestedColumn.generate(tmpBody, tableSchema);
     Set<String> unnestClauses = nt.getUnnestClauses();
     List<String> whereClauses = new ArrayList<>();
-    var tableSchemaCheck = tableSchema.get(tmpBody).getType().equals(LegacySQLTypeName.STRING.toString());
-    var tableSchemaMode = tableSchema.get(tmpBody).getMode();
-    if(tableSchemaMode.equals("REPEATED")){
-      unnestClauses.add(String.format("UNNEST(%s) AS _%s", nt.getColumn(),nt.getColumn()));
-      if (tableSchemaCheck) {
-        whereClauses.add(String.format("IFNULL(_%s, '') <> ''", nt.getColumn()));
-      } else {
-        whereClauses.add(String.format("_%s IS NOT NULL", nt.getColumn()));
-      }
-    }else{
-      if (tableSchemaCheck) {
-        whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
-      } else {
-        whereClauses.add(String.format("%s IS NOT NULL", nt.getColumn()));
-      }
+
+    if (tableSchema.get(tmpBody).getType().equals(LegacySQLTypeName.STRING.toString())) {
+      whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
+    } else {
+      whereClauses.add(String.format("%s IS NOT NULL", nt.getColumn()));
     }
 
     if (system != null && system.length() > 0) {
-      NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system");
+      NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system", tableSchema);
       whereClauses.add(whereColumns.getColumn() + " = '" + system + "'");
       // add any additional 'where' unnest partials that aren't already included in
       // columns-unnest
@@ -199,67 +189,33 @@ public class QueryApiController implements QueryApi {
 
     if (Boolean.TRUE.equals(count)) {
       querySql =
-          "SELECT"+" "+"\n"
+          "SELECT "
               + nt.getColumn()
               + ","
               + "COUNT("
               + nt.getColumn()
-              + ") AS Count\n"
-              + "FROM\n"
-              + tableName +" , "
+              + ") AS Count "
+              + "FROM "
+              + tableName
               + unnestConcat
-              + " WHERE\n "
+              + " WHERE "
               + String.join(" AND ", whereClauses)
               + " GROUP BY "
               + nt.getColumn()
-              + "\n"
-              + "ORDER BY\n"
+              + " ORDER BY "
               + nt.getColumn();
     } else {
       querySql =
           "SELECT DISTINCT "
               + nt.getColumn()
               + " FROM "
-              + tableName +" , "
+              + tableName
               + unnestConcat
               + " WHERE "
               + String.join(" AND ", whereClauses)
               + " ORDER BY "
               + nt.getColumn();
     }
-
-    if(Boolean.TRUE.equals(count) & tableSchemaMode.equals("REPEATED") ){
-      querySql =
-              "SELECT"+" "+"\n"
-                      + "_"+nt.getColumn()
-                      + ","
-                      + "COUNT("
-                      + nt.getColumn()
-                      + ") AS Count\n"
-                      + "FROM\n"
-                      + tableName +" , "
-                      + unnestConcat
-                      + " WHERE\n "
-                      + String.join(" AND ", whereClauses)
-                      + " GROUP BY "
-                      + "_"+nt.getColumn()
-                      + "\n"
-                      + "ORDER BY\n"
-                      + "_"+nt.getColumn();
-    } else if(tableSchemaMode.equals("REPEATED")) {
-      querySql =
-              "SELECT DISTINCT "
-                      + "_" + nt.getColumn()
-                      + " FROM "
-                      + tableName + " , "
-                      + unnestConcat
-                      + " WHERE "
-                      + String.join(" AND ", whereClauses)
-                      + " ORDER BY "
-                      + "_" + nt.getColumn();
-    }
-
-
 
     logger.debug("uniqueValues: {}", querySql);
 
