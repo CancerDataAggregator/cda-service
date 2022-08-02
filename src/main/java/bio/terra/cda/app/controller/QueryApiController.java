@@ -141,24 +141,29 @@ public class QueryApiController implements QueryApi {
           String version, String body, String system, String table, Boolean count) {
     String tableName;
     Map<String,TableSchema.SchemaDefinition> tableSchema;
-    try {
-       tableSchema = TableSchema.buildSchemaMap(TableSchema.getSchema(version));
-    }catch(IOException e){
-      throw new IllegalArgumentException(e.getMessage());
-    }
-    if (table == null) {
-      tableName = applicationConfiguration.getBqTable() + "." + version;
-    } else {
-      tableName = table + "." + version;
-    }
+
+    String myVersion = version;
 
     var tmpBody = body;
     if (tmpBody
-        .toLowerCase()
-        .startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
+            .toLowerCase()
+            .startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
       tmpBody = tmpBody.replace("File.", "");
-      tableName = tableName.replace("Subjects", TableSchema.FILES_COLUMN);
+      myVersion = myVersion.replace("Subjects", TableSchema.FILES_COLUMN);
     }
+
+    if (table == null) {
+      tableName = applicationConfiguration.getBqTable() + "." + myVersion;
+    } else {
+      tableName = table + "." + myVersion;
+    }
+
+    try {
+      tableSchema = TableSchema.buildSchemaMap(TableSchema.getSchema(myVersion));
+    }catch(IOException e){
+      throw new IllegalArgumentException(e.getMessage());
+    }
+
     NestedColumn nt = NestedColumn.generate(tmpBody);
     Set<String> unnestClauses = nt.getUnnestClauses();
 
