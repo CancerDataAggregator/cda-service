@@ -5,6 +5,7 @@ import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
@@ -37,6 +38,7 @@ public class SqlGenerator {
   final Map<String, TableSchema.SchemaDefinition> fileTableSchemaMap;
   final List<TableSchema.SchemaDefinition> tableSchema;
   final List<TableSchema.SchemaDefinition> fileTableSchema;
+  final DataSetInfo dataSetInfo;
   final boolean filesQuery;
   EntitySchema entitySchema;
   List<String> filteredFields;
@@ -64,6 +66,7 @@ public class SqlGenerator {
     this.fileTableSchema = TableSchema.getSchema(fileTable);
     this.tableSchemaMap = TableSchema.buildSchemaMap(this.tableSchema);
     this.fileTableSchemaMap = TableSchema.buildSchemaMap(this.fileTableSchema);
+    this.dataSetInfo = new DataSetInfo.DataSetInfoBuilder().addTableSchema(version, this.tableSchema).build();
 
     initializeEntityFields();
     initializeBuilders();

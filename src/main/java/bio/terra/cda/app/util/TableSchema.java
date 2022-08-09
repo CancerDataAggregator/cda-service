@@ -1,6 +1,9 @@
 package bio.terra.cda.app.util;
 
 import bio.terra.cda.app.models.EntitySchema;
+import bio.terra.cda.app.models.ForeignKey;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.google.cloud.bigquery.Field;
@@ -29,6 +32,7 @@ public class TableSchema {
     private String type;
     private String description;
     private SchemaDefinition[] fields;
+    private ForeignKey foreignKey;
 
     public String getMode() {
       return mode;
@@ -68,6 +72,14 @@ public class TableSchema {
 
     public String getDescription() {
       return this.description;
+    }
+
+    public ForeignKey getForeignKey() {
+      return foreignKey;
+    }
+
+    public void setForeignKey(ForeignKey foreignKey) {
+      this.foreignKey = foreignKey;
     }
   }
   // endregion
