@@ -1,5 +1,6 @@
 package bio.terra.cda.app.builders;
 
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.util.SqlUtil;
@@ -8,10 +9,12 @@ import bio.terra.cda.app.util.TableSchema;
 public class SelectBuilder {
   private final String table;
   private final String fileTable;
+  private final DataSetInfo dataSetInfo;
 
-  public SelectBuilder(String table, String fileTable) {
+  public SelectBuilder(String table, String fileTable, DataSetInfo dataSetInfo) {
     this.table = table;
     this.fileTable = fileTable;
+    this.dataSetInfo = dataSetInfo;
   }
 
   public Select fromQueryField(QueryField queryField) {

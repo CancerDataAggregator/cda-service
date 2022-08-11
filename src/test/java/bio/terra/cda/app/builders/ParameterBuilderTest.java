@@ -1,6 +1,7 @@
 package bio.terra.cda.app.builders;
 
 import bio.terra.cda.app.helpers.Schemas;
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,7 @@ public class ParameterBuilderTest {
     Schemas schemas =
         new Schemas.SchemaBuilder("all_Subjects_v3_0_final", "all_Files_v3_0_final").build();
     ParameterBuilder builder =
-        new ParameterBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap());
+        new ParameterBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap(), new DataSetInfo.DataSetInfoBuilder().build());
     QueryField queryField =
         new QueryField(
             "id", "id", new String[] {"id"}, "id", "id", false, schemas.getSchema().get(0), false);

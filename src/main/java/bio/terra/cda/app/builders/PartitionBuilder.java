@@ -1,5 +1,6 @@
 package bio.terra.cda.app.builders;
 
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.util.SqlUtil;
@@ -15,9 +16,11 @@ public class PartitionBuilder {
   private final String fileTable;
   private static final String ID_FORMAT = "%s.id";
   private static final String SYSTEM_FORMAT = "%s.system";
+  private final DataSetInfo dataSetInfo;
 
-  public PartitionBuilder(String fileTable) {
-    this.fileTable = fileTable;
+  public PartitionBuilder(String fileTable, DataSetInfo dataSetInfo) {
+        this.dataSetInfo = dataSetInfo;
+      this.fileTable = fileTable;
   }
 
   public Partition of(String path, String text) {

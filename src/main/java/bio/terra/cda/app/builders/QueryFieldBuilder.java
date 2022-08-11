@@ -1,5 +1,6 @@
 package bio.terra.cda.app.builders;
 
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
@@ -10,22 +11,19 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 public class QueryFieldBuilder {
-  private final Map<String, TableSchema.SchemaDefinition> baseSchema;
-  private final Map<String, TableSchema.SchemaDefinition> fileSchema;
   private static final String FILE_MATCH =
       String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase());
   private final String table;
   private final String fileTable;
   private final boolean filesQuery;
+  private final DataSetInfo dataSetInfo;
 
   public QueryFieldBuilder(
-      Map<String, TableSchema.SchemaDefinition> baseSchema,
-      Map<String, TableSchema.SchemaDefinition> fileSchema,
+      DataSetInfo dataSetInfo,
       String table,
       String fileTable,
       boolean filesQuery) {
-    this.baseSchema = baseSchema;
-    this.fileSchema = fileSchema;
+    this.dataSetInfo = dataSetInfo;
     this.table = table;
     this.fileTable = fileTable;
     this.filesQuery = filesQuery;
@@ -36,8 +34,7 @@ public class QueryFieldBuilder {
 
     String realPath = fileField ? path.substring(path.indexOf(".") + 1) : path;
     String[] parts = SqlUtil.getParts(realPath);
-    TableSchema.SchemaDefinition schemaDefinition =
-        (fileField ? this.fileSchema : this.baseSchema).get(realPath);
+    TableSchema.SchemaDefinition schemaDefinition = dataSetInfo.getSchemaDefinitionByFieldName(path);
 
     if (Objects.isNull(schemaDefinition)) {
       throw new IllegalArgumentException(

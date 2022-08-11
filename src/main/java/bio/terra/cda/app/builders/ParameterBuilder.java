@@ -1,5 +1,6 @@
 package bio.terra.cda.app.builders;
 
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.LegacySQLTypeName;
@@ -14,12 +15,15 @@ public class ParameterBuilder {
   private final Map<String, QueryParameterValue> parameterValueMap;
   private Map<String, TableSchema.SchemaDefinition> baseSchema;
   private Map<String, TableSchema.SchemaDefinition> fileSchema;
+  private final DataSetInfo dataSetInfo;
 
   public ParameterBuilder(
       Map<String, TableSchema.SchemaDefinition> baseSchema,
-      Map<String, TableSchema.SchemaDefinition> fileSchema) {
+      Map<String, TableSchema.SchemaDefinition> fileSchema,
+      DataSetInfo dataSetInfo) {
     this.baseSchema = baseSchema;
     this.fileSchema = fileSchema;
+    this.dataSetInfo = dataSetInfo;
     this.parameterValueMap = new HashMap<>();
   }
 

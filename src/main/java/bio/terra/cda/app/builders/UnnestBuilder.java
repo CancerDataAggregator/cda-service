@@ -1,5 +1,6 @@
 package bio.terra.cda.app.builders;
 
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.util.SqlUtil;
@@ -15,10 +16,12 @@ public class UnnestBuilder {
   private final String fileTable;
   private final String[] entityParts;
   private final String project;
+  private final DataSetInfo dataSetInfo;
 
-  public UnnestBuilder(String table, String fileTable, String[] entityParts, String project) {
+  public UnnestBuilder(String table, String fileTable, DataSetInfo dataSetInfo, String[] entityParts, String project) {
     this.table = table;
     this.fileTable = fileTable;
+    this.dataSetInfo = dataSetInfo;
     this.entityParts = entityParts;
     this.project = project;
   }
