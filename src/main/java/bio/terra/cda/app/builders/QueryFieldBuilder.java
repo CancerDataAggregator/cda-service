@@ -7,6 +7,7 @@ import com.google.cloud.bigquery.Field;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class QueryFieldBuilder {
@@ -32,9 +33,12 @@ public class QueryFieldBuilder {
   }
 
   public QueryField fromPath(String path) {
-    boolean fileField = path.toLowerCase().startsWith(FILE_MATCH);
+    String[] modSplit = path.split(" ");
+    String modPath = modSplit[0];
 
-    String realPath = fileField ? path.substring(path.indexOf(".") + 1) : path;
+    boolean fileField = modPath.toLowerCase().startsWith(FILE_MATCH);
+
+    String realPath = fileField ? modPath.substring(modPath.indexOf(".") + 1) : modPath;
     String[] parts = SqlUtil.getParts(realPath);
     TableSchema.SchemaDefinition schemaDefinition =
         (fileField ? this.fileSchema : this.baseSchema).get(realPath);
@@ -53,8 +57,18 @@ public class QueryFieldBuilder {
               .toArray(String[]::new);
     }
 
-    String alias = SqlUtil.getAlias(newParts.length - 1, newParts);
-    String columnText = getColumnText(schemaDefinition, newParts, alias, fileField);
+
+    String fieldText = SqlUtil.getAlias(newParts.length - 1, newParts);
+
+    String alias = fieldText.startsWith("_") ? fieldText.substring(1) : fieldText;
+
+    var nonEmpties = Arrays.stream(modSplit).filter(e -> !e.isEmpty()).collect(Collectors.toList());
+    if(nonEmpties.size() >= 3){
+        alias = nonEmpties.get(2);
+    }
+
+
+    String columnText = getColumnText(schemaDefinition, newParts, fieldText, fileField);
 
     return new QueryField(
         schemaDefinition.getName(),

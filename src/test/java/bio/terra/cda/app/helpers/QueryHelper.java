@@ -25,7 +25,7 @@ public class QueryHelper {
                 schemas.getSchemaMap(), schemas.getFileSchemaMap(), table, fileTable, false))
         .setUnnestBuilder(new UnnestBuilder(table, fileTable, entitySchema.getParts(), project))
         .setPartitionBuilder(new PartitionBuilder(fileTable))
-        .setSelectBuilder(new SelectBuilder(table, fileTable))
+        .setSelectBuilder(new SelectBuilder(table,fileTable))
         .setParameterBuilder(
             new ParameterBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap()));
   }
