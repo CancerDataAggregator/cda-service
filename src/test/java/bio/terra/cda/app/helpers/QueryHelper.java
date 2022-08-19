@@ -17,18 +17,23 @@ public class QueryHelper {
       String table, String fileTable, String entity, String project, boolean includeSelect)
       throws IOException {
     var schemas = new Schemas.SchemaBuilder(table, fileTable).build();
-    var entitySchema = TableSchema.getDefinitionByName(schemas.getSchema(), entity);
-    DataSetInfo dataSetInfo = new DataSetInfo.DataSetInfoBuilder().build();
+    DataSetInfo dataSetInfo = new DataSetInfo.DataSetInfoBuilder()
+            .addTableSchema("all_Subjects_v3_0_final", schemas.getSchema())
+            .build();
+    QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
 
     return new QueryContext(table, project)
         .setIncludeSelect(includeSelect)
-        .setQueryFieldBuilder(
-            new QueryFieldBuilder(
-                schemas.getSchemaMap(), schemas.getFileSchemaMap(), dataSetInfo, table, fileTable, false))
-        .setUnnestBuilder(new UnnestBuilder(table, fileTable, dataSetInfo, entitySchema.getParts(), project))
-        .setPartitionBuilder(new PartitionBuilder(fileTable, dataSetInfo))
-        .setSelectBuilder(new SelectBuilder(table, fileTable, dataSetInfo))
+        .setQueryFieldBuilder(queryFieldBuilder)
+        .setUnnestBuilder(
+                new UnnestBuilder(
+                        queryFieldBuilder,
+                        dataSetInfo,
+                        dataSetInfo.getTableInfo("Subject"),
+                        project))
+        .setPartitionBuilder(new PartitionBuilder(dataSetInfo))
+        .setSelectBuilder(new SelectBuilder(dataSetInfo))
         .setParameterBuilder(
-            new ParameterBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap(), dataSetInfo));
+            new ParameterBuilder());
   }
 }

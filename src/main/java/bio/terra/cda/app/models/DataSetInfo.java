@@ -14,15 +14,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class DataSetInfo {
     private final Map<String, TableInfo> tableInfoMap;
     private final Map<String, FieldData> fieldMap;
-    public static final String ID_COLUMN = "id";
-    public static final String FILES_COLUMN = "Files";
-    public static final String IDENTIFIER_COLUMN = "identifier";
-    public static final String SYSTEM_IDENTIFIER = "identifier.system";
     public static final Map<String, String> KNOWN_ALIASES = new HashMap<>() {{
         put("all_Subjects_v3_0_final", "Subject");
         put("all_Files_v3_0_final", "File");
@@ -36,7 +33,20 @@ public class DataSetInfo {
     }
 
     public TableInfo getTableInfo(String tableName) {
-        return this.tableInfoMap.get(tableName);
+        TableInfo tableInfo = this.tableInfoMap.get(tableName);
+
+        if (Objects.isNull(tableInfo)) {
+            AtomicReference<String> table = new AtomicReference<>(tableName);
+            KNOWN_ALIASES.forEach((key, value) -> {
+                if (value.equals(tableName)){
+                    table.set(key);
+                }
+            });
+
+            tableInfo = this.tableInfoMap.get(table.get());
+        }
+
+        return tableInfo;
     }
 
     public TableSchema.SchemaDefinition[] getSchemaDefinitionsForTable(String tableName) {
@@ -67,6 +77,12 @@ public class DataSetInfo {
         }
 
         return this.tableInfoMap.get(fieldData.getTableName());
+    }
+
+    public static String getNewNameForDuplicate(String name, String tableName) {
+        String prefix = KNOWN_ALIASES.getOrDefault(tableName, tableName);
+
+        return String.join("_", List.of(prefix.toLowerCase(Locale.ROOT), name));
     }
 
     private static class FieldData {
@@ -103,10 +119,15 @@ public class DataSetInfo {
         public DataSetInfoBuilder addTableSchema(String tableName, List<TableSchema.SchemaDefinition> tableSchema) throws IOException {
             TableInfo tableInfo = this.tableInfoMap.get(tableName);
             if (Objects.isNull(tableInfo)) {
+                TableSchema.SchemaDefinition partition = tableSchema.stream()
+                        .filter(TableSchema.SchemaDefinition::getPartitionBy)
+                        .findFirst().orElseThrow();
+
                 this.tableInfoMap.put(tableName, new TableInfo.TableInfoBuilder()
                         .setTableName(tableName)
                         .setType(TableInfo.TableInfoTypeEnum.TABLE)
                         .setSchemaDefinitions(tableSchema)
+                        .setPartitionKey(partition.getName())
                         .build());
             }
 
@@ -142,78 +163,90 @@ public class DataSetInfo {
                     }
 
                     tableInfo.addRelationship(
-                            TableRelationship.of(definition.getName(),
+                            TableRelationship.of(tableInfo, definition.getName(),
                                     TableRelationship.TableRelationshipTypeEnum.JOIN,
                                             fkTableInfo).addForeignKey(foreignKey));
                 }
 
                 if (definition.getMode().equals(Field.Mode.REPEATED.toString())
-                        && definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
+                        //&& definition.getType().equals(LegacySQLTypeName.RECORD.toString())
+                ) {
                     String name = definition.getName();
 
                     if (this.usedFields.containsKey(name)) {
-                        String prefix = KNOWN_ALIASES.containsKey(tableInfo.getTableName())
-                                ? KNOWN_ALIASES.get(tableInfo.getTableName())
-                                : tableInfo.getTableName();
-
-                        name = String.join("_", List.of(prefix.toLowerCase(Locale.ROOT), name));
+                        name = DataSetInfo.getNewNameForDuplicate(name, tableInfo.getTableName());
 
                         TableInfo existingTableInfo = this.tableInfoMap.get(definition.getName());
                         if (Objects.nonNull(existingTableInfo)) {
                             TableRelationship existingParent = existingTableInfo
                                     .getRelationships().stream().filter(TableRelationship::isParent)
                                     .findFirst().orElseThrow();
-                            String newRecordPrefix = existingParent.getTableInfo().getTableName();
-                            if (KNOWN_ALIASES.containsKey(newRecordPrefix)) {
-                                newRecordPrefix = KNOWN_ALIASES.get(newRecordPrefix);
-                            }
+                            String newRecordName = DataSetInfo.getNewNameForDuplicate(
+                                    definition.getName(), existingParent.getDestinationTableInfo().getTableName());
 
-                            String newRecordName = String.join(
-                                    "_", List.of(newRecordPrefix.toLowerCase(Locale.ROOT), definition.getName()));
-                            this.tableInfoMap.put(newRecordName,
-                                    TableInfo.of(existingTableInfo.getTableName(),
-                                            newRecordName,
-                                            existingTableInfo.getType(),
-                                            existingTableInfo.getSchemaDefinitions()));
+                            existingTableInfo.setAdjustedTableName(newRecordName);
+                            this.tableInfoMap.put(newRecordName, existingTableInfo);
                             this.tableInfoMap.remove(definition.getName());
                             this.switchedTables.put(definition.getName(), newRecordName);
 
                             for (TableSchema.SchemaDefinition definition1 : existingTableInfo.getSchemaDefinitions()) {
                                 if (this.usedFields.containsKey(definition1.getName())) {
-                                    FieldData fieldData = this.fieldMap.get(definition1.getName());
                                     String newDefName = String.join("_",
                                             List.of(newRecordName, definition1.getName()));
+                                    definition1.setAlias(newDefName);
+
                                     this.fieldMap.put(
                                             newDefName,
-                                            new FieldData(newDefName, fieldData.getSchemaDefinition()));
+                                            new FieldData(newDefName, definition1));
                                     this.fieldMap.remove(definition1.getName());
                                 }
                             }
 
                             FieldData existingFieldData = this.fieldMap.get(definition.getName());
-                            this.fieldMap.put(newRecordName, new FieldData(newRecordName, existingFieldData.getSchemaDefinition()));
+                            TableSchema.SchemaDefinition existingDefinition = existingFieldData.getSchemaDefinition();
+                            existingDefinition.setAlias(newRecordName);
+
+                            this.fieldMap.put(newRecordName, new FieldData(newRecordName, existingDefinition));
                             this.fieldMap.remove(definition.getName());
+                            definition.setAlias(newRecordName);
                         }
+                    }
+
+                    TableSchema.SchemaDefinition partition = definition;
+                    TableInfo.TableInfoTypeEnum tableInfoType = TableInfo.TableInfoTypeEnum.ARRAY;
+                    TableSchema.SchemaDefinition[] fields = new TableSchema.SchemaDefinition[0];
+
+                    if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
+                        partition = Arrays.stream(definition.getFields())
+                                .filter(TableSchema.SchemaDefinition::getPartitionBy)
+                                .findFirst().orElseThrow();
+
+                        tableInfoType = TableInfo.TableInfoTypeEnum.NESTED;
+                        fields = definition.getFields();
                     }
 
                     TableInfo nested = TableInfo.of(
                             definition.getName(),
                             name,
-                            TableInfo.TableInfoTypeEnum.NESTED,
-                            definition.getFields());
+                            tableInfoType,
+                            fields,
+                            partition.getName());
                     nested.addRelationship(
                             TableRelationship.of(
-                                    name, TableRelationship.TableRelationshipTypeEnum.UNNEST, tableInfo, true));
+                                    nested, name, TableRelationship.TableRelationshipTypeEnum.UNNEST, tableInfo, true));
                     tableInfo.addRelationship(
                             TableRelationship.of(
-                                    tableInfo.getTableName(), TableRelationship.TableRelationshipTypeEnum.UNNEST, nested));
+                                    tableInfo, tableInfo.getTableName(), TableRelationship.TableRelationshipTypeEnum.UNNEST, nested));
 
                     this.tableInfoMap.put(name, nested);
+                    definition.setAlias(definition.getName());
                     this.fieldMap.put(name, new FieldData(name, definition));
                     this.usedFields.put(name, true);
 
-                    queue.addAll(Arrays.stream(definition.getFields())
-                            .map(sd -> Tuple.of(nested, sd)).collect(Collectors.toList()));
+                    if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
+                        queue.addAll(Arrays.stream(definition.getFields())
+                                .map(sd -> Tuple.of(nested, sd)).collect(Collectors.toList()));
+                    }
                 } else {
                     String fieldName = definition.getName();
 
@@ -235,12 +268,17 @@ public class DataSetInfo {
                                 newPrefix = KNOWN_ALIASES.get(newPrefix);
                             }
 
+                            TableSchema.SchemaDefinition initialDefinition = initialField.getSchemaDefinition();
                             String newName = String.join("_", List.of(newPrefix.toLowerCase(Locale.ROOT), definition.getName()));
-                            this.fieldMap.put(newName, new FieldData(initialField.getTableName(), initialField.getSchemaDefinition()));
+
+                            initialDefinition.setAlias(newName);
+                            this.fieldMap.put(newName, new FieldData(initialField.getTableName(), initialDefinition));
                             this.fieldMap.remove(definition.getName());
+                            definition.setAlias(newName);
                         }
                     }
 
+                    definition.setAlias(fieldName);
                     this.fieldMap.put(fieldName, new FieldData(tableInfo.getAdjustedTableName(), definition));
                     this.usedFields.put(fieldName, true);
                 }

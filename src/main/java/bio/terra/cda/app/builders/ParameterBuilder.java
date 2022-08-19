@@ -13,17 +13,7 @@ import java.util.stream.Collectors;
 
 public class ParameterBuilder {
   private final Map<String, QueryParameterValue> parameterValueMap;
-  private Map<String, TableSchema.SchemaDefinition> baseSchema;
-  private Map<String, TableSchema.SchemaDefinition> fileSchema;
-  private final DataSetInfo dataSetInfo;
-
-  public ParameterBuilder(
-      Map<String, TableSchema.SchemaDefinition> baseSchema,
-      Map<String, TableSchema.SchemaDefinition> fileSchema,
-      DataSetInfo dataSetInfo) {
-    this.baseSchema = baseSchema;
-    this.fileSchema = fileSchema;
-    this.dataSetInfo = dataSetInfo;
+  public ParameterBuilder() {
     this.parameterValueMap = new HashMap<>();
   }
 

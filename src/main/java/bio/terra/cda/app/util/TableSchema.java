@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,6 +34,8 @@ public class TableSchema {
     private String description;
     private SchemaDefinition[] fields;
     private ForeignKey foreignKey;
+    private Boolean partitionBy;
+    private String alias;
 
     public String getMode() {
       return mode;
@@ -81,13 +84,27 @@ public class TableSchema {
     public void setForeignKey(ForeignKey foreignKey) {
       this.foreignKey = foreignKey;
     }
+
+    public Boolean getPartitionBy() {
+      return !Objects.isNull(partitionBy) && partitionBy;
+    }
+
+    public void setPartitionBy(Boolean partitionBy) {
+      this.partitionBy = partitionBy;
+    }
+
+    public String getAlias() {
+      return alias;
+    }
+
+    public void setAlias(String alias) {
+      this.alias = alias;
+    }
   }
   // endregion
 
   public static final String FILE_PREFIX = "File";
-  public static final String ID_COLUMN = "id";
   public static final String FILES_COLUMN = "Files";
-  public static final String IDENTIFIER_COLUMN = "identifier";
   public static final String SYSTEM_IDENTIFIER = "identifier.system";
 
   private TableSchema() {}

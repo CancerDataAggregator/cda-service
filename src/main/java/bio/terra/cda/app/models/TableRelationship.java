@@ -6,15 +6,17 @@ import java.util.List;
 public class TableRelationship {
     private final String field;
     private final TableRelationshipTypeEnum type;
-    private final TableInfo tableInfo;
+    private final TableInfo fromTableInfo;
+    private final TableInfo destinationTableInfo;
     private final List<ForeignKey> foreignKeys;
     private final boolean parent;
 
-    private TableRelationship(String field, TableRelationshipTypeEnum type, TableInfo tableInfo, boolean parent) {
+    private TableRelationship(TableInfo fromTableInfo, String field, TableRelationshipTypeEnum type, TableInfo destinationTableInfo, boolean parent) {
+        this.fromTableInfo = fromTableInfo;
         this.field = field;
         this.type = type;
         this.foreignKeys = new ArrayList<>();
-        this.tableInfo = tableInfo;
+        this.destinationTableInfo = destinationTableInfo;
         this.parent = parent;
     }
 
@@ -22,8 +24,10 @@ public class TableRelationship {
         return type;
     }
 
-    public TableInfo getTableInfo() {
-        return tableInfo;
+    public TableInfo getFromTableInfo() { return fromTableInfo; }
+
+    public TableInfo getDestinationTableInfo() {
+        return destinationTableInfo;
     }
 
     public List<ForeignKey> getForeignKeys() {
@@ -35,15 +39,21 @@ public class TableRelationship {
         return this;
     }
 
-    public static TableRelationship of(String field, TableRelationshipTypeEnum type, TableInfo tableInfo) {
-        return new TableRelationshipBuilder().setField(field).setType(type).setTableInfo(tableInfo).build();
-    }
-
-    public static TableRelationship of(String field, TableRelationshipTypeEnum type, TableInfo tableInfo, boolean parent) {
+    public static TableRelationship of(TableInfo fromTableInfo, String field, TableRelationshipTypeEnum type, TableInfo destinationTableInfo) {
         return new TableRelationshipBuilder()
                 .setField(field)
                 .setType(type)
-                .setTableInfo(tableInfo)
+                .setFromTableInfo(fromTableInfo)
+                .setDestinationTableInfo(destinationTableInfo)
+                .build();
+    }
+
+    public static TableRelationship of(TableInfo fromTableInfo, String field, TableRelationshipTypeEnum type, TableInfo destinationTableInfo, boolean parent) {
+        return new TableRelationshipBuilder()
+                .setField(field)
+                .setType(type)
+                .setFromTableInfo(fromTableInfo)
+                .setDestinationTableInfo(destinationTableInfo)
                 .setParent(parent)
                 .build();
     }
@@ -74,7 +84,8 @@ public class TableRelationship {
 
     public static class TableRelationshipBuilder {
         private TableRelationshipTypeEnum type;
-        private TableInfo tableInfo;
+        private TableInfo fromTableInfo;
+        private TableInfo destinationTableInfo;
         private String field;
         private boolean parent;
 
@@ -87,8 +98,13 @@ public class TableRelationship {
             return this;
         }
 
-        public TableRelationshipBuilder setTableInfo(TableInfo tableInfo) {
-            this.tableInfo = tableInfo;
+        public TableRelationshipBuilder setFromTableInfo(TableInfo tableInfo) {
+            this.fromTableInfo = tableInfo;
+            return this;
+        }
+
+        public TableRelationshipBuilder setDestinationTableInfo(TableInfo tableInfo) {
+            this.destinationTableInfo = tableInfo;
             return this;
         }
 
@@ -103,7 +119,8 @@ public class TableRelationship {
         }
 
         public TableRelationship build() {
-            return new TableRelationship(this.field, this.type, this.tableInfo, this.parent);
+            return new TableRelationship(
+                    this.fromTableInfo, this.field, this.type, this.destinationTableInfo, this.parent);
         }
     }
 }

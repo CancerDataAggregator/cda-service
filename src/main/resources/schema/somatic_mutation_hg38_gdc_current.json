@@ -10,8 +10,9 @@
     "mode": "NULLABLE",
     "name": "case_barcode",
     "type": "STRING",
+    "partitionBy": true,
     "foreignKey": {
-      "fields": ["id"],
+      "fields": ["subject_id"],
       "type": "SINGLE",
       "tableName": "all_Subjects_v3_0_final",
       "tableAlias": "subjects"
@@ -167,8 +168,8 @@
     "name": "Tumor_Sample_UUID",
     "type": "STRING",
     "foreignKey": {
-      "fields": ["ResearchSubject.Specimen.id"],
-      "type": "SINGLE",
+      "fields": ["specimen_id"],
+      "type": "COMPOSITE_OR",
       "tableName": "all_Subjects_v3_0_final",
       "tableAlias": "subjects"
     }
@@ -179,8 +180,8 @@
     "name": "Matched_Norm_Sample_UUID",
     "type": "STRING",
     "foreignKey": {
-      "fields": ["ResearchSubject.Specimen.id"],
-      "type": "SINGLE",
+      "fields": ["specimen_id"],
+      "type": "COMPOSITE_OR",
       "tableName": "all_Subjects_v3_0_final",
       "tableAlias": "subjects"
     }
@@ -629,7 +630,7 @@
     "name": "case_id",
     "type": "STRING",
     "foreignKey": {
-      "fields": ["ResearchSubject.id"],
+      "fields": ["researchsubject_id"],
       "type": "SINGLE",
       "tableName": "all_Subjects_v3_0_final",
       "tableAlias": "subjects"

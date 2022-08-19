@@ -8,9 +8,9 @@ public class SqlTemplate {
   }
 
   public static String join(
-      String joinType, String path, String alias, String firstJoinPath, String secondJoinPath) {
+      String joinType, String path, String alias, String joinPath) {
     return String.format(
-        "%1$s %2$s AS %3$s ON %4$s = %5$s", joinType, path, alias, firstJoinPath, secondJoinPath);
+        "%1$s %2$s AS %3$s ON %4$s", joinType, path, alias, joinPath);
   }
 
   public static String resultsWrapper(String resultsQuery) {
