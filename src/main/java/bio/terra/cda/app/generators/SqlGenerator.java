@@ -210,17 +210,28 @@ public class SqlGenerator {
     if (this.entityTable.getType().equals(TableInfo.TableInfoTypeEnum.NESTED)
             || ctx.getFilesQuery()) {
       var path = this.entityTable.getTablePath();
+
+      String entityPartitionKey = this.entityTable.getPartitionKey();
+      if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(entityPartitionKey))){
+        entityPartitionKey = DataSetInfo.getNewNameForDuplicate(entityPartitionKey, this.entityTable.getTableName());
+      }
+
       idSelects = Stream.concat(
               Stream.of(
                       String.format("%s AS %s",
                               this.entityTable.getPartitionKeyAlias(),
-                              this.entityTable.getPartitionKey())),
+                              entityPartitionKey)),
               Arrays.stream(path).map(tableRelationship -> {
-                  TableInfo destinationTable = tableRelationship.getDestinationTableInfo();
+                  TableInfo fromTableInfo = tableRelationship.getFromTableInfo();
+
+                  String partitionKey = fromTableInfo.getPartitionKey();
+                  if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(partitionKey))){
+                    partitionKey = DataSetInfo.getNewNameForDuplicate(partitionKey, fromTableInfo.getTableName());
+                  }
 
                   return String.format("%s AS %s",
-                          destinationTable.getPartitionKeyAlias(),
-                          destinationTable.getPartitionKey());
+                          fromTableInfo.getPartitionKeyAlias(),
+                          partitionKey);
               }));
 
       if (path.length > 0) {
@@ -250,7 +261,7 @@ public class SqlGenerator {
                             && (skipExcludes || !filteredFields.contains(definition.getName())))
                 .map(
                     definition -> String.format("%1$s.%2$s AS %3$s", prefix, definition.getName(), definition.getAlias())),
-        idSelects);
+        idSelects).distinct();
   }
 
   protected Stream<? extends Class<?>> getQueryGeneratorClasses() {

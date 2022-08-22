@@ -26,10 +26,14 @@ public class PartitionBuilder {
   }
 
   public Stream<Partition> fromRelationshipPath(TableRelationship[] path) {
-    return Arrays.stream(path)
-            .map(tableRelationship -> new Partition(
+    return Stream.concat(
+            Stream.of(new Partition(
+                    path[0].getFromTableInfo().getTableName(),
+                    path[0].getFromTableInfo().getPartitionKeyAlias())),
+            Arrays.stream(path)
+                  .map(tableRelationship -> new Partition(
                     tableRelationship.getField(),
-                    tableRelationship.getFromTableInfo().getPartitionKeyAlias()));
+                    tableRelationship.getDestinationTableInfo().getPartitionKeyAlias())));
   }
 
   public Partition fromQueryField(QueryField queryField) {
