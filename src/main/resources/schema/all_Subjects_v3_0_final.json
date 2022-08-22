@@ -419,7 +419,7 @@
             "name": "Files",
             "type": "STRING",
             "foreignKey": {
-              "fields": ["id"],
+              "fields": ["file_id"],
               "type": "SINGLE",
               "tableName": "all_Files_v3_0_final",
               "tableAlias": "files"
