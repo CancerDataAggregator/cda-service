@@ -96,20 +96,18 @@ public class TableInfo {
             return new TableRelationship[0];
         }
 
-        return getTablePath(this);
+        return getTablePath(this, this);
     }
 
-    private static TableRelationship[] getTablePath(TableInfo tableInfo) {
-        TableRelationship parent = tableInfo.getRelationships()
+    private static TableRelationship[] getTablePath(TableInfo current, TableInfo target) {
+        TableRelationship parent = current.getRelationships()
                 .stream().filter(TableRelationship::isParent)
                 .findFirst().orElseThrow();
 
         if (parent.getDestinationTableInfo().getType().equals(TableInfoTypeEnum.TABLE)) {
-            return new TableRelationship[] { parent };
+            return parent.getDestinationTableInfo().getPathToTable(target);
         } else {
-            List<TableRelationship> parents = new ArrayList<>(List.of(getTablePath(parent.getDestinationTableInfo())));
-            parents.add(parent);
-            return parents.toArray(TableRelationship[]::new);
+            return getTablePath(parent.getDestinationTableInfo(), target);
         }
     }
 

@@ -11,6 +11,7 @@ import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
 import nonapi.io.github.classgraph.utils.Join;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -74,9 +75,14 @@ public class UnnestBuilder {
   public Stream<Unnest> fromRelationshipPath(TableRelationship[] relationships, SqlUtil.JoinType joinType, boolean includeRepeated) {
     Stream<Unnest> unnestStream = Stream.empty();
 
+    if (Objects.isNull(relationships) || relationships.length == 0){
+      return unnestStream;
+    }
+
     Queue<TableRelationship> queue = Arrays.stream(relationships)
             .collect(Collectors.toCollection(LinkedList::new));
-    TableInfo current = this.entityTable;
+
+    TableInfo current = relationships[0].getFromTableInfo();
 
     while (queue.size() > 0) {
       TableRelationship tableRelationship = queue.remove();
@@ -94,6 +100,11 @@ public class UnnestBuilder {
   public Stream<Unnest> fromRelationship(
           TableInfo tableInfo, TableRelationship tableRelationship, SqlUtil.JoinType joinType, boolean includeRepeated) {
     boolean isJoin = tableRelationship.getType().equals(TableRelationship.TableRelationshipTypeEnum.JOIN);
+
+    if (tableRelationship.isParent()) {
+      return Stream.empty();
+    }
+
     TableInfo destinationTable = tableRelationship.getDestinationTableInfo();
 
     if (isJoin) {
@@ -168,29 +179,5 @@ public class UnnestBuilder {
                       destinationTable.getTableName()),
               destinationTable.getTableAlias()));
     }
-  }
-
-  public Stream<Unnest> fromParts(
-      String table, String[] parts, boolean includeLast, SqlUtil.JoinType joinType) {
-    return fromParts(table, parts, includeLast, joinType, "");
-  }
-
-  public Stream<Unnest> fromParts(
-      String table, String[] parts, boolean includeLast, SqlUtil.JoinType joinType, String prefix) {
-    return IntStream.range(0, parts.length - (includeLast ? 0 : 1))
-        .mapToObj(
-            i -> {
-              String alias = SqlUtil.getAlias(i, parts);
-              alias = prefix.isEmpty() ? alias : String.format("%s%s", prefix, alias);
-
-              return i == 0
-                  ? new Unnest(
-                      joinType, String.format(SqlUtil.ALIAS_FIELD_FORMAT, table, parts[i]), alias)
-                  : new Unnest(
-                      joinType,
-                      String.format(
-                          SqlUtil.ALIAS_FIELD_FORMAT, SqlUtil.getAlias(i - 1, parts), parts[i]),
-                      alias);
-            });
   }
 }
