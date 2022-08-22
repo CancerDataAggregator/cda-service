@@ -6,7 +6,6 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -109,13 +108,11 @@ public class DataSetInfo {
         private final Map<String, TableInfo> tableInfoMap;
         private final Map<String, FieldData> fieldMap;
         private final Map<String, Boolean> usedFields;
-        private final Map<String, String> switchedTables;
 
         public DataSetInfoBuilder() {
             this.tableInfoMap = new HashMap<>();
             this.fieldMap = new HashMap<>();
             this.usedFields = new HashMap<>();
-            this.switchedTables = new HashMap<>();
         }
 
         public DataSetInfoBuilder addTableSchema(String tableName, List<TableSchema.SchemaDefinition> tableSchema) throws IOException {
@@ -142,14 +139,13 @@ public class DataSetInfo {
                 Tuple<TableInfo, TableSchema.SchemaDefinition> tuple = queue.remove();
                 tableInfo = tuple.x();
 
-                String newTable = this.switchedTables.get(tableInfo.getTableName());
-                if (Objects.nonNull(newTable)) {
-                    tableInfo = this.tableInfoMap.get(newTable);
-                }
-
                 TableSchema.SchemaDefinition definition = tuple.y();
 
-                if (tableName.equals("all_Files_v3_0_final")
+                if (definition.getName().equals("system")) {
+                    tableInfo = tableInfo;
+                }
+
+                if (tableInfo.getTableName().equals("all_Files_v3_0_final")
                         && List.of("ResearchSubject", "Specimen", "Subject")
                         .contains(definition.getName())) {
                     continue;
@@ -201,7 +197,6 @@ public class DataSetInfo {
                             existingTableInfo.setAdjustedTableName(newRecordName);
                             this.tableInfoMap.put(newRecordName, existingTableInfo);
                             this.tableInfoMap.remove(definition.getName());
-                            this.switchedTables.put(definition.getName(), newRecordName);
 
                             for (TableSchema.SchemaDefinition definition1 : existingTableInfo.getSchemaDefinitions()) {
                                 if (this.usedFields.containsKey(definition1.getName())) {

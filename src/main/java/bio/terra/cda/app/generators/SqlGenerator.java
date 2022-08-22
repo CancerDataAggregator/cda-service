@@ -22,7 +22,6 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -149,7 +148,7 @@ public class SqlGenerator {
 
     TableInfo tableInfo = ctx.getTableInfo();
 
-    TableRelationship[] pathToFile = tableInfo.getPathToTable(this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX));
+    TableRelationship[] pathToFile = this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX).getPathToTable(tableInfo);
     TableRelationship[] entityPath = tableInfo.getTablePath();
 
     ctx.addUnnests(this.unnestBuilder.fromRelationshipPath(entityPath, SqlUtil.JoinType.INNER, false));

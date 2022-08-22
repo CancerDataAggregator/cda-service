@@ -86,6 +86,10 @@ public class TableInfo {
     }
 
     public String getPartitionKeyAlias() {
+        if (getType().equals(TableInfoTypeEnum.ARRAY)) {
+            return this.getTableAlias();
+        }
+
         return String.format("%s.%s",
                 this.getTableAlias(),
                 this.partitionKey);
@@ -105,25 +109,25 @@ public class TableInfo {
                 .findFirst().orElseThrow();
 
         if (parent.getDestinationTableInfo().getType().equals(TableInfoTypeEnum.TABLE)) {
-            return parent.getDestinationTableInfo().getPathToTable(target);
+            return target.getPathToTable(parent.getDestinationTableInfo());
         } else {
             return getTablePath(parent.getDestinationTableInfo(), target);
         }
     }
 
-    public TableRelationship[] getPathToTable(TableInfo target) {
-        if (this.getTableName().equals(target.getTableName())) {
+    public TableRelationship[] getPathToTable(TableInfo tableInfo) {
+        if (tableInfo.getAdjustedTableName().equals(getAdjustedTableName())) {
             return new TableRelationship[0];
         }
 
         LinkedList<Tuple<TableRelationship[], TableRelationship>> queue =
-                this.getRelationships()
+                tableInfo.getRelationships()
                         .stream()
                         .map(tableRelationship ->
                                 Tuple.of(new TableRelationship[0], tableRelationship))
                         .collect(Collectors.toCollection(LinkedList::new));
         Map<String, Boolean> visited = new HashMap<>() {{
-            put(getTableName(), true);
+            put(tableInfo.getTableName(), true);
         }};
 
         while (queue.size() > 0) {
@@ -136,16 +140,17 @@ public class TableInfo {
             TableRelationship[] relArray = relList.toArray(TableRelationship[]::new);
 
 
-            if (tableRelationship.getDestinationTableInfo().getTableName().equals(target.getTableName())) {
+            if (tableRelationship.getDestinationTableInfo()
+                    .getAdjustedTableName().equals(getAdjustedTableName())) {
                 return relArray;
             }
 
             TableInfo nextTable = tableRelationship.getDestinationTableInfo();
-            visited.put(nextTable.getTableName(), true);
+            visited.put(nextTable.getAdjustedTableName(), true);
 
             List<Tuple<TableRelationship[], TableRelationship>> moreRelationships = nextTable.getRelationships().stream()
                             .filter(tr ->
-                                    Objects.isNull(visited.get(tr.getDestinationTableInfo().getTableName())))
+                                    Objects.isNull(visited.get(tr.getDestinationTableInfo().getAdjustedTableName())))
                             .map(tr -> Tuple.of(relArray, tr))
                             .collect(Collectors.toList());
 

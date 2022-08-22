@@ -7,8 +7,8 @@ import java.io.IOException;
 @CountQueryGenerator(
     entity = "Specimen",
     fieldsToCount = {
-      "file_id",
-      TableSchema.SYSTEM_IDENTIFIER,
+      TableSchema.FILES_COLUMN,
+      "specimen_identifier_system",
       "primary_disease_type",
       "source_material_type",
       "specimen_type"

@@ -1,7 +1,7 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.models.EntitySchema;
-import bio.terra.cda.app.models.TableRelationship;
+import bio.terra.cda.app.models.DataSetInfo;
+import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.app.util.SqlUtil;
@@ -13,6 +13,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,7 +43,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
     if (filesQuery) {
       this.countFields =
-          List.of(TableSchema.SYSTEM_IDENTIFIER, "data_category", "file_format", "data_type");
+          List.of("file_identifier_system", "data_category", "file_format", "data_type");
     }
   }
 
@@ -63,19 +64,45 @@ public class EntityCountSqlGenerator extends SqlGenerator {
             + "from %3$s "
             + "group by %1$s)) as %4$s";
 
-    return Stream.concat(Stream.of(this.entityTable.getPartitionKeyAlias()), countFields.stream())
+    TableInfo table = this.entityTable;
+    if (this.filesQuery) {
+        table = this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX);
+    }
+    String partitionKeyField = table.getPartitionKey();
+    if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(
+            table.getPartitionKey()))) {
+        partitionKeyField = DataSetInfo.getNewNameForDuplicate(
+                table.getPartitionKey(),
+                table.getTableName());
+    }
+
+      String finalPartitionKeyField = partitionKeyField;
+      TableInfo finalTable = table;
+      return Stream.concat(Stream.of(partitionKeyField), countFields.stream())
         .distinct()
         .map(
             field -> {
-              String name = field.equals(this.entityTable.getPartitionKeyAlias())
+              String name = field.equals(finalPartitionKeyField)
                       ? "total"
                       : field.toLowerCase();
 
-              return List.of(this.entityTable.getPartitionKeyAlias(), TableSchema.FILES_COLUMN, TableSchema.FILE_PREFIX)
+              String fieldToUse = field;
+              TableInfo tableInfo = this.entityTable;
+
+              if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(field))) {
+                  fieldToUse = DataSetInfo.getNewNameForDuplicate(field, finalTable.getTableName());
+              }
+
+              tableInfo = this.dataSetInfo.getTableInfoFromField(fieldToUse);
+              if (tableInfo.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)) {
+                  fieldToUse = tableInfo.getPartitionKeyAlias();
+              }
+
+              return List.of(finalPartitionKeyField, TableSchema.FILES_COLUMN, TableSchema.FILE_PREFIX)
                       .contains(field)
                   ? String.format(
-                      "(SELECT COUNT(DISTINCT %s) from %s) as %s", field, tableAlias, name)
-                  : String.format(formatString, field, this.entityTable.getPartitionKeyAlias(), tableAlias, name);
+                      "(SELECT COUNT(DISTINCT %s) from %s) as %s", fieldToUse, tableAlias, name)
+                  : String.format(formatString, fieldToUse, finalPartitionKeyField, tableAlias, name);
             })
         .collect(Collectors.joining(", "));
   }
@@ -96,9 +123,13 @@ public class EntityCountSqlGenerator extends SqlGenerator {
             .flatMap(
                 definition -> {
                   if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
+                      TableInfo fromField = this.dataSetInfo.getTableInfoFromField(definition.getName());
+
+                      if (Objects.isNull(fromField)) {
+                          fromField = this.dataSetInfo.getTableInfoFromField(definition.getAlias());
+                      }
                       ctx.addUnnests(this.unnestBuilder.fromRelationshipPath(
-                              this.entityTable.getPathToTable(
-                                      this.dataSetInfo.getTableInfoFromField(definition.getName())),
+                              fromField.getPathToTable(this.entityTable),
                               SqlUtil.JoinType.LEFT, true));
 //                    ctx.addUnnests(
 //                        this.unnestBuilder.fromParts(
@@ -107,19 +138,26 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 //                            !parts[parts.length - 1].equals(TableSchema.FILES_COLUMN),
 //                            SqlUtil.JoinType.INNER));
 
-                      ctx.addPartitions(this.partitionBuilder.fromRelationshipPath(this.entityTable.getPathToTable(
-                              this.dataSetInfo.getTableInfoFromField(definition.getName()))));
+                      ctx.addPartitions(this.partitionBuilder.fromRelationshipPath(fromField.getPathToTable(
+                              this.entityTable)));
 
-                    return !definition.getType().equals(LegacySQLTypeName.RECORD.toString())
-                        ? Stream.of(String.format("%s", definition.getAlias()))
-                        : Arrays.stream(definition.getFields())
-                            .map(
-                                fieldDefinition ->
-                                        String.format(
-                                                "%1$s.%2$s AS %3$s",
-                                                definition.getAlias(),
-                                                fieldDefinition.getName(),
-                                                fieldDefinition.getAlias()));
+                      TableInfo finalFromField = fromField;
+                      if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
+                          if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
+                              return Arrays.stream(definition.getFields())
+                                      .map(
+                                              fieldDefinition ->
+                                                      String.format(
+                                                              "%1$s.%2$s AS %3$s",
+                                                              finalFromField.getTableAlias(),
+                                                              fieldDefinition.getName(),
+                                                              fieldDefinition.getAlias()));
+                          } else {
+                              return Stream.of(fromField.getTableAlias());
+                          }
+                      } else {
+                          return Stream.of(String.format("%s", definition.getAlias()));
+                      }
                   } else {
                     return Stream.of(
                         String.format("%1$s.%2$s AS %3$s", prefix, definition.getName(), definition.getAlias()));

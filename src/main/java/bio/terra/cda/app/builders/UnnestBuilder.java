@@ -9,9 +9,7 @@ import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
-import nonapi.io.github.classgraph.utils.Join;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -19,7 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class UnnestBuilder {
@@ -59,7 +56,7 @@ public class UnnestBuilder {
   private Stream<Unnest> buildUnnestsFromQueryField(
       QueryField queryField, boolean includeRepeated) {
     TableInfo tableInfo = this.dataSetInfo.getTableInfoFromField(queryField.getPath());
-    TableRelationship[] pathToTable = this.entityTable.getPathToTable(tableInfo);
+    TableRelationship[] pathToTable = tableInfo.getPathToTable(this.entityTable);
 
     if (Objects.isNull(pathToTable)) {
       throw new IllegalArgumentException(String.format("No path found to field %s", queryField.getPath()));

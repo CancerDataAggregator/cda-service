@@ -3,13 +3,12 @@ package bio.terra.cda.app.generators;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
-import java.util.Locale;
 
 @CountQueryGenerator(
     entity = "ResearchSubject",
     fieldsToCount = {
-      "file_id",
-      TableSchema.SYSTEM_IDENTIFIER,
+      TableSchema.FILES_COLUMN,
+      "researchsubject_identifier_system",
       "primary_diagnosis_condition",
       "primary_diagnosis_site"
     },

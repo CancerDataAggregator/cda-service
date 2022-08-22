@@ -1,11 +1,9 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
