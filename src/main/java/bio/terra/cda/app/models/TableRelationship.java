@@ -1,7 +1,9 @@
 package bio.terra.cda.app.models;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 public class TableRelationship {
     private final String field;
@@ -10,14 +12,25 @@ public class TableRelationship {
     private final TableInfo destinationTableInfo;
     private final List<ForeignKey> foreignKeys;
     private final boolean parent;
+    private final boolean array;
 
-    private TableRelationship(TableInfo fromTableInfo, String field, TableRelationshipTypeEnum type, TableInfo destinationTableInfo, boolean parent) {
+    private TableRelationship(
+            TableInfo fromTableInfo,
+            String field,
+            TableRelationshipTypeEnum type,
+            TableInfo destinationTableInfo,
+            boolean parent,
+            List<ForeignKey> foreignKeys,
+            boolean array) {
         this.fromTableInfo = fromTableInfo;
         this.field = field;
         this.type = type;
-        this.foreignKeys = new ArrayList<>();
         this.destinationTableInfo = destinationTableInfo;
         this.parent = parent;
+        this.foreignKeys = Objects.nonNull(foreignKeys)
+            ? foreignKeys
+            : new ArrayList<>();
+        this.array = array;
     }
 
     public TableRelationshipTypeEnum getType() {
@@ -66,6 +79,10 @@ public class TableRelationship {
         return parent;
     }
 
+    public boolean isArray() {
+        return array;
+    }
+
     public enum TableRelationshipTypeEnum {
         UNNEST("UNNEST"),
         JOIN("JOIN");
@@ -87,10 +104,13 @@ public class TableRelationship {
         private TableInfo fromTableInfo;
         private TableInfo destinationTableInfo;
         private String field;
+        private List<ForeignKey> foreignKeys;
         private boolean parent;
+        private boolean array;
 
         public TableRelationshipBuilder() {
             this.parent = false;
+            this.array = false;
         }
 
         public TableRelationshipBuilder setType(TableRelationshipTypeEnum type) {
@@ -118,9 +138,19 @@ public class TableRelationship {
             return this;
         }
 
+        public TableRelationshipBuilder setForeignKeys(Collection<ForeignKey> foreignKeys) {
+            this.foreignKeys = new ArrayList<>(foreignKeys);
+            return this;
+        }
+
+        public TableRelationshipBuilder setArray(boolean array) {
+            this.array = array;
+            return this;
+        }
+
         public TableRelationship build() {
             return new TableRelationship(
-                    this.fromTableInfo, this.field, this.type, this.destinationTableInfo, this.parent);
+                    this.fromTableInfo, this.field, this.type, this.destinationTableInfo, this.parent, this.foreignKeys, this.array);
         }
     }
 }

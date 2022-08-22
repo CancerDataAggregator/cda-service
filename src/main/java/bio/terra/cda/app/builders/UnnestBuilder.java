@@ -111,9 +111,13 @@ public class UnnestBuilder {
        String fieldName = tableRelationship.getField();
 
        TableSchema.SchemaDefinition schemaDefinition = this.dataSetInfo.getSchemaDefinitionByFieldName(fieldName);
+
        if (Objects.isNull(schemaDefinition)) {
-         fieldName = DataSetInfo.getNewNameForDuplicate(fieldName, tableInfo.getTableName());
+         fieldName = tableRelationship.isArray()
+            ? tableInfo.getAdjustedTableName()
+            : DataSetInfo.getNewNameForDuplicate(fieldName, tableInfo.getTableName());
        }
+
       QueryField queryField = this.queryFieldBuilder.fromPath(fieldName);
 
       unnestStream = Stream.concat(
