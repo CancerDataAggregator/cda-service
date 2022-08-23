@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -71,6 +72,23 @@ public class TableInfo {
 
     public TableSchema.SchemaDefinition[] getSchemaDefinitions() {
         return schemaDefinitions;
+    }
+
+    public String getPartitionKeyFullName() {
+        String table = this.adjustedTableName.toLowerCase(Locale.ROOT);;
+
+        if (this.getType().equals(TableInfoTypeEnum.TABLE)) {
+            table = DataSetInfo.KNOWN_ALIASES.getOrDefault(this.tableName, this.tableName)
+                               .toLowerCase(Locale.ROOT);
+        }
+
+        if (getType().equals(TableInfoTypeEnum.ARRAY)) {
+            return table;
+        }
+
+        return String.format("%s_%s",
+                table,
+                this.partitionKey);
     }
 
     public String getTableAlias() {
