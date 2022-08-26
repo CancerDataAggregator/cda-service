@@ -727,8 +727,8 @@ paths:
 
   /api/v1/columns/{version}:
     get:
-      summary: Returns all column names
-      description: Return columnNames for schema
+      summary: Returns all column names and definitions for schema
+      description: Return columnNames for schema along with their descriptions
       operationId: columns
       tags:
         - query
@@ -739,7 +739,7 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
   /api/v1/global-counts/{version}:
     post:

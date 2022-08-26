@@ -38,7 +38,6 @@ public class SqlGenerator {
   final List<TableSchema.SchemaDefinition> tableSchema;
   final DataSetInfo dataSetInfo;
   final boolean filesQuery;
-  EntitySchema entitySchema;
   List<String> filteredFields;
   boolean modularEntity;
   UnnestBuilder unnestBuilder;

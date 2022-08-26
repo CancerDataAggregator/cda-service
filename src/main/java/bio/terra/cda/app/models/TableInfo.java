@@ -99,6 +99,24 @@ public class TableInfo {
         }
     }
 
+    public TableInfo getSuperTableInfo() {
+        if (this.getType().equals(TableInfoTypeEnum.TABLE)) {
+            return this;
+        } else {
+            TableInfo current = this;
+
+            while (!current.getType().equals(TableInfoTypeEnum.TABLE)) {
+                TableRelationship parent = current.getRelationships()
+                        .stream().filter(TableRelationship::isParent)
+                        .findFirst().orElseThrow();
+
+                current = parent.getDestinationTableInfo();
+            }
+
+            return current;
+        }
+    }
+
     public String getPartitionKey() {
         return partitionKey;
     }
@@ -127,7 +145,7 @@ public class TableInfo {
                 .findFirst().orElseThrow();
 
         if (parent.getDestinationTableInfo().getType().equals(TableInfoTypeEnum.TABLE)) {
-            return target.getPathToTable(parent.getDestinationTableInfo());
+            return parent.getDestinationTableInfo().getPathToTable(target);
         } else {
             return getTablePath(parent.getDestinationTableInfo(), target);
         }
@@ -139,13 +157,13 @@ public class TableInfo {
         }
 
         LinkedList<Tuple<TableRelationship[], TableRelationship>> queue =
-                tableInfo.getRelationships()
+                this.getRelationships()
                         .stream()
                         .map(tableRelationship ->
                                 Tuple.of(new TableRelationship[0], tableRelationship))
                         .collect(Collectors.toCollection(LinkedList::new));
         Map<String, Boolean> visited = new HashMap<>() {{
-            put(tableInfo.getTableName(), true);
+            put(getTableName(), true);
         }};
 
         while (queue.size() > 0) {
@@ -159,7 +177,7 @@ public class TableInfo {
 
 
             if (tableRelationship.getDestinationTableInfo()
-                    .getAdjustedTableName().equals(getAdjustedTableName())) {
+                    .getAdjustedTableName().equals(tableInfo.getAdjustedTableName())) {
                 return relArray;
             }
 
@@ -173,10 +191,7 @@ public class TableInfo {
                             .collect(Collectors.toList());
 
             if (!moreRelationships.isEmpty()) {
-                queue.addAll(nextTable.getRelationships().stream()
-                        .map(tr ->
-                                Tuple.of(relArray, tr))
-                        .collect(Collectors.toList()));
+                queue.addAll(moreRelationships);
             }
         }
 

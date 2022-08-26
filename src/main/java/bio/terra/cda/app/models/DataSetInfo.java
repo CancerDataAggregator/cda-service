@@ -7,6 +7,7 @@ import com.google.cloud.bigquery.LegacySQLTypeName;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,6 +49,18 @@ public class DataSetInfo {
         }
 
         return tableInfo;
+    }
+
+    public List<Map.Entry<String, String>> getFieldDescriptions() {
+        Map<String, String> fieldDescs = new HashMap<>();
+
+        this.fieldMap.entrySet()
+                .stream().filter(entry ->
+                        !entry.getValue().getSchemaDefinition().getType().equals(LegacySQLTypeName.RECORD.toString()))
+                .forEach(entry ->
+                    fieldDescs.put(entry.getKey(), entry.getValue().getSchemaDefinition().getDescription()));
+
+        return fieldDescs.entrySet().stream().sorted(Map.Entry.comparingByKey()).collect(Collectors.toList());
     }
 
     public TableSchema.SchemaDefinition[] getSchemaDefinitionsForTable(String tableName) {
@@ -140,10 +153,6 @@ public class DataSetInfo {
                 tableInfo = tuple.x();
 
                 TableSchema.SchemaDefinition definition = tuple.y();
-
-                if (definition.getName().equals("system")) {
-                    tableInfo = tableInfo;
-                }
 
                 if (tableInfo.getTableName().equals("all_Files_v3_0_final")
                         && List.of("ResearchSubject", "Specimen", "Subject")
