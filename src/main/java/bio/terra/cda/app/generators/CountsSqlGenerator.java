@@ -44,7 +44,7 @@ public class CountsSqlGenerator extends SqlGenerator {
                     .nodeType(Query.NodeTypeEnum.SELECTVALUES)
                     .value(
                         tableInfoMap.keySet().stream()
-                            .map(key -> tableInfoMap.get(key).getPartitionKeyFullName())
+                            .map(key -> tableInfoMap.get(key).getPartitionKeyFullName(this.dataSetInfo))
                             .collect(Collectors.joining(","))))
             .r(QueryUtil.deSelectifyQuery(query));
 

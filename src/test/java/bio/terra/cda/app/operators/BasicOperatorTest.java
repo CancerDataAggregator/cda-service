@@ -40,7 +40,7 @@ public class BasicOperatorTest {
 
     assertEquals(0, ctx.getUnnests().size());
     assertEquals(0, ctx.getPartitions().size());
-    assertEquals("(IFNULL(UPPER(all_Subjects_v3_0_final.id), '') = UPPER(@_id_1))", whereClause);
+    assertEquals("(IFNULL(UPPER(Subject.id), '') = UPPER(@subject_id_1))", whereClause);
   }
 
   @Test
@@ -56,7 +56,7 @@ public class BasicOperatorTest {
     assertEquals(2, ctx.getUnnests().size());
     assertEquals(0, ctx.getPartitions().size());
     assertEquals(
-        "(((IFNULL(UPPER(_ResearchSubject_Diagnosis.stage), '') = UPPER(@_ResearchSubject_Diagnosis_stage_1)) OR (IFNULL(UPPER(_ResearchSubject_Diagnosis.stage), '') = UPPER(@_ResearchSubject_Diagnosis_stage_2))) AND (IFNULL(UPPER(_ResearchSubject.primary_diagnosis_site), '') = UPPER(@_ResearchSubject_primary_diagnosis_site_1)))",
+        "(((IFNULL(UPPER(_Diagnosis.stage), '') = UPPER(@stage_1)) OR (IFNULL(UPPER(_Diagnosis.stage), '') = UPPER(@stage_2))) AND (IFNULL(UPPER(_ResearchSubject.primary_diagnosis_site), '') = UPPER(@primary_diagnosis_site_1)))",
         whereClause);
 
     QueryContext ResearchSubjectContext =
@@ -65,12 +65,12 @@ public class BasicOperatorTest {
 
     String rsWhere = query.buildQuery(ResearchSubjectContext);
 
-    assertEquals(2, ResearchSubjectContext.getUnnests().size());
+    assertEquals(1, ResearchSubjectContext.getUnnests().size());
 
     ResearchSubjectContext.getUnnests()
         .forEach(
             unnest -> {
-              if (unnest.getPath().equals("all_Subjects_v3_0_final.ResearchSubject")) {
+              if (unnest.getPath().equals("Subject.ResearchSubject")) {
                 assertEquals(SqlUtil.JoinType.INNER, unnest.getJoinType());
               } else {
                 assertEquals(SqlUtil.JoinType.LEFT, unnest.getJoinType());

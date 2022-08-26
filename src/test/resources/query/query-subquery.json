@@ -4,7 +4,7 @@
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "ResearchSubject.identifier.system"
+      "value": "researchsubject_identifier_system"
     },
     "r": {
       "node_type": "quoted",
@@ -15,7 +15,7 @@
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "ResearchSubject.identifier.system"
+      "value": "researchsubject_identifier_system"
     },
     "r": {
       "node_type": "quoted",

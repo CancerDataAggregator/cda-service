@@ -6,7 +6,7 @@
       "node_type": "=",
       "l": {
         "node_type": "column",
-        "value": "ResearchSubject.Diagnosis.stage"
+        "value": "stage"
       },
       "r": {
         "node_type": "quoted",
@@ -17,7 +17,7 @@
       "node_type": "=",
       "l": {
         "node_type": "column",
-        "value": "ResearchSubject.Diagnosis.stage"
+        "value": "stage"
       },
       "r": {
         "node_type": "quoted",
@@ -29,7 +29,7 @@
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "ResearchSubject.primary_diagnosis_site"
+      "value": "primary_diagnosis_site"
     },
     "r": {
       "node_type": "quoted",

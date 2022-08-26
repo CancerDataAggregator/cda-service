@@ -29,7 +29,7 @@ public class QueryHelper {
                 new UnnestBuilder(
                         queryFieldBuilder,
                         dataSetInfo,
-                        dataSetInfo.getTableInfo("Subject"),
+                        dataSetInfo.getTableInfo(entity),
                         project))
         .setPartitionBuilder(new PartitionBuilder(dataSetInfo))
         .setSelectBuilder(new SelectBuilder(dataSetInfo))

@@ -67,7 +67,7 @@ class QueryApiControllerTest {
             });
 
     var expected =
-        "SELECT DISTINCT sex FROM gdc-bq-sample.dev.all_Subjects_v3_0_final, UNNEST(ResearchSubject) AS _ResearchSubject, UNNEST(_ResearchSubject.identifier) AS _identifier WHERE IFNULL(sex, '') <> '' AND _identifier.system = 'GDC' ORDER BY sex";
+        "SELECT DISTINCT Subject.sex FROM gdc-bq-sample.dev.all_Subjects_v3_0_final AS Subject INNER JOIN UNNEST(Subject.identifier) AS _subject_identifier WHERE IFNULL(Subject.sex, '') <> '' AND _subject_identifier.system = 'GDC' ORDER BY Subject.sex";
     var result =
         mvc.perform(
                 post("/api/v1/unique-values/{version}", version)

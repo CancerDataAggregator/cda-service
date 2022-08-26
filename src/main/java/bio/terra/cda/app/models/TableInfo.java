@@ -74,8 +74,12 @@ public class TableInfo {
         return schemaDefinitions;
     }
 
-    public String getPartitionKeyFullName() {
-        String table = this.adjustedTableName.toLowerCase(Locale.ROOT);;
+    public String getPartitionKeyFullName(DataSetInfo dataSetInfo) {
+        if (Objects.nonNull(dataSetInfo.getSchemaDefinitionByFieldName(this.partitionKey))) {
+            return this.partitionKey;
+        }
+
+        String table = this.adjustedTableName.toLowerCase(Locale.ROOT);
 
         if (this.getType().equals(TableInfoTypeEnum.TABLE)) {
             table = DataSetInfo.KNOWN_ALIASES.getOrDefault(this.tableName, this.tableName)
