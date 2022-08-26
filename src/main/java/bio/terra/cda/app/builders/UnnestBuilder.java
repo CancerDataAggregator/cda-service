@@ -56,7 +56,7 @@ public class UnnestBuilder {
   private Stream<Unnest> buildUnnestsFromQueryField(
       QueryField queryField, boolean includeRepeated) {
     TableInfo tableInfo = this.dataSetInfo.getTableInfoFromField(queryField.getPath());
-    TableRelationship[] pathToTable = tableInfo.getPathToTable(this.entityTable);
+    TableRelationship[] pathToTable = this.entityTable.getPathToTable(tableInfo);
 
     if (Objects.isNull(pathToTable)) {
       throw new IllegalArgumentException(String.format("No path found to field %s", queryField.getPath()));
@@ -161,7 +161,7 @@ public class UnnestBuilder {
                  true,
                  String.join(
                          foreignKeyTypeEnum.equals(ForeignKey.ForeignKeyTypeEnum.COMPOSITE_AND)
-                                 ? "AND" : "OR",
+                                 ? " AND " : " OR ",
                          joinConditions))));
     } else {
       if (!includeRepeated && destinationTable.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)) {

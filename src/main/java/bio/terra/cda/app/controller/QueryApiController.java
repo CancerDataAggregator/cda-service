@@ -8,6 +8,8 @@ import bio.terra.cda.app.generators.CountsSqlGenerator;
 import bio.terra.cda.app.generators.DiagnosisCountSqlGenerator;
 import bio.terra.cda.app.generators.DiagnosisSqlGenerator;
 import bio.terra.cda.app.generators.FileSqlGenerator;
+import bio.terra.cda.app.generators.MutationCountSqlGenerator;
+import bio.terra.cda.app.generators.MutationSqlGenerator;
 import bio.terra.cda.app.generators.ResearchSubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.ResearchSubjectSqlGenerator;
 import bio.terra.cda.app.generators.SpecimenCountSqlGenerator;
@@ -543,6 +545,38 @@ public class QueryApiController implements QueryApi {
     try {
       QueryJobConfiguration.Builder configBuilder =
           new TreatmentCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(configBuilder, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region Mutation Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> mutationQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      QueryJobConfiguration.Builder configBuilder =
+              new MutationSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(configBuilder, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> mutationCountsQuery(
+          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      QueryJobConfiguration.Builder configBuilder =
+              new MutationCountSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
