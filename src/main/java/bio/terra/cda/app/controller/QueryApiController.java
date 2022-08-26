@@ -236,6 +236,7 @@ public class QueryApiController implements QueryApi {
               + " ORDER BY "
               + queryField.getColumnText();
     }
+
     logger.debug("uniqueValues: {}", querySql);
 
     QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
