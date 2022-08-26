@@ -6,7 +6,7 @@ import java.io.IOException;
 
 @CountQueryGenerator(
         entity = "Mutation",
-        fieldsToCount = {"project_short_name", "Hugo_Symbol"},
+        fieldsToCount = {"project_short_name", "NCBI_Build", "Chromosome", "Variant_Type", "One_Consequence"},
         excludedFields = {})
 public class MutationCountSqlGenerator extends EntityCountSqlGenerator {
     public MutationCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
