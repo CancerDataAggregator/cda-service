@@ -1,32 +1,27 @@
 package bio.terra.cda.app.builders;
 
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.models.Select;
+import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.util.SqlUtil;
-import com.google.cloud.bigquery.Field;
+import bio.terra.cda.app.util.TableSchema;
 
 public class SelectBuilder {
-  private final String table;
-  private final String fileTable;
+  private final DataSetInfo dataSetInfo;
 
-  public SelectBuilder(String table, String fileTable) {
-    this.table = table;
-    this.fileTable = fileTable;
+  public SelectBuilder(DataSetInfo dataSetInfo) {
+    this.dataSetInfo = dataSetInfo;
   }
 
   public Select fromQueryField(QueryField queryField) {
-    String field = queryField.getColumnText();
-    if (queryField.getMode().equals(Field.Mode.REPEATED.toString())) {
-      var parts = queryField.getParts();
-      if (parts.length == 1) {
-        field =
-            String.format(
-                "%s.%s", queryField.isFileField() ? fileTable : table, queryField.getName());
-      } else {
-        field =
-            String.format("%s.%s", SqlUtil.getAlias(parts.length - 2, parts), queryField.getName());
-      }
-    }
+    TableInfo tableInfo = dataSetInfo.getTableInfoFromField(queryField.getPath());
+
+    String field =
+        String.format(
+            SqlUtil.ALIAS_FIELD_FORMAT,
+            tableInfo.getTableAlias(),
+            queryField.getName());
     return new Select(field, queryField.getAlias());
   }
 }

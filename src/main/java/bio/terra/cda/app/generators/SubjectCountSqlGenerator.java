@@ -8,7 +8,7 @@ import java.io.IOException;
     entity = "Subject",
     fieldsToCount = {
       TableSchema.FILES_COLUMN,
-      TableSchema.SYSTEM_IDENTIFIER,
+      "subject_identifier_system",
       "sex",
       "race",
       "ethnicity",

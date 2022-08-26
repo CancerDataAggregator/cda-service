@@ -1,29 +1,31 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.models.EntitySchema;
+import bio.terra.cda.app.models.Partition;
+import bio.terra.cda.app.models.TableInfo;
+import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class FileSqlGenerator extends SqlGenerator {
-  private final List<EntitySchema> schemaList;
+  private final List<TableInfo> tableInfoList;
 
   public FileSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
     super(qualifiedTable, rootQuery, version, true);
 
-    schemaList = getEntitySchemasAsSortedList();
+      tableInfoList = getTableInfosAsSortedList();
   }
 
   @Override
@@ -32,32 +34,24 @@ public class FileSqlGenerator extends SqlGenerator {
     StringBuilder sb = new StringBuilder();
     AtomicReference<String> previousAlias = new AtomicReference<>("");
     List<String> tables = new ArrayList<>();
-    schemaList.stream()
-        .filter(
-            Objects::nonNull) // null = subject, don't need that here as subjects are a superset of
-        // researchsubject and specimen
+      tableInfoList
         .forEach(
-            entitySchema -> {
+            tableInfo -> {
               var resultsQuery =
                   resultsQuery(
                       query,
                       tableOrSubClause,
                       subQuery,
-                      buildQueryContext(entitySchema, true, subQuery));
+                      buildQueryContext(tableInfo, true, subQuery));
               var resultsAlias =
-                  String.format("%s_files", entitySchema.getPath().replace(".", "_"));
+                  String.format("%s_files", tableInfo.getAdjustedTableName().toLowerCase(Locale.ROOT));
 
-              var realParts = entitySchema.getParts();
-              List<String> aliases =
-                  IntStream.range(0, realParts.length)
-                      .mapToObj(
-                          i -> {
-                            String realAlias = SqlUtil.getAlias(i, realParts);
-                            String tmp = realAlias.substring(1).toLowerCase();
-                            return String.format("%s_id", tmp);
-                          })
+              TableRelationship[] tablePath = tableInfo.getTablePath();
+              List<String> aliases = Arrays.stream(tablePath)
+                      .map(tableRelationship -> tableRelationship.getFromTableInfo().getPartitionKeyFullName())
                       .collect(Collectors.toList());
-              aliases.add("subject_id");
+
+              aliases.add(tableInfo.getPartitionKeyFullName());
 
               sb.append(
                   String.format(
@@ -70,7 +64,7 @@ public class FileSqlGenerator extends SqlGenerator {
                           previousAlias.get().equals("")
                               ? ""
                               : String.format(
-                                  " AND CONCAT(results.id, %1$s) not in (SELECT CONCAT(%2$s.id, %3$s) FROM %2$s)",
+                                  " AND CONCAT(results.file_id, %1$s) not in (SELECT CONCAT(%2$s.file_id, %3$s) FROM %2$s)",
                                   aliases.stream()
                                       .map(
                                           a ->
@@ -105,46 +99,37 @@ public class FileSqlGenerator extends SqlGenerator {
       QueryContext ctx, String prefix, boolean skipExcludes) {
 
     List<String> idSelects = new ArrayList<>();
-    schemaList.forEach(
-        entitySchema -> {
-          String path = entitySchema.getPath();
-
-          var pathParts = entitySchema.getParts();
-          var realParts = ctx.getEntityParts();
-          String realAlias = SqlUtil.getAlias(pathParts.length - 1, pathParts);
-          String tmp = realAlias.substring(1).toLowerCase();
-          String alias = String.format("%s_id", tmp);
+    tableInfoList.forEach(
+        tableInfo -> {
+          var pathParts = tableInfo.getTablePath();
+          var realParts = ctx.getTableInfo().getTablePath();
           String value =
-              realParts.length < pathParts.length ? "''" : String.format("%s.id", realAlias);
+              realParts.length < pathParts.length ? "''" : tableInfo.getPartitionKeyAlias();
 
-          idSelects.add(
-              path.equals(EntitySchema.DEFAULT_PATH)
-                  ? String.format("%s.id as %s_id", table, EntitySchema.DEFAULT_PATH.toLowerCase())
-                  : String.format("%s AS %s", value, alias));
+          idSelects.add(String.format("%s AS %s", value, tableInfo.getPartitionKeyFullName()));
 
-          if (!path.equals(EntitySchema.DEFAULT_PATH)) {
-            ctx.addPartitions(this.partitionBuilder.fromParts(realParts, tableSchemaMap));
+          if (realParts.length == 0) {
+              ctx.addPartitions(Stream.of(this.partitionBuilder.of(ctx.getTableInfo().getTableName(),
+                      ctx.getTableInfo().getPartitionKeyAlias())));
           } else {
-            ctx.addPartitions(
-                Stream.of(this.partitionBuilder.of("id", String.format("%s.id", table))));
+              ctx.addPartitions(this.partitionBuilder.fromRelationshipPath(realParts));
           }
         });
 
     return combinedSelects(ctx, prefix, true, idSelects.stream().distinct());
   }
 
-  private List<EntitySchema> getEntitySchemasAsSortedList() {
+  private List<TableInfo> getTableInfosAsSortedList() {
     return getFileClasses()
         .map(
             clazz -> {
               var annotation = clazz.getAnnotation(QueryGenerator.class);
-              return TableSchema.getDefinitionByName(tableSchema, annotation.entity())
-                  .setTable(table);
+              return this.dataSetInfo.getTableInfo(annotation.entity());
             })
         .sorted(
-            (schema1, schema2) -> {
-              var firstSplit = schema1.getParts();
-              var secondSplit = schema2.getParts();
+            (table1, table2) -> {
+              var firstSplit = table1.getTablePath();
+              var secondSplit = table2.getTablePath();
 
               return Integer.compare(secondSplit.length, firstSplit.length);
             })
