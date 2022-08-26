@@ -57,16 +57,14 @@ public class QueryFieldBuilder {
               .toArray(String[]::new);
     }
 
-
     String fieldText = SqlUtil.getAlias(newParts.length - 1, newParts);
 
     String alias = fieldText.startsWith("_") ? fieldText.substring(1) : fieldText;
 
     var nonEmpties = Arrays.stream(modSplit).filter(e -> !e.isEmpty()).collect(Collectors.toList());
-    if(nonEmpties.size() >= 3){
-        alias = nonEmpties.get(2);
+    if (nonEmpties.size() >= 3) {
+      alias = nonEmpties.get(2);
     }
-
 
     String columnText = getColumnText(schemaDefinition, newParts, fieldText, fileField);
 

@@ -98,7 +98,7 @@ public class SqlGenerator {
   protected void initializeBuilders() {
     this.queryFieldBuilder =
         new QueryFieldBuilder(tableSchemaMap, fileTableSchemaMap, table, fileTable, filesQuery);
-    this.selectBuilder = new SelectBuilder( table,  fileTable);
+    this.selectBuilder = new SelectBuilder(table, fileTable);
     this.unnestBuilder = new UnnestBuilder(table, fileTable, entitySchema.getParts(), project);
     this.partitionBuilder = new PartitionBuilder(fileTable);
     this.parameterBuilder = new ParameterBuilder(tableSchemaMap, fileTableSchemaMap);

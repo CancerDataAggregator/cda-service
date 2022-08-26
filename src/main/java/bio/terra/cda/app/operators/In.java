@@ -5,9 +5,7 @@ import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.generated.model.Query;
-
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 @QueryOperator(nodeType = {Query.NodeTypeEnum.IN, Query.NodeTypeEnum.NOT_IN})
 public class In extends BasicOperator {
@@ -35,9 +33,8 @@ public class In extends BasicOperator {
               parameterName, parameterName.substring(1));
     } else {
       String parameterName =
-          parameterBuilder.addParameterValue(queryField,
-                  Arrays.stream(right.split(","))
-                          .map(String::trim).toArray());
+          parameterBuilder.addParameterValue(
+              queryField, Arrays.stream(right.split(",")).map(String::trim).toArray());
 
       right = String.format("UNNEST(%s)", parameterName);
     }

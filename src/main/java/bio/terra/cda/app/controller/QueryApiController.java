@@ -24,6 +24,7 @@ import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
 import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -31,8 +32,6 @@ import java.net.URL;
 import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,16 +137,16 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> uniqueValues(
-          String version, String body, String system, String table, Boolean count) {
+      String version, String body, String system, String table, Boolean count) {
     String tableName;
-    Map<String,TableSchema.SchemaDefinition> tableSchema;
+    Map<String, TableSchema.SchemaDefinition> tableSchema;
 
     String myVersion = version;
 
     var tmpBody = body;
     if (tmpBody
-            .toLowerCase()
-            .startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
+        .toLowerCase()
+        .startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
       tmpBody = tmpBody.replace("File.", "");
       myVersion = myVersion.replace("Subjects", TableSchema.FILES_COLUMN);
     }
@@ -160,7 +159,7 @@ public class QueryApiController implements QueryApi {
 
     try {
       tableSchema = TableSchema.buildSchemaMap(TableSchema.getSchema(myVersion));
-    }catch(IOException e){
+    } catch (IOException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
 
@@ -175,7 +174,8 @@ public class QueryApiController implements QueryApi {
     }
 
     if (system != null && system.length() > 0) {
-      NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system", tableSchema);
+      NestedColumn whereColumns =
+          NestedColumn.generate("ResearchSubject.identifier.system", tableSchema);
       whereClauses.add(whereColumns.getColumn() + " = '" + system + "'");
       // add any additional 'where' unnest partials that aren't already included in
       // columns-unnest
