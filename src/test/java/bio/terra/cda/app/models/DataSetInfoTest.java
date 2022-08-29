@@ -30,6 +30,8 @@ public class DataSetInfoTest {
         assertTrue(Objects.nonNull(researchSubjectTable));
         assertTrue(Objects.nonNull(subjectAssociatedProject));
 
+        assertEquals("all_Subjects_v3_0_final", subjectTable.getAdjustedTableName());
+
         assertEquals(TableInfo.TableInfoTypeEnum.TABLE, subjectTable.getType());
         assertEquals(TableInfo.TableInfoTypeEnum.TABLE, fileTable.getType());
         assertEquals(TableInfo.TableInfoTypeEnum.NESTED, researchSubjectTable.getType());
