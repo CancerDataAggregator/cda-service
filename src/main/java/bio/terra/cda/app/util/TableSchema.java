@@ -2,8 +2,6 @@ package bio.terra.cda.app.util;
 
 import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.models.ForeignKey;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.google.cloud.bigquery.Field;

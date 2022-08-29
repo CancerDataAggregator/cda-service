@@ -7,7 +7,6 @@ import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.app.util.TableSchema;
 import java.io.IOException;
 
 public class QueryHelper {
@@ -17,7 +16,8 @@ public class QueryHelper {
       String table, String fileTable, String entity, String project, boolean includeSelect)
       throws IOException {
     var schemas = new Schemas.SchemaBuilder(table, fileTable).build();
-    DataSetInfo dataSetInfo = new DataSetInfo.DataSetInfoBuilder()
+    DataSetInfo dataSetInfo =
+        new DataSetInfo.DataSetInfoBuilder()
             .addTableSchema("all_Subjects_v3_0_final", schemas.getSchema())
             .build();
     QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
@@ -26,14 +26,10 @@ public class QueryHelper {
         .setIncludeSelect(includeSelect)
         .setQueryFieldBuilder(queryFieldBuilder)
         .setUnnestBuilder(
-                new UnnestBuilder(
-                        queryFieldBuilder,
-                        dataSetInfo,
-                        dataSetInfo.getTableInfo(entity),
-                        project))
+            new UnnestBuilder(
+                queryFieldBuilder, dataSetInfo, dataSetInfo.getTableInfo(entity), project))
         .setPartitionBuilder(new PartitionBuilder(dataSetInfo))
         .setSelectBuilder(new SelectBuilder(dataSetInfo))
-        .setParameterBuilder(
-            new ParameterBuilder());
+        .setParameterBuilder(new ParameterBuilder());
   }
 }

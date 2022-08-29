@@ -1,8 +1,6 @@
 package bio.terra.cda.app.builders;
 
-import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
-import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.StandardSQLTypeName;
@@ -13,6 +11,7 @@ import java.util.stream.Collectors;
 
 public class ParameterBuilder {
   private final Map<String, QueryParameterValue> parameterValueMap;
+
   public ParameterBuilder() {
     this.parameterValueMap = new HashMap<>();
   }

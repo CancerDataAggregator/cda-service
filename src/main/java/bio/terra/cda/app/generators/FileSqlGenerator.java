@@ -1,6 +1,5 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.util.QueryContext;
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +23,7 @@ public class FileSqlGenerator extends SqlGenerator {
       throws IOException {
     super(qualifiedTable, rootQuery, version, true);
 
-      tableInfoList = getTableInfosAsSortedList();
+    tableInfoList = getTableInfosAsSortedList();
   }
 
   @Override
@@ -34,53 +32,51 @@ public class FileSqlGenerator extends SqlGenerator {
     StringBuilder sb = new StringBuilder();
     AtomicReference<String> previousAlias = new AtomicReference<>("");
     List<String> tables = new ArrayList<>();
-      tableInfoList
-        .forEach(
-            tableInfo -> {
-              var resultsQuery =
-                  resultsQuery(
-                      query,
-                      tableOrSubClause,
-                      subQuery,
-                      buildQueryContext(tableInfo, true, subQuery));
-              var resultsAlias =
-                  String.format("%s_files", tableInfo.getAdjustedTableName().toLowerCase(Locale.ROOT));
+    tableInfoList.forEach(
+        tableInfo -> {
+          var resultsQuery =
+              resultsQuery(
+                  query, tableOrSubClause, subQuery, buildQueryContext(tableInfo, true, subQuery));
+          var resultsAlias =
+              String.format("%s_files", tableInfo.getAdjustedTableName().toLowerCase(Locale.ROOT));
 
-              TableRelationship[] tablePath = tableInfo.getTablePath();
-              List<String> aliases = Arrays.stream(tablePath)
-                      .map(tableRelationship -> tableRelationship.getFromTableInfo().getPartitionKeyFullName(this.dataSetInfo))
-                      .collect(Collectors.toList());
+          TableRelationship[] tablePath = tableInfo.getTablePath();
+          List<String> aliases =
+              Arrays.stream(tablePath)
+                  .map(
+                      tableRelationship ->
+                          tableRelationship
+                              .getFromTableInfo()
+                              .getPartitionKeyFullName(this.dataSetInfo))
+                  .collect(Collectors.toList());
 
-              aliases.add(tableInfo.getPartitionKeyFullName(this.dataSetInfo));
+          aliases.add(tableInfo.getPartitionKeyFullName(this.dataSetInfo));
 
-              sb.append(
+          sb.append(
+              String.format(
+                  "%1$s%2$s as (%3$s),",
+                  previousAlias.get().equals("") ? "with" : "",
+                  String.format(" %s", resultsAlias),
                   String.format(
-                      "%1$s%2$s as (%3$s),",
-                      previousAlias.get().equals("") ? "with" : "",
-                      String.format(" %s", resultsAlias),
-                      String.format(
-                          "%s%s",
-                          SqlTemplate.resultsWrapper(resultsQuery),
-                          previousAlias.get().equals("")
-                              ? ""
-                              : String.format(
-                                  " AND CONCAT(results.file_id, %1$s) not in (SELECT CONCAT(%2$s.file_id, %3$s) FROM %2$s)",
-                                  aliases.stream()
-                                      .map(
-                                          a ->
-                                              String.format(
-                                                  SqlUtil.ALIAS_FIELD_FORMAT, "results", a))
-                                      .collect(Collectors.joining(", ")),
-                                  previousAlias,
-                                  aliases.stream()
-                                      .map(
-                                          a ->
-                                              String.format(
-                                                  SqlUtil.ALIAS_FIELD_FORMAT, previousAlias, a))
-                                      .collect(Collectors.joining(", "))))));
-              previousAlias.set(resultsAlias);
-              tables.add(resultsAlias);
-            });
+                      "%s%s",
+                      SqlTemplate.resultsWrapper(resultsQuery),
+                      previousAlias.get().equals("")
+                          ? ""
+                          : String.format(
+                              " AND CONCAT(results.file_id, %1$s) not in (SELECT CONCAT(%2$s.file_id, %3$s) FROM %2$s)",
+                              aliases.stream()
+                                  .map(a -> String.format(SqlUtil.ALIAS_FIELD_FORMAT, "results", a))
+                                  .collect(Collectors.joining(", ")),
+                              previousAlias,
+                              aliases.stream()
+                                  .map(
+                                      a ->
+                                          String.format(
+                                              SqlUtil.ALIAS_FIELD_FORMAT, previousAlias, a))
+                                  .collect(Collectors.joining(", "))))));
+          previousAlias.set(resultsAlias);
+          tables.add(resultsAlias);
+        });
 
     sb.append(
         String.format(
@@ -106,13 +102,18 @@ public class FileSqlGenerator extends SqlGenerator {
           String value =
               realParts.length < pathParts.length ? "''" : tableInfo.getPartitionKeyAlias();
 
-          idSelects.add(String.format("%s AS %s", value, tableInfo.getPartitionKeyFullName(this.dataSetInfo)));
+          idSelects.add(
+              String.format(
+                  "%s AS %s", value, tableInfo.getPartitionKeyFullName(this.dataSetInfo)));
 
           if (realParts.length == 0) {
-              ctx.addPartitions(Stream.of(this.partitionBuilder.of(ctx.getTableInfo().getTableName(),
-                      ctx.getTableInfo().getPartitionKeyAlias())));
+            ctx.addPartitions(
+                Stream.of(
+                    this.partitionBuilder.of(
+                        ctx.getTableInfo().getTableName(),
+                        ctx.getTableInfo().getPartitionKeyAlias())));
           } else {
-              ctx.addPartitions(this.partitionBuilder.fromRelationshipPath(realParts));
+            ctx.addPartitions(this.partitionBuilder.fromRelationshipPath(realParts));
           }
         });
 

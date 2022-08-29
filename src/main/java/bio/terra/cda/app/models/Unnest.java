@@ -11,11 +11,7 @@ public class Unnest {
   private final String joinPath;
 
   public Unnest(
-      SqlUtil.JoinType joinType,
-      String path,
-      String alias,
-      boolean isJoin,
-      String joinPath) {
+      SqlUtil.JoinType joinType, String path, String alias, boolean isJoin, String joinPath) {
     this.joinType = joinType;
     this.path = path;
     this.alias = alias;
