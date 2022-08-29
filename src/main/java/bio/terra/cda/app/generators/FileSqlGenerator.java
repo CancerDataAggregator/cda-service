@@ -48,10 +48,10 @@ public class FileSqlGenerator extends SqlGenerator {
 
               TableRelationship[] tablePath = tableInfo.getTablePath();
               List<String> aliases = Arrays.stream(tablePath)
-                      .map(tableRelationship -> tableRelationship.getFromTableInfo().getPartitionKeyFullName())
+                      .map(tableRelationship -> tableRelationship.getFromTableInfo().getPartitionKeyFullName(this.dataSetInfo))
                       .collect(Collectors.toList());
 
-              aliases.add(tableInfo.getPartitionKeyFullName());
+              aliases.add(tableInfo.getPartitionKeyFullName(this.dataSetInfo));
 
               sb.append(
                   String.format(
@@ -106,7 +106,7 @@ public class FileSqlGenerator extends SqlGenerator {
           String value =
               realParts.length < pathParts.length ? "''" : tableInfo.getPartitionKeyAlias();
 
-          idSelects.add(String.format("%s AS %s", value, tableInfo.getPartitionKeyFullName()));
+          idSelects.add(String.format("%s AS %s", value, tableInfo.getPartitionKeyFullName(this.dataSetInfo)));
 
           if (realParts.length == 0) {
               ctx.addPartitions(Stream.of(this.partitionBuilder.of(ctx.getTableInfo().getTableName(),

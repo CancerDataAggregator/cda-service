@@ -33,6 +33,10 @@ import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
@@ -247,8 +251,15 @@ public class QueryApiController implements QueryApi {
               .addTableSchema(version, TableSchema.getSchema(version)).build();
 
       List<Map.Entry<String, String>> columnsList = dataSetInfo.getFieldDescriptions();
+      List<JsonNode> results = columnsList.stream().map(entry -> {
+        ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+        objectNode.set(entry.getKey(), TextNode.valueOf(entry.getValue()));
+
+        return objectNode;
+      }).collect(Collectors.toList());
+
       QueryResponseData queryResponseData = new QueryResponseData();
-      queryResponseData.result(Collections.singletonList(columnsList));
+      queryResponseData.result(Collections.unmodifiableList(results));
       queryResponseData.totalRowCount((long) columnsList.size());
 
       return new ResponseEntity<>(queryResponseData, HttpStatus.OK);

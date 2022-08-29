@@ -2,7 +2,7 @@
   "node_type": "IN",
   "l": {
     "node_type": "column",
-    "value": "ResearchSubject.primary_diagnosis_condition"
+    "value": "primary_diagnosis_condition"
   },
   "r": {
     "node_type": "unquoted",

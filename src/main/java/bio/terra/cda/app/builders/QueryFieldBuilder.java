@@ -9,6 +9,7 @@ import com.google.cloud.bigquery.Field;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class QueryFieldBuilder {
@@ -23,9 +24,11 @@ public class QueryFieldBuilder {
   }
 
   public QueryField fromPath(String path) {
-    String[] parts = SqlUtil.getParts(path);
-    TableSchema.SchemaDefinition schemaDefinition = dataSetInfo.getSchemaDefinitionByFieldName(path);
-    TableInfo tableInfo = dataSetInfo.getTableInfoFromField(path);
+    String[] modSplit = path.split(" ");
+    String modPath = modSplit[0];
+    String[] parts = SqlUtil.getParts(modPath);
+    TableSchema.SchemaDefinition schemaDefinition = dataSetInfo.getSchemaDefinitionByFieldName(modPath);
+    TableInfo tableInfo = dataSetInfo.getTableInfoFromField(modPath);
 
     if (Objects.isNull(schemaDefinition)) {
       throw new IllegalArgumentException(
@@ -35,6 +38,11 @@ public class QueryFieldBuilder {
 
     String alias = path.replace(".", "_");
     String columnText = getColumnText(schemaDefinition, tableInfo.getTableAlias());
+
+    var nonEmpties = Arrays.stream(modSplit).filter(e -> !e.isEmpty()).collect(Collectors.toList());
+    if (nonEmpties.size() >= 3) {
+      alias = nonEmpties.get(2);
+    }
 
     String tableAlias = DataSetInfo.KNOWN_ALIASES.get(tableInfo.getTableName());
 
