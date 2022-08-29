@@ -1,11 +1,10 @@
 package bio.terra.cda.app.util;
 
 import com.google.cloud.bigquery.Field;
-import org.springframework.util.StringUtils;
-
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.util.StringUtils;
 
 public class NestedColumn {
   private final String column;
@@ -16,7 +15,8 @@ public class NestedColumn {
     this.unnestClauses = unnestClauses;
   }
 
-  public static NestedColumn generate(String qualifiedColumnName, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+  public static NestedColumn generate(
+      String qualifiedColumnName, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
     return Builder.generate(qualifiedColumnName, tableSchemaMap);
   }
 
@@ -27,20 +27,25 @@ public class NestedColumn {
      * A.B.C.D.column -> > SELECT DISTINCT(_D.column) FROM TABLE, UNNEST(A) AS _A, UNNEST(_A.B)
      * AS _B, UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D
      */
-    public static NestedColumn generate(String qualifiedColumnName, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
+    public static NestedColumn generate(
+        String qualifiedColumnName, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
         throws IllegalArgumentException {
       Set<String> unnestClauses = new LinkedHashSet<String>();
       String newColumn = null;
       if (StringUtils.hasLength(qualifiedColumnName)) {
         String[] c = SqlUtil.getParts(qualifiedColumnName);
         int modifier = 1;
-        boolean repeated = tableSchemaMap.get(qualifiedColumnName).getMode().equals(Field.Mode.REPEATED.toString());
+        boolean repeated =
+            tableSchemaMap
+                .get(qualifiedColumnName)
+                .getMode()
+                .equals(Field.Mode.REPEATED.toString());
 
         if (c.length == 1 && !repeated) {
           return new NestedColumn(qualifiedColumnName, new LinkedHashSet<String>());
         }
 
-        if (repeated){
+        if (repeated) {
           modifier = 0;
         }
 

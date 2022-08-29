@@ -5,8 +5,6 @@ import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
-import com.google.cloud.bigquery.Field;
 
 public class SelectBuilder {
   private final DataSetInfo dataSetInfo;

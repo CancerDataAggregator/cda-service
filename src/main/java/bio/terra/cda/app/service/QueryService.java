@@ -7,7 +7,7 @@ import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.SystemStatus;
-import bio.terra.cda.generated.model.SystemStatusSystems;
+import bio.terra.cda.generated.model.SystemStatusSystemsValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,7 +62,7 @@ public class QueryService {
 
   @Cacheable
   public SystemStatus bigQueryCheck() {
-    SystemStatusSystems bigQuerySystemStatus = new SystemStatusSystems();
+    SystemStatusSystemsValue bigQuerySystemStatus = new SystemStatusSystemsValue();
     boolean success = false;
     try {
       String statusCheck = bigQuery.getDataset(bqTable).getDatasetId().getDataset();
