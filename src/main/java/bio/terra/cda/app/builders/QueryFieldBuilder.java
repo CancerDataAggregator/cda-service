@@ -14,9 +14,7 @@ public class QueryFieldBuilder {
   private final boolean filesQuery;
   private final DataSetInfo dataSetInfo;
 
-  public QueryFieldBuilder(
-      DataSetInfo dataSetInfo,
-      boolean filesQuery) {
+  public QueryFieldBuilder(DataSetInfo dataSetInfo, boolean filesQuery) {
     this.dataSetInfo = dataSetInfo;
     this.filesQuery = filesQuery;
   }
@@ -25,13 +23,12 @@ public class QueryFieldBuilder {
     String[] modSplit = path.split(" ");
     String modPath = modSplit[0];
     String[] parts = SqlUtil.getParts(modPath);
-    TableSchema.SchemaDefinition schemaDefinition = dataSetInfo.getSchemaDefinitionByFieldName(modPath);
+    TableSchema.SchemaDefinition schemaDefinition =
+        dataSetInfo.getSchemaDefinitionByFieldName(modPath);
     TableInfo tableInfo = dataSetInfo.getTableInfoFromField(modPath);
 
     if (Objects.isNull(schemaDefinition)) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Column %s does not exist", path));
+      throw new IllegalArgumentException(String.format("Column %s does not exist", path));
     }
 
     String alias = path.replace(".", "_");
@@ -56,9 +53,7 @@ public class QueryFieldBuilder {
         Objects.nonNull(tableAlias) && tableAlias.equals(TableSchema.FILE_PREFIX));
   }
 
-  protected String getColumnText(
-      TableSchema.SchemaDefinition schemaDefinition,
-      String tableAlias) {
+  protected String getColumnText(TableSchema.SchemaDefinition schemaDefinition, String tableAlias) {
     String mode = schemaDefinition.getMode();
 
     if (mode.equals(Field.Mode.REPEATED.toString())) {

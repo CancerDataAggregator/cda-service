@@ -5,13 +5,7 @@ import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
-import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class PartitionBuilder {
@@ -27,13 +21,16 @@ public class PartitionBuilder {
 
   public Stream<Partition> fromRelationshipPath(TableRelationship[] path) {
     return Stream.concat(
-            Stream.of(new Partition(
-                    path[0].getFromTableInfo().getTableName(),
-                    path[0].getFromTableInfo().getPartitionKeyAlias())),
-            Arrays.stream(path)
-                  .map(tableRelationship -> new Partition(
-                    tableRelationship.getField(),
-                    tableRelationship.getDestinationTableInfo().getPartitionKeyAlias())));
+        Stream.of(
+            new Partition(
+                path[0].getFromTableInfo().getTableName(),
+                path[0].getFromTableInfo().getPartitionKeyAlias())),
+        Arrays.stream(path)
+            .map(
+                tableRelationship ->
+                    new Partition(
+                        tableRelationship.getField(),
+                        tableRelationship.getDestinationTableInfo().getPartitionKeyAlias())));
   }
 
   public Partition fromQueryField(QueryField queryField) {

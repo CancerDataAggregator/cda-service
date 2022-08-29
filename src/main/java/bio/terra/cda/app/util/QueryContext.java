@@ -5,7 +5,6 @@ import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
-import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.TableInfo;

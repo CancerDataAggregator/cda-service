@@ -25,7 +25,6 @@ import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.service.exception.BadQueryException;
-import bio.terra.cda.app.util.NestedColumn;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.controller.QueryApi;
@@ -38,6 +37,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -47,8 +47,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -154,52 +152,67 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> uniqueValues(
-          String version, String body, String system, String table, Boolean count) {
+      String version, String body, String system, String table, Boolean count) {
     String tableName;
     DataSetInfo dataSetInfo;
 
     try {
-      dataSetInfo = new DataSetInfo.DataSetInfoBuilder()
+      dataSetInfo =
+          new DataSetInfo.DataSetInfoBuilder()
               .addTableSchema(version, TableSchema.getSchema(version))
               .build();
-    } catch(IOException e){
+    } catch (IOException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
 
-    TableSchema.SchemaDefinition schemaDefinition = dataSetInfo.getSchemaDefinitionByFieldName(body);
+    TableSchema.SchemaDefinition schemaDefinition =
+        dataSetInfo.getSchemaDefinitionByFieldName(body);
     TableInfo tableInfo = dataSetInfo.getTableInfoFromField(body);
     TableRelationship[] tablePath = tableInfo.getTablePath();
     QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
 
     String project = table == null ? applicationConfiguration.getBqTable() : table;
-    UnnestBuilder unnestBuilder = new UnnestBuilder(queryFieldBuilder, dataSetInfo, tableInfo, project);
+    UnnestBuilder unnestBuilder =
+        new UnnestBuilder(queryFieldBuilder, dataSetInfo, tableInfo, project);
     QueryField queryField = queryFieldBuilder.fromPath(body);
 
-    tableName = String.format("%s.%s AS %s ", project, tableInfo.getSuperTableInfo().getTableName(), tableInfo.getSuperTableInfo().getTableAlias());
+    tableName =
+        String.format(
+            "%s.%s AS %s ",
+            project,
+            tableInfo.getSuperTableInfo().getTableName(),
+            tableInfo.getSuperTableInfo().getTableAlias());
 
     List<String> whereClauses = new ArrayList<>();
-    if(schemaDefinition.getType().equals(LegacySQLTypeName.STRING.toString())){
-        whereClauses.add(String.format("IFNULL(%s, '') <> ''", queryField.getColumnText()));
-    }else{
-        whereClauses.add(String.format("%s IS NOT NULL", queryField.getColumnText()));
+    if (schemaDefinition.getType().equals(LegacySQLTypeName.STRING.toString())) {
+      whereClauses.add(String.format("IFNULL(%s, '') <> ''", queryField.getColumnText()));
+    } else {
+      whereClauses.add(String.format("%s IS NOT NULL", queryField.getColumnText()));
     }
 
     Stream<Unnest> unnestStream = Stream.empty();
-    unnestStream = Stream.concat(unnestStream,
+    unnestStream =
+        Stream.concat(
+            unnestStream,
             unnestBuilder.fromRelationshipPath(tablePath, SqlUtil.JoinType.INNER, true));
 
     if (system != null && system.length() > 0) {
-      TableInfo identifierTable = dataSetInfo.getTableInfo(tableInfo.getAdjustedTableName().toLowerCase(Locale.ROOT) + "_identifier");
+      TableInfo identifierTable =
+          dataSetInfo.getTableInfo(
+              tableInfo.getAdjustedTableName().toLowerCase(Locale.ROOT) + "_identifier");
 
       if (Objects.isNull(identifierTable)) {
         identifierTable = dataSetInfo.getTableInfo("subject_identifier");
       }
       TableRelationship[] pathToIdentifier = tableInfo.getPathToTable(identifierTable);
 
-      unnestStream = Stream.concat(unnestStream,
+      unnestStream =
+          Stream.concat(
+              unnestStream,
               unnestBuilder.fromRelationshipPath(pathToIdentifier, SqlUtil.JoinType.INNER, true));
 
-      QueryField systemField = queryFieldBuilder.fromPath(identifierTable.getAdjustedTableName() + "_system");
+      QueryField systemField =
+          queryFieldBuilder.fromPath(identifierTable.getAdjustedTableName() + "_system");
       whereClauses.add(systemField.getColumnText() + " = '" + system + "'");
     }
 
@@ -208,7 +221,8 @@ public class QueryApiController implements QueryApi {
 
     if (Boolean.TRUE.equals(count)) {
       querySql =
-          "SELECT"+" "
+          "SELECT"
+              + " "
               + queryField.getColumnText()
               + ","
               + "COUNT("
@@ -247,16 +261,22 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<QueryResponseData> columns(String version, String table) {
     try {
-      DataSetInfo dataSetInfo = new DataSetInfo.DataSetInfoBuilder()
-              .addTableSchema(version, TableSchema.getSchema(version)).build();
+      DataSetInfo dataSetInfo =
+          new DataSetInfo.DataSetInfoBuilder()
+              .addTableSchema(version, TableSchema.getSchema(version))
+              .build();
 
       List<Map.Entry<String, String>> columnsList = dataSetInfo.getFieldDescriptions();
-      List<JsonNode> results = columnsList.stream().map(entry -> {
-        ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-        objectNode.set(entry.getKey(), TextNode.valueOf(entry.getValue()));
+      List<JsonNode> results =
+          columnsList.stream()
+              .map(
+                  entry -> {
+                    ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+                    objectNode.set(entry.getKey(), TextNode.valueOf(entry.getValue()));
 
-        return objectNode;
-      }).collect(Collectors.toList());
+                    return objectNode;
+                  })
+              .collect(Collectors.toList());
 
       QueryResponseData queryResponseData = new QueryResponseData();
       queryResponseData.result(Collections.unmodifiableList(results));
@@ -569,10 +589,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> mutationQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       QueryJobConfiguration.Builder configBuilder =
-              new MutationSqlGenerator(table + "." + version, body, version).generate();
+          new MutationSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
@@ -584,10 +604,10 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> mutationCountsQuery(
-          String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
     try {
       QueryJobConfiguration.Builder configBuilder =
-              new MutationCountSqlGenerator(table + "." + version, body, version).generate();
+          new MutationCountSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);

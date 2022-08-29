@@ -6,7 +6,6 @@ import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
 import bio.terra.cda.app.models.DataSetInfo;
-import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.TableInfo;
@@ -61,7 +60,8 @@ public class SqlGenerator {
             ? qualifiedTable.replace("Subjects", TableSchema.FILES_COLUMN)
             : qualifiedTable.substring(dotPos + 1).replace("Subjects", TableSchema.FILES_COLUMN);
     this.tableSchema = TableSchema.getSchema(version);
-    this.dataSetInfo = new DataSetInfo.DataSetInfoBuilder().addTableSchema(version, this.tableSchema).build();
+    this.dataSetInfo =
+        new DataSetInfo.DataSetInfoBuilder().addTableSchema(version, this.tableSchema).build();
 
     initializeEntityFields();
     initializeBuilders();
@@ -83,24 +83,26 @@ public class SqlGenerator {
     QueryGenerator queryGenerator = this.getClass().getAnnotation(QueryGenerator.class);
     this.modularEntity = queryGenerator != null;
 
-    this.entityTable = queryGenerator != null
-      ? this.dataSetInfo.getTableInfo(queryGenerator.entity())
-      : this.dataSetInfo.getTableInfo(version);
+    this.entityTable =
+        queryGenerator != null
+            ? this.dataSetInfo.getTableInfo(queryGenerator.entity())
+            : this.dataSetInfo.getTableInfo(version);
 
     this.filteredFields =
         queryGenerator != null ? Arrays.asList(queryGenerator.excludedFields()) : List.of();
   }
 
   protected void initializeBuilders() {
-    this.queryFieldBuilder =
-        new QueryFieldBuilder(this.dataSetInfo, filesQuery);
+    this.queryFieldBuilder = new QueryFieldBuilder(this.dataSetInfo, filesQuery);
     this.selectBuilder = new SelectBuilder(this.dataSetInfo);
-    this.unnestBuilder = new UnnestBuilder(this.queryFieldBuilder, this.dataSetInfo, this.entityTable, project);
+    this.unnestBuilder =
+        new UnnestBuilder(this.queryFieldBuilder, this.dataSetInfo, this.entityTable, project);
     this.partitionBuilder = new PartitionBuilder(this.dataSetInfo);
     this.parameterBuilder = new ParameterBuilder();
   }
 
-  protected QueryContext buildQueryContext(TableInfo entityTable, boolean filesQuery, boolean subQuery) {
+  protected QueryContext buildQueryContext(
+      TableInfo entityTable, boolean filesQuery, boolean subQuery) {
     return new QueryContext(table, project)
         .setFilesQuery(filesQuery)
         .setTableInfo(entityTable)
@@ -147,27 +149,32 @@ public class SqlGenerator {
 
     TableInfo tableInfo = ctx.getTableInfo();
 
-    TableRelationship[] pathToFile = this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX).getPathToTable(tableInfo);
+    TableRelationship[] pathToFile =
+        this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX).getPathToTable(tableInfo);
     TableRelationship[] entityPath = tableInfo.getTablePath();
 
-    ctx.addUnnests(this.unnestBuilder.fromRelationshipPath(entityPath, SqlUtil.JoinType.INNER, false));
+    ctx.addUnnests(
+        this.unnestBuilder.fromRelationshipPath(entityPath, SqlUtil.JoinType.INNER, false));
 
     if (filesQuery) {
-      ctx.addUnnests(this.unnestBuilder.fromRelationshipPath(pathToFile, SqlUtil.JoinType.INNER, false));
+      ctx.addUnnests(
+          this.unnestBuilder.fromRelationshipPath(pathToFile, SqlUtil.JoinType.INNER, false));
     }
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
     String selectFields =
-        getSelect(ctx, tableInfo.getTableAlias(), !this.modularEntity).collect(Collectors.joining(", "));
+        getSelect(ctx, tableInfo.getTableAlias(), !this.modularEntity)
+            .collect(Collectors.joining(", "));
 
-    TableInfo startTable = Objects.isNull(entityPath) || entityPath.length == 0
+    TableInfo startTable =
+        Objects.isNull(entityPath) || entityPath.length == 0
             ? this.entityTable
             : entityPath[0].getFromTableInfo();
-    var fromClause = Stream.concat(
-            Stream.of(String.format("%s.%s AS %s",
-                    project,
-                    startTable.getTableName(),
-                    startTable.getTableAlias())),
+    var fromClause =
+        Stream.concat(
+            Stream.of(
+                String.format(
+                    "%s.%s AS %s", project, startTable.getTableName(), startTable.getTableAlias())),
             ctx.getUnnests().stream().map(Unnest::toString));
 
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
@@ -181,7 +188,8 @@ public class SqlGenerator {
 
   protected Stream<String> getPartitionByFields(QueryContext ctx) {
     return Stream.concat(
-            Stream.of(ctx.getFilesQuery()
+            Stream.of(
+                ctx.getFilesQuery()
                     ? this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX).getPartitionKeyAlias()
                     : ctx.getTableInfo().getPartitionKeyAlias()),
             ctx.getPartitions().stream().map(Partition::toString))
@@ -193,11 +201,11 @@ public class SqlGenerator {
       return ctx.getSelect().stream().map(Select::toString);
     } else {
       return getSelectsFromEntity(
-              ctx,
-              ctx.getFilesQuery()
-                      ? this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX).getTableAlias()
-                      : table,
-              skipExcludes);
+          ctx,
+          ctx.getFilesQuery()
+              ? this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX).getTableAlias()
+              : table,
+          skipExcludes);
     }
   }
 
@@ -206,40 +214,44 @@ public class SqlGenerator {
     Stream<String> idSelects = Stream.of();
 
     if (this.entityTable.getType().equals(TableInfo.TableInfoTypeEnum.NESTED)
-            || ctx.getFilesQuery()) {
+        || ctx.getFilesQuery()) {
       var path = this.entityTable.getTablePath();
 
       String entityPartitionKey = this.entityTable.getPartitionKey();
-      if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(entityPartitionKey))){
-        entityPartitionKey = DataSetInfo.getNewNameForDuplicate(entityPartitionKey, this.entityTable.getTableName());
+      if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(entityPartitionKey))) {
+        entityPartitionKey =
+            DataSetInfo.getNewNameForDuplicate(entityPartitionKey, this.entityTable.getTableName());
       }
 
-      idSelects = Stream.concat(
+      idSelects =
+          Stream.concat(
               Stream.of(
-                      String.format("%s AS %s",
-                              this.entityTable.getPartitionKeyAlias(),
-                              entityPartitionKey)),
-              Arrays.stream(path).map(tableRelationship -> {
-                  TableInfo fromTableInfo = tableRelationship.getFromTableInfo();
+                  String.format(
+                      "%s AS %s", this.entityTable.getPartitionKeyAlias(), entityPartitionKey)),
+              Arrays.stream(path)
+                  .map(
+                      tableRelationship -> {
+                        TableInfo fromTableInfo = tableRelationship.getFromTableInfo();
 
-                  String partitionKey = fromTableInfo.getPartitionKey();
-                  if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(partitionKey))){
-                    partitionKey = DataSetInfo.getNewNameForDuplicate(partitionKey, fromTableInfo.getTableName());
-                  }
+                        String partitionKey = fromTableInfo.getPartitionKey();
+                        if (Objects.isNull(
+                            this.dataSetInfo.getSchemaDefinitionByFieldName(partitionKey))) {
+                          partitionKey =
+                              DataSetInfo.getNewNameForDuplicate(
+                                  partitionKey, fromTableInfo.getTableName());
+                        }
 
-                  return String.format("%s AS %s",
-                          fromTableInfo.getPartitionKeyAlias(),
-                          partitionKey);
-              }));
+                        return String.format(
+                            "%s AS %s", fromTableInfo.getPartitionKeyAlias(), partitionKey);
+                      }));
 
       if (path.length > 0) {
         ctx.addPartitions(this.partitionBuilder.fromRelationshipPath(path));
       } else {
         ctx.addPartitions(
-                Stream.of(
-                        this.partitionBuilder.of(
-                                this.entityTable.getPartitionKey(),
-                                this.entityTable.getPartitionKeyAlias())));
+            Stream.of(
+                this.partitionBuilder.of(
+                    this.entityTable.getPartitionKey(), this.entityTable.getPartitionKeyAlias())));
       }
     }
     return combinedSelects(ctx, prefix, skipExcludes, idSelects);
@@ -248,9 +260,12 @@ public class SqlGenerator {
   protected Stream<String> combinedSelects(
       QueryContext ctx, String prefix, boolean skipExcludes, Stream<String> idSelects) {
     return Stream.concat(
-        Arrays.stream(ctx.getFilesQuery()
-                ? this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX).getSchemaDefinitions()
-                : this.entityTable.getSchemaDefinitions())
+            Arrays.stream(
+                    ctx.getFilesQuery()
+                        ? this.dataSetInfo
+                            .getTableInfo(TableSchema.FILE_PREFIX)
+                            .getSchemaDefinitions()
+                        : this.entityTable.getSchemaDefinitions())
                 .filter(
                     definition ->
                         !(ctx.getFilesQuery()
@@ -258,8 +273,12 @@ public class SqlGenerator {
                                     .contains(definition.getName()))
                             && (skipExcludes || !filteredFields.contains(definition.getName())))
                 .map(
-                    definition -> String.format("%1$s.%2$s AS %3$s", prefix, definition.getName(), definition.getAlias())),
-        idSelects).distinct();
+                    definition ->
+                        String.format(
+                            "%1$s.%2$s AS %3$s",
+                            prefix, definition.getName(), definition.getAlias())),
+            idSelects)
+        .distinct();
   }
 
   protected Stream<? extends Class<?>> getQueryGeneratorClasses() {

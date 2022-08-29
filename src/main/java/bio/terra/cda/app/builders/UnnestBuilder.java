@@ -9,7 +9,6 @@ import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -26,10 +25,10 @@ public class UnnestBuilder {
   private final QueryFieldBuilder queryFieldBuilder;
 
   public UnnestBuilder(
-          QueryFieldBuilder queryFieldBuilder,
-          DataSetInfo dataSetInfo,
-          TableInfo entityTable,
-          String project) {
+      QueryFieldBuilder queryFieldBuilder,
+      DataSetInfo dataSetInfo,
+      TableInfo entityTable,
+      String project) {
     this.queryFieldBuilder = queryFieldBuilder;
     this.dataSetInfo = dataSetInfo;
     this.entityTable = entityTable;
@@ -37,11 +36,7 @@ public class UnnestBuilder {
   }
 
   public Unnest of(
-      SqlUtil.JoinType joinType,
-      String path,
-      String alias,
-      boolean isJoin,
-      String joinPath) {
+      SqlUtil.JoinType joinType, String path, String alias, boolean isJoin, String joinPath) {
     return new Unnest(joinType, path, alias, isJoin, joinPath);
   }
 
@@ -59,32 +54,36 @@ public class UnnestBuilder {
     TableRelationship[] pathToTable = this.entityTable.getPathToTable(tableInfo);
 
     if (Objects.isNull(pathToTable)) {
-      throw new IllegalArgumentException(String.format("No path found to field %s", queryField.getPath()));
+      throw new IllegalArgumentException(
+          String.format("No path found to field %s", queryField.getPath()));
     }
 
     return fromRelationshipPath(
-            pathToTable,
-            queryField.isFileField() && queryField.isFilesQuery()
-                    ? SqlUtil.JoinType.INNER : SqlUtil.JoinType.LEFT,
-            includeRepeated);
+        pathToTable,
+        queryField.isFileField() && queryField.isFilesQuery()
+            ? SqlUtil.JoinType.INNER
+            : SqlUtil.JoinType.LEFT,
+        includeRepeated);
   }
 
-  public Stream<Unnest> fromRelationshipPath(TableRelationship[] relationships, SqlUtil.JoinType joinType, boolean includeRepeated) {
+  public Stream<Unnest> fromRelationshipPath(
+      TableRelationship[] relationships, SqlUtil.JoinType joinType, boolean includeRepeated) {
     Stream<Unnest> unnestStream = Stream.empty();
 
-    if (Objects.isNull(relationships) || relationships.length == 0){
+    if (Objects.isNull(relationships) || relationships.length == 0) {
       return unnestStream;
     }
 
-    Queue<TableRelationship> queue = Arrays.stream(relationships)
-            .collect(Collectors.toCollection(LinkedList::new));
+    Queue<TableRelationship> queue =
+        Arrays.stream(relationships).collect(Collectors.toCollection(LinkedList::new));
 
     TableInfo current = relationships[0].getFromTableInfo();
 
     while (queue.size() > 0) {
       TableRelationship tableRelationship = queue.remove();
 
-      unnestStream = Stream.concat(
+      unnestStream =
+          Stream.concat(
               unnestStream,
               fromRelationship(current, tableRelationship, joinType, includeRepeated));
 
@@ -95,8 +94,12 @@ public class UnnestBuilder {
   }
 
   public Stream<Unnest> fromRelationship(
-          TableInfo tableInfo, TableRelationship tableRelationship, SqlUtil.JoinType joinType, boolean includeRepeated) {
-    boolean isJoin = tableRelationship.getType().equals(TableRelationship.TableRelationshipTypeEnum.JOIN);
+      TableInfo tableInfo,
+      TableRelationship tableRelationship,
+      SqlUtil.JoinType joinType,
+      boolean includeRepeated) {
+    boolean isJoin =
+        tableRelationship.getType().equals(TableRelationship.TableRelationshipTypeEnum.JOIN);
 
     if (tableRelationship.isParent()) {
       return Stream.empty();
@@ -105,75 +108,83 @@ public class UnnestBuilder {
     TableInfo destinationTable = tableRelationship.getDestinationTableInfo();
 
     if (isJoin) {
-       List<ForeignKey> foreignKeyList = tableRelationship.getForeignKeys();
-//       TableRelationship otherWay = destinationTable.getRelationships()
-//               .stream().filter(rel -> rel.getTableInfo().getTableName().equals(tableInfo.getTableName()))
-//               .findFirst().orElseThrow();
-//       List<ForeignKey> targetForeignKeyList = otherWay.getForeignKeys();
+      List<ForeignKey> foreignKeyList = tableRelationship.getForeignKeys();
+      //       TableRelationship otherWay = destinationTable.getRelationships()
+      //               .stream().filter(rel ->
+      // rel.getTableInfo().getTableName().equals(tableInfo.getTableName()))
+      //               .findFirst().orElseThrow();
+      //       List<ForeignKey> targetForeignKeyList = otherWay.getForeignKeys();
 
-       List<String> joinConditions = new ArrayList<String>();
+      List<String> joinConditions = new ArrayList<String>();
 
-       ForeignKey.ForeignKeyTypeEnum foreignKeyTypeEnum = foreignKeyList.get(0).getType();
+      ForeignKey.ForeignKeyTypeEnum foreignKeyTypeEnum = foreignKeyList.get(0).getType();
 
-       Stream<Unnest> unnestStream = Stream.empty();
-       String fieldName = tableRelationship.getField();
+      Stream<Unnest> unnestStream = Stream.empty();
+      String fieldName = tableRelationship.getField();
 
-       TableSchema.SchemaDefinition schemaDefinition = this.dataSetInfo.getSchemaDefinitionByFieldName(fieldName);
+      TableSchema.SchemaDefinition schemaDefinition =
+          this.dataSetInfo.getSchemaDefinitionByFieldName(fieldName);
 
-       if (Objects.isNull(schemaDefinition)) {
-         fieldName = tableRelationship.isArray()
-            ? tableInfo.getAdjustedTableName()
-            : DataSetInfo.getNewNameForDuplicate(fieldName, tableInfo.getTableName());
-       }
+      if (Objects.isNull(schemaDefinition)) {
+        fieldName =
+            tableRelationship.isArray()
+                ? tableInfo.getAdjustedTableName()
+                : DataSetInfo.getNewNameForDuplicate(fieldName, tableInfo.getTableName());
+      }
 
       QueryField queryField = this.queryFieldBuilder.fromPath(fieldName);
 
-      unnestStream = Stream.concat(
-              unnestStream,
-              this.fromQueryField(queryField, true));
+      unnestStream = Stream.concat(unnestStream, this.fromQueryField(queryField, true));
 
-      String originTableJoin = queryField.getMode().equals(Field.Mode.REPEATED.toString())
+      String originTableJoin =
+          queryField.getMode().equals(Field.Mode.REPEATED.toString())
               ? queryField.getColumnText()
               : String.format("%s.%s", tableInfo.getTableAlias(), queryField.getName());
 
-       for (ForeignKey sourceKey : foreignKeyList) {
-         for (QueryField field : Arrays.stream(sourceKey.getFields())
-                 .map(queryFieldBuilder::fromPath).collect(Collectors.toList())) {
+      for (ForeignKey sourceKey : foreignKeyList) {
+        for (QueryField field :
+            Arrays.stream(sourceKey.getFields())
+                .map(queryFieldBuilder::fromPath)
+                .collect(Collectors.toList())) {
 
-           String fieldToJoin = field.getMode().equals(Field.Mode.REPEATED.toString())
-            ? field.getColumnText()
-            : String.format("%s.%s", tableRelationship.getDestinationTableInfo().getTableAlias(), field.getName());
+          String fieldToJoin =
+              field.getMode().equals(Field.Mode.REPEATED.toString())
+                  ? field.getColumnText()
+                  : String.format(
+                      "%s.%s",
+                      tableRelationship.getDestinationTableInfo().getTableAlias(), field.getName());
 
-           joinConditions.add(
-                   String.format(
-                           "%s = %s",
-                           originTableJoin,
-                           fieldToJoin));
-         }
-       }
+          joinConditions.add(String.format("%s = %s", originTableJoin, fieldToJoin));
+        }
+      }
 
-       return Stream.concat(
-               unnestStream,
-               Stream.of(new Unnest(
-                 joinType,
-                 String.format(SqlUtil.ALIAS_FIELD_FORMAT, project, destinationTable.getTableName()),
-                 destinationTable.getTableAlias(),
-                 true,
-                 String.join(
-                         foreignKeyTypeEnum.equals(ForeignKey.ForeignKeyTypeEnum.COMPOSITE_AND)
-                                 ? " AND " : " OR ",
-                         joinConditions))));
+      return Stream.concat(
+          unnestStream,
+          Stream.of(
+              new Unnest(
+                  joinType,
+                  String.format(
+                      SqlUtil.ALIAS_FIELD_FORMAT, project, destinationTable.getTableName()),
+                  destinationTable.getTableAlias(),
+                  true,
+                  String.join(
+                      foreignKeyTypeEnum.equals(ForeignKey.ForeignKeyTypeEnum.COMPOSITE_AND)
+                          ? " AND "
+                          : " OR ",
+                      joinConditions))));
     } else {
-      if (!includeRepeated && destinationTable.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)) {
+      if (!includeRepeated
+          && destinationTable.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)) {
         return Stream.empty();
       }
 
-      return Stream.of(new Unnest(
+      return Stream.of(
+          new Unnest(
               joinType,
               String.format(
-                      SqlUtil.ALIAS_FIELD_FORMAT,
-                      tableInfo.getTableAlias(),
-                      destinationTable.getTableName()),
+                  SqlUtil.ALIAS_FIELD_FORMAT,
+                  tableInfo.getTableAlias(),
+                  destinationTable.getTableName()),
               destinationTable.getTableAlias()));
     }
   }

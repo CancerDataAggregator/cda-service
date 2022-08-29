@@ -17,10 +17,7 @@ public class SelectBuilder {
     TableInfo tableInfo = dataSetInfo.getTableInfoFromField(queryField.getPath());
 
     String field =
-        String.format(
-            SqlUtil.ALIAS_FIELD_FORMAT,
-            tableInfo.getTableAlias(),
-            queryField.getName());
+        String.format(SqlUtil.ALIAS_FIELD_FORMAT, tableInfo.getTableAlias(), queryField.getName());
 
     return new Select(field, queryField.getAlias());
   }

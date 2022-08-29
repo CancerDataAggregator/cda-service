@@ -9,11 +9,9 @@ import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CountsSqlGenerator extends SqlGenerator {
   public CountsSqlGenerator(String qualifiedTable, Query rootQuery, String version)
@@ -23,7 +21,7 @@ public class CountsSqlGenerator extends SqlGenerator {
 
   @Override
   protected String sql(String tableOrSubClause, Query query, boolean subQuery)
-          throws UncheckedExecutionException, IllegalArgumentException {
+      throws UncheckedExecutionException, IllegalArgumentException {
     Map<String, TableInfo> tableInfoMap = new HashMap<>();
 
     getQueryGeneratorClasses()
@@ -44,7 +42,9 @@ public class CountsSqlGenerator extends SqlGenerator {
                     .nodeType(Query.NodeTypeEnum.SELECTVALUES)
                     .value(
                         tableInfoMap.keySet().stream()
-                            .map(key -> tableInfoMap.get(key).getPartitionKeyFullName(this.dataSetInfo))
+                            .map(
+                                key ->
+                                    tableInfoMap.get(key).getPartitionKeyFullName(this.dataSetInfo))
                             .collect(Collectors.joining(","))))
             .r(QueryUtil.deSelectifyQuery(query));
 
@@ -58,17 +58,23 @@ public class CountsSqlGenerator extends SqlGenerator {
               new SqlGenerator(
                       this.qualifiedTable, newQuery, this.version, false, this.parameterBuilder)
                   .sql(this.qualifiedTable, newQuery, false)),
-          tableInfoMap.keySet().stream().map(key -> {
+          tableInfoMap.keySet().stream()
+              .map(
+                  key -> {
                     TableInfo tableInfo = tableInfoMap.get(key);
-                      String entityPartitionKey = tableInfo.getPartitionKey();
-                      if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(entityPartitionKey))) {
-                          entityPartitionKey = DataSetInfo.getNewNameForDuplicate(entityPartitionKey, tableInfo.getTableName());
-                      }
+                    String entityPartitionKey = tableInfo.getPartitionKey();
+                    if (Objects.isNull(
+                        this.dataSetInfo.getSchemaDefinitionByFieldName(entityPartitionKey))) {
+                      entityPartitionKey =
+                          DataSetInfo.getNewNameForDuplicate(
+                              entityPartitionKey, tableInfo.getTableName());
+                    }
 
                     return String.format(
                         "COUNT(DISTINCT %s) AS %s",
                         entityPartitionKey, String.format("%s_count", key.toLowerCase()));
-                  }).collect(Collectors.joining(", ")),
+                  })
+              .collect(Collectors.joining(", ")),
           resultsAlias);
     } catch (IOException e) {
       throw new UncheckedExecutionException(e);
