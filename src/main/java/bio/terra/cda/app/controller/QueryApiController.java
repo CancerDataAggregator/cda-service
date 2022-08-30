@@ -28,6 +28,7 @@ import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.controller.QueryApi;
+import bio.terra.cda.generated.model.ColumnsResponseData;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
@@ -259,7 +260,7 @@ public class QueryApiController implements QueryApi {
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryResponseData> columns(String version, String table) {
+  public ResponseEntity<ColumnsResponseData> columns(String version, String table) {
     try {
       DataSetInfo dataSetInfo =
           new DataSetInfo.DataSetInfoBuilder()
@@ -278,9 +279,8 @@ public class QueryApiController implements QueryApi {
                   })
               .collect(Collectors.toList());
 
-      QueryResponseData queryResponseData = new QueryResponseData();
+      ColumnsResponseData queryResponseData = new ColumnsResponseData();
       queryResponseData.result(Collections.unmodifiableList(results));
-      queryResponseData.totalRowCount((long) columnsList.size());
 
       return new ResponseEntity<>(queryResponseData, HttpStatus.OK);
     } catch (IOException e) {

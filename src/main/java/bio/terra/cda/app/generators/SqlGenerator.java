@@ -150,7 +150,7 @@ public class SqlGenerator {
     TableInfo tableInfo = ctx.getTableInfo();
 
     TableRelationship[] pathToFile =
-        this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX).getPathToTable(tableInfo);
+        tableInfo.getPathToTable(this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX));
     TableRelationship[] entityPath = tableInfo.getTablePath();
 
     ctx.addUnnests(
@@ -304,11 +304,8 @@ public class SqlGenerator {
         .filter(
             cls -> {
               QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
-              var schema = TableSchema.getDefinitionByName(tableSchema, generator.entity());
-              TableSchema.SchemaDefinition[] fields =
-                  schema.wasFound()
-                      ? schema.getSchemaFields()
-                      : tableSchema.toArray(TableSchema.SchemaDefinition[]::new);
+              TableInfo tableInfo = this.dataSetInfo.getTableInfo(generator.entity());
+              TableSchema.SchemaDefinition[] fields = tableInfo.getSchemaDefinitions();
               return Arrays.stream(fields)
                   .map(TableSchema.SchemaDefinition::getName)
                   .anyMatch(s -> s.equals(TableSchema.FILES_COLUMN));
