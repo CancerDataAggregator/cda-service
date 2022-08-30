@@ -130,7 +130,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                 }
                 ctx.addUnnests(
                     this.unnestBuilder.fromRelationshipPath(
-                        fromField.getPathToTable(this.entityTable), SqlUtil.JoinType.LEFT, true));
+                        this.entityTable.getPathToTable(fromField), SqlUtil.JoinType.LEFT, true));
                 //                    ctx.addUnnests(
                 //                        this.unnestBuilder.fromParts(
                 //                            ctx.getFilesQuery() ? fileTable : table,
@@ -141,7 +141,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
                 ctx.addPartitions(
                     this.partitionBuilder.fromRelationshipPath(
-                        fromField.getPathToTable(this.entityTable)));
+                            this.entityTable.getPathToTable(fromField)));
 
                 TableInfo finalFromField = fromField;
                 if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {

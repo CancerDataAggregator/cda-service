@@ -805,7 +805,7 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryResponse"
+          $ref: "#/components/responses/ColumnsResponse"
 
   /api/v1/global-counts/{version}:
     post:
@@ -1022,6 +1022,14 @@ components:
           nullable: true
           description: a URL to use to fetch the next page of data in the query. can be null if the query is not complete
 
+    ColumnsResponseData:
+      type: object
+      properties:
+        result:
+          type: array
+          items:
+            type: object
+
     DatasetDescription:
       type: object
       properties:
@@ -1159,6 +1167,13 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/QueryResponseData"
+
+    ColumnsResponse:
+      description: columns response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ColumnsResponseData"
 
     JobStatusResponse:
       description: Get's Bigquery job id status
