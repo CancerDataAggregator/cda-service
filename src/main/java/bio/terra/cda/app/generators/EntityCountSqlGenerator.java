@@ -81,7 +81,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
         .distinct()
         .map(
             field -> {
-              String name = field.equals(finalPartitionKeyField) ? "total" : field.toLowerCase();
+              String name = field.equals(finalPartitionKeyField) ? "total" : field;
 
               String fieldToUse = field;
               TableInfo tableInfo = this.entityTable;
