@@ -43,7 +43,7 @@ public class QueryFieldBuilder {
 
     return new QueryField(
         schemaDefinition.getName(),
-        path,
+        modPath,
         parts,
         alias,
         columnText,
