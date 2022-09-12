@@ -141,7 +141,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
                 ctx.addPartitions(
                     this.partitionBuilder.fromRelationshipPath(
-                            this.entityTable.getPathToTable(fromField)));
+                        this.entityTable.getPathToTable(fromField)));
 
                 TableInfo finalFromField = fromField;
                 if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
