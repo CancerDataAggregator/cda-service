@@ -200,7 +200,11 @@ public class QueryApiController implements QueryApi {
     if (system != null && system.length() > 0) {
       TableInfo identifierTable =
           dataSetInfo.getTableInfo(
-              tableInfo.getAdjustedTableName().toLowerCase(Locale.ROOT) + "_identifier");
+              DataSetInfo.KNOWN_ALIASES
+                      .getOrDefault(
+                          tableInfo.getAdjustedTableName(), tableInfo.getAdjustedTableName())
+                      .toLowerCase(Locale.ROOT)
+                  + "_identifier");
 
       if (Objects.isNull(identifierTable)) {
         identifierTable = dataSetInfo.getTableInfo("subject_identifier");
