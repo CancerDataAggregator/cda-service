@@ -5,9 +5,9 @@ import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
-import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
+import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.Unnest;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +21,6 @@ public class QueryContext {
   private List<Unnest> unnests;
   private List<Select> select;
   private List<Partition> partitions;
-  private EntitySchema entitySchema;
   private Boolean includeSelect;
   private Boolean filesQuery;
   private QueryFieldBuilder queryFieldBuilder;
@@ -29,6 +28,7 @@ public class QueryContext {
   private UnnestBuilder unnestBuilder;
   private PartitionBuilder partitionBuilder;
   private ParameterBuilder parameterBuilder;
+  private TableInfo tableInfo;
 
   public QueryContext(String table, String project) {
     this.table = table;
@@ -52,13 +52,13 @@ public class QueryContext {
     return this.project;
   }
 
-  public QueryContext setEntitySchema(EntitySchema schema) {
-    this.entitySchema = schema;
+  public QueryContext setTableInfo(TableInfo tableInfo) {
+    this.tableInfo = tableInfo;
     return this;
   }
 
-  public EntitySchema getEntitySchema() {
-    return this.entitySchema;
+  public TableInfo getTableInfo() {
+    return this.tableInfo;
   }
 
   public QueryContext setIncludeSelect(Boolean value) {
@@ -184,9 +184,5 @@ public class QueryContext {
 
   public List<Partition> getPartitions() {
     return partitions;
-  }
-
-  public String[] getEntityParts() {
-    return this.entitySchema.getParts();
   }
 }

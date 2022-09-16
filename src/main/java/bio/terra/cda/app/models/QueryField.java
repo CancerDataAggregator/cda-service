@@ -9,9 +9,10 @@ public class QueryField {
   private final String[] parts;
   private final String alias;
   private final String columnText;
-  private final boolean fileField;
   private final TableSchema.SchemaDefinition schemaDefinition;
   private final boolean filesQuery;
+  private final String tableName;
+  private final boolean fileField;
   // endregion
 
   // region constructors
@@ -21,17 +22,19 @@ public class QueryField {
       String[] parts,
       String alias,
       String columnText,
-      boolean fileField,
+      String tableName,
       TableSchema.SchemaDefinition schemaDefinition,
-      boolean filesQuery) {
+      boolean filesQuery,
+      boolean fileField) {
     this.name = name;
     this.path = path;
     this.parts = parts;
     this.alias = alias;
     this.columnText = columnText;
-    this.fileField = fileField;
     this.schemaDefinition = schemaDefinition;
     this.filesQuery = filesQuery;
+    this.tableName = tableName;
+    this.fileField = fileField;
   }
   // endregion
 
@@ -46,10 +49,6 @@ public class QueryField {
 
   public String[] getParts() {
     return this.parts;
-  }
-
-  public boolean isFileField() {
-    return this.fileField;
   }
 
   public String getAlias() {
@@ -74,6 +73,14 @@ public class QueryField {
 
   public boolean isFilesQuery() {
     return filesQuery;
+  }
+
+  public String getTableName() {
+    return tableName;
+  }
+
+  public boolean isFileField() {
+    return fileField;
   }
   // endregion
 }

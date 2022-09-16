@@ -8,7 +8,7 @@ import java.io.IOException;
     entity = "Specimen",
     fieldsToCount = {
       TableSchema.FILES_COLUMN,
-      TableSchema.SYSTEM_IDENTIFIER,
+      "specimen_identifier_system",
       "primary_disease_type",
       "source_material_type",
       "specimen_type"

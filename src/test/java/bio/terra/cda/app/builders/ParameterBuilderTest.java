@@ -11,11 +11,18 @@ public class ParameterBuilderTest {
   void testAddParameterDuplicates() throws IOException {
     Schemas schemas =
         new Schemas.SchemaBuilder("all_Subjects_v3_0_final", "all_Files_v3_0_final").build();
-    ParameterBuilder builder =
-        new ParameterBuilder(schemas.getSchemaMap(), schemas.getFileSchemaMap());
+    ParameterBuilder builder = new ParameterBuilder();
     QueryField queryField =
         new QueryField(
-            "id", "id", new String[] {"id"}, "id", "id", false, schemas.getSchema().get(0), false);
+            "id",
+            "id",
+            new String[] {"id"},
+            "id",
+            "id",
+            "table",
+            schemas.getSchema().get(0),
+            false,
+            false);
 
     builder.addParameterValue(queryField, "test");
     builder.addParameterValue(queryField, "test2");

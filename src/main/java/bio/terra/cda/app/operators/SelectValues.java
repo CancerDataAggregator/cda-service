@@ -39,7 +39,6 @@ public class SelectValues extends BasicOperator {
     ctx.addPartitions(
         Arrays.stream(getValue().split(","))
             .map(String::trim)
-            .filter(select -> select.contains("."))
             .map(ctx.getQueryFieldBuilder()::fromPath)
             .map(ctx.getPartitionBuilder()::fromQueryField));
   }

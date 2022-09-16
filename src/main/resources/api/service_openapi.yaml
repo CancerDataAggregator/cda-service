@@ -576,6 +576,72 @@ paths:
         200:
           $ref: "#/components/responses/QueryCreated"
 
+  /api/v1/mutations/{version}:
+    post:
+      summary: Execute Mutation query
+      description: |
+        Execute a query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: mutationQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The diagnosis query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
+  /api/v1/mutations/counts/{version}:
+    post:
+      summary: Execute Mutation Counts query
+      description: |
+        Execute a Mutation Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: mutationCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DatasetVersion"
+        - in: query
+          description: If true, don't run the query, only generate and return it.
+          name: dryRun
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Table"
+
+
+      requestBody:
+        description: The mutation query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryCreated"
+
   /api/v1/treatments/{version}:
     post:
       summary: Execute Treatments query
@@ -727,8 +793,8 @@ paths:
 
   /api/v1/columns/{version}:
     get:
-      summary: Returns all column names
-      description: Return columnNames for schema
+      summary: Returns all column names and definitions for schema
+      description: Return columnNames for schema along with their descriptions
       operationId: columns
       tags:
         - query
@@ -739,7 +805,7 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/ColumnsResponse"
 
   /api/v1/global-counts/{version}:
     post:
@@ -956,6 +1022,14 @@ components:
           nullable: true
           description: a URL to use to fetch the next page of data in the query. can be null if the query is not complete
 
+    ColumnsResponseData:
+      type: object
+      properties:
+        result:
+          type: array
+          items:
+            type: object
+
     DatasetDescription:
       type: object
       properties:
@@ -1093,6 +1167,13 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/QueryResponseData"
+
+    ColumnsResponse:
+      description: columns response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ColumnsResponseData"
 
     JobStatusResponse:
       description: Get's Bigquery job id status

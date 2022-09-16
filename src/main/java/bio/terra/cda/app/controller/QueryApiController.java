@@ -1,11 +1,15 @@
 package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.aop.TrackExecutionTime;
+import bio.terra.cda.app.builders.QueryFieldBuilder;
+import bio.terra.cda.app.builders.UnnestBuilder;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
 import bio.terra.cda.app.generators.DiagnosisCountSqlGenerator;
 import bio.terra.cda.app.generators.DiagnosisSqlGenerator;
 import bio.terra.cda.app.generators.FileSqlGenerator;
+import bio.terra.cda.app.generators.MutationCountSqlGenerator;
+import bio.terra.cda.app.generators.MutationSqlGenerator;
 import bio.terra.cda.app.generators.ResearchSubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.ResearchSubjectSqlGenerator;
 import bio.terra.cda.app.generators.SpecimenCountSqlGenerator;
@@ -14,25 +18,36 @@ import bio.terra.cda.app.generators.SubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.SubjectSqlGenerator;
 import bio.terra.cda.app.generators.TreatmentCountSqlGenerator;
 import bio.terra.cda.app.generators.TreatmentSqlGenerator;
+import bio.terra.cda.app.models.DataSetInfo;
+import bio.terra.cda.app.models.QueryField;
+import bio.terra.cda.app.models.TableInfo;
+import bio.terra.cda.app.models.TableRelationship;
+import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.service.exception.BadQueryException;
-import bio.terra.cda.app.util.NestedColumn;
+import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.controller.QueryApi;
+import bio.terra.cda.generated.model.ColumnsResponseData;
 import bio.terra.cda.generated.model.JobStatusData;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,62 +153,85 @@ public class QueryApiController implements QueryApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<QueryCreatedData> uniqueValues(
-          String version, String body, String system, String table, Boolean count) {
+      String version, String body, String system, String table, Boolean count) {
     String tableName;
-    Map<String,TableSchema.SchemaDefinition> tableSchema;
-
-    String myVersion = version;
-
-    var tmpBody = body;
-    if (tmpBody
-            .toLowerCase()
-            .startsWith(String.format("%s.", TableSchema.FILE_PREFIX.toLowerCase()))) {
-      tmpBody = tmpBody.replace("File.", "");
-      myVersion = myVersion.replace("Subjects", TableSchema.FILES_COLUMN);
-    }
-
-    if (table == null) {
-      tableName = applicationConfiguration.getBqTable() + "." + myVersion;
-    } else {
-      tableName = table + "." + myVersion;
-    }
+    DataSetInfo dataSetInfo;
 
     try {
-      tableSchema = TableSchema.buildSchemaMap(TableSchema.getSchema(myVersion));
-    }catch(IOException e){
+      dataSetInfo =
+          new DataSetInfo.DataSetInfoBuilder()
+              .addTableSchema(version, TableSchema.getSchema(version))
+              .build();
+    } catch (IOException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
 
-    NestedColumn nt = NestedColumn.generate(tmpBody, tableSchema);
-    Set<String> unnestClauses = nt.getUnnestClauses();
-    List<String> whereClauses = new ArrayList<>();
+    TableSchema.SchemaDefinition schemaDefinition =
+        dataSetInfo.getSchemaDefinitionByFieldName(body);
+    TableInfo tableInfo = dataSetInfo.getTableInfoFromField(body);
+    TableRelationship[] tablePath = tableInfo.getTablePath();
+    QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
 
-    if (tableSchema.get(tmpBody).getType().equals(LegacySQLTypeName.STRING.toString())) {
-      whereClauses.add(String.format("IFNULL(%s, '') <> ''", nt.getColumn()));
+    String project = table == null ? applicationConfiguration.getBqTable() : table;
+    UnnestBuilder unnestBuilder =
+        new UnnestBuilder(queryFieldBuilder, dataSetInfo, tableInfo, project);
+    QueryField queryField = queryFieldBuilder.fromPath(body);
+
+    tableName =
+        String.format(
+            "%s.%s AS %s ",
+            project,
+            tableInfo.getSuperTableInfo().getTableName(),
+            tableInfo.getSuperTableInfo().getTableAlias());
+
+    List<String> whereClauses = new ArrayList<>();
+    if (schemaDefinition.getType().equals(LegacySQLTypeName.STRING.toString())) {
+      whereClauses.add(String.format("IFNULL(%s, '') <> ''", queryField.getColumnText()));
     } else {
-      whereClauses.add(String.format("%s IS NOT NULL", nt.getColumn()));
+      whereClauses.add(String.format("%s IS NOT NULL", queryField.getColumnText()));
     }
+
+    Stream<Unnest> unnestStream = Stream.empty();
+    unnestStream =
+        Stream.concat(
+            unnestStream,
+            unnestBuilder.fromRelationshipPath(tablePath, SqlUtil.JoinType.INNER, true));
 
     if (system != null && system.length() > 0) {
-      NestedColumn whereColumns = NestedColumn.generate("ResearchSubject.identifier.system", tableSchema);
-      whereClauses.add(whereColumns.getColumn() + " = '" + system + "'");
-      // add any additional 'where' unnest partials that aren't already included in
-      // columns-unnest
-      // clauses
-      unnestClauses.addAll(whereColumns.getUnnestClauses());
+      TableInfo identifierTable =
+          dataSetInfo.getTableInfo(
+              DataSetInfo.KNOWN_ALIASES
+                      .getOrDefault(
+                          tableInfo.getAdjustedTableName(), tableInfo.getAdjustedTableName())
+                      .toLowerCase(Locale.ROOT)
+                  + "_identifier");
+
+      if (Objects.isNull(identifierTable)) {
+        identifierTable = dataSetInfo.getTableInfo("subject_identifier");
+      }
+      TableRelationship[] pathToIdentifier = tableInfo.getPathToTable(identifierTable);
+
+      unnestStream =
+          Stream.concat(
+              unnestStream,
+              unnestBuilder.fromRelationshipPath(pathToIdentifier, SqlUtil.JoinType.INNER, true));
+
+      QueryField systemField =
+          queryFieldBuilder.fromPath(identifierTable.getAdjustedTableName() + "_system");
+      whereClauses.add(systemField.getColumnText() + " = '" + system + "'");
     }
 
-    StringBuilder unnestConcat = new StringBuilder();
-    unnestClauses.forEach(unnestConcat::append);
+    String unnestConcat = unnestStream.map(Unnest::toString).collect(Collectors.joining(" "));
     var querySql = "";
 
     if (Boolean.TRUE.equals(count)) {
       querySql =
-          "SELECT "
-              + nt.getColumn()
+          "SELECT"
+              + " "
+              + queryField.getColumnText()
               + ","
               + "COUNT("
-              + nt.getColumn()
+              + queryField.getColumnText()
               + ") AS Count "
               + "FROM "
               + tableName
@@ -201,22 +239,22 @@ public class QueryApiController implements QueryApi {
               + " WHERE "
               + String.join(" AND ", whereClauses)
               + " GROUP BY "
-              + nt.getColumn()
-              + " ORDER BY "
-              + nt.getColumn();
+              + queryField.getColumnText()
+              + " "
+              + "ORDER BY "
+              + queryField.getColumnText();
     } else {
       querySql =
           "SELECT DISTINCT "
-              + nt.getColumn()
+              + queryField.getColumnText()
               + " FROM "
               + tableName
               + unnestConcat
               + " WHERE "
               + String.join(" AND ", whereClauses)
               + " ORDER BY "
-              + nt.getColumn();
+              + queryField.getColumnText();
     }
-
     logger.debug("uniqueValues: {}", querySql);
 
     QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
@@ -226,38 +264,32 @@ public class QueryApiController implements QueryApi {
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> columns(String version, String table) {
-    String tableName;
-    if (table == null) {
-      tableName = applicationConfiguration.getBqTable();
-    } else {
-      tableName = table;
+  public ResponseEntity<ColumnsResponseData> columns(String version, String table) {
+    try {
+      DataSetInfo dataSetInfo =
+          new DataSetInfo.DataSetInfoBuilder()
+              .addTableSchema(version, TableSchema.getSchema(version))
+              .build();
+
+      List<Map.Entry<String, String>> columnsList = dataSetInfo.getFieldDescriptions();
+      List<JsonNode> results =
+          columnsList.stream()
+              .map(
+                  entry -> {
+                    ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+                    objectNode.set(entry.getKey(), TextNode.valueOf(entry.getValue()));
+
+                    return objectNode;
+                  })
+              .collect(Collectors.toList());
+
+      ColumnsResponseData queryResponseData = new ColumnsResponseData();
+      queryResponseData.result(Collections.unmodifiableList(results));
+
+      return new ResponseEntity<>(queryResponseData, HttpStatus.OK);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Version specified does not exist");
     }
-
-    var fileTable = version.replace("Subjects", TableSchema.FILES_COLUMN);
-
-    String querySql =
-        String.format(
-            "\nWITH Subjects as "
-                + "(SELECT\n  field_path\nFROM\n  "
-                + "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n  "
-                + "table_name = '%s'\n  AND \n  "
-                + "NOT CONTAINS_SUBSTR(field_path, \"Files\")\n AND NOT STARTS_WITH(data_type, 'ARRAY<STRUCT')\n),Files AS "
-                + "(SELECT\n  \"File.\"|| field_path AS  field_path\nFROM\n  "
-                + "%s.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS\nWHERE\n "
-                + " table_name = '%s'\n  AND \n  "
-                + "NOT starts_with(field_path, \"Subject\")\n  "
-                + "AND \n  NOT starts_with(field_path, "
-                + "\"ResearchSubject\")\n  "
-                + "AND \n  NOT starts_with(field_path, \"Specimen\")\nAND NOT STARTS_WITH(data_type, 'ARRAY<STRUCT')\n)\n\n\n"
-                + "SELECT * FROM Subjects UNION ALL (SELECT * FROM Files)\n\n",
-            tableName, version, tableName, fileTable);
-
-    logger.debug("columns: {}", querySql);
-
-    QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
-
-    return sendQuery(queryJobBuilder, false);
   }
 
   @Override
@@ -548,6 +580,38 @@ public class QueryApiController implements QueryApi {
     try {
       QueryJobConfiguration.Builder configBuilder =
           new TreatmentCountSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(configBuilder, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  // endregion
+
+  // region Mutation Queries
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> mutationQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      QueryJobConfiguration.Builder configBuilder =
+          new MutationSqlGenerator(table + "." + version, body, version).generate();
+      return sendQuery(configBuilder, dryRun);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(INVALID_DATABASE);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryCreatedData> mutationCountsQuery(
+      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
+    try {
+      QueryJobConfiguration.Builder configBuilder =
+          new MutationCountSqlGenerator(table + "." + version, body, version).generate();
       return sendQuery(configBuilder, dryRun);
     } catch (IOException e) {
       throw new IllegalArgumentException(INVALID_DATABASE);
