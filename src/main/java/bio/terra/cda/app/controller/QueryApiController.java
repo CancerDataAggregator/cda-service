@@ -165,17 +165,17 @@ public class QueryApiController implements QueryApi {
     } catch (IOException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
+    QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
+    QueryField queryField = queryFieldBuilder.fromPath(body);
 
     TableSchema.SchemaDefinition schemaDefinition =
         dataSetInfo.getSchemaDefinitionByFieldName(body);
     TableInfo tableInfo = dataSetInfo.getTableInfoFromField(body);
     TableRelationship[] tablePath = tableInfo.getTablePath();
-    QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
 
     String project = table == null ? applicationConfiguration.getBqTable() : table;
     UnnestBuilder unnestBuilder =
         new UnnestBuilder(queryFieldBuilder, dataSetInfo, tableInfo, project);
-    QueryField queryField = queryFieldBuilder.fromPath(body);
 
     tableName =
         String.format(
