@@ -59,7 +59,7 @@ public class FileSqlGenerator extends SqlGenerator {
                   String.format(" %s", resultsAlias),
                   String.format(
                       "%s%s",
-                      SqlTemplate.resultsWrapper(resultsQuery),
+                      SqlTemplate.resultsWrapper(resultsQuery, ""),
                       previousAlias.get().equals("")
                           ? ""
                           : String.format(

@@ -1,10 +1,12 @@
 package bio.terra.cda.app.util;
 
+import bio.terra.cda.app.builders.OrderByBuilder;
 import bio.terra.cda.app.builders.ParameterBuilder;
 import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
+import bio.terra.cda.app.models.OrderBy;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.TableInfo;
@@ -21,6 +23,7 @@ public class QueryContext {
   private List<Unnest> unnests;
   private List<Select> select;
   private List<Partition> partitions;
+  private List<OrderBy> orderBys;
   private Boolean includeSelect;
   private Boolean filesQuery;
   private QueryFieldBuilder queryFieldBuilder;
@@ -28,6 +31,7 @@ public class QueryContext {
   private UnnestBuilder unnestBuilder;
   private PartitionBuilder partitionBuilder;
   private ParameterBuilder parameterBuilder;
+  private OrderByBuilder orderByBuilder;
   private TableInfo tableInfo;
 
   public QueryContext(String table, String project) {
@@ -37,6 +41,7 @@ public class QueryContext {
     this.unnests = new ArrayList<>();
     this.select = new ArrayList<>();
     this.partitions = new ArrayList<>();
+    this.orderBys = new ArrayList<>();
   }
 
   public QueryContext setFilesQuery(boolean value) {
@@ -115,6 +120,15 @@ public class QueryContext {
     return this;
   }
 
+  public OrderByBuilder getOrderByBuilder() {
+    return this.orderByBuilder;
+  }
+
+  public QueryContext setOrderByBuilder(OrderByBuilder builder) {
+    this.orderByBuilder = builder;
+    return this;
+  }
+
   public QueryContext addUnnests(Stream<Unnest> newUnnests) {
     var aliasIndexes = new HashMap<String, Integer>();
 
@@ -170,6 +184,11 @@ public class QueryContext {
     return this;
   }
 
+  public QueryContext addOrderBys(Stream<OrderBy> orderByStream) {
+    this.orderBys.addAll(orderByStream.collect(Collectors.toList()));
+    return this;
+  }
+
   public String getTable() {
     return this.table;
   }
@@ -184,5 +203,9 @@ public class QueryContext {
 
   public List<Partition> getPartitions() {
     return partitions;
+  }
+
+  public List<OrderBy> getOrderBys() {
+    return orderBys;
   }
 }

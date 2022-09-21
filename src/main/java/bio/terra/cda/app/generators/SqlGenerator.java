@@ -1,11 +1,13 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.builders.OrderByBuilder;
 import bio.terra.cda.app.builders.ParameterBuilder;
 import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
 import bio.terra.cda.app.models.DataSetInfo;
+import bio.terra.cda.app.models.OrderBy;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.TableInfo;
@@ -17,6 +19,7 @@ import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
+import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,6 +47,7 @@ public class SqlGenerator {
   QueryFieldBuilder queryFieldBuilder;
   PartitionBuilder partitionBuilder;
   ParameterBuilder parameterBuilder;
+  OrderByBuilder orderByBuilder;
   TableInfo entityTable;
 
   public SqlGenerator(String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
@@ -99,6 +103,7 @@ public class SqlGenerator {
         new UnnestBuilder(this.queryFieldBuilder, this.dataSetInfo, this.entityTable, project);
     this.partitionBuilder = new PartitionBuilder(this.dataSetInfo);
     this.parameterBuilder = new ParameterBuilder();
+    this.orderByBuilder = new OrderByBuilder();
   }
 
   protected QueryContext buildQueryContext(
@@ -111,7 +116,8 @@ public class SqlGenerator {
         .setSelectBuilder(selectBuilder)
         .setUnnestBuilder(unnestBuilder)
         .setPartitionBuilder(partitionBuilder)
-        .setParameterBuilder(parameterBuilder);
+        .setParameterBuilder(parameterBuilder)
+        .setOrderByBuilder(orderByBuilder);
   }
 
   public QueryJobConfiguration.Builder generate() throws IllegalArgumentException {
@@ -125,12 +131,15 @@ public class SqlGenerator {
 
   protected String sql(String tableOrSubClause, Query query, boolean subQuery)
       throws IllegalArgumentException {
+    QueryContext ctx = buildQueryContext(this.entityTable, filesQuery, subQuery);
+
     return SqlTemplate.resultsWrapper(
         resultsQuery(
             query,
             tableOrSubClause,
             subQuery,
-            buildQueryContext(this.entityTable, filesQuery, subQuery)));
+            ctx),
+            ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
   }
 
   protected String resultsQuery(
@@ -273,10 +282,18 @@ public class SqlGenerator {
                                     .contains(definition.getName()))
                             && (skipExcludes || !filteredFields.contains(definition.getName())))
                 .map(
-                    definition ->
-                        String.format(
-                            "%1$s.%2$s AS %3$s",
-                            prefix, definition.getName(), definition.getAlias())),
+                    definition -> {
+                      String fieldSelect = String.format("%s.%s", prefix, definition.getName());
+
+                      if (definition.getMode().equals(Field.Mode.REPEATED.toString())
+                        && ctx.getOrderBys().stream().anyMatch(ob -> ob.getPath().equals(definition.getName()))) {
+                        fieldSelect = this.dataSetInfo.getTableInfo(definition.getName()).getTableAlias();
+                      }
+
+                      return String.format(
+                              "%1$s AS %2$s",
+                              fieldSelect, definition.getAlias());
+                    }),
             idSelects)
         .distinct();
   }

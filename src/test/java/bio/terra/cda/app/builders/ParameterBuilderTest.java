@@ -20,6 +20,7 @@ public class ParameterBuilderTest {
             "id",
             "id",
             "table",
+            "",
             schemas.getSchema().get(0),
             false,
             false);

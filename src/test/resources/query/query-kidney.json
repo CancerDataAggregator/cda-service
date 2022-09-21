@@ -1,39 +1,46 @@
 {
-  "node_type": "AND",
+  "node_type": "ORDERBY",
   "l": {
-    "node_type": "OR",
-    "l": {
-      "node_type": "=",
-      "l": {
-        "node_type": "column",
-        "value": "stage"
-      },
-      "r": {
-        "node_type": "quoted",
-        "value": "Stage I"
-      }
-    },
-    "r": {
-      "node_type": "=",
-      "l": {
-        "node_type": "column",
-        "value": "stage"
-      },
-      "r": {
-        "node_type": "quoted",
-        "value": "Stage II"
-      }
-    }
+    "node_type": "ORDERBYVALUES",
+    "value": "sex asc"
   },
   "r": {
-    "node_type": "=",
+    "node_type": "AND",
     "l": {
-      "node_type": "column",
-      "value": "primary_diagnosis_site"
+      "node_type": "OR",
+      "l": {
+        "node_type": "=",
+        "l": {
+          "node_type": "column",
+          "value": "stage"
+        },
+        "r": {
+          "node_type": "quoted",
+          "value": "Stage I"
+        }
+      },
+      "r": {
+        "node_type": "=",
+        "l": {
+          "node_type": "column",
+          "value": "stage"
+        },
+        "r": {
+          "node_type": "quoted",
+          "value": "Stage II"
+        }
+      }
     },
     "r": {
-      "node_type": "quoted",
-      "value": "Kidney"
+      "node_type": "=",
+      "l": {
+        "node_type": "column",
+        "value": "primary_diagnosis_site"
+      },
+      "r": {
+        "node_type": "quoted",
+        "value": "Kidney"
+      }
     }
   }
 }
