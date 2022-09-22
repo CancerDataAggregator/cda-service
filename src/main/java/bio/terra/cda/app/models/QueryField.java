@@ -13,6 +13,7 @@ public class QueryField {
   private final boolean filesQuery;
   private final String tableName;
   private final boolean fileField;
+  private final String modifier;
   // endregion
 
   // region constructors
@@ -23,6 +24,7 @@ public class QueryField {
       String alias,
       String columnText,
       String tableName,
+      String modifier,
       TableSchema.SchemaDefinition schemaDefinition,
       boolean filesQuery,
       boolean fileField) {
@@ -35,6 +37,7 @@ public class QueryField {
     this.filesQuery = filesQuery;
     this.tableName = tableName;
     this.fileField = fileField;
+    this.modifier = modifier;
   }
   // endregion
 
@@ -81,6 +84,10 @@ public class QueryField {
 
   public boolean isFileField() {
     return fileField;
+  }
+
+  public String getModifier() {
+    return modifier;
   }
   // endregion
 }

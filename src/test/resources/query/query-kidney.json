@@ -1,39 +1,39 @@
 {
-  "node_type": "AND",
-  "l": {
-    "node_type": "OR",
+    "node_type": "AND",
     "l": {
-      "node_type": "=",
+      "node_type": "OR",
       "l": {
-        "node_type": "column",
-        "value": "stage"
+        "node_type": "=",
+        "l": {
+          "node_type": "column",
+          "value": "stage"
+        },
+        "r": {
+          "node_type": "quoted",
+          "value": "Stage I"
+        }
       },
       "r": {
-        "node_type": "quoted",
-        "value": "Stage I"
+        "node_type": "=",
+        "l": {
+          "node_type": "column",
+          "value": "stage"
+        },
+        "r": {
+          "node_type": "quoted",
+          "value": "Stage II"
+        }
       }
     },
     "r": {
       "node_type": "=",
       "l": {
         "node_type": "column",
-        "value": "stage"
+        "value": "primary_diagnosis_site"
       },
       "r": {
         "node_type": "quoted",
-        "value": "Stage II"
+        "value": "Kidney"
       }
-    }
-  },
-  "r": {
-    "node_type": "=",
-    "l": {
-      "node_type": "column",
-      "value": "primary_diagnosis_site"
-    },
-    "r": {
-      "node_type": "quoted",
-      "value": "Kidney"
     }
   }
-}

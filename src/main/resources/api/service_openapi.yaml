@@ -1129,7 +1129,9 @@ components:
               IS,
               "IS NOT",
               "NOT IN",
-              "NOT LIKE"
+              "NOT LIKE",
+              ORDERBY,
+              ORDERBYVALUES
             ]
           description: >
             Query contents and behavior depends on `node_type`:

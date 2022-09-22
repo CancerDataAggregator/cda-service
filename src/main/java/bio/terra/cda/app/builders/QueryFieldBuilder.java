@@ -32,9 +32,15 @@ public class QueryFieldBuilder {
     }
 
     String alias = path.replace(".", "_");
+    String modifier = "ASC";
     String columnText = getColumnText(schemaDefinition, tableInfo.getTableAlias());
 
     var nonEmpties = Arrays.stream(modSplit).filter(e -> !e.isEmpty()).collect(Collectors.toList());
+    if (nonEmpties.size() >= 2) {
+      modifier = nonEmpties.get(1);
+      alias = nonEmpties.get(0);
+    }
+
     if (nonEmpties.size() >= 3) {
       alias = nonEmpties.get(2);
     }
@@ -48,6 +54,7 @@ public class QueryFieldBuilder {
         alias,
         columnText,
         tableInfo.getAdjustedTableName(),
+        modifier,
         schemaDefinition,
         filesQuery,
         Objects.nonNull(tableAlias) && tableAlias.equals(TableSchema.FILE_PREFIX));

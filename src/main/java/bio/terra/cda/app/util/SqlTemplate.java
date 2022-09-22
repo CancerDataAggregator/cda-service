@@ -1,5 +1,7 @@
 package bio.terra.cda.app.util;
 
+import java.util.Objects;
+
 public class SqlTemplate {
   private SqlTemplate() {}
 
@@ -17,9 +19,17 @@ public class SqlTemplate {
   }
 
   public static String resultsQuery(
-      String partitionByFields, String selectFields, String from, String where) {
+      String partitionByFields,
+      String selectFields,
+      String from,
+      String where,
+      String orderBys) {
     return String.format(
-        "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s",
-        partitionByFields, selectFields, from, where);
+        "SELECT ROW_NUMBER() OVER (PARTITION BY %1$s) as rn, %2$s FROM %3$s WHERE %4$s%5$s",
+        partitionByFields,
+        selectFields,
+        from,
+        where,
+        !Objects.equals(orderBys, "") ? String.format(" ORDER BY %s", orderBys) : "");
   }
 }
