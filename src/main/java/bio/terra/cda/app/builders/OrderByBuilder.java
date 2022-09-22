@@ -9,6 +9,6 @@ public class OrderByBuilder {
   }
 
   public OrderBy fromQueryField(QueryField queryField) {
-    return new OrderBy(queryField.getAlias(), OrderBy.OrderByModifier.valueOf(queryField.getModifier()));
+    return new OrderBy(queryField.getName(), queryField.getColumnText(), OrderBy.OrderByModifier.valueOf(queryField.getModifier()));
   }
 }

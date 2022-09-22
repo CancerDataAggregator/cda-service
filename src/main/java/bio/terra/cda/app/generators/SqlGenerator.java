@@ -138,8 +138,7 @@ public class SqlGenerator {
             query,
             tableOrSubClause,
             subQuery,
-            ctx),
-            ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+            ctx));
   }
 
   protected String resultsQuery(
@@ -192,7 +191,8 @@ public class SqlGenerator {
         getPartitionByFields(ctx).collect(Collectors.joining(", ")),
         subQuery ? String.format("%s.*", table) : selectFields,
         fromString,
-        condition);
+        condition,
+        ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
   }
 
   protected Stream<String> getPartitionByFields(QueryContext ctx) {
@@ -286,7 +286,7 @@ public class SqlGenerator {
                       String fieldSelect = String.format("%s.%s", prefix, definition.getName());
 
                       if (definition.getMode().equals(Field.Mode.REPEATED.toString())
-                        && ctx.getOrderBys().stream().anyMatch(ob -> ob.getPath().equals(definition.getName()))) {
+                        && ctx.getOrderBys().stream().anyMatch(ob -> ob.getFieldName().equals(definition.getName()))) {
                         fieldSelect = this.dataSetInfo.getTableInfo(definition.getName()).getTableAlias();
                       }
 

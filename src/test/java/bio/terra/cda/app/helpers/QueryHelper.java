@@ -1,5 +1,6 @@
 package bio.terra.cda.app.helpers;
 
+import bio.terra.cda.app.builders.OrderByBuilder;
 import bio.terra.cda.app.builders.ParameterBuilder;
 import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
@@ -30,6 +31,7 @@ public class QueryHelper {
                 queryFieldBuilder, dataSetInfo, dataSetInfo.getTableInfo(entity), project))
         .setPartitionBuilder(new PartitionBuilder(dataSetInfo))
         .setSelectBuilder(new SelectBuilder(dataSetInfo))
-        .setParameterBuilder(new ParameterBuilder());
+        .setParameterBuilder(new ParameterBuilder())
+        .setOrderByBuilder(new OrderByBuilder());
   }
 }

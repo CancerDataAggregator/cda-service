@@ -32,7 +32,7 @@ public class QueryFieldBuilder {
     }
 
     String alias = path.replace(".", "_");
-    String modifier = "";
+    String modifier = "ASC";
     String columnText = getColumnText(schemaDefinition, tableInfo.getTableAlias());
 
     var nonEmpties = Arrays.stream(modSplit).filter(e -> !e.isEmpty()).collect(Collectors.toList());

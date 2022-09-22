@@ -22,7 +22,6 @@ public class OrderByValues extends BasicOperator {
                 Arrays.stream(getValue().split(","))
                         .map(String::trim)
                         .map(ctx.getQueryFieldBuilder()::fromPath)
-                        .filter(field -> field.getMode().equals(Field.Mode.REPEATED.toString()))
                         .flatMap(field -> ctx.getUnnestBuilder().fromQueryField(field, true)));
     }
 
