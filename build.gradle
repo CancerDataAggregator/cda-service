@@ -31,7 +31,7 @@ ext['log4j2.version'] = '2.17.1'
 
 group = 'bio.terra.cda'
 
-version = '3.0.2'
+version = '3.2.0'
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
@@ -136,7 +136,7 @@ task buildPythonSdk(type: GenerateTask){
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
 	configOptions = [
-			 packageVersion : "8.17.2022"
+			 packageVersion : "9.22.2022"
 	]
 }
 
