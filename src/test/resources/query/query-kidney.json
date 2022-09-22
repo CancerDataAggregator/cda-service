@@ -1,10 +1,4 @@
 {
-  "node_type": "ORDERBY",
-  "l": {
-    "node_type": "ORDERBYVALUES",
-    "value": "sex asc"
-  },
-  "r": {
     "node_type": "AND",
     "l": {
       "node_type": "OR",
@@ -43,4 +37,3 @@
       }
     }
   }
-}
