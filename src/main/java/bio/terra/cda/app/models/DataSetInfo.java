@@ -5,6 +5,7 @@ import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -174,36 +175,40 @@ public class DataSetInfo {
           continue;
         }
 
-        ForeignKey foreignKey = definition.getForeignKey();
-        Optional<TableRelationship.TableRelationshipBuilder> relationshipToAdd = Optional.empty();
+        ForeignKey[] foreignKeys = definition.getForeignKeys();
+        Optional<List<TableRelationship.TableRelationshipBuilder>> relationshipsToAdd = Optional.empty();
 
-        if (Objects.nonNull(foreignKey)) {
-          TableInfo fkTableInfo = this.tableInfoMap.get(foreignKey.getTableName());
+        if (Objects.nonNull(foreignKeys)) {
+          for (ForeignKey foreignKey : foreignKeys) {
+            TableInfo fkTableInfo = this.tableInfoMap.get(foreignKey.getTableName());
 
-          if (Objects.isNull(fkTableInfo)) {
-            this.addTableSchema(
-                foreignKey.getTableName(), TableSchema.getSchema(foreignKey.getTableName()));
-            fkTableInfo = this.tableInfoMap.get(foreignKey.getTableName());
-          }
+            if (Objects.isNull(fkTableInfo)) {
+              this.addTableSchema(
+                      foreignKey.getTableName(), TableSchema.getSchema(foreignKey.getTableName()));
+              fkTableInfo = this.tableInfoMap.get(foreignKey.getTableName());
+            }
 
-          if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
-            relationshipToAdd =
-                Optional.of(
-                    new TableRelationship.TableRelationshipBuilder()
-                        .setDestinationTableInfo(fkTableInfo)
-                        .setParent(false)
-                        .setType(TableRelationship.TableRelationshipTypeEnum.JOIN)
-                        .setForeignKeys(List.of(foreignKey))
-                        .setField(definition.getName())
-                        .setArray(true));
-          } else {
-            tableInfo.addRelationship(
-                TableRelationship.of(
-                        tableInfo,
-                        definition.getName(),
-                        TableRelationship.TableRelationshipTypeEnum.JOIN,
-                        fkTableInfo)
-                    .addForeignKey(foreignKey));
+            if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
+              if (relationshipsToAdd.isEmpty()) {
+                relationshipsToAdd = Optional.of(new ArrayList<>());
+              }
+
+              relationshipsToAdd.get().add(new TableRelationship.TableRelationshipBuilder()
+                                      .setDestinationTableInfo(fkTableInfo)
+                                      .setParent(false)
+                                      .setType(TableRelationship.TableRelationshipTypeEnum.JOIN)
+                                      .setForeignKeys(List.of(foreignKey))
+                                      .setField(definition.getName())
+                                      .setArray(true));
+            } else {
+              tableInfo.addRelationship(
+                      TableRelationship.of(
+                                      tableInfo,
+                                      definition.getName(),
+                                      TableRelationship.TableRelationshipTypeEnum.JOIN,
+                                      fkTableInfo)
+                              .addForeignKey(foreignKey));
+            }
           }
         }
 
@@ -285,10 +290,11 @@ public class DataSetInfo {
                   TableRelationship.TableRelationshipTypeEnum.UNNEST,
                   nested));
 
-          relationshipToAdd.ifPresent(
-              tableRelationshipBuilder ->
-                  nested.addRelationship(
-                      tableRelationshipBuilder.setFromTableInfo(nested).build()));
+          relationshipsToAdd.ifPresent(
+              tableRelationshipBuilders ->
+                  tableRelationshipBuilders.forEach(tableRelationshipBuilder ->
+                          nested.addRelationship(
+                            tableRelationshipBuilder.setFromTableInfo(nested).build())));
 
           this.tableInfoMap.put(name, nested);
           definition.setAlias(name);

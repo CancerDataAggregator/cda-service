@@ -5,12 +5,15 @@
     "name": "id",
     "type": "STRING",
     "partitionBy": true,
-    "foreignKey": {
-      "fields": ["case_barcode"],
-      "type": "SINGLE",
-      "tableName": "somatic_mutation_hg38_gdc_current",
-      "tableAlias": "mutations"
-    }
+    "foreignKeys": [
+      {
+        "fields": [
+          "case_barcode"
+        ],
+        "type": "SINGLE",
+        "tableName": "somatic_mutation_hg38_gdc_current",
+        "tableAlias": "mutations"
+      }]
   },
   {
     "description": "A 'business' identifier for the entity, typically as provided by an external system or authority, that persists across implementing systems  (i.e. a  'logical' identifier). Uses a specialized, complex 'Identifier' data type to capture information about the source of the business identifier - or a URI expressed as a string to an existing entity. ",
@@ -92,12 +95,12 @@
     "mode": "REPEATED",
     "name": "Files",
     "type": "STRING",
-    "foreignKey": {
+    "foreignKeys": [{
       "fields": ["file_id"],
       "type": "SINGLE",
       "tableName": "all_Files_v3_0_final",
       "tableAlias": "files"
-    }
+    }]
   },
   {
     "description": "A research subject is the entity of interest in a specific research study or project, typically a human being or an animal, but can also be a device, group of humans or animals, or a tissue sample. Human research subjects are usually not traceable to a particular person to protect the subject\u2019s privacy.  This entity plays the role of the case_id in existing data.",
@@ -108,12 +111,12 @@
         "name": "id",
         "type": "STRING",
         "partitionBy": true,
-        "foreignKey": {
+        "foreignKeys": [{
           "fields": ["case_id"],
           "type": "SINGLE",
           "tableName": "somatic_mutation_hg38_gdc_current",
           "tableAlias": "mutations"
-        }
+        }]
       },
       {
         "description": "A 'business' identifier for the entity, typically as provided by an external system or authority, that persists across implementing systems  (i.e. a  'logical' identifier). Uses a specialized, complex 'Identifier' data type to capture information about the source of the business identifier - or a URI expressed as a string to an existing entity. ",
@@ -159,12 +162,12 @@
         "mode": "REPEATED",
         "name": "Files",
         "type": "STRING",
-        "foreignKey": {
+        "foreignKeys": [{
           "fields": ["file_id"],
           "type": "SINGLE",
           "tableName": "all_Files_v3_0_final",
           "tableAlias": "files"
-        }
+        }]
       },
       {
         "description": "A collection of characteristics that describe an abnormal condition of the body as assessed at a point in time. May be used to capture information about neoplastic and non-neoplastic conditions.",
@@ -337,12 +340,12 @@
             "name": "id",
             "type": "STRING",
             "partitionBy": true,
-            "foreignKey": {
+            "foreignKeys": [{
               "fields": ["Tumor_Sample_UUID", "Matched_Norm_Sample_UUID"],
               "type": "COMPOSITE_OR",
               "tableName": "somatic_mutation_hg38_gdc_current",
               "tableAlias": "mutations"
-            }
+            }]
           },
           {
             "description": "A 'business' identifier  or accession number for the entity, typically as provided by an external system or authority, that persists across implementing systems  (i.e. a  'logical' identifier). ",
@@ -418,12 +421,12 @@
             "mode": "REPEATED",
             "name": "Files",
             "type": "STRING",
-            "foreignKey": {
+            "foreignKeys": [{
               "fields": ["file_id"],
               "type": "SINGLE",
               "tableName": "all_Files_v3_0_final",
               "tableAlias": "files"
-            }
+            }]
           }
         ],
         "mode": "REPEATED",
