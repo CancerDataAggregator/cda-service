@@ -31,7 +31,7 @@ public class TableSchema {
     private String type;
     private String description;
     private SchemaDefinition[] fields;
-    private ForeignKey foreignKey;
+    private ForeignKey[] foreignKeys;
     private Boolean partitionBy;
     private String alias;
 
@@ -75,12 +75,12 @@ public class TableSchema {
       return this.description;
     }
 
-    public ForeignKey getForeignKey() {
-      return foreignKey;
+    public ForeignKey[] getForeignKeys() {
+      return foreignKeys;
     }
 
-    public void setForeignKey(ForeignKey foreignKey) {
-      this.foreignKey = foreignKey;
+    public void setForeignKeys(ForeignKey[] foreignKeys) {
+      this.foreignKeys = foreignKeys;
     }
 
     public Boolean getPartitionBy() {
