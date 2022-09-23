@@ -11,12 +11,12 @@
     "name": "case_barcode",
     "type": "STRING",
     "partitionBy": true,
-    "foreignKey": {
+    "foreignKeys": [{
       "fields": ["subject_id"],
       "type": "SINGLE",
       "tableName": "all_Subjects_v3_0_final",
       "tableAlias": "subjects"
-    }
+    }]
   },
   {
     "description": "TCGA sample barcode for the tumor, eg TCGA-12-1089-01A. One sample may have multiple sets of CN segmentations corresponding to multiple aliquots; use GROUP BY appropriately in queries",
@@ -167,24 +167,24 @@
     "mode": "NULLABLE",
     "name": "Tumor_Sample_UUID",
     "type": "STRING",
-    "foreignKey": {
+    "foreignKeys": [{
       "fields": ["specimen_id"],
       "type": "COMPOSITE_OR",
       "tableName": "all_Subjects_v3_0_final",
       "tableAlias": "subjects"
-    }
+    }]
   },
   {
     "description": "Unique GDC identifier for normal aliquot (10189 unique)",
     "mode": "NULLABLE",
     "name": "Matched_Norm_Sample_UUID",
     "type": "STRING",
-    "foreignKey": {
+    "foreignKeys": [{
       "fields": ["specimen_id"],
       "type": "COMPOSITE_OR",
       "tableName": "all_Subjects_v3_0_final",
       "tableAlias": "subjects"
-    }
+    }]
   },
   {
     "description": "The coding sequence of the variant in HGVS recommended format",
@@ -629,12 +629,12 @@
     "mode": "NULLABLE",
     "name": "case_id",
     "type": "STRING",
-    "foreignKey": {
+    "foreignKeys": [{
       "fields": ["researchsubject_id"],
       "type": "SINGLE",
       "tableName": "all_Subjects_v3_0_final",
       "tableAlias": "subjects"
-    }
+    }]
   },
   {
     "description": "GDC filters applied universally across all MAFs",
