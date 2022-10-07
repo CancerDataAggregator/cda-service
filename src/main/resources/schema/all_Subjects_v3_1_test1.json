@@ -13,8 +13,16 @@
             "case_barcode"
           ],
           "type": "SINGLE",
-          "tableName": "somatic_mutation_hg38_gdc_current",
+          "tableName": "somatic_mutation_hg38_gdc_v3_1_test1",
           "tableAlias": "mutations"
+        },
+        {
+          "fields": [
+            "Subjects"
+          ],
+          "type": "SINGLE",
+          "tableName": "all_Files_v3_1_test1",
+          "tableAlias": "files"
         }
       ]
     },
@@ -94,22 +102,6 @@
       "type": "STRING"
     },
     {
-      "description": "List of ids of File entities associated with the Patient",
-      "mode": "REPEATED",
-      "name": "Files",
-      "type": "STRING",
-      "foreignKeys": [
-        {
-          "fields": [
-            "file_id"
-          ],
-          "type": "SINGLE",
-          "tableName": "all_Files_v3_0_final",
-          "tableAlias": "files"
-        }
-      ]
-    },
-    {
       "description": "A research subject is the entity of interest in a specific research study or project, typically a human being or an animal, but can also be a device, group of humans or animals, or a tissue sample. Human research subjects are usually not traceable to a particular person to protect the subject\u2019s privacy.  This entity plays the role of the case_id in existing data.",
       "fields": [
         {
@@ -124,8 +116,16 @@
                 "case_id"
               ],
               "type": "SINGLE",
-              "tableName": "somatic_mutation_hg38_gdc_current",
+              "tableName": "somatic_mutation_hg38_gdc_v3_1_test1",
               "tableAlias": "mutations"
+            },
+            {
+              "fields": [
+                "ResearchSubjects"
+              ],
+              "type": "SINGLE",
+              "tableName": "all_Files_v3_1_test1",
+              "tableAlias": "files"
             }
           ]
         },
@@ -169,22 +169,6 @@
           "type": "STRING"
         },
         {
-          "description": "List of ids of File entities associated with the ResearchSubject",
-          "mode": "REPEATED",
-          "name": "Files",
-          "type": "STRING",
-          "foreignKeys": [
-            {
-              "fields": [
-                "file_id"
-              ],
-              "type": "SINGLE",
-              "tableName": "all_Files_v3_0_final",
-              "tableAlias": "files"
-            }
-          ]
-        },
-        {
           "description": "A collection of characteristics that describe an abnormal condition of the body as assessed at a point in time. May be used to capture information about neoplastic and non-neoplastic conditions.",
           "fields": [
             {
@@ -216,19 +200,19 @@
               "type": "RECORD"
             },
             {
-              "description": "The diagnosis instance that qualified a subject for inclusion on a ResearchProject",
+              "description": "The diagnosis instance that qualified a subject for inclusion on a ResearchProject.",
               "mode": "NULLABLE",
               "name": "primary_diagnosis",
               "type": "STRING"
             },
             {
-              "description": "The age in days of the individual at the time of diagnosis",
+              "description": "The age in days of the individual at the time of diagnosis.",
               "mode": "NULLABLE",
               "name": "age_at_diagnosis",
               "type": "INTEGER"
             },
             {
-              "description": "Code that represents the histology of the disease using the third edition of the International Classification of Diseases for Oncology, published in 2000, used principally in tumor and cancer registri",
+              "description": "Code that represents the histology of the disease using the third edition of the International Classification of Diseases for Oncology, published in 2000, used principally in tumor and cancer registries for coding the site (topography) and the histology (morphology) of neoplasms.",
               "mode": "NULLABLE",
               "name": "morphology",
               "type": "STRING"
@@ -246,7 +230,7 @@
               "type": "STRING"
             },
             {
-              "description": "The method used to confirm the patients malignant diagnosis",
+              "description": "The method used to confirm the subjects malignant diagnosis.",
               "mode": "NULLABLE",
               "name": "method_of_diagnosis",
               "type": "STRING"
@@ -362,8 +346,16 @@
                     "Matched_Norm_Sample_UUID"
                   ],
                   "type": "COMPOSITE_OR",
-                  "tableName": "somatic_mutation_hg38_gdc_current",
+                  "tableName": "somatic_mutation_hg38_gdc_v3_1_test1",
                   "tableAlias": "mutations"
+                },
+                {
+                  "fields": [
+                    "Specimens"
+                  ],
+                  "type": "SINGLE",
+                  "tableName": "all_Files_v3_1_test1",
+                  "tableAlias": "files"
                 }
               ]
             },
@@ -395,7 +387,7 @@
               "type": "STRING"
             },
             {
-              "description": "The number of days from the index date to either the date a sample was collected for a specific study or project, or the date a patient underwent a procedure (e.g. surgical resection) yielding a sample that was eventually used for research.",
+              "description": "The number of days from the index date to either the date a sample was collected for a specific study or project, or the date a subject underwent a procedure (e.g. surgical resection) yielding a sample that was eventually used for research.",
               "mode": "NULLABLE",
               "name": "days_to_collection",
               "type": "INTEGER"
@@ -435,22 +427,6 @@
               "mode": "NULLABLE",
               "name": "derived_from_subject",
               "type": "STRING"
-            },
-            {
-              "description": "List of ids of File entities associated with the Specimen",
-              "mode": "REPEATED",
-              "name": "Files",
-              "type": "STRING",
-              "foreignKeys": [
-                {
-                  "fields": [
-                    "file_id"
-                  ],
-                  "type": "SINGLE",
-                  "tableName": "all_Files_v3_0_final",
-                  "tableAlias": "files"
-                }
-              ]
             }
           ],
           "mode": "REPEATED",

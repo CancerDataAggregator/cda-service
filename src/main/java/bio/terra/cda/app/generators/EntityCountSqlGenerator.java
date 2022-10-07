@@ -2,6 +2,7 @@ package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.TableInfo;
+import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.app.util.SqlUtil;
@@ -49,14 +50,25 @@ public class EntityCountSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
+  protected String sql(String tableOrSubClause, Query query, boolean subQuery, boolean hasSubClause, boolean ignoreWith)
       throws UncheckedExecutionException, IllegalArgumentException {
-    String viewSql = super.sql(tableOrSubClause, QueryUtil.deSelectifyQuery(query), subQuery);
+    String viewSql = super.sql(tableOrSubClause, QueryUtil.deSelectifyQuery(query), subQuery, hasSubClause, true);
     String tableAlias = "flattened_result";
+    String withStatement = "";
+    if (this.viewListBuilder.hasAny() && !ignoreWith) {
+      withStatement = String.format(
+              "%s, %s as (%s)",
+              getWithStatement(),
+              tableAlias,
+              viewSql);
+    } else {
+      withStatement = String.format("WITH %s as (%s)", tableAlias, viewSql);
+    }
+
     return subQuery
         ? viewSql
         : String.format(
-            "with %s as (%s) select %s", tableAlias, viewSql, getCountSelects(tableAlias));
+            "%s select %s", withStatement, getCountSelects(tableAlias));
   }
 
   protected String getCountSelects(String tableAlias) {
@@ -72,7 +84,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
     String partitionKeyField = table.getPartitionKey();
     if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(table.getPartitionKey()))) {
       partitionKeyField =
-          DataSetInfo.getNewNameForDuplicate(table.getPartitionKey(), table.getTableName());
+          DataSetInfo.getNewNameForDuplicate(this.dataSetInfo.getKnownAliases(), table.getPartitionKey(), table.getTableName());
     }
 
     String finalPartitionKeyField = partitionKeyField;
@@ -87,12 +99,12 @@ public class EntityCountSqlGenerator extends SqlGenerator {
               TableInfo tableInfo = this.entityTable;
 
               if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(field))) {
-                fieldToUse = DataSetInfo.getNewNameForDuplicate(field, finalTable.getTableName());
+                fieldToUse = DataSetInfo.getNewNameForDuplicate(this.dataSetInfo.getKnownAliases(), field, finalTable.getTableName());
               }
 
               tableInfo = this.dataSetInfo.getTableInfoFromField(fieldToUse);
               if (tableInfo.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)) {
-                fieldToUse = tableInfo.getPartitionKeyAlias();
+                fieldToUse = tableInfo.getPartitionKeyAlias(this.dataSetInfo);
               }
 
               return List.of(
@@ -151,11 +163,11 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                             fieldDefinition ->
                                 String.format(
                                     "%1$s.%2$s AS %3$s",
-                                    finalFromField.getTableAlias(),
+                                    finalFromField.getTableAlias(this.dataSetInfo),
                                     fieldDefinition.getName(),
                                     fieldDefinition.getAlias()));
                   } else {
-                    return Stream.of(fromField.getTableAlias());
+                    return Stream.of(fromField.getTableAlias(this.dataSetInfo));
                   }
                 } else {
                   return Stream.of(String.format("%s", definition.getAlias()));

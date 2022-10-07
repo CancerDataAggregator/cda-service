@@ -3,6 +3,8 @@ package bio.terra.cda.app.controller;
 import bio.terra.cda.app.aop.TrackExecutionTime;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
+import bio.terra.cda.app.builders.ViewBuilder;
+import bio.terra.cda.app.builders.ViewListBuilder;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
 import bio.terra.cda.app.generators.DiagnosisCountSqlGenerator;
@@ -23,6 +25,7 @@ import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
+import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.app.util.SqlUtil;
@@ -165,6 +168,7 @@ public class QueryApiController implements QueryApi {
     } catch (IOException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
+
     QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
     QueryField queryField = queryFieldBuilder.fromPath(body);
 
@@ -174,15 +178,16 @@ public class QueryApiController implements QueryApi {
     TableRelationship[] tablePath = tableInfo.getTablePath();
 
     String project = table == null ? applicationConfiguration.getBqTable() : table;
+    ViewListBuilder<View, ViewBuilder> viewListBuilder = new ViewListBuilder<>(ViewBuilder.class, dataSetInfo, project);
     UnnestBuilder unnestBuilder =
-        new UnnestBuilder(queryFieldBuilder, dataSetInfo, tableInfo, project);
+        new UnnestBuilder(queryFieldBuilder, viewListBuilder, dataSetInfo, tableInfo, project);
 
     tableName =
         String.format(
             "%s.%s AS %s ",
             project,
             tableInfo.getSuperTableInfo().getTableName(),
-            tableInfo.getSuperTableInfo().getTableAlias());
+            tableInfo.getSuperTableInfo().getTableAlias(dataSetInfo));
 
     List<String> whereClauses = new ArrayList<>();
     if (schemaDefinition.getType().equals(LegacySQLTypeName.STRING.toString())) {
@@ -200,7 +205,7 @@ public class QueryApiController implements QueryApi {
     if (system != null && system.length() > 0) {
       TableInfo identifierTable =
           dataSetInfo.getTableInfo(
-              DataSetInfo.KNOWN_ALIASES
+          dataSetInfo.getKnownAliases()
                       .getOrDefault(
                           tableInfo.getAdjustedTableName(), tableInfo.getAdjustedTableName())
                       .toLowerCase(Locale.ROOT)

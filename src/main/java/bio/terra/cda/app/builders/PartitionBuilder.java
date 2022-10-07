@@ -24,18 +24,18 @@ public class PartitionBuilder {
         Stream.of(
             new Partition(
                 path[0].getFromTableInfo().getTableName(),
-                path[0].getFromTableInfo().getPartitionKeyAlias())),
+                path[0].getFromTableInfo().getPartitionKeyAlias(this.dataSetInfo))),
         Arrays.stream(path)
             .map(
                 tableRelationship ->
                     new Partition(
                         tableRelationship.getField(),
-                        tableRelationship.getDestinationTableInfo().getPartitionKeyAlias())));
+                        tableRelationship.getDestinationTableInfo().getPartitionKeyAlias(this.dataSetInfo))));
   }
 
   public Partition fromQueryField(QueryField queryField) {
     TableInfo tableInfo = dataSetInfo.getTableInfoFromField(queryField.getPath());
 
-    return new Partition(queryField.getPath(), tableInfo.getPartitionKeyAlias());
+    return new Partition(queryField.getPath(), tableInfo.getPartitionKeyAlias(this.dataSetInfo));
   }
 }

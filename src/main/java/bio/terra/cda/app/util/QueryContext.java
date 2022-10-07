@@ -6,11 +6,15 @@ import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
+import bio.terra.cda.app.builders.ViewBuilder;
+import bio.terra.cda.app.builders.ViewListBuilder;
 import bio.terra.cda.app.models.OrderBy;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.Unnest;
+import bio.terra.cda.app.models.View;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +36,7 @@ public class QueryContext {
   private PartitionBuilder partitionBuilder;
   private ParameterBuilder parameterBuilder;
   private OrderByBuilder orderByBuilder;
+  private ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder;
   private TableInfo tableInfo;
 
   public QueryContext(String table, String project) {
@@ -126,6 +131,15 @@ public class QueryContext {
 
   public QueryContext setOrderByBuilder(OrderByBuilder builder) {
     this.orderByBuilder = builder;
+    return this;
+  }
+
+  public ViewListBuilder<? extends View, ? extends ViewBuilder> getViewListBuilder() {
+    return this.viewListBuilder;
+  }
+
+  public QueryContext setViewListBuilder(ViewListBuilder<? extends View, ? extends ViewBuilder> builder) {
+    this.viewListBuilder = builder;
     return this;
   }
 

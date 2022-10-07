@@ -19,6 +19,9 @@ public class Select {
 
   @Override
   public String toString() {
+    if (alias.equals("")) {
+      return path;
+    }
     return String.format("%s AS %s", path, alias);
   }
 }

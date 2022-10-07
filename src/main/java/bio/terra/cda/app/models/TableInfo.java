@@ -89,7 +89,7 @@ public class TableInfo {
 
     if (this.getType().equals(TableInfoTypeEnum.TABLE)) {
       table =
-          DataSetInfo.KNOWN_ALIASES
+            dataSetInfo.getKnownAliases()
               .getOrDefault(this.tableName, this.tableName)
               .toLowerCase(Locale.ROOT);
     }
@@ -101,9 +101,9 @@ public class TableInfo {
     return String.format("%s_%s", table, this.partitionKey);
   }
 
-  public String getTableAlias() {
+  public String getTableAlias(DataSetInfo dataSetInfo) {
     if (this.getType().equals(TableInfoTypeEnum.TABLE)) {
-      return DataSetInfo.KNOWN_ALIASES.getOrDefault(this.tableName, this.tableName);
+      return dataSetInfo.getKnownAliases().getOrDefault(this.tableName, this.tableName);
     } else {
       return String.format("_%s", this.adjustedTableName);
     }
@@ -133,12 +133,12 @@ public class TableInfo {
     return partitionKey;
   }
 
-  public String getPartitionKeyAlias() {
+  public String getPartitionKeyAlias(DataSetInfo dataSetInfo) {
     if (getType().equals(TableInfoTypeEnum.ARRAY)) {
-      return this.getTableAlias();
+      return this.getTableAlias(dataSetInfo);
     }
 
-    return String.format("%s.%s", this.getTableAlias(), this.partitionKey);
+    return String.format("%s.%s", this.getTableAlias(dataSetInfo), this.partitionKey);
   }
 
   public TableRelationship[] getTablePath() {

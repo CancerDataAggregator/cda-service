@@ -27,16 +27,24 @@ public class FileSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
+  protected String sql(String tableOrSubClause, Query query, boolean subQuery, boolean hasSubClause, boolean ignoreWith)
       throws UncheckedExecutionException, IllegalArgumentException {
     StringBuilder sb = new StringBuilder();
     AtomicReference<String> previousAlias = new AtomicReference<>("");
     List<String> tables = new ArrayList<>();
+
+    String withStatement = "WITH ";
+    if (this.viewListBuilder.hasAny() && !ignoreWith) {
+        withStatement = String.format("%s,", getWithStatement());
+    }
+
+    sb.append(withStatement);
+
     tableInfoList.forEach(
         tableInfo -> {
           var resultsQuery =
               resultsQuery(
-                  query, tableOrSubClause, subQuery, buildQueryContext(tableInfo, true, subQuery));
+                  query, tableOrSubClause, subQuery, buildQueryContext(tableInfo, true, subQuery), false);
           var resultsAlias =
               String.format("%s_files", tableInfo.getAdjustedTableName().toLowerCase(Locale.ROOT));
 
@@ -54,9 +62,8 @@ public class FileSqlGenerator extends SqlGenerator {
 
           sb.append(
               String.format(
-                  "%1$s%2$s as (%3$s),",
-                  previousAlias.get().equals("") ? "with" : "",
-                  String.format(" %s", resultsAlias),
+                  "%1$s as (%2$s),",
+                  String.format("%s", resultsAlias),
                   String.format(
                       "%s%s",
                       SqlTemplate.resultsWrapper(resultsQuery),
@@ -100,7 +107,7 @@ public class FileSqlGenerator extends SqlGenerator {
           var pathParts = tableInfo.getTablePath();
           var realParts = ctx.getTableInfo().getTablePath();
           String value =
-              realParts.length < pathParts.length ? "''" : tableInfo.getPartitionKeyAlias();
+              realParts.length < pathParts.length ? "''" : tableInfo.getPartitionKeyAlias(this.dataSetInfo);
 
           idSelects.add(
               String.format(
@@ -111,7 +118,7 @@ public class FileSqlGenerator extends SqlGenerator {
                 Stream.of(
                     this.partitionBuilder.of(
                         ctx.getTableInfo().getTableName(),
-                        ctx.getTableInfo().getPartitionKeyAlias())));
+                        ctx.getTableInfo().getPartitionKeyAlias(this.dataSetInfo))));
           } else {
             ctx.addPartitions(this.partitionBuilder.fromRelationshipPath(realParts));
           }

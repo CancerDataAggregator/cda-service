@@ -19,7 +19,7 @@
             "subject_id"
           ],
           "type": "SINGLE",
-          "tableName": "all_Subjects_v3_0_final",
+          "tableName": "all_Subjects_v3_1_test1",
           "tableAlias": "subjects"
         }
       ]
@@ -179,7 +179,7 @@
             "specimen_id"
           ],
           "type": "COMPOSITE_OR",
-          "tableName": "all_Subjects_v3_0_final",
+          "tableName": "all_Subjects_v3_1_test1",
           "tableAlias": "subjects"
         }
       ]
@@ -195,7 +195,7 @@
             "specimen_id"
           ],
           "type": "COMPOSITE_OR",
-          "tableName": "all_Subjects_v3_0_final",
+          "tableName": "all_Subjects_v3_1_test1",
           "tableAlias": "subjects"
         }
       ]
@@ -649,7 +649,7 @@
             "researchsubject_id"
           ],
           "type": "SINGLE",
-          "tableName": "all_Subjects_v3_0_final",
+          "tableName": "all_Subjects_v3_1_test1",
           "tableAlias": "subjects"
         }
       ]
