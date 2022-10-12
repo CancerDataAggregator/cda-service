@@ -12,8 +12,7 @@ import java.io.IOException;
       "primary_disease_type",
       "source_material_type",
       "specimen_type"
-    },
-    excludedFields = {})
+    })
 public class SpecimenCountSqlGenerator extends EntityCountSqlGenerator {
   public SpecimenCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {

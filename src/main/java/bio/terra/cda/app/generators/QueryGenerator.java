@@ -9,6 +9,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface QueryGenerator {
   public String entity();
-
-  public String[] excludedFields();
+  public boolean hasFiles();
 }

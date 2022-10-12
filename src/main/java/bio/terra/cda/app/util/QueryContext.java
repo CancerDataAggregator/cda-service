@@ -189,17 +189,32 @@ public class QueryContext {
   }
 
   public QueryContext addPartitions(Stream<Partition> newPartitions) {
-    this.partitions.addAll(newPartitions.collect(Collectors.toList()));
+    List<Partition> newPartitionsList = newPartitions.collect(Collectors.toList());
+    if (newPartitionsList.isEmpty()) {
+      return this;
+    }
+
+    this.partitions.addAll(newPartitionsList);
     return this;
   }
 
   public QueryContext addSelects(Stream<Select> selects) {
-    this.select.addAll(selects.collect(Collectors.toList()));
+    List<Select> newSelectsList = selects.collect(Collectors.toList());
+    if (newSelectsList.isEmpty()) {
+      return this;
+    }
+
+    this.select.addAll(newSelectsList);
     return this;
   }
 
   public QueryContext addOrderBys(Stream<OrderBy> orderByStream) {
-    this.orderBys.addAll(orderByStream.collect(Collectors.toList()));
+    List<OrderBy> newOrderByList = orderByStream.collect(Collectors.toList());
+    if (newOrderByList.isEmpty()) {
+      return this;
+    }
+
+    this.orderBys.addAll(newOrderByList);
     return this;
   }
 

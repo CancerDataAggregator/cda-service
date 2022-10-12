@@ -6,6 +6,7 @@ import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class PartitionBuilder {
@@ -20,6 +21,10 @@ public class PartitionBuilder {
   }
 
   public Stream<Partition> fromRelationshipPath(TableRelationship[] path) {
+    if (Objects.isNull(path) || path.length == 0) {
+      return Stream.empty();
+    }
+
     return Stream.concat(
         Stream.of(
             new Partition(

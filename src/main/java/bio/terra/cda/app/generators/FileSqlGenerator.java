@@ -33,13 +33,6 @@ public class FileSqlGenerator extends SqlGenerator {
     AtomicReference<String> previousAlias = new AtomicReference<>("");
     List<String> tables = new ArrayList<>();
 
-    String withStatement = "WITH ";
-    if (this.viewListBuilder.hasAny() && !ignoreWith) {
-        withStatement = String.format("%s,", getWithStatement());
-    }
-
-    sb.append(withStatement);
-
     tableInfoList.forEach(
         tableInfo -> {
           var resultsQuery =
@@ -94,7 +87,16 @@ public class FileSqlGenerator extends SqlGenerator {
 
     sb.append("SELECT unioned_result.* FROM unioned_result");
 
-    return sb.toString();
+    StringBuilder newSb = new StringBuilder();
+    String withStatement = "WITH ";
+    if (this.viewListBuilder.hasAny() && !ignoreWith) {
+        withStatement = String.format("%s,", getWithStatement());
+    }
+
+    newSb.append(withStatement);
+    newSb.append(sb.toString());
+
+    return newSb.toString();
   }
 
   @Override

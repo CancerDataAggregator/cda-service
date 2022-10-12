@@ -98,8 +98,10 @@ public class SqlGenerator {
             ? this.dataSetInfo.getTableInfo(queryGenerator.entity())
             : this.dataSetInfo.getTableInfo(version);
 
-    this.filteredFields =
-        queryGenerator != null ? Arrays.asList(queryGenerator.excludedFields()) : List.of();
+    this.filteredFields = Arrays.stream(this.entityTable.getSchemaDefinitions())
+            .filter(TableSchema.SchemaDefinition::isExcludeFromSelect)
+            .map(TableSchema.SchemaDefinition::getName)
+            .collect(Collectors.toList());
   }
 
   protected void initializeBuilders() {
@@ -289,6 +291,12 @@ public class SqlGenerator {
 
   protected Stream<String> combinedSelects(
       QueryContext ctx, String prefix, boolean skipExcludes, Stream<String> idSelects) {
+    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX);
+    List<String> fileFilteredFields = Arrays.stream(fileTableInfo.getSchemaDefinitions())
+            .filter(TableSchema.SchemaDefinition::isExcludeFromSelect)
+            .map(TableSchema.SchemaDefinition::getName)
+            .collect(Collectors.toList());
+
     return Stream.concat(
             Arrays.stream(
                     ctx.getFilesQuery()
@@ -299,7 +307,7 @@ public class SqlGenerator {
                 .filter(
                     definition ->
                         !(ctx.getFilesQuery()
-                                && List.of("ResearchSubject", "Subject", "Specimen", "ResearchSubjects", "Subjects", "Specimens")
+                                && fileFilteredFields
                                     .contains(definition.getName()))
                             && (skipExcludes || !filteredFields.contains(definition.getName())))
                 .map(
@@ -343,10 +351,8 @@ public class SqlGenerator {
             cls -> {
               QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
               TableInfo tableInfo = this.dataSetInfo.getTableInfo(generator.entity());
-              TableSchema.SchemaDefinition[] fields = tableInfo.getSchemaDefinitions();
-              return Arrays.stream(fields)
-                  .map(TableSchema.SchemaDefinition::getName)
-                  .anyMatch(s -> s.equals(TableSchema.FILES_COLUMN));
+              TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX);
+              return Objects.nonNull(tableInfo.getPathToTable(fileTableInfo, true)) && generator.hasFiles();
             });
   }
 

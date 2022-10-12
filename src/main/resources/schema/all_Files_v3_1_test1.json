@@ -4,109 +4,140 @@
     {
       "description": "The 'logical' identifier of the entity in the repository, e.g. a UUID.  This 'id' is unique within a given system. The identified entity may have a different 'id' in a different system.",
       "mode": "REQUIRED",
-      "name": "id",
       "type": "STRING",
-      "partitionBy": true
+      "name": "id",
+      "partitionBy": true,
+      "countByFields": [
+        {
+          "field": "id",
+          "type": "TOTAL",
+          "alias": "total"
+        }
+      ]
     },
     {
       "description": "A 'business' identifier  or accession number for the entity, typically as provided by an external system or authority, that persists across implementing systems  (i.e. a  'logical' identifier). ",
+      "mode": "REPEATED",
+      "type": "RECORD",
+      "name": "identifier",
       "fields": [
         {
           "description": "The system or namespace that defines the identifier.",
           "mode": "NULLABLE",
-          "name": "system",
           "type": "STRING",
-          "partitionBy": true
+          "name": "system",
+          "partitionBy": true,
+          "countByFields": [
+            {
+              "field": "system",
+              "type": "GROUPED"
+            }
+          ]
         },
         {
           "description": "The value of the identifier, as defined by the system.",
           "mode": "NULLABLE",
-          "name": "value",
-          "type": "STRING"
+          "type": "STRING",
+          "name": "value"
         }
-      ],
-      "mode": "REPEATED",
-      "name": "identifier",
-      "type": "RECORD"
+      ]
     },
     {
       "description": "Short name or abbreviation for dataset. Maps to rdfs:label.",
       "mode": "NULLABLE",
-      "name": "label",
-      "type": "STRING"
+      "type": "STRING",
+      "name": "label"
     },
     {
       "description": "Broad categorization of the contents of the data file.",
       "mode": "NULLABLE",
+      "type": "STRING",
       "name": "data_category",
-      "type": "STRING"
+      "countByFields": [
+        {
+          "field": "data_category",
+          "type": "GROUPED"
+        }
+      ]
     },
     {
       "description": "Specific content type of the data file.",
       "mode": "NULLABLE",
+      "type": "STRING",
       "name": "data_type",
-      "type": "STRING"
+      "countByFields": [
+        {
+          "field": "data_type",
+          "type": "GROUPED"
+        }
+      ]
     },
     {
       "description": "Format of the data files.",
       "mode": "NULLABLE",
+      "type": "STRING",
       "name": "file_format",
-      "type": "STRING"
+      "countByFields": [
+        {
+          "field": "file_format",
+          "type": "GROUPED"
+        }
+      ]
     },
     {
       "description": "A reference to the Project(s) of which this ResearchSubject is a member. The associated_project may be embedded using the $ref definition or may be a reference to the id for the Project - or a URI expressed as a string to an existing entity.",
       "mode": "REPEATED",
-      "name": "associated_project",
-      "type": "STRING"
+      "type": "STRING",
+      "name": "associated_project"
     },
     {
       "description": "A string of characters used to identify a resource on the Data Repo Service(DRS).",
       "mode": "NULLABLE",
-      "name": "drs_uri",
-      "type": "STRING"
+      "type": "STRING",
+      "name": "drs_uri"
     },
     {
       "description": "Size of the file in bytes. Maps to dcat:byteSize.",
       "mode": "NULLABLE",
-      "name": "byte_size",
-      "type": "INTEGER"
+      "type": "INTEGER",
+      "name": "byte_size"
     },
     {
       "description": "A digit representing the sum of the correct digits in a piece of stored or transmitted digital data, against which later comparisons can be made to detect errors in the data.",
       "mode": "NULLABLE",
-      "name": "checksum",
-      "type": "STRING"
+      "type": "STRING",
+      "name": "checksum"
     },
     {
       "description": "Data modality describes the biological nature of the information gathered as the result of an Activity, independent of the technology or methods used to produce the information.",
       "mode": "NULLABLE",
-      "name": "data_modality",
-      "type": "STRING"
+      "type": "STRING",
+      "name": "data_modality"
     },
     {
       "description": "An imaging modality describes the imaging equipment and/or method used to acquire certain structural or functional information about the body. These include but are not limited to computed tomography (CT) and magnetic resonance imaging (MRI). Taken from the DICOM standard.",
       "mode": "NULLABLE",
-      "name": "imaging_modality",
-      "type": "STRING"
+      "type": "STRING",
+      "name": "imaging_modality"
     },
     {
       "description": "The dbgap accession number for the project.",
       "mode": "NULLABLE",
-      "name": "dbgap_accession_number",
-      "type": "STRING"
+      "type": "STRING",
+      "name": "dbgap_accession_number"
     },
     {
       "description": "The 'logical' identifier of the series or grouping of imaging files in the system of record which the file is a part of.",
       "mode": "NULLABLE",
-      "name": "imaging_series",
-      "type": "STRING"
+      "type": "STRING",
+      "name": "imaging_series"
     },
     {
       "description": "List of ids of Subject entities associated with the File",
       "mode": "REPEATED",
-      "name": "Subjects",
       "type": "STRING",
-      "partitionBy": true,
+      "name": "Subjects",
+      "excludeFromSelect": true,
       "foreignKeys": [
         {
           "fields": [
@@ -121,9 +152,9 @@
     {
       "description": "List of ids of ResearchSubject entities associated with the File",
       "mode": "REPEATED",
-      "name": "ResearchSubjects",
       "type": "STRING",
-      "partitionBy": true,
+      "name": "ResearchSubjects",
+      "excludeFromSelect": true,
       "foreignKeys": [
         {
           "fields": [
@@ -138,9 +169,9 @@
     {
       "description": "List of ids of Specimen entities associated with the File",
       "mode": "REPEATED",
-      "name": "Specimens",
       "type": "STRING",
-      "partitionBy": true,
+      "name": "Specimens",
+      "excludeFromSelect": true,
       "foreignKeys": [
         {
           "fields": [

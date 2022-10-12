@@ -1,5 +1,6 @@
 package bio.terra.cda.app.util;
 
+import bio.terra.cda.app.models.CountByField;
 import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.models.ForeignKey;
 import com.fasterxml.jackson.databind.JavaType;
@@ -50,6 +51,8 @@ public class TableSchema {
     private ForeignKey[] foreignKeys;
     private Boolean partitionBy;
     private String alias;
+    private CountByField[] countByFields;
+    private boolean excludeFromSelect;
 
     public String getMode() {
       return mode;
@@ -113,6 +116,22 @@ public class TableSchema {
 
     public void setAlias(String alias) {
       this.alias = alias;
+    }
+
+    public CountByField[] getCountByFields() {
+      return countByFields;
+    }
+
+    public void setCountByFields(CountByField[] countByFields) {
+      this.countByFields = countByFields;
+    }
+
+    public boolean isExcludeFromSelect() {
+      return excludeFromSelect;
+    }
+
+    public void setExcludeFromSelect(boolean excludeFromSelect) {
+      this.excludeFromSelect = excludeFromSelect;
     }
   }
   // endregion

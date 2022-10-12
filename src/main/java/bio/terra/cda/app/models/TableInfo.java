@@ -164,12 +164,17 @@ public class TableInfo {
   }
 
   public TableRelationship[] getPathToTable(TableInfo tableInfo) {
+    return this.getPathToTable(tableInfo, false);
+  }
+
+  public TableRelationship[] getPathToTable(TableInfo tableInfo, boolean noParent) {
     if (tableInfo.getAdjustedTableName().equals(getAdjustedTableName())) {
       return new TableRelationship[0];
     }
 
     LinkedList<Tuple<TableRelationship[], TableRelationship>> queue =
         this.getRelationships().stream()
+            .filter(tableRelationship -> (!tableRelationship.isParent() || !noParent))
             .map(tableRelationship -> Tuple.of(new TableRelationship[0], tableRelationship))
             .collect(Collectors.toCollection(LinkedList::new));
     Map<String, Boolean> visited =
@@ -203,7 +208,8 @@ public class TableInfo {
               .filter(
                   tr ->
                       Objects.isNull(
-                          visited.get(tr.getDestinationTableInfo().getAdjustedTableName())))
+                          visited.get(tr.getDestinationTableInfo().getAdjustedTableName()))
+                      && (!tableRelationship.isParent() || !noParent))
               .map(tr -> Tuple.of(relArray, tr))
               .collect(Collectors.toList());
 

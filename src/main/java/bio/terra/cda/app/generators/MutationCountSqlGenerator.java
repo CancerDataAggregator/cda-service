@@ -11,8 +11,7 @@ import java.io.IOException;
       "Chromosome",
       "Variant_Type",
       "One_Consequence"
-    },
-    excludedFields = {})
+    })
 public class MutationCountSqlGenerator extends EntityCountSqlGenerator {
   public MutationCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
