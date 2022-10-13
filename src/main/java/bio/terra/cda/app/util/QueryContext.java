@@ -14,7 +14,6 @@ import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.models.View;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -138,7 +137,8 @@ public class QueryContext {
     return this.viewListBuilder;
   }
 
-  public QueryContext setViewListBuilder(ViewListBuilder<? extends View, ? extends ViewBuilder> builder) {
+  public QueryContext setViewListBuilder(
+      ViewListBuilder<? extends View, ? extends ViewBuilder> builder) {
     this.viewListBuilder = builder;
     return this;
   }

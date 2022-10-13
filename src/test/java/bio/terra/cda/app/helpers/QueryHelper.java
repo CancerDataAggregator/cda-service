@@ -25,14 +25,19 @@ public class QueryHelper {
             .addTableSchema("all_Subjects_v3_0_final", schemas.getSchema())
             .build();
     QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
-    ViewListBuilder<View, ViewBuilder> viewListBuilder = new ViewListBuilder<>(ViewBuilder.class, dataSetInfo, project);
+    ViewListBuilder<View, ViewBuilder> viewListBuilder =
+        new ViewListBuilder<>(ViewBuilder.class, dataSetInfo, project);
 
     return new QueryContext(table, project)
         .setIncludeSelect(includeSelect)
         .setQueryFieldBuilder(queryFieldBuilder)
         .setUnnestBuilder(
             new UnnestBuilder(
-                queryFieldBuilder, viewListBuilder, dataSetInfo, dataSetInfo.getTableInfo(entity), project))
+                queryFieldBuilder,
+                viewListBuilder,
+                dataSetInfo,
+                dataSetInfo.getTableInfo(entity),
+                project))
         .setPartitionBuilder(new PartitionBuilder(dataSetInfo))
         .setSelectBuilder(new SelectBuilder(dataSetInfo))
         .setParameterBuilder(new ParameterBuilder())

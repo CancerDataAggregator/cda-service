@@ -22,7 +22,10 @@ public class DataSetInfo {
   private final Map<String, FieldData> fieldMap;
   private final Map<String, String> knownAliases;
 
-  private DataSetInfo(Map<String, TableInfo> tableInfoMap, Map<String, FieldData> fieldMap, Map<String, String> knownAliases) {
+  private DataSetInfo(
+      Map<String, TableInfo> tableInfoMap,
+      Map<String, FieldData> fieldMap,
+      Map<String, String> knownAliases) {
     this.tableInfoMap = tableInfoMap;
     this.fieldMap = fieldMap;
     this.knownAliases = knownAliases;
@@ -87,7 +90,8 @@ public class DataSetInfo {
     return this.getTableInfo(fieldData.getTableName());
   }
 
-  public static String getNewNameForDuplicate(Map<String, String> knownAliases, String name, String tableName) {
+  public static String getNewNameForDuplicate(
+      Map<String, String> knownAliases, String name, String tableName) {
     String prefix = knownAliases.getOrDefault(tableName, tableName);
 
     return String.join("_", List.of(prefix.toLowerCase(Locale.ROOT), name));
@@ -125,12 +129,11 @@ public class DataSetInfo {
     }
 
     public DataSetInfoBuilder addTableSchema(
-            String tableName, TableSchema.TableDefinition tableDefinition) throws IOException {
+        String tableName, TableSchema.TableDefinition tableDefinition) throws IOException {
       TableInfo tableInfo = this.addTableIfNotExists(tableName, tableDefinition);
 
       Queue<Tuple<TableInfo, TableSchema.SchemaDefinition>> queue = new LinkedList<>();
-      for (TableSchema.SchemaDefinition schemaDefinition
-              : tableDefinition.getDefinitions()) {
+      for (TableSchema.SchemaDefinition schemaDefinition : tableDefinition.getDefinitions()) {
         queue.add(Tuple.of(tableInfo, schemaDefinition));
       }
 
@@ -146,11 +149,13 @@ public class DataSetInfo {
         }
 
         ForeignKey[] foreignKeys = definition.getForeignKeys();
-        Optional<List<TableRelationship.TableRelationshipBuilder>> relationshipsToAdd = Optional.empty();
+        Optional<List<TableRelationship.TableRelationshipBuilder>> relationshipsToAdd =
+            Optional.empty();
 
         if (Objects.nonNull(foreignKeys)) {
           for (ForeignKey foreignKey : foreignKeys) {
-            TableRelationship.TableRelationshipBuilder builder = this.addRelationship(foreignKey, definition, tableInfo);
+            TableRelationship.TableRelationshipBuilder builder =
+                this.addRelationship(foreignKey, definition, tableInfo);
 
             if (Objects.nonNull(builder)) {
               if (relationshipsToAdd.isEmpty()) {
@@ -243,9 +248,10 @@ public class DataSetInfo {
 
           relationshipsToAdd.ifPresent(
               tableRelationshipBuilders ->
-                  tableRelationshipBuilders.forEach(tableRelationshipBuilder ->
+                  tableRelationshipBuilders.forEach(
+                      tableRelationshipBuilder ->
                           nested.addRelationship(
-                            tableRelationshipBuilder.setFromTableInfo(nested).build())));
+                              tableRelationshipBuilder.setFromTableInfo(nested).build())));
 
           this.tableInfoMap.put(name, nested);
           definition.setAlias(name);
@@ -273,8 +279,10 @@ public class DataSetInfo {
 
             FieldData initialField = this.fieldMap.get(definition.getName());
             if (Objects.nonNull(initialField)) {
-              TableInfo tableInfo1 = this.tableInfoMap.get(
-                      this.knownAliases.getOrDefault(initialField.getTableName(), initialField.getTableName()));
+              TableInfo tableInfo1 =
+                  this.tableInfoMap.get(
+                      this.knownAliases.getOrDefault(
+                          initialField.getTableName(), initialField.getTableName()));
 
               String newPrefix = tableInfo1.getAdjustedTableName();
 
@@ -308,24 +316,26 @@ public class DataSetInfo {
       return new DataSetInfo(tableInfoMap, fieldMap, knownAliases);
     }
 
-    private TableInfo addTableIfNotExists(String tableName, TableSchema.TableDefinition tableDefinition) {
+    private TableInfo addTableIfNotExists(
+        String tableName, TableSchema.TableDefinition tableDefinition) {
       TableInfo tableInfo = this.tableInfoMap.get(tableName);
       if (Objects.isNull(tableInfo)) {
         TableSchema.SchemaDefinition partition =
-                Arrays.stream(tableDefinition.getDefinitions())
-                        .filter(TableSchema.SchemaDefinition::getPartitionBy)
-                        .findFirst()
-                        .orElseThrow();
+            Arrays.stream(tableDefinition.getDefinitions())
+                .filter(TableSchema.SchemaDefinition::getPartitionBy)
+                .findFirst()
+                .orElseThrow();
 
         this.tableInfoMap.put(
-                tableDefinition.getTableAlias(),
-                new TableInfo.TableInfoBuilder()
-                        .setTableName(tableName)
-                        .setType(TableInfo.TableInfoTypeEnum.TABLE)
-                        .setSchemaDefinitions(Arrays.stream(tableDefinition.getDefinitions()).collect(Collectors.toList()))
-                        .setPartitionKey(partition.getName())
-                        .setAdjustedTableName(tableDefinition.getTableAlias())
-                        .build());
+            tableDefinition.getTableAlias(),
+            new TableInfo.TableInfoBuilder()
+                .setTableName(tableName)
+                .setType(TableInfo.TableInfoTypeEnum.TABLE)
+                .setSchemaDefinitions(
+                    Arrays.stream(tableDefinition.getDefinitions()).collect(Collectors.toList()))
+                .setPartitionKey(partition.getName())
+                .setAdjustedTableName(tableDefinition.getTableAlias())
+                .build());
 
         knownAliases.put(tableName, tableDefinition.getTableAlias());
       }
@@ -334,51 +344,57 @@ public class DataSetInfo {
     }
 
     private TableRelationship.TableRelationshipBuilder addRelationship(
-            ForeignKey foreignKey,
-            TableSchema.SchemaDefinition definition,
-            TableInfo tableInfo) throws IOException {
-      TableInfo fkTableInfo = this.tableInfoMap.get(this.knownAliases.getOrDefault(foreignKey.getTableName(), foreignKey.getTableName()));
+        ForeignKey foreignKey, TableSchema.SchemaDefinition definition, TableInfo tableInfo)
+        throws IOException {
+      TableInfo fkTableInfo =
+          this.tableInfoMap.get(
+              this.knownAliases.getOrDefault(foreignKey.getTableName(), foreignKey.getTableName()));
 
       if (Objects.isNull(fkTableInfo)) {
         this.addTableSchema(
-                foreignKey.getTableName(), TableSchema.getSchema(foreignKey.getTableName()));
-        fkTableInfo = this.tableInfoMap.get(this.knownAliases.getOrDefault(foreignKey.getTableName(), foreignKey.getTableName()));
+            foreignKey.getTableName(), TableSchema.getSchema(foreignKey.getTableName()));
+        fkTableInfo =
+            this.tableInfoMap.get(
+                this.knownAliases.getOrDefault(
+                    foreignKey.getTableName(), foreignKey.getTableName()));
       }
 
       if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
         return new TableRelationship.TableRelationshipBuilder()
-                .setDestinationTableInfo(fkTableInfo)
-                .setParent(false)
-                .setType(TableRelationship.TableRelationshipTypeEnum.JOIN)
-                .setForeignKeys(List.of(foreignKey))
-                .setField(definition.getName())
-                .setArray(true);
+            .setDestinationTableInfo(fkTableInfo)
+            .setParent(false)
+            .setType(TableRelationship.TableRelationshipTypeEnum.JOIN)
+            .setForeignKeys(List.of(foreignKey))
+            .setField(definition.getName())
+            .setArray(true);
       } else {
         tableInfo.addRelationship(
-                TableRelationship.of(
-                                tableInfo,
-                                definition.getName(),
-                                TableRelationship.TableRelationshipTypeEnum.JOIN,
-                                fkTableInfo)
-                        .addForeignKey(foreignKey));
+            TableRelationship.of(
+                    tableInfo,
+                    definition.getName(),
+                    TableRelationship.TableRelationshipTypeEnum.JOIN,
+                    fkTableInfo)
+                .addForeignKey(foreignKey));
         return null;
       }
     }
 
     private void setCountByTableInfo(TableSchema.SchemaDefinition definition, TableInfo tableInfo) {
-        CountByField[] countByFields = definition.getCountByFields();
-        if (Objects.nonNull(countByFields) && countByFields.length > 0) {
-            for (CountByField countByField : countByFields) {
-                if (Objects.isNull(countByField.getTable())) {
-                    countByField.setTableInfo(tableInfo);
-                } else {
-                    TableInfo countByTableInfo = this.tableInfoMap.get(
-                            this.knownAliases.getOrDefault(countByField.getTable(), countByField.getTable()));
+      CountByField[] countByFields = definition.getCountByFields();
+      if (Objects.nonNull(countByFields) && countByFields.length > 0) {
+        for (CountByField countByField : countByFields) {
+          if (Objects.isNull(countByField.getTable())) {
+            countByField.setTableInfo(tableInfo);
+          } else {
+            TableInfo countByTableInfo =
+                this.tableInfoMap.get(
+                    this.knownAliases.getOrDefault(
+                        countByField.getTable(), countByField.getTable()));
 
-                    countByField.setTableInfo(countByTableInfo);
-                }
-            }
+            countByField.setTableInfo(countByTableInfo);
+          }
         }
+      }
     }
   }
 }

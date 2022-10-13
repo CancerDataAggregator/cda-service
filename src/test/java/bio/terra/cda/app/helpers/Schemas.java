@@ -2,7 +2,6 @@ package bio.terra.cda.app.helpers;
 
 import bio.terra.cda.app.util.TableSchema;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 public class Schemas {

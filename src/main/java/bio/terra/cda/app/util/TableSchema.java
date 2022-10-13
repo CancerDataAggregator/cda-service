@@ -1,28 +1,17 @@
 package bio.terra.cda.app.util;
 
 import bio.terra.cda.app.models.CountByField;
-import bio.terra.cda.app.models.EntitySchema;
 import bio.terra.cda.app.models.ForeignKey;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
-import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.springframework.core.io.ClassPathResource;
 
 public class TableSchema {
@@ -159,8 +148,7 @@ public class TableSchema {
     ClassPathResource resource = new ClassPathResource(fileName);
     InputStream inputStream = resource.getInputStream();
     ObjectMapper mapper = new ObjectMapper();
-    JavaType javaType =
-        mapper.getTypeFactory().constructType(TableDefinition.class);
+    JavaType javaType = mapper.getTypeFactory().constructType(TableDefinition.class);
 
     return mapper.readValue(inputStream, javaType);
   }

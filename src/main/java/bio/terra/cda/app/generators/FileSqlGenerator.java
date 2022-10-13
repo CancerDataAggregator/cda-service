@@ -27,7 +27,12 @@ public class FileSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, boolean subQuery, boolean hasSubClause, boolean ignoreWith)
+  protected String sql(
+      String tableOrSubClause,
+      Query query,
+      boolean subQuery,
+      boolean hasSubClause,
+      boolean ignoreWith)
       throws UncheckedExecutionException, IllegalArgumentException {
     StringBuilder sb = new StringBuilder();
     AtomicReference<String> previousAlias = new AtomicReference<>("");
@@ -37,7 +42,11 @@ public class FileSqlGenerator extends SqlGenerator {
         tableInfo -> {
           var resultsQuery =
               resultsQuery(
-                  query, tableOrSubClause, subQuery, buildQueryContext(tableInfo, true, subQuery), false);
+                  query,
+                  tableOrSubClause,
+                  subQuery,
+                  buildQueryContext(tableInfo, true, subQuery),
+                  false);
           var resultsAlias =
               String.format("%s_files", tableInfo.getAdjustedTableName().toLowerCase(Locale.ROOT));
 
@@ -90,7 +99,7 @@ public class FileSqlGenerator extends SqlGenerator {
     StringBuilder newSb = new StringBuilder();
     String withStatement = "WITH ";
     if (this.viewListBuilder.hasAny() && !ignoreWith) {
-        withStatement = String.format("%s,", getWithStatement());
+      withStatement = String.format("%s,", getWithStatement());
     }
 
     newSb.append(withStatement);
@@ -109,7 +118,9 @@ public class FileSqlGenerator extends SqlGenerator {
           var pathParts = tableInfo.getTablePath();
           var realParts = ctx.getTableInfo().getTablePath();
           String value =
-              realParts.length < pathParts.length ? "''" : tableInfo.getPartitionKeyAlias(this.dataSetInfo);
+              realParts.length < pathParts.length
+                  ? "''"
+                  : tableInfo.getPartitionKeyAlias(this.dataSetInfo);
 
           idSelects.add(
               String.format(

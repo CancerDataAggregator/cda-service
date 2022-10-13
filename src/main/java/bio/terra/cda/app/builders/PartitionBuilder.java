@@ -35,7 +35,9 @@ public class PartitionBuilder {
                 tableRelationship ->
                     new Partition(
                         tableRelationship.getField(),
-                        tableRelationship.getDestinationTableInfo().getPartitionKeyAlias(this.dataSetInfo))));
+                        tableRelationship
+                            .getDestinationTableInfo()
+                            .getPartitionKeyAlias(this.dataSetInfo))));
   }
 
   public Partition fromQueryField(QueryField queryField) {

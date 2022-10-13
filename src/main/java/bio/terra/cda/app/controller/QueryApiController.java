@@ -178,7 +178,8 @@ public class QueryApiController implements QueryApi {
     TableRelationship[] tablePath = tableInfo.getTablePath();
 
     String project = table == null ? applicationConfiguration.getBqTable() : table;
-    ViewListBuilder<View, ViewBuilder> viewListBuilder = new ViewListBuilder<>(ViewBuilder.class, dataSetInfo, project);
+    ViewListBuilder<View, ViewBuilder> viewListBuilder =
+        new ViewListBuilder<>(ViewBuilder.class, dataSetInfo, project);
     UnnestBuilder unnestBuilder =
         new UnnestBuilder(queryFieldBuilder, viewListBuilder, dataSetInfo, tableInfo, project);
 
@@ -205,7 +206,8 @@ public class QueryApiController implements QueryApi {
     if (system != null && system.length() > 0) {
       TableInfo identifierTable =
           dataSetInfo.getTableInfo(
-          dataSetInfo.getKnownAliases()
+              dataSetInfo
+                      .getKnownAliases()
                       .getOrDefault(
                           tableInfo.getAdjustedTableName(), tableInfo.getAdjustedTableName())
                       .toLowerCase(Locale.ROOT)

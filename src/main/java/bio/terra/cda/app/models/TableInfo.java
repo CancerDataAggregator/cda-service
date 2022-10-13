@@ -89,7 +89,8 @@ public class TableInfo {
 
     if (this.getType().equals(TableInfoTypeEnum.TABLE)) {
       table =
-            dataSetInfo.getKnownAliases()
+          dataSetInfo
+              .getKnownAliases()
               .getOrDefault(this.tableName, this.tableName)
               .toLowerCase(Locale.ROOT);
     }
@@ -208,8 +209,8 @@ public class TableInfo {
               .filter(
                   tr ->
                       Objects.isNull(
-                          visited.get(tr.getDestinationTableInfo().getAdjustedTableName()))
-                      && (!tableRelationship.isParent() || !noParent))
+                              visited.get(tr.getDestinationTableInfo().getAdjustedTableName()))
+                          && (!tableRelationship.isParent() || !noParent))
               .map(tr -> Tuple.of(relArray, tr))
               .collect(Collectors.toList());
 

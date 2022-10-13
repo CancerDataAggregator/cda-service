@@ -7,7 +7,6 @@ import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.models.View;
-import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
@@ -134,7 +133,8 @@ public class UnnestBuilder {
         fieldName =
             tableRelationship.isArray()
                 ? tableInfo.getAdjustedTableName()
-                : DataSetInfo.getNewNameForDuplicate(this.dataSetInfo.getKnownAliases(), fieldName, tableInfo.getTableName());
+                : DataSetInfo.getNewNameForDuplicate(
+                    this.dataSetInfo.getKnownAliases(), fieldName, tableInfo.getTableName());
       }
 
       QueryField queryField = this.queryFieldBuilder.fromPath(fieldName);
@@ -144,10 +144,11 @@ public class UnnestBuilder {
       String originTableJoin =
           queryField.getMode().equals(Field.Mode.REPEATED.toString())
               ? queryField.getColumnText()
-              : String.format("%s.%s", tableInfo.getTableAlias(this.dataSetInfo), queryField.getName());
+              : String.format(
+                  "%s.%s", tableInfo.getTableAlias(this.dataSetInfo), queryField.getName());
 
-      String tableString = String.format(
-              SqlUtil.ALIAS_FIELD_FORMAT, project, destinationTable.getTableName());
+      String tableString =
+          String.format(SqlUtil.ALIAS_FIELD_FORMAT, project, destinationTable.getTableName());
 
       boolean skip = false;
       boolean added = false;
@@ -159,16 +160,21 @@ public class UnnestBuilder {
                 .collect(Collectors.toList())) {
 
           String fieldToJoin =
-                  field.getMode().equals(Field.Mode.REPEATED.toString())
-                          ? field.getColumnText()
-                          : String.format(
-                          "%s.%s",
-                          tableRelationship.getDestinationTableInfo().getTableAlias(this.dataSetInfo), field.getName());
+              field.getMode().equals(Field.Mode.REPEATED.toString())
+                  ? field.getColumnText()
+                  : String.format(
+                      "%s.%s",
+                      tableRelationship.getDestinationTableInfo().getTableAlias(this.dataSetInfo),
+                      field.getName());
 
           if (field.getMode().equals(Field.Mode.REPEATED.toString())) {
-            tableString = String.format("%s_%s", destinationTable.getTableAlias(this.dataSetInfo), field.getName());
+            tableString =
+                String.format(
+                    "%s_%s", destinationTable.getTableAlias(this.dataSetInfo), field.getName());
             String fieldAlias = String.format("%s_flattened", field.getName());
-            fieldToJoin = String.format("%s.%s", destinationTable.getTableAlias(this.dataSetInfo), fieldAlias);
+            fieldToJoin =
+                String.format(
+                    "%s.%s", destinationTable.getTableAlias(this.dataSetInfo), fieldAlias);
 
             if (this.viewListBuilder.contains(tableString)) {
               skip = true;
@@ -177,25 +183,35 @@ public class UnnestBuilder {
 
               ViewBuilder viewBuilder = this.viewListBuilder.getViewBuilder();
               TableInfo repeatedTable = this.dataSetInfo.getTableInfoFromField(field.getName());
-              viewBuilder.setViewName(tableString)
-                         .setTable(destinationTable)
-                         .setIncludeAlias(true)
-                         .setViewType(View.ViewType.WITH)
-                         .addUnnests(this.fromRelationshipPath(destinationTable.getPathToTable(repeatedTable), SqlUtil.JoinType.LEFT, true));
+              viewBuilder
+                  .setViewName(tableString)
+                  .setTable(destinationTable)
+                  .setIncludeAlias(true)
+                  .setViewType(View.ViewType.WITH)
+                  .addUnnests(
+                      this.fromRelationshipPath(
+                          destinationTable.getPathToTable(repeatedTable),
+                          SqlUtil.JoinType.LEFT,
+                          true));
 
-              Arrays.stream(destinationTable.getSchemaDefinitions()).forEach(definition -> {
-                  if (definition.getName().equals(field.getName())) {
-                    viewBuilder.addSelect(
-                            new SelectBuilder(this.dataSetInfo)
-                                    .of(field.getColumnText(), fieldAlias));
-                  } else {
-                    viewBuilder.addSelect(
-                            new SelectBuilder(this.dataSetInfo)
-                                    .of(String.format("%s.%s",
-                                            destinationTable.getTableAlias(this.dataSetInfo),
-                                            definition.getName()), ""));
-                  }
-              });
+              Arrays.stream(destinationTable.getSchemaDefinitions())
+                  .forEach(
+                      definition -> {
+                        if (definition.getName().equals(field.getName())) {
+                          viewBuilder.addSelect(
+                              new SelectBuilder(this.dataSetInfo)
+                                  .of(field.getColumnText(), fieldAlias));
+                        } else {
+                          viewBuilder.addSelect(
+                              new SelectBuilder(this.dataSetInfo)
+                                  .of(
+                                      String.format(
+                                          "%s.%s",
+                                          destinationTable.getTableAlias(this.dataSetInfo),
+                                          definition.getName()),
+                                      ""));
+                        }
+                      });
               this.viewListBuilder.addView(viewBuilder.build());
             }
           }
@@ -206,17 +222,18 @@ public class UnnestBuilder {
 
       return Stream.concat(
           unnestStream,
-          !skip || added ? Stream.of(
-              new Unnest(
-                  joinType,
-                  tableString,
-                  destinationTable.getTableAlias(this.dataSetInfo),
-                  true,
-                  String.join(
-                      foreignKeyTypeEnum.equals(ForeignKey.ForeignKeyTypeEnum.COMPOSITE_AND)
-                          ? " AND "
-                          : " OR ",
-                      joinConditions)))
+          !skip || added
+              ? Stream.of(
+                  new Unnest(
+                      joinType,
+                      tableString,
+                      destinationTable.getTableAlias(this.dataSetInfo),
+                      true,
+                      String.join(
+                          foreignKeyTypeEnum.equals(ForeignKey.ForeignKeyTypeEnum.COMPOSITE_AND)
+                              ? " AND "
+                              : " OR ",
+                          joinConditions)))
               : Stream.empty());
     } else {
       if (!includeRepeated

@@ -20,7 +20,12 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, boolean subQuery, boolean hasSubClause, boolean ignoreWith)
+  protected String sql(
+      String tableOrSubClause,
+      Query query,
+      boolean subQuery,
+      boolean hasSubClause,
+      boolean ignoreWith)
       throws UncheckedExecutionException, IllegalArgumentException {
     Map<String, TableInfo> tableInfoMap = new HashMap<>();
 
@@ -49,18 +54,25 @@ public class CountsSqlGenerator extends SqlGenerator {
             .r(QueryUtil.deSelectifyQuery(query));
 
     try {
-        String resultsAlias = "flattened_results";
-        String flattenedWith = String.format(
-                "%s as (%s)", resultsAlias,
-                new SqlGenerator(
-                        this.qualifiedTable, newQuery, this.version, false, this.parameterBuilder, this.viewListBuilder)
-                        .sql(this.qualifiedTable, newQuery, false, false, true));
-        String withStatement = String.format("WITH %s", flattenedWith);
+      String resultsAlias = "flattened_results";
+      String flattenedWith =
+          String.format(
+              "%s as (%s)",
+              resultsAlias,
+              new SqlGenerator(
+                      this.qualifiedTable,
+                      newQuery,
+                      this.version,
+                      false,
+                      this.parameterBuilder,
+                      this.viewListBuilder)
+                  .sql(this.qualifiedTable, newQuery, false, false, true));
+      String withStatement = String.format("WITH %s", flattenedWith);
 
-        if (this.viewListBuilder.hasAny() && !ignoreWith) {
-            withStatement = String.format("%s, %s", getWithStatement(), flattenedWith);
-        }
-        return String.format(
+      if (this.viewListBuilder.hasAny() && !ignoreWith) {
+        withStatement = String.format("%s, %s", getWithStatement(), flattenedWith);
+      }
+      return String.format(
           "%s SELECT %s FROM %s",
           withStatement,
           tableInfoMap.keySet().stream()
@@ -72,7 +84,9 @@ public class CountsSqlGenerator extends SqlGenerator {
                         this.dataSetInfo.getSchemaDefinitionByFieldName(entityPartitionKey))) {
                       entityPartitionKey =
                           DataSetInfo.getNewNameForDuplicate(
-                                  this.dataSetInfo.getKnownAliases(), entityPartitionKey, tableInfo.getTableName());
+                              this.dataSetInfo.getKnownAliases(),
+                              entityPartitionKey,
+                              tableInfo.getTableName());
                     }
 
                     return String.format(
