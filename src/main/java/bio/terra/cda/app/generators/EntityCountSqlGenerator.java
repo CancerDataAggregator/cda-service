@@ -100,11 +100,6 @@ public class EntityCountSqlGenerator extends SqlGenerator {
             countByField -> {
               TableInfo tableToUse = countByField.getTableInfo();
 
-              String name =
-                  Objects.nonNull(countByField.getAlias())
-                      ? countByField.getAlias()
-                      : countByField.getField();
-
               String fieldToUse = countByField.getField();
 
               if (Objects.isNull(
@@ -121,11 +116,15 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                 fieldToUse = tableToUse.getPartitionKeyAlias(this.dataSetInfo);
               }
 
+              String alias = Objects.nonNull(countByField.getAlias())
+                      ? countByField.getAlias()
+                      : fieldToUse;
+
               return countByField.getType().equals(CountByField.CountByTypeEnum.TOTAL)
                   ? String.format(
-                      "(SELECT COUNT(DISTINCT %s) from %s) as %s", fieldToUse, tableAlias, name)
+                      "(SELECT COUNT(DISTINCT %s) from %s) as %s", fieldToUse, tableAlias, alias)
                   : String.format(
-                      formatString, fieldToUse, finalPartitionKeyField, tableAlias, name);
+                      formatString, fieldToUse, finalPartitionKeyField, tableAlias, alias);
             })
         .collect(Collectors.joining(", "));
   }
