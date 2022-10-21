@@ -35,6 +35,23 @@ public class DataSetInfo {
     return this.tableInfoMap.get(this.knownAliases.getOrDefault(tableName, tableName));
   }
 
+  public List<ColumnsReturn> getColumnsData() {
+    return this.fieldMap.entrySet().stream()
+            .filter(entry ->
+                    !entry
+                        .getValue()
+                        .getSchemaDefinition()
+                        .getType()
+                        .equals(LegacySQLTypeName.RECORD.toString()))
+            .map(entry -> new ColumnsReturn(
+                    entry.getValue().getTableName(),
+                    entry.getKey(),
+                    entry.getValue().getSchemaDefinition().getDescription(),
+                    entry.getValue().getSchemaDefinition().getType(),
+                    entry.getValue().getSchemaDefinition().getMode()))
+            .collect(Collectors.toList());
+  }
+
   public List<Map.Entry<String, String>> getFieldDescriptions() {
     Map<String, String> fieldDescs = new HashMap<>();
 
