@@ -204,7 +204,8 @@
           ],
           "type": "COMPOSITE_OR",
           "tableName": "all_Subjects_v3_1_test1",
-          "tableAlias": "subjects"
+          "tableAlias": "specimen",
+          "location": "ResearchSubject.Specimen"
         }
       ]
     },
@@ -220,7 +221,8 @@
           ],
           "type": "COMPOSITE_OR",
           "tableName": "all_Subjects_v3_1_test1",
-          "tableAlias": "subjects"
+          "tableAlias": "specimen",
+          "location": "ResearchSubject.Specimen"
         }
       ]
     },
@@ -680,7 +682,8 @@
           ],
           "type": "SINGLE",
           "tableName": "all_Subjects_v3_1_test1",
-          "tableAlias": "subjects"
+          "tableAlias": "researchsubjects",
+          "location": "ResearchSubject"
         }
       ]
     },

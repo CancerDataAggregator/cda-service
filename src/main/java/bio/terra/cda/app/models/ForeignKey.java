@@ -7,6 +7,7 @@ public class ForeignKey {
   private String tableName;
   private String[] fields;
   private String tableAlias;
+  private String location;
 
   public enum ForeignKeyTypeEnum {
     SINGLE("SINGLE"),
@@ -72,5 +73,11 @@ public class ForeignKey {
 
   public void setFields(String[] fields) {
     this.fields = fields;
+  }public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
   }
 }

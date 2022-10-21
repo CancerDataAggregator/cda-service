@@ -189,6 +189,10 @@ public class TableInfo {
       Tuple<TableRelationship[], TableRelationship> tuple = queue.pop();
       TableRelationship[] currentPath = tuple.x();
       TableRelationship tableRelationship = tuple.y();
+      var foreignKey = tableRelationship.getForeignKeys();
+      if (foreignKey.stream().anyMatch(fk -> Objects.nonNull(fk.getLocation()) && fk.getLocation().length() > 0)) {
+        continue;
+      }
 
       List<TableRelationship> relList = new ArrayList<>(List.of(currentPath));
       relList.add(tableRelationship);

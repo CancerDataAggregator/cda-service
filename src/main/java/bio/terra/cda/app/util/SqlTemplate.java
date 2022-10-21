@@ -5,8 +5,14 @@ import java.util.Objects;
 public class SqlTemplate {
   private SqlTemplate() {}
 
-  public static String unnest(String joinType, String path, String resultingAlias) {
-    return String.format("%1$s UNNEST(%2$s) AS %3$s", joinType, path, resultingAlias);
+  public static String unnest(String joinType, String path, String resultingAlias, String joinPath) {
+    return String.format("%1$s UNNEST(%2$s) AS %3$s%4$s",
+            joinType,
+            path,
+            resultingAlias,
+            Objects.nonNull(joinPath) && joinPath.length() > 0
+              ? String.format(" ON %s", joinPath)
+              : "");
   }
 
   public static String join(String joinType, String path, String alias, String joinPath) {

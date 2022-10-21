@@ -145,7 +145,8 @@
           ],
           "type": "SINGLE",
           "tableName": "all_Subjects_v3_1_test1",
-          "tableAlias": "subjects"
+          "tableAlias": "subjects",
+          "location": ""
         }
       ]
     },
@@ -162,7 +163,8 @@
           ],
           "type": "SINGLE",
           "tableName": "all_Subjects_v3_1_test1",
-          "tableAlias": "subjects"
+          "tableAlias": "subjects",
+          "location": "ResearchSubject"
         }
       ]
     },
@@ -179,7 +181,8 @@
           ],
           "type": "SINGLE",
           "tableName": "all_Subjects_v3_1_test1",
-          "tableAlias": "subjects"
+          "tableAlias": "specimens",
+          "location": "ResearchSubject.Specimen"
         }
       ]
     }

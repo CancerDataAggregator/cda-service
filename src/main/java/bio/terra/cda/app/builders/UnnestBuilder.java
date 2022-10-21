@@ -12,6 +12,7 @@ import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +26,7 @@ public class UnnestBuilder {
   private final DataSetInfo dataSetInfo;
   private final QueryFieldBuilder queryFieldBuilder;
   private final ViewListBuilder<View, ViewBuilder> viewListBuilder;
+  private final HashMap<String, String> additionalJoinPaths;
 
   public UnnestBuilder(
       QueryFieldBuilder queryFieldBuilder,
@@ -37,11 +39,18 @@ public class UnnestBuilder {
     this.dataSetInfo = dataSetInfo;
     this.entityTable = entityTable;
     this.project = project;
+
+    additionalJoinPaths = new HashMap<>();
+  }
+
+  public UnnestBuilder addAdditionalJoinPath(String key, String path) {
+    this.additionalJoinPaths.put(key, path);
+    return this;
   }
 
   public Unnest of(
-      SqlUtil.JoinType joinType, String path, String alias, boolean isJoin, String joinPath) {
-    return new Unnest(joinType, path, alias, isJoin, joinPath);
+      SqlUtil.JoinType joinType, String path, String alias, boolean isJoin, String joinPath, TableInfo tableInfo) {
+    return new Unnest(joinType, path, alias, isJoin, joinPath, tableInfo);
   }
 
   public Stream<Unnest> fromQueryField(QueryField queryField) {
@@ -233,7 +242,8 @@ public class UnnestBuilder {
                           foreignKeyTypeEnum.equals(ForeignKey.ForeignKeyTypeEnum.COMPOSITE_AND)
                               ? " AND "
                               : " OR ",
-                          joinConditions)))
+                          joinConditions),
+                          destinationTable))
               : Stream.empty());
     } else {
       if (!includeRepeated
@@ -241,14 +251,31 @@ public class UnnestBuilder {
         return Stream.empty();
       }
 
+      String path = String.format(
+              SqlUtil.ALIAS_FIELD_FORMAT,
+              tableInfo.getTableAlias(this.dataSetInfo),
+              destinationTable.getTableName());
+
+      if (this.additionalJoinPaths.containsKey(destinationTable.getAdjustedTableName())) {
+        String joinPath = String.format("%s = %s",
+                destinationTable.getPartitionKeyAlias(this.dataSetInfo),
+                this.additionalJoinPaths.get(destinationTable.getAdjustedTableName()));
+        return Stream.of(
+                new Unnest(
+                        joinType,
+                        path,
+                        destinationTable.getTableAlias(this.dataSetInfo),
+                        false,
+                        joinPath,
+                        destinationTable));
+      }
+
       return Stream.of(
           new Unnest(
               joinType,
-              String.format(
-                  SqlUtil.ALIAS_FIELD_FORMAT,
-                  tableInfo.getTableAlias(this.dataSetInfo),
-                  destinationTable.getTableName()),
-              destinationTable.getTableAlias(this.dataSetInfo)));
+              path,
+              destinationTable.getTableAlias(this.dataSetInfo),
+              destinationTable));
     }
   }
 }

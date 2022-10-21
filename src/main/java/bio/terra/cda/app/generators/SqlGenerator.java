@@ -71,6 +71,7 @@ public class SqlGenerator {
     this.dataSetInfo =
         new DataSetInfo.DataSetInfoBuilder().addTableSchema(version, this.tableDefinition).build();
 
+    preInit();
     initializeEntityFields();
     initializeBuilders();
   }
@@ -87,6 +88,11 @@ public class SqlGenerator {
 
     this.parameterBuilder = parameterBuilder;
     this.viewListBuilder = viewListBuilder;
+  }
+
+  protected void preInit() {
+    // nothing here, meant for subclasses to override
+    // and add preInit tasks before EntityFields and builders are initialized
   }
 
   protected void initializeEntityFields() {

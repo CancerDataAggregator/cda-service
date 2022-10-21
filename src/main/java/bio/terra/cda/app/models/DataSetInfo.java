@@ -354,9 +354,9 @@ public class DataSetInfo {
         this.addTableSchema(
             foreignKey.getTableName(), TableSchema.getSchema(foreignKey.getTableName()));
         fkTableInfo =
-            this.tableInfoMap.get(
-                this.knownAliases.getOrDefault(
-                    foreignKey.getTableName(), foreignKey.getTableName()));
+                this.tableInfoMap.get(
+                        this.knownAliases.getOrDefault(
+                                foreignKey.getTableName(), foreignKey.getTableName()));
       }
 
       if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
