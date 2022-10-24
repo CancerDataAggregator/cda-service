@@ -190,7 +190,8 @@ public class TableInfo {
       TableRelationship[] currentPath = tuple.x();
       TableRelationship tableRelationship = tuple.y();
       var foreignKey = tableRelationship.getForeignKeys();
-      if (foreignKey.stream().anyMatch(fk -> Objects.nonNull(fk.getLocation()) && fk.getLocation().length() > 0)) {
+      if (foreignKey.stream()
+          .anyMatch(fk -> Objects.nonNull(fk.getLocation()) && fk.getLocation().length() > 0)) {
         continue;
       }
 

@@ -73,7 +73,9 @@ public class ForeignKey {
 
   public void setFields(String[] fields) {
     this.fields = fields;
-  }public String getLocation() {
+  }
+
+  public String getLocation() {
     return location;
   }
 

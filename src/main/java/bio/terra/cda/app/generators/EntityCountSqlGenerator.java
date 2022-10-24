@@ -116,9 +116,8 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                 fieldToUse = tableToUse.getPartitionKeyAlias(this.dataSetInfo);
               }
 
-              String alias = Objects.nonNull(countByField.getAlias())
-                      ? countByField.getAlias()
-                      : fieldToUse;
+              String alias =
+                  Objects.nonNull(countByField.getAlias()) ? countByField.getAlias() : fieldToUse;
 
               return countByField.getType().equals(CountByField.CountByTypeEnum.TOTAL)
                   ? String.format(

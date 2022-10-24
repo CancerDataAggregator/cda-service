@@ -40,27 +40,34 @@ public class DataSetInfo {
 
   public List<ColumnsReturn> getColumnsData(ColumnsReturnBuilder columnsReturnBuilder) {
     return this.fieldMap.entrySet().stream()
-            .filter(entry -> {
-              TableSchema.SchemaDefinition schemaDefinition = entry.getValue().getSchemaDefinition();
+        .filter(
+            entry -> {
+              TableSchema.SchemaDefinition schemaDefinition =
+                  entry.getValue().getSchemaDefinition();
 
               return !schemaDefinition.getType().equals(LegacySQLTypeName.RECORD.toString())
-                      && !schemaDefinition.isExcludeFromSelect();
+                  && !schemaDefinition.isExcludeFromSelect();
             })
-            .map(entry -> columnsReturnBuilder.of(
+        .map(
+            entry ->
+                columnsReturnBuilder.of(
                     validateAndGetEndpoint(entry.getValue().getTableInfo()),
                     entry.getKey(),
                     entry.getValue().getSchemaDefinition().getDescription(),
                     entry.getValue().getSchemaDefinition().getType(),
                     entry.getValue().getSchemaDefinition().getMode()))
-            .collect(Collectors.toList());
+        .collect(Collectors.toList());
   }
 
   private String validateAndGetEndpoint(TableInfo endpointTable) {
-    List<String> endpoints = EndpointUtil.getQueryGeneratorClasses()
-            .map(cls -> {
-              QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
-              return generator.entity();
-            }).collect(Collectors.toList());
+    List<String> endpoints =
+        EndpointUtil.getQueryGeneratorClasses()
+            .map(
+                cls -> {
+                  QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
+                  return generator.entity();
+                })
+            .collect(Collectors.toList());
     endpoints.add(TableSchema.FILE_PREFIX);
 
     if (endpoints.contains(endpointTable.getAdjustedTableName())) {
@@ -75,12 +82,11 @@ public class DataSetInfo {
           return current.getAdjustedTableName();
         }
 
-        Optional<TableRelationship> parent = current.getRelationships()
-                .stream()
-                .filter(TableRelationship::isParent)
-                .findFirst();
+        Optional<TableRelationship> parent =
+            current.getRelationships().stream().filter(TableRelationship::isParent).findFirst();
 
-        parent.ifPresent(tableRelationship -> tableInfoQueue.add(tableRelationship.getDestinationTableInfo()));
+        parent.ifPresent(
+            tableRelationship -> tableInfoQueue.add(tableRelationship.getDestinationTableInfo()));
       }
 
       return null;
@@ -230,7 +236,8 @@ public class DataSetInfo {
                   existingFieldData.getSchemaDefinition();
               existingDefinition.setAlias(newRecordName);
 
-              this.fieldMap.put(newRecordName, new FieldData(existingTableInfo, existingDefinition));
+              this.fieldMap.put(
+                  newRecordName, new FieldData(existingTableInfo, existingDefinition));
               this.fieldMap.remove(definition.getName());
               definition.setAlias(newRecordName);
             }
@@ -305,8 +312,8 @@ public class DataSetInfo {
               String newPrefix = tableInfo1.getAdjustedTableName();
 
               if (tableInfo1.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)) {
-                newPrefix = tableInfo1.getRelationships()
-                        .stream()
+                newPrefix =
+                    tableInfo1.getRelationships().stream()
                         .filter(TableRelationship::isParent)
                         .findFirst()
                         .orElseThrow()
@@ -324,8 +331,7 @@ public class DataSetInfo {
                       "_", List.of(newPrefix.toLowerCase(Locale.ROOT), definition.getName()));
 
               initialDefinition.setAlias(newName);
-              this.fieldMap.put(
-                  newName, new FieldData(tableInfo1, initialDefinition));
+              this.fieldMap.put(newName, new FieldData(tableInfo1, initialDefinition));
               this.fieldMap.remove(definition.getName());
               definition.setAlias(newName);
             }
@@ -382,9 +388,9 @@ public class DataSetInfo {
         this.addTableSchema(
             foreignKey.getTableName(), TableSchema.getSchema(foreignKey.getTableName()));
         fkTableInfo =
-                this.tableInfoMap.get(
-                        this.knownAliases.getOrDefault(
-                                foreignKey.getTableName(), foreignKey.getTableName()));
+            this.tableInfoMap.get(
+                this.knownAliases.getOrDefault(
+                    foreignKey.getTableName(), foreignKey.getTableName()));
       }
 
       if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {

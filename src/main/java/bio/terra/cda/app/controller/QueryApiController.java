@@ -21,7 +21,6 @@ import bio.terra.cda.app.generators.SubjectCountSqlGenerator;
 import bio.terra.cda.app.generators.SubjectSqlGenerator;
 import bio.terra.cda.app.generators.TreatmentCountSqlGenerator;
 import bio.terra.cda.app.generators.TreatmentSqlGenerator;
-import bio.terra.cda.app.models.ColumnsReturn;
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.models.TableInfo;
@@ -280,18 +279,19 @@ public class QueryApiController implements QueryApi {
               .addTableSchema(version, TableSchema.getSchema(version))
               .build();
 
-      List<JsonNode> results = dataSetInfo.getColumnsData(new ColumnsReturnBuilder())
-              .stream()
-              .map(columnsReturn -> {
-                ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-                objectNode.set("fieldName", TextNode.valueOf(columnsReturn.getFieldName()));
-                objectNode.set("endpoint", TextNode.valueOf(columnsReturn.getEndpoint()));
-                objectNode.set("description", TextNode.valueOf(columnsReturn.getDescription()));
-                objectNode.set("type", TextNode.valueOf(columnsReturn.getType()));
-                objectNode.set("mode", TextNode.valueOf(columnsReturn.getMode()));
+      List<JsonNode> results =
+          dataSetInfo.getColumnsData(new ColumnsReturnBuilder()).stream()
+              .map(
+                  columnsReturn -> {
+                    ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+                    objectNode.set("fieldName", TextNode.valueOf(columnsReturn.getFieldName()));
+                    objectNode.set("endpoint", TextNode.valueOf(columnsReturn.getEndpoint()));
+                    objectNode.set("description", TextNode.valueOf(columnsReturn.getDescription()));
+                    objectNode.set("type", TextNode.valueOf(columnsReturn.getType()));
+                    objectNode.set("mode", TextNode.valueOf(columnsReturn.getMode()));
 
-                return objectNode;
-              })
+                    return objectNode;
+                  })
               .collect(Collectors.toList());
 
       ColumnsResponseData queryResponseData = new ColumnsResponseData();

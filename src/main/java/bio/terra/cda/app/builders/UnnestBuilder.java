@@ -49,7 +49,12 @@ public class UnnestBuilder {
   }
 
   public Unnest of(
-      SqlUtil.JoinType joinType, String path, String alias, boolean isJoin, String joinPath, TableInfo tableInfo) {
+      SqlUtil.JoinType joinType,
+      String path,
+      String alias,
+      boolean isJoin,
+      String joinPath,
+      TableInfo tableInfo) {
     return new Unnest(joinType, path, alias, isJoin, joinPath, tableInfo);
   }
 
@@ -243,7 +248,7 @@ public class UnnestBuilder {
                               ? " AND "
                               : " OR ",
                           joinConditions),
-                          destinationTable))
+                      destinationTable))
               : Stream.empty());
     } else {
       if (!includeRepeated
@@ -251,31 +256,31 @@ public class UnnestBuilder {
         return Stream.empty();
       }
 
-      String path = String.format(
+      String path =
+          String.format(
               SqlUtil.ALIAS_FIELD_FORMAT,
               tableInfo.getTableAlias(this.dataSetInfo),
               destinationTable.getTableName());
 
       if (this.additionalJoinPaths.containsKey(destinationTable.getAdjustedTableName())) {
-        String joinPath = String.format("%s = %s",
+        String joinPath =
+            String.format(
+                "%s = %s",
                 destinationTable.getPartitionKeyAlias(this.dataSetInfo),
                 this.additionalJoinPaths.get(destinationTable.getAdjustedTableName()));
         return Stream.of(
-                new Unnest(
-                        joinType,
-                        path,
-                        destinationTable.getTableAlias(this.dataSetInfo),
-                        false,
-                        joinPath,
-                        destinationTable));
+            new Unnest(
+                joinType,
+                path,
+                destinationTable.getTableAlias(this.dataSetInfo),
+                false,
+                joinPath,
+                destinationTable));
       }
 
       return Stream.of(
           new Unnest(
-              joinType,
-              path,
-              destinationTable.getTableAlias(this.dataSetInfo),
-              destinationTable));
+              joinType, path, destinationTable.getTableAlias(this.dataSetInfo), destinationTable));
     }
   }
 }

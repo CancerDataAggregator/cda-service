@@ -2,7 +2,6 @@ package bio.terra.cda.app.models;
 
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
-
 import java.util.Objects;
 
 public class Unnest {
@@ -14,7 +13,12 @@ public class Unnest {
   private final TableInfo tableInfo;
 
   public Unnest(
-      SqlUtil.JoinType joinType, String path, String alias, boolean isJoin, String joinPath, TableInfo tableInfo) {
+      SqlUtil.JoinType joinType,
+      String path,
+      String alias,
+      boolean isJoin,
+      String joinPath,
+      TableInfo tableInfo) {
     this.joinType = joinType;
     this.path = path;
     this.alias = alias;
@@ -48,6 +52,7 @@ public class Unnest {
   public String toString() {
     return isJoin
         ? SqlTemplate.join(joinType.value, path, alias, joinPath)
-        : SqlTemplate.unnest(joinType.value, path, alias, Objects.nonNull(joinPath) ? joinPath : "");
+        : SqlTemplate.unnest(
+            joinType.value, path, alias, Objects.nonNull(joinPath) ? joinPath : "");
   }
 }
