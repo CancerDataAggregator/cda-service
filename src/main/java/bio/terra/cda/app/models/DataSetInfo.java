@@ -47,7 +47,7 @@ public class DataSetInfo {
                       && !schemaDefinition.isExcludeFromSelect();
             })
             .map(entry -> columnsReturnBuilder.of(
-                    validateAndGetEndpoint(entry.getValue().getTableName()),
+                    validateAndGetEndpoint(entry.getValue().getTableInfo()),
                     entry.getKey(),
                     entry.getValue().getSchemaDefinition().getDescription(),
                     entry.getValue().getSchemaDefinition().getType(),
@@ -55,7 +55,7 @@ public class DataSetInfo {
             .collect(Collectors.toList());
   }
 
-  private String validateAndGetEndpoint(String endpoint) {
+  private String validateAndGetEndpoint(TableInfo endpointTable) {
     List<String> endpoints = EndpointUtil.getQueryGeneratorClasses()
             .map(cls -> {
               QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
@@ -63,67 +63,32 @@ public class DataSetInfo {
             }).collect(Collectors.toList());
     endpoints.add(TableSchema.FILE_PREFIX);
 
-    if (endpoints.contains(endpoint)) {
-      return endpoint.toLowerCase(Locale.ROOT);
+    if (endpoints.contains(endpointTable.getAdjustedTableName())) {
+      return endpointTable.getAdjustedTableName().toLowerCase(Locale.ROOT);
     } else {
-      TableInfo tableInfo = this.getTableInfo(endpoint);
+      Queue<TableInfo> tableInfoQueue = new LinkedList<>(List.of(endpointTable));
 
-      if (Objects.nonNull(tableInfo)) {
-        Queue<TableInfo> tableInfoQueue = new LinkedList<>(List.of(tableInfo));
+      while (!tableInfoQueue.isEmpty()) {
+        TableInfo current = tableInfoQueue.remove();
 
-        while (!tableInfoQueue.isEmpty()) {
-          TableInfo current = tableInfoQueue.remove();
-
-          if (endpoints.contains(current.getAdjustedTableName())) {
-            return current.getAdjustedTableName();
-          }
-
-          Optional<TableRelationship> parent = current.getRelationships()
-                  .stream()
-                  .filter(TableRelationship::isParent)
-                  .findFirst();
-
-          parent.ifPresent(tableRelationship -> tableInfoQueue.add(tableRelationship.getDestinationTableInfo()));
+        if (endpoints.contains(current.getAdjustedTableName())) {
+          return current.getAdjustedTableName();
         }
+
+        Optional<TableRelationship> parent = current.getRelationships()
+                .stream()
+                .filter(TableRelationship::isParent)
+                .findFirst();
+
+        parent.ifPresent(tableRelationship -> tableInfoQueue.add(tableRelationship.getDestinationTableInfo()));
       }
 
       return null;
     }
   }
 
-  public List<Map.Entry<String, String>> getFieldDescriptions() {
-    Map<String, String> fieldDescs = new HashMap<>();
-
-    this.fieldMap.entrySet().stream()
-        .filter(
-            entry ->
-                !entry
-                    .getValue()
-                    .getSchemaDefinition()
-                    .getType()
-                    .equals(LegacySQLTypeName.RECORD.toString()))
-        .forEach(
-            entry ->
-                fieldDescs.put(
-                    entry.getKey(), entry.getValue().getSchemaDefinition().getDescription()));
-
-    return fieldDescs.entrySet().stream()
-        .sorted(Map.Entry.comparingByKey())
-        .collect(Collectors.toList());
-  }
-
   public Map<String, String> getKnownAliases() {
     return knownAliases;
-  }
-
-  public TableSchema.SchemaDefinition[] getSchemaDefinitionsForTable(String tableName) {
-    TableInfo tableInfo = this.getTableInfo(tableName);
-
-    if (Objects.isNull(tableInfo)) {
-      return null;
-    }
-
-    return tableInfo.getSchemaDefinitions();
   }
 
   public TableSchema.SchemaDefinition getSchemaDefinitionByFieldName(String fieldName) {
@@ -143,7 +108,7 @@ public class DataSetInfo {
       return null;
     }
 
-    return this.getTableInfo(fieldData.getTableName());
+    return this.getTableInfo(fieldData.getTableInfo().getAdjustedTableName());
   }
 
   public static String getNewNameForDuplicate(
@@ -154,16 +119,16 @@ public class DataSetInfo {
   }
 
   private static class FieldData {
-    private final String tableName;
+    private final TableInfo tableInfo;
     private final TableSchema.SchemaDefinition schemaDefinition;
 
-    private FieldData(String tableName, TableSchema.SchemaDefinition schemaDefinition) {
-      this.tableName = tableName;
+    private FieldData(TableInfo tableInfo, TableSchema.SchemaDefinition schemaDefinition) {
+      this.tableInfo = tableInfo;
       this.schemaDefinition = schemaDefinition;
     }
 
-    public String getTableName() {
-      return tableName;
+    public TableInfo getTableInfo() {
+      return tableInfo;
     }
 
     public TableSchema.SchemaDefinition getSchemaDefinition() {
@@ -255,7 +220,7 @@ public class DataSetInfo {
                       String.join("_", List.of(newRecordName, definition1.getName()));
                   definition1.setAlias(newDefName);
 
-                  this.fieldMap.put(newDefName, new FieldData(newRecordName, definition1));
+                  this.fieldMap.put(newDefName, new FieldData(existingTableInfo, definition1));
                   this.fieldMap.remove(definition1.getName());
                 }
               }
@@ -265,7 +230,7 @@ public class DataSetInfo {
                   existingFieldData.getSchemaDefinition();
               existingDefinition.setAlias(newRecordName);
 
-              this.fieldMap.put(newRecordName, new FieldData(newRecordName, existingDefinition));
+              this.fieldMap.put(newRecordName, new FieldData(existingTableInfo, existingDefinition));
               this.fieldMap.remove(definition.getName());
               definition.setAlias(newRecordName);
             }
@@ -312,7 +277,7 @@ public class DataSetInfo {
           this.tableInfoMap.put(name, nested);
           definition.setAlias(name);
           setCountByTableInfo(definition, nested);
-          this.fieldMap.put(name, new FieldData(name, definition));
+          this.fieldMap.put(name, new FieldData(nested, definition));
           this.usedFields.put(name, true);
 
           if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
@@ -335,12 +300,19 @@ public class DataSetInfo {
 
             FieldData initialField = this.fieldMap.get(definition.getName());
             if (Objects.nonNull(initialField)) {
-              TableInfo tableInfo1 =
-                  this.tableInfoMap.get(
-                      this.knownAliases.getOrDefault(
-                          initialField.getTableName(), initialField.getTableName()));
+              TableInfo tableInfo1 = initialField.getTableInfo();
 
               String newPrefix = tableInfo1.getAdjustedTableName();
+
+              if (tableInfo1.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)) {
+                newPrefix = tableInfo1.getRelationships()
+                        .stream()
+                        .filter(TableRelationship::isParent)
+                        .findFirst()
+                        .orElseThrow()
+                        .getDestinationTableInfo()
+                        .getAdjustedTableName();
+              }
 
               if (knownAliases.containsKey(newPrefix)) {
                 newPrefix = knownAliases.get(newPrefix);
@@ -353,7 +325,7 @@ public class DataSetInfo {
 
               initialDefinition.setAlias(newName);
               this.fieldMap.put(
-                  newName, new FieldData(tableInfo1.getAdjustedTableName(), initialDefinition));
+                  newName, new FieldData(tableInfo1, initialDefinition));
               this.fieldMap.remove(definition.getName());
               definition.setAlias(newName);
             }
@@ -361,7 +333,7 @@ public class DataSetInfo {
 
           definition.setAlias(fieldName);
           setCountByTableInfo(definition, tableInfo);
-          this.fieldMap.put(fieldName, new FieldData(tableInfo.getAdjustedTableName(), definition));
+          this.fieldMap.put(fieldName, new FieldData(tableInfo, definition));
           this.usedFields.put(fieldName, true);
         }
       }
