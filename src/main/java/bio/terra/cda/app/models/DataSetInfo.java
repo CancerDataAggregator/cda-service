@@ -1,5 +1,8 @@
 package bio.terra.cda.app.models;
 
+import bio.terra.cda.app.builders.ColumnsReturnBuilder;
+import bio.terra.cda.app.generators.QueryGenerator;
+import bio.terra.cda.app.util.EndpointUtil;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.Field;
@@ -35,21 +38,57 @@ public class DataSetInfo {
     return this.tableInfoMap.get(this.knownAliases.getOrDefault(tableName, tableName));
   }
 
-  public List<ColumnsReturn> getColumnsData() {
+  public List<ColumnsReturn> getColumnsData(ColumnsReturnBuilder columnsReturnBuilder) {
     return this.fieldMap.entrySet().stream()
-            .filter(entry ->
-                    !entry
-                        .getValue()
-                        .getSchemaDefinition()
-                        .getType()
-                        .equals(LegacySQLTypeName.RECORD.toString()))
-            .map(entry -> new ColumnsReturn(
-                    entry.getValue().getTableName(),
+            .filter(entry -> {
+              TableSchema.SchemaDefinition schemaDefinition = entry.getValue().getSchemaDefinition();
+
+              return !schemaDefinition.getType().equals(LegacySQLTypeName.RECORD.toString())
+                      && !schemaDefinition.isExcludeFromSelect();
+            })
+            .map(entry -> columnsReturnBuilder.of(
+                    validateAndGetEndpoint(entry.getValue().getTableName()),
                     entry.getKey(),
                     entry.getValue().getSchemaDefinition().getDescription(),
                     entry.getValue().getSchemaDefinition().getType(),
                     entry.getValue().getSchemaDefinition().getMode()))
             .collect(Collectors.toList());
+  }
+
+  private String validateAndGetEndpoint(String endpoint) {
+    List<String> endpoints = EndpointUtil.getQueryGeneratorClasses()
+            .map(cls -> {
+              QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
+              return generator.entity();
+            }).collect(Collectors.toList());
+    endpoints.add(TableSchema.FILE_PREFIX);
+
+    if (endpoints.contains(endpoint)) {
+      return endpoint.toLowerCase(Locale.ROOT);
+    } else {
+      TableInfo tableInfo = this.getTableInfo(endpoint);
+
+      if (Objects.nonNull(tableInfo)) {
+        Queue<TableInfo> tableInfoQueue = new LinkedList<>(List.of(tableInfo));
+
+        while (!tableInfoQueue.isEmpty()) {
+          TableInfo current = tableInfoQueue.remove();
+
+          if (endpoints.contains(current.getAdjustedTableName())) {
+            return current.getAdjustedTableName();
+          }
+
+          Optional<TableRelationship> parent = current.getRelationships()
+                  .stream()
+                  .filter(TableRelationship::isParent)
+                  .findFirst();
+
+          parent.ifPresent(tableRelationship -> tableInfoQueue.add(tableRelationship.getDestinationTableInfo()));
+        }
+      }
+
+      return null;
+    }
   }
 
   public List<Map.Entry<String, String>> getFieldDescriptions() {

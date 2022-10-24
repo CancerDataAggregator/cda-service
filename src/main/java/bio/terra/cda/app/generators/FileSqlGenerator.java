@@ -4,6 +4,7 @@ import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
+import bio.terra.cda.app.util.EndpointUtil;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
@@ -287,7 +288,7 @@ public class FileSqlGenerator extends SqlGenerator {
   }
 
   private List<TableInfo> getTableInfosAsSortedList() {
-    return getFileClasses()
+    return EndpointUtil.getFileClasses(this.dataSetInfo)
         .map(
             clazz -> {
               var annotation = clazz.getAnnotation(QueryGenerator.class);

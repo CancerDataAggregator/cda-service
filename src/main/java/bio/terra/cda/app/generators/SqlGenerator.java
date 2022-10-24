@@ -362,36 +362,6 @@ public class SqlGenerator {
         .distinct();
   }
 
-  protected Stream<? extends Class<?>> getQueryGeneratorClasses() {
-    ClassPathScanningCandidateComponentProvider scanner =
-        new ClassPathScanningCandidateComponentProvider(false);
-
-    scanner.addIncludeFilter(new AnnotationTypeFilter(QueryGenerator.class));
-
-    return scanner.findCandidateComponents("bio.terra.cda.app.generators").stream()
-        .map(
-            cls -> {
-              try {
-                return Class.forName(cls.getBeanClassName());
-              } catch (ClassNotFoundException e) {
-                return null;
-              }
-            })
-        .filter(Objects::nonNull);
-  }
-
-  protected Stream<? extends Class<?>> getFileClasses() {
-    return getQueryGeneratorClasses()
-        .filter(
-            cls -> {
-              QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
-              TableInfo tableInfo = this.dataSetInfo.getTableInfo(generator.entity());
-              TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX);
-              return Objects.nonNull(tableInfo.getPathToTable(fileTableInfo, true))
-                  && generator.hasFiles();
-            });
-  }
-
   protected String getWithStatement() {
     return String.format(
         "WITH %s ",

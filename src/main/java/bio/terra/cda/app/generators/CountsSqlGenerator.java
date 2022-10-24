@@ -4,6 +4,7 @@ import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.operators.Select;
 import bio.terra.cda.app.operators.SelectValues;
+import bio.terra.cda.app.util.EndpointUtil;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -29,7 +30,7 @@ public class CountsSqlGenerator extends SqlGenerator {
       throws UncheckedExecutionException, IllegalArgumentException {
     Map<String, TableInfo> tableInfoMap = new HashMap<>();
 
-    getQueryGeneratorClasses()
+    EndpointUtil.getQueryGeneratorClasses()
         .forEach(
             clazz -> {
               var annotation = clazz.getAnnotation(QueryGenerator.class);

@@ -1,6 +1,7 @@
 package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.aop.TrackExecutionTime;
+import bio.terra.cda.app.builders.ColumnsReturnBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
 import bio.terra.cda.app.builders.ViewBuilder;
@@ -279,7 +280,7 @@ public class QueryApiController implements QueryApi {
               .addTableSchema(version, TableSchema.getSchema(version))
               .build();
 
-      List<JsonNode> results = dataSetInfo.getColumnsData()
+      List<JsonNode> results = dataSetInfo.getColumnsData(new ColumnsReturnBuilder())
               .stream()
               .map(columnsReturn -> {
                 ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
