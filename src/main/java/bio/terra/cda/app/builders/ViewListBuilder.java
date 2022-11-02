@@ -42,10 +42,8 @@ public class ViewListBuilder<V extends View, T extends ViewBuilder> {
         | InvocationTargetException
         | InstantiationException
         | IllegalAccessException e) {
-      e.printStackTrace();
+      return null;
     }
-
-    return null;
   }
 
   public boolean hasAny() {
