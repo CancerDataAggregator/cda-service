@@ -158,9 +158,8 @@ public class SqlGenerator {
       throws IllegalArgumentException {
     QueryContext ctx = buildQueryContext(this.entityTable, filesQuery, subQuery);
 
-    String results =
-        SqlTemplate.resultsWrapper(
-            resultsQuery(query, tableOrSubClause, subQuery, ctx, hasSubClause));
+    String queryResult = resultsQuery(query, tableOrSubClause, subQuery, ctx, hasSubClause);
+    String results = subQuery ? queryResult : SqlTemplate.resultsWrapper(queryResult);
 
     String withStatement = "";
     if (this.viewListBuilder.hasAny() && !ignoreWith) {
@@ -212,9 +211,10 @@ public class SqlGenerator {
     }
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
-    String selectFields =
-        getSelect(ctx, tableInfo.getTableAlias(this.dataSetInfo), !this.modularEntity)
-            .collect(Collectors.joining(", "));
+    String selectFields = subQuery
+            ? ""
+            : getSelect(ctx, tableInfo.getTableAlias(this.dataSetInfo), !this.modularEntity)
+                .collect(Collectors.joining(", "));
 
     var fromClause =
         Stream.concat(
@@ -230,9 +230,17 @@ public class SqlGenerator {
 
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
 
+    if (subQuery) {
+      return SqlTemplate.regularQuery(
+              String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
+              fromString,
+              condition,
+              ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+    }
+
     return SqlTemplate.resultsQuery(
         getPartitionByFields(ctx).collect(Collectors.joining(", ")),
-        subQuery ? String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)) : selectFields,
+        selectFields,
         fromString,
         condition,
         ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
