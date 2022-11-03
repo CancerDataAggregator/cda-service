@@ -1,5 +1,6 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.models.CountByField;
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.util.QueryContext;
@@ -11,14 +12,17 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class EntityCountSqlGenerator extends SqlGenerator {
-  private List<String> countFields;
+  private List<CountByField> countFields;
 
   public EntityCountSqlGenerator(
       String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
@@ -37,26 +41,38 @@ public class EntityCountSqlGenerator extends SqlGenerator {
             : this.dataSetInfo.getTableInfo(version);
 
     this.filteredFields =
-        queryGenerator != null ? Arrays.asList(queryGenerator.excludedFields()) : List.of();
+        Arrays.stream(this.entityTable.getSchemaDefinitions())
+            .filter(TableSchema.SchemaDefinition::isExcludeFromSelect)
+            .map(TableSchema.SchemaDefinition::getName)
+            .collect(Collectors.toList());
 
-    this.countFields =
-        queryGenerator != null ? Arrays.asList(queryGenerator.fieldsToCount()) : List.of();
-
-    if (filesQuery) {
-      this.countFields =
-          List.of("file_identifier_system", "data_category", "file_format", "data_type");
-    }
+    //    this.countFields =
+    //        queryGenerator != null ? Arrays.asList(queryGenerator.fieldsToCount()) : List.of();
+    this.countFields = this.getCountByFields();
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
+  protected String sql(
+      String tableOrSubClause,
+      Query query,
+      boolean subQuery,
+      boolean hasSubClause,
+      boolean ignoreWith)
       throws UncheckedExecutionException, IllegalArgumentException {
-    String viewSql = super.sql(tableOrSubClause, QueryUtil.deSelectifyQuery(query), subQuery);
+    String viewSql =
+        super.sql(
+            tableOrSubClause, QueryUtil.deSelectifyQuery(query), subQuery, hasSubClause, true);
     String tableAlias = "flattened_result";
+    String withStatement = "";
+    if (this.viewListBuilder.hasAny() && !ignoreWith) {
+      withStatement = String.format("%s, %s as (%s)", getWithStatement(), tableAlias, viewSql);
+    } else {
+      withStatement = String.format("WITH %s as (%s)", tableAlias, viewSql);
+    }
+
     return subQuery
         ? viewSql
-        : String.format(
-            "with %s as (%s) select %s", tableAlias, viewSql, getCountSelects(tableAlias));
+        : String.format("%s select %s", withStatement, getCountSelects(tableAlias));
   }
 
   protected String getCountSelects(String tableAlias) {
@@ -72,36 +88,42 @@ public class EntityCountSqlGenerator extends SqlGenerator {
     String partitionKeyField = table.getPartitionKey();
     if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(table.getPartitionKey()))) {
       partitionKeyField =
-          DataSetInfo.getNewNameForDuplicate(table.getPartitionKey(), table.getTableName());
+          DataSetInfo.getNewNameForDuplicate(
+              this.dataSetInfo.getKnownAliases(), table.getPartitionKey(), table.getTableName());
     }
 
     String finalPartitionKeyField = partitionKeyField;
-    TableInfo finalTable = table;
-    return Stream.concat(Stream.of(partitionKeyField), countFields.stream())
+
+    return this.countFields.stream()
         .distinct()
         .map(
-            field -> {
-              String name = field.equals(finalPartitionKeyField) ? "Total" : field;
+            countByField -> {
+              TableInfo tableToUse = countByField.getTableInfo();
 
-              String fieldToUse = field;
-              TableInfo tableInfo = this.entityTable;
+              String fieldToUse = countByField.getField();
 
-              if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(field))) {
-                fieldToUse = DataSetInfo.getNewNameForDuplicate(field, finalTable.getTableName());
+              if (Objects.isNull(
+                  this.dataSetInfo.getSchemaDefinitionByFieldName(countByField.getField()))) {
+                fieldToUse =
+                    DataSetInfo.getNewNameForDuplicate(
+                        this.dataSetInfo.getKnownAliases(),
+                        countByField.getField(),
+                        tableToUse.getAdjustedTableName());
               }
 
-              tableInfo = this.dataSetInfo.getTableInfoFromField(fieldToUse);
-              if (tableInfo.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)) {
-                fieldToUse = tableInfo.getPartitionKeyAlias();
+              tableToUse = this.dataSetInfo.getTableInfoFromField(fieldToUse);
+              if (tableToUse.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)) {
+                fieldToUse = tableToUse.getPartitionKeyAlias(this.dataSetInfo);
               }
 
-              return List.of(
-                          finalPartitionKeyField, TableSchema.FILES_COLUMN, TableSchema.FILE_PREFIX)
-                      .contains(field)
+              String alias =
+                  Objects.nonNull(countByField.getAlias()) ? countByField.getAlias() : fieldToUse;
+
+              return countByField.getType().equals(CountByField.CountByTypeEnum.TOTAL)
                   ? String.format(
-                      "(SELECT COUNT(DISTINCT %s) from %s) as %s", fieldToUse, tableAlias, name)
+                      "(SELECT COUNT(DISTINCT %s) from %s) as %s", fieldToUse, tableAlias, alias)
                   : String.format(
-                      formatString, fieldToUse, finalPartitionKeyField, tableAlias, name);
+                      formatString, fieldToUse, finalPartitionKeyField, tableAlias, alias);
             })
         .collect(Collectors.joining(", "));
   }
@@ -109,62 +131,154 @@ public class EntityCountSqlGenerator extends SqlGenerator {
   @Override
   protected Stream<String> getSelectsFromEntity(
       QueryContext ctx, String prefix, boolean skipExcludes) {
+    return this.countFields.stream()
+        .map(
+            countByField -> {
+              TableInfo tableToUse = countByField.getTableInfo();
 
-    return Arrays.stream(
-            ctx.getFilesQuery()
-                ? this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX).getSchemaDefinitions()
-                : this.entityTable.getSchemaDefinitions())
-        .filter(
-            definition ->
-                !(ctx.getFilesQuery()
-                        && List.of("ResearchSubject", "Subject", "Specimen")
-                            .contains(definition.getName()))
-                    && (skipExcludes || !filteredFields.contains(definition.getName())))
-        .flatMap(
-            definition -> {
-              if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
-                TableInfo fromField = this.dataSetInfo.getTableInfoFromField(definition.getName());
+              String fieldToUse = countByField.getField();
 
-                if (Objects.isNull(fromField)) {
-                  fromField = this.dataSetInfo.getTableInfoFromField(definition.getAlias());
-                }
-                ctx.addUnnests(
-                    this.unnestBuilder.fromRelationshipPath(
-                        this.entityTable.getPathToTable(fromField), SqlUtil.JoinType.LEFT, true));
-                //                    ctx.addUnnests(
-                //                        this.unnestBuilder.fromParts(
-                //                            ctx.getFilesQuery() ? fileTable : table,
-                //                            parts,
-                //                            !parts[parts.length -
-                // 1].equals(TableSchema.FILES_COLUMN),
-                //                            SqlUtil.JoinType.INNER));
-
-                ctx.addPartitions(
-                    this.partitionBuilder.fromRelationshipPath(
-                        this.entityTable.getPathToTable(fromField)));
-
-                TableInfo finalFromField = fromField;
-                if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
-                  if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
-                    return Arrays.stream(definition.getFields())
-                        .map(
-                            fieldDefinition ->
-                                String.format(
-                                    "%1$s.%2$s AS %3$s",
-                                    finalFromField.getTableAlias(),
-                                    fieldDefinition.getName(),
-                                    fieldDefinition.getAlias()));
-                  } else {
-                    return Stream.of(fromField.getTableAlias());
-                  }
-                } else {
-                  return Stream.of(String.format("%s", definition.getAlias()));
-                }
-              } else {
-                return Stream.of(
-                    String.format(
-                        "%1$s.%2$s AS %3$s", prefix, definition.getName(), definition.getAlias()));
+              if (Objects.isNull(
+                  this.dataSetInfo.getSchemaDefinitionByFieldName(countByField.getField()))) {
+                fieldToUse =
+                    DataSetInfo.getNewNameForDuplicate(
+                        this.dataSetInfo.getKnownAliases(),
+                        countByField.getField(),
+                        tableToUse.getAdjustedTableName());
               }
+
+              TableSchema.SchemaDefinition definition =
+                  this.dataSetInfo.getSchemaDefinitionByFieldName(fieldToUse);
+
+              ctx.addUnnests(
+                  this.unnestBuilder.fromRelationshipPath(
+                      this.entityTable.getPathToTable(tableToUse), SqlUtil.JoinType.LEFT, true));
+
+              ctx.addPartitions(
+                  this.partitionBuilder.fromRelationshipPath(
+                      this.entityTable.getPathToTable(tableToUse)));
+
+              if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
+                return tableToUse.getTableAlias(this.dataSetInfo);
+              } else {
+                return String.format(
+                    "%1$s.%2$s AS %3$s",
+                    tableToUse.getTableAlias(this.dataSetInfo),
+                    definition.getName(),
+                    definition.getAlias());
+              }
+
+              //              if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
+              //                TableInfo fromField =
+              // this.dataSetInfo.getTableInfoFromField(definition.getName());
+              //
+              //                if (Objects.isNull(fromField)) {
+              //                  fromField =
+              // this.dataSetInfo.getTableInfoFromField(definition.getAlias());
+              //                }
+              //                ctx.addUnnests(
+              //                    this.unnestBuilder.fromRelationshipPath(
+              //                        this.entityTable.getPathToTable(fromField),
+              // SqlUtil.JoinType.LEFT, true));
+              //
+              //                ctx.addPartitions(
+              //                    this.partitionBuilder.fromRelationshipPath(
+              //                        this.entityTable.getPathToTable(fromField)));
+              //
+              //                TableInfo finalFromField = fromField;
+              //                if
+              // (definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
+              //                  return Arrays.stream(definition.getFields())
+              //                      .map(
+              //                          fieldDefinition ->
+              //                              String.format(
+              //                                  "%1$s.%2$s AS %3$s",
+              //                                  finalFromField.getTableAlias(this.dataSetInfo),
+              //                                  fieldDefinition.getName(),
+              //                                  fieldDefinition.getAlias()));
+              //                } else {
+              //                  return Stream.of(fromField.getTableAlias(this.dataSetInfo));
+              //                }
+              //              } else {
+              //                return Arrays.stream(definition.getCountByFields()).map(countByField
+              // -> {
+              //                  if (Objects.nonNull(countByField.getTable())) {
+              //                    TableInfo countByTable =
+              // this.dataSetInfo.getTableInfo(countByField.getTable());
+              //                    ctx.addUnnests(
+              //                            this.unnestBuilder.fromRelationshipPath(
+              //                                    this.entityTable.getPathToTable(countByTable),
+              // SqlUtil.JoinType.LEFT, true));
+              //                    ctx.addPartitions(
+              //                            this.partitionBuilder.fromRelationshipPath(
+              //                                    this.entityTable.getPathToTable(countByTable)));
+              //
+              //                    TableSchema.SchemaDefinition countByTableField =
+              //                            Arrays.stream(countByTable.getSchemaDefinitions())
+              //                                    .filter(def ->
+              // def.getName().equals(countByField.getField()))
+              //                                    .findFirst()
+              //                                    .orElseThrow();
+              //
+              //                    if
+              // (countByTableField.getMode().equals(Field.Mode.REPEATED.toString())) {
+              //                      TableInfo countByArrayTable =
+              // this.dataSetInfo.getTableInfoFromField(countByTableField.getName());
+              //
+              //                      if (Objects.isNull(countByArrayTable)) {
+              //                        countByArrayTable =
+              // this.dataSetInfo.getTableInfoFromField(countByTableField.getAlias());
+              //                      }
+              //                      ctx.addUnnests(
+              //                              this.unnestBuilder.fromRelationshipPath(
+              //
+              // countByTable.getPathToTable(countByArrayTable), SqlUtil.JoinType.LEFT, true));
+              //
+              //                      ctx.addPartitions(
+              //                              this.partitionBuilder.fromRelationshipPath(
+              //
+              // countByTable.getPathToTable(countByArrayTable)));
+              //
+              //                      return countByArrayTable.getTableAlias(this.dataSetInfo);
+              //                    } else {
+              //                      return String.format("%1$s.%2$s AS %3$s",
+              //                              countByTable.getTableAlias(this.dataSetInfo),
+              //                              countByTableField.getName(),
+              //                              countByTableField.getAlias());
+              //                    }
+              //                  } else {
+              //                    return String.format(
+              //                            "%1$s.%2$s AS %3$s", prefix, definition.getName(),
+              // definition.getAlias());
+              //                  }
+              //                });
+              //              }
             });
+  }
+
+  protected List<CountByField> getCountByFields() {
+    TableInfo countFieldsTable =
+        filesQuery ? this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX) : this.entityTable;
+
+    List<CountByField> countByFieldList = new ArrayList<>();
+
+    Queue<TableSchema.SchemaDefinition> schemaDefinitionQueue =
+        new LinkedList<>(List.of(countFieldsTable.getSchemaDefinitions()));
+    while (schemaDefinitionQueue.size() > 0) {
+      TableSchema.SchemaDefinition definition = schemaDefinitionQueue.remove();
+
+      if (definition.isExcludeFromSelect()) {
+        continue;
+      }
+
+      if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
+        schemaDefinitionQueue.addAll(List.of(definition.getFields()));
+      } else if (Objects.nonNull(definition.getCountByFields())
+          && definition.getCountByFields().length > 0) {
+        countByFieldList.addAll(List.of(definition.getCountByFields()));
+      }
+    }
+
+    return countByFieldList;
   }
 }

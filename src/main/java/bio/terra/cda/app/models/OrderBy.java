@@ -22,7 +22,9 @@ public class OrderBy {
     this.modifier = modifier;
   }
 
-  public String getFieldName() { return this.fieldName; }
+  public String getFieldName() {
+    return this.fieldName;
+  }
 
   public String getPath() {
     return this.path;

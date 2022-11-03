@@ -6,11 +6,14 @@ import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
+import bio.terra.cda.app.builders.ViewBuilder;
+import bio.terra.cda.app.builders.ViewListBuilder;
 import bio.terra.cda.app.models.OrderBy;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.Unnest;
+import bio.terra.cda.app.models.View;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +35,7 @@ public class QueryContext {
   private PartitionBuilder partitionBuilder;
   private ParameterBuilder parameterBuilder;
   private OrderByBuilder orderByBuilder;
+  private ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder;
   private TableInfo tableInfo;
 
   public QueryContext(String table, String project) {
@@ -129,6 +133,16 @@ public class QueryContext {
     return this;
   }
 
+  public ViewListBuilder<? extends View, ? extends ViewBuilder> getViewListBuilder() {
+    return this.viewListBuilder;
+  }
+
+  public QueryContext setViewListBuilder(
+      ViewListBuilder<? extends View, ? extends ViewBuilder> builder) {
+    this.viewListBuilder = builder;
+    return this;
+  }
+
   public QueryContext addUnnests(Stream<Unnest> newUnnests) {
     var aliasIndexes = new HashMap<String, Integer>();
 
@@ -175,17 +189,32 @@ public class QueryContext {
   }
 
   public QueryContext addPartitions(Stream<Partition> newPartitions) {
-    this.partitions.addAll(newPartitions.collect(Collectors.toList()));
+    List<Partition> newPartitionsList = newPartitions.collect(Collectors.toList());
+    if (newPartitionsList.isEmpty()) {
+      return this;
+    }
+
+    this.partitions.addAll(newPartitionsList);
     return this;
   }
 
   public QueryContext addSelects(Stream<Select> selects) {
-    this.select.addAll(selects.collect(Collectors.toList()));
+    List<Select> newSelectsList = selects.collect(Collectors.toList());
+    if (newSelectsList.isEmpty()) {
+      return this;
+    }
+
+    this.select.addAll(newSelectsList);
     return this;
   }
 
   public QueryContext addOrderBys(Stream<OrderBy> orderByStream) {
-    this.orderBys.addAll(orderByStream.collect(Collectors.toList()));
+    List<OrderBy> newOrderByList = orderByStream.collect(Collectors.toList());
+    if (newOrderByList.isEmpty()) {
+      return this;
+    }
+
+    this.orderBys.addAll(newOrderByList);
     return this;
   }
 

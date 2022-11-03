@@ -11,8 +11,7 @@ import java.io.IOException;
       "researchsubject_identifier_system",
       "primary_diagnosis_condition",
       "primary_diagnosis_site"
-    },
-    excludedFields = {"Specimen", "Diagnosis"})
+    })
 public class ResearchSubjectCountSqlGenerator extends EntityCountSqlGenerator {
   public ResearchSubjectCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {
