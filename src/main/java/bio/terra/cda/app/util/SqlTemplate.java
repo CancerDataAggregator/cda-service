@@ -26,6 +26,14 @@ public class SqlTemplate {
         "SELECT results.* EXCEPT(rn) FROM (%1$s) as results WHERE rn = 1", resultsQuery);
   }
 
+  public static String regularQuery(String selectFields, String from, String where, String orderBys) {
+    return String.format("SELECT %1$s FROM %2$s WHERE %3$s%4$s",
+            selectFields,
+            from,
+            where,
+            !Objects.equals(orderBys, "") ? String.format(" ORDER BY %s", orderBys) : "");
+  }
+
   public static String resultsQuery(
       String partitionByFields, String selectFields, String from, String where, String orderBys) {
     return String.format(
