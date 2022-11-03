@@ -681,7 +681,7 @@
             "researchsubject_id"
           ],
           "type": "SINGLE",
-          "tableName": "all_Subjects_v3_1_test1",
+          "tableName": "all_Subjects_v3_1_final",
           "tableAlias": "researchsubjects",
           "location": "ResearchSubject"
         }
