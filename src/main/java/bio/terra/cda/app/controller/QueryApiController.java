@@ -205,19 +205,29 @@ public class QueryApiController implements QueryApi {
             unnestBuilder.fromRelationshipPath(tablePath, SqlUtil.JoinType.INNER, true));
 
     if (system != null && system.length() > 0) {
+      TableInfo newTableInfo = tableInfo.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)
+              ? tableInfo
+                .getRelationships()
+                .stream()
+                .filter(TableRelationship::isParent)
+                .findFirst()
+                .orElseThrow()
+                .getDestinationTableInfo()
+              : tableInfo;
+      String tbl = dataSetInfo
+              .getKnownAliases()
+              .getOrDefault(
+                      newTableInfo.getAdjustedTableName(), newTableInfo.getAdjustedTableName())
+              .toLowerCase(Locale.ROOT);
       TableInfo identifierTable =
-          dataSetInfo.getTableInfo(
-              dataSetInfo
-                      .getKnownAliases()
-                      .getOrDefault(
-                          tableInfo.getAdjustedTableName(), tableInfo.getAdjustedTableName())
-                      .toLowerCase(Locale.ROOT)
-                  + "_identifier");
+              dataSetInfo.getTableInfo(
+                      tbl
+                              + (tbl.contains("_identifier") ? "" : "_identifier"));
 
       if (Objects.isNull(identifierTable)) {
         identifierTable = dataSetInfo.getTableInfo("subject_identifier");
       }
-      TableRelationship[] pathToIdentifier = tableInfo.getPathToTable(identifierTable);
+      TableRelationship[] pathToIdentifier = newTableInfo.getPathToTable(identifierTable);
 
       unnestStream =
           Stream.concat(
