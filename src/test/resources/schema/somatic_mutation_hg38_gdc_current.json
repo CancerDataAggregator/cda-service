@@ -1,681 +1,730 @@
-[
-  {
-    "description": "Project name abbreviation; the program name appended with a project name abbreviation; eg. TCGA-OV, etc.",
-    "mode": "NULLABLE",
-    "name": "project_short_name",
-    "type": "STRING"
-  },
-  {
-    "description": "Original TCGA case barcode, eg TCGA-DX-A8BN",
-    "mode": "NULLABLE",
-    "name": "case_barcode",
-    "type": "STRING",
-    "partitionBy": true,
-    "foreignKeys": [{
-      "fields": ["subject_id"],
-      "type": "SINGLE",
-      "tableName": "all_Subjects_v3_0_final",
-      "tableAlias": "subjects"
-    }]
-  },
-  {
-    "description": "TCGA sample barcode for the tumor, eg TCGA-12-1089-01A. One sample may have multiple sets of CN segmentations corresponding to multiple aliquots; use GROUP BY appropriately in queries",
-    "mode": "NULLABLE",
-    "name": "sample_barcode_tumor",
-    "type": "STRING"
-  },
-  {
-    "description": "TCGA sample barcode for the normal control, eg TCGA-12-1089-01A. One sample may have multiple sets of CN segmentations corresponding to multiple aliquots; use GROUP BY appropriately in queries",
-    "mode": "NULLABLE",
-    "name": "sample_barcode_normal",
-    "type": "STRING"
-  },
-  {
-    "description": "TCGA aliquot barcode for the tumor, eg TCGA-12-1089-01A-01D-0517-01",
-    "mode": "NULLABLE",
-    "name": "aliquot_barcode_tumor",
-    "type": "STRING"
-  },
-  {
-    "description": "TCGA aliquot barcode for the normal control, eg TCGA-12-1089-01A-01D-0517-01",
-    "mode": "NULLABLE",
-    "name": "aliquot_barcode_normal",
-    "type": "STRING"
-  },
-  {
-    "description": "HUGO symbol for the gene (HUGO symbols are always in all caps). Unknown is used for regions that do not correspond to a gene",
-    "mode": "NULLABLE",
-    "name": "Hugo_Symbol",
-    "type": "STRING"
-  },
-  {
-    "description": "Entrez gene ID (an integer). 0 is used for regions that do not correspond to a gene region or Ensembl ID",
-    "mode": "NULLABLE",
-    "name": "Entrez_Gene_Id",
-    "type": "INTEGER"
-  },
-  {
-    "description": "One or more genome sequencing center reporting the variant",
-    "mode": "NULLABLE",
-    "name": "Center",
-    "type": "STRING"
-  },
-  {
-    "description": "The reference genome used for the alignment (GRCh38)",
-    "mode": "NULLABLE",
-    "name": "NCBI_Build",
-    "type": "STRING"
-  },
-  {
-    "description": "Chromosome, possible values: chr1-22, and chrX",
-    "mode": "NULLABLE",
-    "name": "Chromosome",
-    "type": "STRING"
-  },
-  {
-    "description": "Lowest numeric position of the reported variant on the genomic reference sequence. Mutation start coordinate",
-    "mode": "NULLABLE",
-    "name": "Start_Position",
-    "type": "INTEGER"
-  },
-  {
-    "description": "Highest numeric genomic position of the reported variant on the genomic reference sequence. Mutation end coordinate",
-    "mode": "NULLABLE",
-    "name": "End_Position",
-    "type": "INTEGER"
-  },
-  {
-    "description": "Either + or - to denote whether read mapped to the sense (+) or anti-sense (-) strand",
-    "mode": "NULLABLE",
-    "name": "Strand",
-    "type": "STRING"
-  },
-  {
-    "description": "Translational effect of variant allele",
-    "mode": "NULLABLE",
-    "name": "Variant_Classification",
-    "type": "STRING"
-  },
-  {
-    "description": "Type of mutation. TNP (tri-nucleotide polymorphism) is analogous to DNP (di-nucleotide polymorphism) but for three consecutive nucleotides. ONP (oligo-nucleotide polymorphism) is analogous to TNP but for consecutive runs of four or more (SNP, DNP, TNP, ONP, INS, DEL, or Consolidated)",
-    "mode": "NULLABLE",
-    "name": "Variant_Type",
-    "type": "STRING"
-  },
-  {
-    "description": "The plus strand reference allele at this position. Includes the deleted sequence for a deletion or - for an insertion",
-    "mode": "NULLABLE",
-    "name": "Reference_Allele",
-    "type": "STRING"
-  },
-  {
-    "description": "Primary data genotype for tumor sequencing (discovery) allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases",
-    "mode": "NULLABLE",
-    "name": "Tumor_Seq_Allele1",
-    "type": "STRING"
-  },
-  {
-    "description": "Primary data genotype for tumor sequencing (discovery) allele 2. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases",
-    "mode": "NULLABLE",
-    "name": "Tumor_Seq_Allele2",
-    "type": "STRING"
-  },
-  {
-    "description": "The rs-IDs from the   dbSNP database, novel if not found in any database used, or null if there is no dbSNP record, but it is found in other databases",
-    "mode": "NULLABLE",
-    "name": "dbSNP_RS",
-    "type": "STRING"
-  },
-  {
-    "description": "The dbSNP validation status is reported as a semicolon-separated list of statuses. The union of all rs-IDs is taken when there are multiple",
-    "mode": "NULLABLE",
-    "name": "dbSNP_Val_Status",
-    "type": "STRING"
-  },
-  {
-    "description": "Secondary data from orthogonal technology. Tumor genotyping (validation) for allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases",
-    "mode": "NULLABLE",
-    "name": "Tumor_Validation_Allele1",
-    "type": "STRING"
-  },
-  {
-    "description": "Secondary data from orthogonal technology. Tumor genotyping (validation) for allele 2",
-    "mode": "NULLABLE",
-    "name": "Tumor_Validation_Allele2",
-    "type": "STRING"
-  },
-  {
-    "description": "An assessment of the mutation as somatic, germline, LOH, post transcriptional modification, unknown, or none. The values allowed in this field are constrained by the value in the Validation_Status field",
-    "mode": "NULLABLE",
-    "name": "Mutation_Status",
-    "type": "STRING"
-  },
-  {
-    "description": "The assay platforms used for the validation call",
-    "mode": "NULLABLE",
-    "name": "Validation_Method",
-    "type": "STRING"
-  },
-  {
-    "description": "Instrument used to produce primary sequence data",
-    "mode": "NULLABLE",
-    "name": "Sequencer",
-    "type": "STRING"
-  },
-  {
-    "description": "Unique GDC identifier for tumor aliquot (10189 unique)",
-    "mode": "NULLABLE",
-    "name": "Tumor_Sample_UUID",
-    "type": "STRING",
-    "foreignKeys": [{
-      "fields": ["specimen_id"],
-      "type": "COMPOSITE_OR",
-      "tableName": "all_Subjects_v3_0_final",
-      "tableAlias": "subjects"
-    }]
-  },
-  {
-    "description": "Unique GDC identifier for normal aliquot (10189 unique)",
-    "mode": "NULLABLE",
-    "name": "Matched_Norm_Sample_UUID",
-    "type": "STRING",
-    "foreignKeys": [{
-      "fields": ["specimen_id"],
-      "type": "COMPOSITE_OR",
-      "tableName": "all_Subjects_v3_0_final",
-      "tableAlias": "subjects"
-    }]
-  },
-  {
-    "description": "The coding sequence of the variant in HGVS recommended format",
-    "mode": "NULLABLE",
-    "name": "HGVSc",
-    "type": "STRING"
-  },
-  {
-    "description": "The protein sequence of the variant in HGVS recommended format. p.= signifies no change in the protein",
-    "mode": "NULLABLE",
-    "name": "HGVSp",
-    "type": "STRING"
-  },
-  {
-    "description": "Same as the HGVSp column, but using 1-letter amino-acid codes",
-    "mode": "NULLABLE",
-    "name": "HGVSp_Short",
-    "type": "STRING"
-  },
-  {
-    "description": "Ensembl ID of the transcript affected by the variant",
-    "mode": "NULLABLE",
-    "name": "Transcript_ID",
-    "type": "STRING"
-  },
-  {
-    "description": "The exon number (out of total number)",
-    "mode": "NULLABLE",
-    "name": "Exon_Number",
-    "type": "STRING"
-  },
-  {
-    "description": "Read depth across this locus in tumor BAM",
-    "mode": "NULLABLE",
-    "name": "t_depth",
-    "type": "STRING"
-  },
-  {
-    "description": "Read depth supporting the reference allele in tumor BAM",
-    "mode": "NULLABLE",
-    "name": "t_ref_count",
-    "type": "STRING"
-  },
-  {
-    "description": "Read depth supporting the variant allele in tumor BAM",
-    "mode": "NULLABLE",
-    "name": "t_alt_count",
-    "type": "STRING"
-  },
-  {
-    "description": "Read depth across this locus in normal BAM",
-    "mode": "NULLABLE",
-    "name": "n_depth",
-    "type": "STRING"
-  },
-  {
-    "description": "A semicolon delimited list of all possible variant effects, sorted by priority ([Symbol,Consequence,HGVSp_Short,Transcript_ID,RefSeq,HGVSc,Impact,Canonical,Sift,PolyPhen,Strand])",
-    "mode": "NULLABLE",
-    "name": "all_effects",
-    "type": "STRING"
-  },
-  {
-    "description": "The variant allele used to calculate the consequence",
-    "mode": "NULLABLE",
-    "name": "Allele",
-    "type": "STRING"
-  },
-  {
-    "description": "The gene symbol. In this table, gene symbol is gene name e.g. ACADVL",
-    "mode": "NULLABLE",
-    "name": "Gene",
-    "type": "STRING"
-  },
-  {
-    "description": "Stable Ensembl ID of feature (transcript, regulatory, motif)",
-    "mode": "NULLABLE",
-    "name": "Feature",
-    "type": "STRING"
-  },
-  {
-    "description": "Type of feature. Currently one of Transcript, RegulatoryFeature, MotifFeature (or blank)",
-    "mode": "NULLABLE",
-    "name": "Feature_type",
-    "type": "STRING"
-  },
-  {
-    "description": "The single consequence of the canonical transcript in  sequence ontology terms, eg missense_variant",
-    "mode": "NULLABLE",
-    "name": "One_Consequence",
-    "type": "STRING"
-  },
-  {
-    "description": "Consequence type of this variant; sequence ontology terms",
-    "mode": "NULLABLE",
-    "name": "Consequence",
-    "type": "STRING"
-  },
-  {
-    "description": "Relative position of base pair in the cDNA sequence as a fraction. A - symbol is displayed as the numerator if the variant does not appear in cDNA",
-    "mode": "NULLABLE",
-    "name": "cDNA_position",
-    "type": "STRING"
-  },
-  {
-    "description": "Relative position of base pair in coding sequence. A - symbol is displayed as the numerator if the variant does not appear in coding sequence",
-    "mode": "NULLABLE",
-    "name": "CDS_position",
-    "type": "STRING"
-  },
-  {
-    "description": "Relative position of affected amino acid in protein. A - symbol is displayed as the numerator if the variant does not appear in coding sequence",
-    "mode": "NULLABLE",
-    "name": "Protein_position",
-    "type": "STRING"
-  },
-  {
-    "description": "Amino acid substitution caused by the mutation. Only given if the variation affects the protein-coding sequence",
-    "mode": "NULLABLE",
-    "name": "Amino_acids",
-    "type": "STRING"
-  },
-  {
-    "description": "The alternative codons with the variant base in upper case",
-    "mode": "NULLABLE",
-    "name": "Codons",
-    "type": "STRING"
-  },
-  {
-    "description": "Known identifier of existing variation",
-    "mode": "NULLABLE",
-    "name": "Existing_variation",
-    "type": "STRING"
-  },
-  {
-    "description": "Allele number from input; 0 is reference, 1 is first alternate etc.",
-    "mode": "NULLABLE",
-    "name": "ALLELE_NUM",
-    "type": "STRING"
-  },
-  {
-    "description": "Shortest distance from the variant to transcript",
-    "mode": "NULLABLE",
-    "name": "DISTANCE",
-    "type": "INTEGER"
-  },
-  {
-    "description": "The DNA strand (1 or -1) on which the transcript/feature lies",
-    "mode": "NULLABLE",
-    "name": "TRANSCRIPT_STRAND",
-    "type": "INTEGER"
-  },
-  {
-    "description": "Eg TP53, LRP1B, etc (same as Hugo_Symbol field except blank instead of Unknown",
-    "mode": "NULLABLE",
-    "name": "SYMBOL",
-    "type": "STRING"
-  },
-  {
-    "description": "The source of the gene symbol, usually HGNC, rarely blank, other sources include Uniprot_gn, EntrezGene, etc",
-    "mode": "NULLABLE",
-    "name": "SYMBOL_SOURCE",
-    "type": "STRING"
-  },
-  {
-    "description": "Gene identifier from the HUGO Gene Nomenclature Committee if applicable",
-    "mode": "NULLABLE",
-    "name": "HGNC_ID",
-    "type": "STRING"
-  },
-  {
-    "description": "Biotype of transcript",
-    "mode": "NULLABLE",
-    "name": "BIOTYPE",
-    "type": "STRING"
-  },
-  {
-    "description": "A flag (YES) indicating that the VEP-based canonical transcript, the longest translation, was used for this gene. If not, the value is null",
-    "mode": "NULLABLE",
-    "name": "CANONICAL",
-    "type": "STRING"
-  },
-  {
-    "description": "The  CCDS identifier for this transcript, where applicable",
-    "mode": "NULLABLE",
-    "name": "CCDS",
-    "type": "STRING"
-  },
-  {
-    "description": "The Ensembl protein identifier of the affected transcript",
-    "mode": "NULLABLE",
-    "name": "ENSP",
-    "type": "STRING"
-  },
-  {
-    "description": "UniProtKB/Swiss-Prot accession",
-    "mode": "NULLABLE",
-    "name": "SWISSPROT",
-    "type": "STRING"
-  },
-  {
-    "description": "UniProtKB/TrEMBL identifier of protein product",
-    "mode": "NULLABLE",
-    "name": "TREMBL",
-    "type": "STRING"
-  },
-  {
-    "description": "UniParc identifier of protein product",
-    "mode": "NULLABLE",
-    "name": "UNIPARC",
-    "type": "STRING"
-  },
-  {
-    "description": "RefSeq identifier for this transcript",
-    "mode": "NULLABLE",
-    "name": "RefSeq",
-    "type": "STRING"
-  },
-  {
-    "description": "The   SIFT prediction and/or score, with both given as prediction (score)",
-    "mode": "NULLABLE",
-    "name": "SIFT",
-    "type": "STRING"
-  },
-  {
-    "description": "The PolyPhen prediction and/or score",
-    "mode": "NULLABLE",
-    "name": "PolyPhen",
-    "type": "STRING"
-  },
-  {
-    "description": "The exon number (out of total number)",
-    "mode": "NULLABLE",
-    "name": "EXON",
-    "type": "STRING"
-  },
-  {
-    "description": "The intron number (out of total number)",
-    "mode": "NULLABLE",
-    "name": "INTRON",
-    "type": "STRING"
-  },
-  {
-    "description": "The source and identifier of any overlapping protein domains",
-    "mode": "NULLABLE",
-    "name": "DOMAINS",
-    "type": "STRING"
-  },
-  {
-    "description": "Non-reference allele and frequency of existing variant in   1000 Genomes",
-    "mode": "NULLABLE",
-    "name": "GMAF",
-    "type": "FLOAT"
-  },
-  {
-    "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined African population",
-    "mode": "NULLABLE",
-    "name": "AFR_MAF",
-    "type": "FLOAT"
-  },
-  {
-    "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined American population",
-    "mode": "NULLABLE",
-    "name": "AMR_MAF",
-    "type": "FLOAT"
-  },
-  {
-    "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined East Asian population",
-    "mode": "NULLABLE",
-    "name": "EAS_MAF",
-    "type": "FLOAT"
-  },
-  {
-    "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined European population",
-    "mode": "NULLABLE",
-    "name": "EUR_MAF",
-    "type": "FLOAT"
-  },
-  {
-    "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined South Asian population",
-    "mode": "NULLABLE",
-    "name": "SAS_MAF",
-    "type": "FLOAT"
-  },
-  {
-    "description": "Non-reference allele and frequency of existing variant in NHLBI-ESP African American population",
-    "mode": "NULLABLE",
-    "name": "AA_MAF",
-    "type": "STRING"
-  },
-  {
-    "description": "Non-reference allele and frequency of existing variant in NHLBI-ESP European American population",
-    "mode": "NULLABLE",
-    "name": "EA_MAF",
-    "type": "STRING"
-  },
-  {
-    "description": "Clinical significance of variant from dbSNP",
-    "mode": "NULLABLE",
-    "name": "CLIN_SIG",
-    "type": "STRING"
-  },
-  {
-    "description": "Somatic status of each ID reported under Existing_variation (0, 1, or null)",
-    "mode": "NULLABLE",
-    "name": "SOMATIC",
-    "type": "STRING"
-  },
-  {
-    "description": "Pubmed ID(s) of publications that cite existing variant",
-    "mode": "NULLABLE",
-    "name": "PUBMED",
-    "type": "STRING"
-  },
-  {
-    "description": "The impact modifier for the consequence type",
-    "mode": "NULLABLE",
-    "name": "IMPACT",
-    "type": "STRING"
-  },
-  {
-    "description": "Indicates if this block of consequence data was picked by VEP's   pick feature (1 or null)",
-    "mode": "NULLABLE",
-    "name": "PICK",
-    "type": "STRING"
-  },
-  {
-    "description": "Sequence Ontology variant class",
-    "mode": "NULLABLE",
-    "name": "VARIANT_CLASS",
-    "type": "STRING"
-  },
-  {
-    "description": "Transcript support level, which is based on independent RNA analyses",
-    "mode": "NULLABLE",
-    "name": "TSL",
-    "type": "INTEGER"
-  },
-  {
-    "description": "Indicates by how many bases the HGVS notations for this variant have been shifted",
-    "mode": "NULLABLE",
-    "name": "HGVS_OFFSET",
-    "type": "INTEGER"
-  },
-  {
-    "description": "Indicates if existing variant is associated with a phenotype, disease or trait (0, 1, or null)",
-    "mode": "NULLABLE",
-    "name": "PHENO",
-    "type": "STRING"
-  },
-  {
-    "description": "Alleles in this variant have been converted to minimal representation before consequence calculation (1 or null)",
-    "mode": "NULLABLE",
-    "name": "MINIMISED",
-    "type": "STRING"
-  },
-  {
-    "description": "Global Allele Frequency from   ExAC",
-    "mode": "NULLABLE",
-    "name": "ExAC_AF",
-    "type": "STRING"
-  },
-  {
-    "description": "Adjusted Global Allele Frequency from ExAC",
-    "mode": "NULLABLE",
-    "name": "ExAC_AF_Adj",
-    "type": "STRING"
-  },
-  {
-    "description": "African/African American Allele Frequency from ExAC",
-    "mode": "NULLABLE",
-    "name": "ExAC_AF_AFR",
-    "type": "STRING"
-  },
-  {
-    "description": "American Allele Frequency from ExAC",
-    "mode": "NULLABLE",
-    "name": "ExAC_AF_AMR",
-    "type": "STRING"
-  },
-  {
-    "description": "East Asian Allele Frequency from ExAC",
-    "mode": "NULLABLE",
-    "name": "ExAC_AF_EAS",
-    "type": "STRING"
-  },
-  {
-    "description": "Finnish Allele Frequency from ExAC",
-    "mode": "NULLABLE",
-    "name": "ExAC_AF_FIN",
-    "type": "STRING"
-  },
-  {
-    "description": "Non-Finnish European Allele Frequency from ExAC",
-    "mode": "NULLABLE",
-    "name": "ExAC_AF_NFE",
-    "type": "STRING"
-  },
-  {
-    "description": "Other Allele Frequency from ExAC",
-    "mode": "NULLABLE",
-    "name": "ExAC_AF_OTH",
-    "type": "STRING"
-  },
-  {
-    "description": "South Asian Allele Frequency from ExAC",
-    "mode": "NULLABLE",
-    "name": "ExAC_AF_SAS",
-    "type": "STRING"
-  },
-  {
-    "description": "Copied from input VCF. This includes filters implemented directly by the variant caller and other external software used in the DNA-Seq pipeline. See below for additional details.",
-    "mode": "NULLABLE",
-    "name": "FILTER",
-    "type": "STRING"
-  },
-  {
-    "description": "The reference allele per VCF specs, and its five flanking base pairs",
-    "mode": "NULLABLE",
-    "name": "CONTEXT",
-    "type": "STRING"
-  },
-  {
-    "description": "|-delimited list of GDC VCF file identifiers",
-    "mode": "NULLABLE",
-    "name": "src_vcf_id",
-    "type": "STRING"
-  },
-  {
-    "description": "Unique GDC identifier for the underlying bam file",
-    "mode": "NULLABLE",
-    "name": "tumor_bam_uuid",
-    "type": "STRING"
-  },
-  {
-    "description": "Unique GDC identifier for the underlying normal bam file",
-    "mode": "NULLABLE",
-    "name": "normal_bam_uuid",
-    "type": "STRING"
-  },
-  {
-    "description": "Unique GDC identifier for the underlying case",
-    "mode": "NULLABLE",
-    "name": "case_id",
-    "type": "STRING",
-    "foreignKeys": [{
-      "fields": ["researchsubject_id"],
-      "type": "SINGLE",
-      "tableName": "all_Subjects_v3_0_final",
-      "tableAlias": "subjects"
-    }]
-  },
-  {
-    "description": "GDC filters applied universally across all MAFs",
-    "mode": "NULLABLE",
-    "name": "GDC_FILTER",
-    "type": "STRING"
-  },
-  {
-    "description": "Overlapping COSMIC variants",
-    "mode": "NULLABLE",
-    "name": "COSMIC",
-    "type": "STRING"
-  },
-  {
-    "description": "Indicates whether this region overlaps with an MC3 variant for the same sample pair",
-    "mode": "NULLABLE",
-    "name": "MC3_Overlap",
-    "type": "STRING"
-  },
-  {
-    "description": "GDC implementation of validation checks. See notes section (#5) below for details",
-    "mode": "NULLABLE",
-    "name": "GDC_Validation_Status",
-    "type": "STRING"
-  },
-  {
-    "description": "|-delimited list of mutation caller(s) that agreed on this particular call, always in alphabetical order: muse, mutect, somaticsniper, varscan",
-    "mode": "NULLABLE",
-    "name": "callerName",
-    "type": "STRING"
-  },
-  {
-    "description": "|-delimited list of unique GDC identifiers for underlying MAF file",
-    "mode": "NULLABLE",
-    "name": "fileUUID",
-    "type": "STRING"
-  },
-  {
-    "description": "|-delimited list of name of underlying MAF file",
-    "mode": "NULLABLE",
-    "name": "fileName",
-    "type": "STRING"
-  }
-]
+{
+  "tableAlias": "Mutation",
+  "definitions": [
+    {
+      "description": "Project name abbreviation; the program name appended with a project name abbreviation; eg. TCGA-OV, etc.",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "project_short_name",
+      "countByFields": [
+        {
+          "field": "project_short_name",
+          "type": "GROUPED"
+        }
+      ]
+    },
+    {
+      "description": "Original TCGA case barcode, eg TCGA-DX-A8BN",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "case_barcode",
+      "partitionBy": true,
+      "foreignKeys": [
+        {
+          "fields": [
+            "subject_id"
+          ],
+          "type": "SINGLE",
+          "tableName": "all_Subjects_v3_0_final",
+          "tableAlias": "subjects"
+        }
+      ]
+    },
+    {
+      "description": "TCGA sample barcode for the tumor, eg TCGA-12-1089-01A. One sample may have multiple sets of CN segmentations corresponding to multiple aliquots; use GROUP BY appropriately in queries",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "sample_barcode_tumor"
+    },
+    {
+      "description": "TCGA sample barcode for the normal control, eg TCGA-12-1089-01A. One sample may have multiple sets of CN segmentations corresponding to multiple aliquots; use GROUP BY appropriately in queries",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "sample_barcode_normal"
+    },
+    {
+      "description": "TCGA aliquot barcode for the tumor, eg TCGA-12-1089-01A-01D-0517-01",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "aliquot_barcode_tumor"
+    },
+    {
+      "description": "TCGA aliquot barcode for the normal control, eg TCGA-12-1089-01A-01D-0517-01",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "aliquot_barcode_normal"
+    },
+    {
+      "description": "HUGO symbol for the gene (HUGO symbols are always in all caps). Unknown is used for regions that do not correspond to a gene",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Hugo_Symbol"
+    },
+    {
+      "description": "Entrez gene ID (an integer). 0 is used for regions that do not correspond to a gene region or Ensembl ID",
+      "mode": "NULLABLE",
+      "type": "INTEGER",
+      "name": "Entrez_Gene_Id"
+    },
+    {
+      "description": "One or more genome sequencing center reporting the variant",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Center"
+    },
+    {
+      "description": "The reference genome used for the alignment (GRCh38)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "NCBI_Build",
+      "countByFields": [
+        {
+          "field": "NCBI_Build",
+          "type": "GROUPED"
+        }
+      ]
+    },
+    {
+      "description": "Chromosome, possible values: chr1-22, and chrX",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Chromosome",
+      "countByFields": [
+        {
+          "field": "Chromosome",
+          "type": "GROUPED"
+        }
+      ]
+    },
+    {
+      "description": "Lowest numeric position of the reported variant on the genomic reference sequence. Mutation start coordinate",
+      "mode": "NULLABLE",
+      "type": "INTEGER",
+      "name": "Start_Position"
+    },
+    {
+      "description": "Highest numeric genomic position of the reported variant on the genomic reference sequence. Mutation end coordinate",
+      "mode": "NULLABLE",
+      "type": "INTEGER",
+      "name": "End_Position"
+    },
+    {
+      "description": "Either + or - to denote whether read mapped to the sense (+) or anti-sense (-) strand",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Strand"
+    },
+    {
+      "description": "Translational effect of variant allele",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Variant_Classification"
+    },
+    {
+      "description": "Type of mutation. TNP (tri-nucleotide polymorphism) is analogous to DNP (di-nucleotide polymorphism) but for three consecutive nucleotides. ONP (oligo-nucleotide polymorphism) is analogous to TNP but for consecutive runs of four or more (SNP, DNP, TNP, ONP, INS, DEL, or Consolidated)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Variant_Type",
+      "countByFields": [
+        {
+          "field": "Variant_Type",
+          "type": "GROUPED"
+        }
+      ]
+    },
+    {
+      "description": "The plus strand reference allele at this position. Includes the deleted sequence for a deletion or - for an insertion",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Reference_Allele"
+    },
+    {
+      "description": "Primary data genotype for tumor sequencing (discovery) allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Tumor_Seq_Allele1"
+    },
+    {
+      "description": "Primary data genotype for tumor sequencing (discovery) allele 2. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Tumor_Seq_Allele2"
+    },
+    {
+      "description": "The rs-IDs from the   dbSNP database, novel if not found in any database used, or null if there is no dbSNP record, but it is found in other databases",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "dbSNP_RS"
+    },
+    {
+      "description": "The dbSNP validation status is reported as a semicolon-separated list of statuses. The union of all rs-IDs is taken when there are multiple",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "dbSNP_Val_Status"
+    },
+    {
+      "description": "Secondary data from orthogonal technology. Tumor genotyping (validation) for allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Tumor_Validation_Allele1"
+    },
+    {
+      "description": "Secondary data from orthogonal technology. Tumor genotyping (validation) for allele 2",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Tumor_Validation_Allele2"
+    },
+    {
+      "description": "An assessment of the mutation as somatic, germline, LOH, post transcriptional modification, unknown, or none. The values allowed in this field are constrained by the value in the Validation_Status field",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Mutation_Status"
+    },
+    {
+      "description": "The assay platforms used for the validation call",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Validation_Method"
+    },
+    {
+      "description": "Instrument used to produce primary sequence data",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Sequencer"
+    },
+    {
+      "description": "Unique GDC identifier for tumor aliquot (10189 unique)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Tumor_Sample_UUID",
+      "foreignKeys": [
+        {
+          "fields": [
+            "specimen_id"
+          ],
+          "type": "COMPOSITE_OR",
+          "tableName": "all_Subjects_v3_0_final",
+          "tableAlias": "subjects"
+        }
+      ]
+    },
+    {
+      "description": "Unique GDC identifier for normal aliquot (10189 unique)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Matched_Norm_Sample_UUID",
+      "foreignKeys": [
+        {
+          "fields": [
+            "specimen_id"
+          ],
+          "type": "COMPOSITE_OR",
+          "tableName": "all_Subjects_v3_0_final",
+          "tableAlias": "subjects"
+        }
+      ]
+    },
+    {
+      "description": "The coding sequence of the variant in HGVS recommended format",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "HGVSc"
+    },
+    {
+      "description": "The protein sequence of the variant in HGVS recommended format. p.= signifies no change in the protein",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "HGVSp"
+    },
+    {
+      "description": "Same as the HGVSp column, but using 1-letter amino-acid codes",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "HGVSp_Short"
+    },
+    {
+      "description": "Ensembl ID of the transcript affected by the variant",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Transcript_ID"
+    },
+    {
+      "description": "The exon number (out of total number)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Exon_Number"
+    },
+    {
+      "description": "Read depth across this locus in tumor BAM",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "t_depth"
+    },
+    {
+      "description": "Read depth supporting the reference allele in tumor BAM",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "t_ref_count"
+    },
+    {
+      "description": "Read depth supporting the variant allele in tumor BAM",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "t_alt_count"
+    },
+    {
+      "description": "Read depth across this locus in normal BAM",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "n_depth"
+    },
+    {
+      "description": "A semicolon delimited list of all possible variant effects, sorted by priority ([Symbol,Consequence,HGVSp_Short,Transcript_ID,RefSeq,HGVSc,Impact,Canonical,Sift,PolyPhen,Strand])",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "all_effects"
+    },
+    {
+      "description": "The variant allele used to calculate the consequence",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Allele"
+    },
+    {
+      "description": "The gene symbol. In this table, gene symbol is gene name e.g. ACADVL",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Gene"
+    },
+    {
+      "description": "Stable Ensembl ID of feature (transcript, regulatory, motif)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Feature"
+    },
+    {
+      "description": "Type of feature. Currently one of Transcript, RegulatoryFeature, MotifFeature (or blank)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Feature_type"
+    },
+    {
+      "description": "The single consequence of the canonical transcript in  sequence ontology terms, eg missense_variant",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "One_Consequence",
+      "countByFields": [
+        {
+          "field": "One_Consequence",
+          "type": "GROUPED"
+        }
+      ]
+    },
+    {
+      "description": "Consequence type of this variant; sequence ontology terms",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Consequence"
+    },
+    {
+      "description": "Relative position of base pair in the cDNA sequence as a fraction. A - symbol is displayed as the numerator if the variant does not appear in cDNA",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "cDNA_position"
+    },
+    {
+      "description": "Relative position of base pair in coding sequence. A - symbol is displayed as the numerator if the variant does not appear in coding sequence",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "CDS_position"
+    },
+    {
+      "description": "Relative position of affected amino acid in protein. A - symbol is displayed as the numerator if the variant does not appear in coding sequence",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Protein_position"
+    },
+    {
+      "description": "Amino acid substitution caused by the mutation. Only given if the variation affects the protein-coding sequence",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Amino_acids"
+    },
+    {
+      "description": "The alternative codons with the variant base in upper case",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Codons"
+    },
+    {
+      "description": "Known identifier of existing variation",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "Existing_variation"
+    },
+    {
+      "description": "Allele number from input; 0 is reference, 1 is first alternate etc.",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ALLELE_NUM"
+    },
+    {
+      "description": "Shortest distance from the variant to transcript",
+      "mode": "NULLABLE",
+      "type": "INTEGER",
+      "name": "DISTANCE"
+    },
+    {
+      "description": "The DNA strand (1 or -1) on which the transcript/feature lies",
+      "mode": "NULLABLE",
+      "type": "INTEGER",
+      "name": "TRANSCRIPT_STRAND"
+    },
+    {
+      "description": "Eg TP53, LRP1B, etc (same as Hugo_Symbol field except blank instead of Unknown",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "SYMBOL"
+    },
+    {
+      "description": "The source of the gene symbol, usually HGNC, rarely blank, other sources include Uniprot_gn, EntrezGene, etc",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "SYMBOL_SOURCE"
+    },
+    {
+      "description": "Gene identifier from the HUGO Gene Nomenclature Committee if applicable",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "HGNC_ID"
+    },
+    {
+      "description": "Biotype of transcript",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "BIOTYPE"
+    },
+    {
+      "description": "A flag (YES) indicating that the VEP-based canonical transcript, the longest translation, was used for this gene. If not, the value is null",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "CANONICAL"
+    },
+    {
+      "description": "The  CCDS identifier for this transcript, where applicable",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "CCDS"
+    },
+    {
+      "description": "The Ensembl protein identifier of the affected transcript",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ENSP"
+    },
+    {
+      "description": "UniProtKB/Swiss-Prot accession",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "SWISSPROT"
+    },
+    {
+      "description": "UniProtKB/TrEMBL identifier of protein product",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "TREMBL"
+    },
+    {
+      "description": "UniParc identifier of protein product",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "UNIPARC"
+    },
+    {
+      "description": "RefSeq identifier for this transcript",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "RefSeq"
+    },
+    {
+      "description": "The   SIFT prediction and/or score, with both given as prediction (score)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "SIFT"
+    },
+    {
+      "description": "The PolyPhen prediction and/or score",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "PolyPhen"
+    },
+    {
+      "description": "The exon number (out of total number)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "EXON"
+    },
+    {
+      "description": "The intron number (out of total number)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "INTRON"
+    },
+    {
+      "description": "The source and identifier of any overlapping protein domains",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "DOMAINS"
+    },
+    {
+      "description": "Non-reference allele and frequency of existing variant in   1000 Genomes",
+      "mode": "NULLABLE",
+      "type": "FLOAT",
+      "name": "GMAF"
+    },
+    {
+      "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined African population",
+      "mode": "NULLABLE",
+      "type": "FLOAT",
+      "name": "AFR_MAF"
+    },
+    {
+      "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined American population",
+      "mode": "NULLABLE",
+      "type": "FLOAT",
+      "name": "AMR_MAF"
+    },
+    {
+      "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined East Asian population",
+      "mode": "NULLABLE",
+      "type": "FLOAT",
+      "name": "EAS_MAF"
+    },
+    {
+      "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined European population",
+      "mode": "NULLABLE",
+      "type": "FLOAT",
+      "name": "EUR_MAF"
+    },
+    {
+      "description": "Non-reference allele and frequency of existing variant in 1000 Genomes combined South Asian population",
+      "mode": "NULLABLE",
+      "type": "FLOAT",
+      "name": "SAS_MAF"
+    },
+    {
+      "description": "Non-reference allele and frequency of existing variant in NHLBI-ESP African American population",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "AA_MAF"
+    },
+    {
+      "description": "Non-reference allele and frequency of existing variant in NHLBI-ESP European American population",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "EA_MAF"
+    },
+    {
+      "description": "Clinical significance of variant from dbSNP",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "CLIN_SIG"
+    },
+    {
+      "description": "Somatic status of each ID reported under Existing_variation (0, 1, or null)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "SOMATIC"
+    },
+    {
+      "description": "Pubmed ID(s) of publications that cite existing variant",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "PUBMED"
+    },
+    {
+      "description": "The impact modifier for the consequence type",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "IMPACT"
+    },
+    {
+      "description": "Indicates if this block of consequence data was picked by VEP's   pick feature (1 or null)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "PICK"
+    },
+    {
+      "description": "Sequence Ontology variant class",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "VARIANT_CLASS"
+    },
+    {
+      "description": "Transcript support level, which is based on independent RNA analyses",
+      "mode": "NULLABLE",
+      "type": "INTEGER",
+      "name": "TSL"
+    },
+    {
+      "description": "Indicates by how many bases the HGVS notations for this variant have been shifted",
+      "mode": "NULLABLE",
+      "type": "INTEGER",
+      "name": "HGVS_OFFSET"
+    },
+    {
+      "description": "Indicates if existing variant is associated with a phenotype, disease or trait (0, 1, or null)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "PHENO"
+    },
+    {
+      "description": "Alleles in this variant have been converted to minimal representation before consequence calculation (1 or null)",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "MINIMISED"
+    },
+    {
+      "description": "Global Allele Frequency from   ExAC",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ExAC_AF"
+    },
+    {
+      "description": "Adjusted Global Allele Frequency from ExAC",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ExAC_AF_Adj"
+    },
+    {
+      "description": "African/African American Allele Frequency from ExAC",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ExAC_AF_AFR"
+    },
+    {
+      "description": "American Allele Frequency from ExAC",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ExAC_AF_AMR"
+    },
+    {
+      "description": "East Asian Allele Frequency from ExAC",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ExAC_AF_EAS"
+    },
+    {
+      "description": "Finnish Allele Frequency from ExAC",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ExAC_AF_FIN"
+    },
+    {
+      "description": "Non-Finnish European Allele Frequency from ExAC",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ExAC_AF_NFE"
+    },
+    {
+      "description": "Other Allele Frequency from ExAC",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ExAC_AF_OTH"
+    },
+    {
+      "description": "South Asian Allele Frequency from ExAC",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "ExAC_AF_SAS"
+    },
+    {
+      "description": "Copied from input VCF. This includes filters implemented directly by the variant caller and other external software used in the DNA-Seq pipeline. See below for additional details.",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "FILTER"
+    },
+    {
+      "description": "The reference allele per VCF specs, and its five flanking base pairs",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "CONTEXT"
+    },
+    {
+      "description": "|-delimited list of GDC VCF file identifiers",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "src_vcf_id"
+    },
+    {
+      "description": "Unique GDC identifier for the underlying bam file",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "tumor_bam_uuid"
+    },
+    {
+      "description": "Unique GDC identifier for the underlying normal bam file",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "normal_bam_uuid"
+    },
+    {
+      "description": "Unique GDC identifier for the underlying case",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "case_id",
+      "foreignKeys": [
+        {
+          "fields": [
+            "researchsubject_id"
+          ],
+          "type": "SINGLE",
+          "tableName": "all_Subjects_v3_0_final",
+          "tableAlias": "subjects"
+        }
+      ]
+    },
+    {
+      "description": "GDC filters applied universally across all MAFs",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "GDC_FILTER"
+    },
+    {
+      "description": "Overlapping COSMIC variants",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "COSMIC"
+    },
+    {
+      "description": "Indicates whether this region overlaps with an MC3 variant for the same sample pair",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "MC3_Overlap"
+    },
+    {
+      "description": "GDC implementation of validation checks. See notes section (#5) below for details",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "GDC_Validation_Status"
+    },
+    {
+      "description": "|-delimited list of mutation caller(s) that agreed on this particular call, always in alphabetical order: muse, mutect, somaticsniper, varscan",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "callerName"
+    },
+    {
+      "description": "|-delimited list of unique GDC identifiers for underlying MAF file",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "fileUUID"
+    },
+    {
+      "description": "|-delimited list of name of underlying MAF file",
+      "mode": "NULLABLE",
+      "type": "STRING",
+      "name": "fileName"
+    }
+  ]
+}

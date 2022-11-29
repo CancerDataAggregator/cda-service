@@ -33,7 +33,7 @@ public class QueryFieldBuilder {
 
     String alias = path.replace(".", "_");
     String modifier = "ASC";
-    String columnText = getColumnText(schemaDefinition, tableInfo.getTableAlias());
+    String columnText = getColumnText(schemaDefinition, tableInfo.getTableAlias(this.dataSetInfo));
 
     var nonEmpties = Arrays.stream(modSplit).filter(e -> !e.isEmpty()).collect(Collectors.toList());
     if (nonEmpties.size() >= 2) {
@@ -45,7 +45,7 @@ public class QueryFieldBuilder {
       alias = nonEmpties.get(2);
     }
 
-    String tableAlias = DataSetInfo.KNOWN_ALIASES.get(tableInfo.getTableName());
+    String tableAlias = this.dataSetInfo.getKnownAliases().get(tableInfo.getTableName());
 
     return new QueryField(
         schemaDefinition.getName(),

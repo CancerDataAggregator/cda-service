@@ -9,6 +9,12 @@
       "partitionBy": true,
       "countByFields": [
         {
+          "table": "all_Files_v3_1_test1",
+          "field": "id",
+          "alias": "files",
+          "type": "TOTAL"
+        },
+        {
           "field": "id",
           "alias": "total",
           "type": "TOTAL"
@@ -20,8 +26,16 @@
             "case_barcode"
           ],
           "type": "SINGLE",
-          "tableName": "somatic_mutation_hg38_gdc_current",
+          "tableName": "somatic_mutation_hg38_gdc_v3_1_test1",
           "tableAlias": "mutations"
+        },
+        {
+          "fields": [
+            "Subjects"
+          ],
+          "type": "SINGLE",
+          "tableName": "all_Files_v3_1_test1",
+          "tableAlias": "files"
         }
       ]
     },
@@ -131,31 +145,6 @@
       ]
     },
     {
-      "description": "List of ids of File entities associated with the Patient",
-      "mode": "REPEATED",
-      "type": "STRING",
-      "name": "Files",
-      "excludeFromSelect": true,
-      "countByFields": [
-        {
-          "field": "id",
-          "alias": "files",
-          "table": "all_Files_v3_0_final",
-          "type": "TOTAL"
-        }
-      ],
-      "foreignKeys": [
-        {
-          "fields": [
-            "file_id"
-          ],
-          "type": "SINGLE",
-          "tableName": "all_Files_v3_0_final",
-          "tableAlias": "files"
-        }
-      ]
-    },
-    {
       "description": "A research subject is the entity of interest in a specific research study or project, typically a human being or an animal, but can also be a device, group of humans or animals, or a tissue sample. Human research subjects are usually not traceable to a particular person to protect the subject\u2019s privacy.  This entity plays the role of the case_id in existing data.",
       "mode": "REPEATED",
       "type": "RECORD",
@@ -169,6 +158,12 @@
           "partitionBy": true,
           "countByFields": [
             {
+              "table": "all_Files_v3_1_test1",
+              "field": "id",
+              "alias": "files",
+              "type": "TOTAL"
+            },
+            {
               "field": "id",
               "alias": "total",
               "type": "TOTAL"
@@ -180,8 +175,16 @@
                 "case_id"
               ],
               "type": "SINGLE",
-              "tableName": "somatic_mutation_hg38_gdc_current",
+              "tableName": "somatic_mutation_hg38_gdc_v3_1_test1",
               "tableAlias": "mutations"
+            },
+            {
+              "fields": [
+                "ResearchSubjects"
+              ],
+              "type": "SINGLE",
+              "tableName": "all_Files_v3_1_test1",
+              "tableAlias": "files"
             }
           ]
         },
@@ -239,31 +242,6 @@
             {
               "field": "primary_diagnosis_site",
               "type": "GROUPED"
-            }
-          ]
-        },
-        {
-          "description": "List of ids of File entities associated with the ResearchSubject",
-          "mode": "REPEATED",
-          "type": "STRING",
-          "name": "Files",
-          "excludeFromSelect": true,
-          "countByFields": [
-            {
-              "field": "id",
-              "alias": "files",
-              "table": "all_Files_v3_0_final",
-              "type": "TOTAL"
-            }
-          ],
-          "foreignKeys": [
-            {
-              "fields": [
-                "file_id"
-              ],
-              "type": "SINGLE",
-              "tableName": "all_Files_v3_0_final",
-              "tableAlias": "files"
             }
           ]
         },
@@ -501,6 +479,12 @@
               "partitionBy": true,
               "countByFields": [
                 {
+                  "table": "all_Files_v3_1_test1",
+                  "field": "id",
+                  "alias": "files",
+                  "type": "TOTAL"
+                },
+                {
                   "field": "id",
                   "alias": "total",
                   "type": "TOTAL"
@@ -513,8 +497,16 @@
                     "Matched_Norm_Sample_UUID"
                   ],
                   "type": "COMPOSITE_OR",
-                  "tableName": "somatic_mutation_hg38_gdc_current",
+                  "tableName": "somatic_mutation_hg38_gdc_v3_1_test1",
                   "tableAlias": "mutations"
+                },
+                {
+                  "fields": [
+                    "Specimens"
+                  ],
+                  "type": "SINGLE",
+                  "tableName": "all_Files_v3_1_test1",
+                  "tableAlias": "files"
                 }
               ]
             },
@@ -610,31 +602,6 @@
               "mode": "NULLABLE",
               "type": "STRING",
               "name": "derived_from_subject"
-            },
-            {
-              "description": "List of ids of File entities associated with the Specimen",
-              "mode": "REPEATED",
-              "type": "STRING",
-              "name": "Files",
-              "excludeFromSelect": true,
-              "countByFields": [
-                {
-                  "field": "id",
-                  "alias": "files",
-                  "table": "all_Files_v3_0_final",
-                  "type": "TOTAL"
-                }
-              ],
-              "foreignKeys": [
-                {
-                  "fields": [
-                    "file_id"
-                  ],
-                  "type": "SINGLE",
-                  "tableName": "all_Files_v3_0_final",
-                  "tableAlias": "files"
-                }
-              ]
             }
           ],
           "excludeFromSelect": true

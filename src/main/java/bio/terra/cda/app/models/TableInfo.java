@@ -89,7 +89,8 @@ public class TableInfo {
 
     if (this.getType().equals(TableInfoTypeEnum.TABLE)) {
       table =
-          DataSetInfo.KNOWN_ALIASES
+          dataSetInfo
+              .getKnownAliases()
               .getOrDefault(this.tableName, this.tableName)
               .toLowerCase(Locale.ROOT);
     }
@@ -101,9 +102,9 @@ public class TableInfo {
     return String.format("%s_%s", table, this.partitionKey);
   }
 
-  public String getTableAlias() {
+  public String getTableAlias(DataSetInfo dataSetInfo) {
     if (this.getType().equals(TableInfoTypeEnum.TABLE)) {
-      return DataSetInfo.KNOWN_ALIASES.getOrDefault(this.tableName, this.tableName);
+      return dataSetInfo.getKnownAliases().getOrDefault(this.tableName, this.tableName);
     } else {
       return String.format("_%s", this.adjustedTableName);
     }
@@ -133,12 +134,12 @@ public class TableInfo {
     return partitionKey;
   }
 
-  public String getPartitionKeyAlias() {
+  public String getPartitionKeyAlias(DataSetInfo dataSetInfo) {
     if (getType().equals(TableInfoTypeEnum.ARRAY)) {
-      return this.getTableAlias();
+      return this.getTableAlias(dataSetInfo);
     }
 
-    return String.format("%s.%s", this.getTableAlias(), this.partitionKey);
+    return String.format("%s.%s", this.getTableAlias(dataSetInfo), this.partitionKey);
   }
 
   public TableRelationship[] getTablePath() {
@@ -164,12 +165,17 @@ public class TableInfo {
   }
 
   public TableRelationship[] getPathToTable(TableInfo tableInfo) {
+    return this.getPathToTable(tableInfo, false);
+  }
+
+  public TableRelationship[] getPathToTable(TableInfo tableInfo, boolean noParent) {
     if (tableInfo.getAdjustedTableName().equals(getAdjustedTableName())) {
       return new TableRelationship[0];
     }
 
     LinkedList<Tuple<TableRelationship[], TableRelationship>> queue =
         this.getRelationships().stream()
+            .filter(tableRelationship -> (!tableRelationship.isParent() || !noParent))
             .map(tableRelationship -> Tuple.of(new TableRelationship[0], tableRelationship))
             .collect(Collectors.toCollection(LinkedList::new));
     Map<String, Boolean> visited =
@@ -183,6 +189,11 @@ public class TableInfo {
       Tuple<TableRelationship[], TableRelationship> tuple = queue.pop();
       TableRelationship[] currentPath = tuple.x();
       TableRelationship tableRelationship = tuple.y();
+      var foreignKey = tableRelationship.getForeignKeys();
+      if (foreignKey.stream()
+          .anyMatch(fk -> Objects.nonNull(fk.getLocation()) && fk.getLocation().length() > 0)) {
+        continue;
+      }
 
       List<TableRelationship> relList = new ArrayList<>(List.of(currentPath));
       relList.add(tableRelationship);
@@ -203,7 +214,8 @@ public class TableInfo {
               .filter(
                   tr ->
                       Objects.isNull(
-                          visited.get(tr.getDestinationTableInfo().getAdjustedTableName())))
+                              visited.get(tr.getDestinationTableInfo().getAdjustedTableName()))
+                          && (!tableRelationship.isParent() || !noParent))
               .map(tr -> Tuple.of(relArray, tr))
               .collect(Collectors.toList());
 

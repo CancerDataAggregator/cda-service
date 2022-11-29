@@ -4,6 +4,7 @@ import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.operators.Select;
 import bio.terra.cda.app.operators.SelectValues;
+import bio.terra.cda.app.util.EndpointUtil;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -20,11 +21,16 @@ public class CountsSqlGenerator extends SqlGenerator {
   }
 
   @Override
-  protected String sql(String tableOrSubClause, Query query, boolean subQuery)
+  protected String sql(
+      String tableOrSubClause,
+      Query query,
+      boolean subQuery,
+      boolean hasSubClause,
+      boolean ignoreWith)
       throws UncheckedExecutionException, IllegalArgumentException {
     Map<String, TableInfo> tableInfoMap = new HashMap<>();
 
-    getQueryGeneratorClasses()
+    EndpointUtil.getQueryGeneratorClasses()
         .forEach(
             clazz -> {
               var annotation = clazz.getAnnotation(QueryGenerator.class);
@@ -50,14 +56,26 @@ public class CountsSqlGenerator extends SqlGenerator {
 
     try {
       String resultsAlias = "flattened_results";
-      return String.format(
-          "%s SELECT %s FROM %s",
+      String flattenedWith =
           String.format(
-              "with %s as (%s)",
+              "%s as (%s)",
               resultsAlias,
               new SqlGenerator(
-                      this.qualifiedTable, newQuery, this.version, false, this.parameterBuilder)
-                  .sql(this.qualifiedTable, newQuery, false)),
+                      this.qualifiedTable,
+                      newQuery,
+                      this.version,
+                      false,
+                      this.parameterBuilder,
+                      this.viewListBuilder)
+                  .sql(this.qualifiedTable, newQuery, false, false, true));
+      String withStatement = String.format("WITH %s", flattenedWith);
+
+      if (this.viewListBuilder.hasAny() && !ignoreWith) {
+        withStatement = String.format("%s, %s", getWithStatement(), flattenedWith);
+      }
+      return String.format(
+          "%s SELECT %s FROM %s",
+          withStatement,
           tableInfoMap.keySet().stream()
               .map(
                   key -> {
@@ -67,7 +85,9 @@ public class CountsSqlGenerator extends SqlGenerator {
                         this.dataSetInfo.getSchemaDefinitionByFieldName(entityPartitionKey))) {
                       entityPartitionKey =
                           DataSetInfo.getNewNameForDuplicate(
-                              entityPartitionKey, tableInfo.getTableName());
+                              this.dataSetInfo.getKnownAliases(),
+                              entityPartitionKey,
+                              tableInfo.getTableName());
                     }
 
                     return String.format(

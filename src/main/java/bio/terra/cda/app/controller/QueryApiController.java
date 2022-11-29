@@ -1,8 +1,11 @@
 package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.aop.TrackExecutionTime;
+import bio.terra.cda.app.builders.ColumnsReturnBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
+import bio.terra.cda.app.builders.ViewBuilder;
+import bio.terra.cda.app.builders.ViewListBuilder;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.CountsSqlGenerator;
 import bio.terra.cda.app.generators.DiagnosisCountSqlGenerator;
@@ -23,6 +26,7 @@ import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
+import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.service.QueryService;
 import bio.terra.cda.app.service.exception.BadQueryException;
 import bio.terra.cda.app.util.SqlUtil;
@@ -165,6 +169,7 @@ public class QueryApiController implements QueryApi {
     } catch (IOException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
+
     QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
     QueryField queryField = queryFieldBuilder.fromPath(body);
 
@@ -174,15 +179,17 @@ public class QueryApiController implements QueryApi {
     TableRelationship[] tablePath = tableInfo.getTablePath();
 
     String project = table == null ? applicationConfiguration.getBqTable() : table;
+    ViewListBuilder<View, ViewBuilder> viewListBuilder =
+        new ViewListBuilder<>(ViewBuilder.class, dataSetInfo, project);
     UnnestBuilder unnestBuilder =
-        new UnnestBuilder(queryFieldBuilder, dataSetInfo, tableInfo, project);
+        new UnnestBuilder(queryFieldBuilder, viewListBuilder, dataSetInfo, tableInfo, project);
 
     tableName =
         String.format(
             "%s.%s AS %s ",
             project,
             tableInfo.getSuperTableInfo().getTableName(),
-            tableInfo.getSuperTableInfo().getTableAlias());
+            tableInfo.getSuperTableInfo().getTableAlias(dataSetInfo));
 
     List<String> whereClauses = new ArrayList<>();
     if (schemaDefinition.getType().equals(LegacySQLTypeName.STRING.toString())) {
@@ -198,18 +205,29 @@ public class QueryApiController implements QueryApi {
             unnestBuilder.fromRelationshipPath(tablePath, SqlUtil.JoinType.INNER, true));
 
     if (system != null && system.length() > 0) {
+      TableInfo newTableInfo = tableInfo.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)
+              ? tableInfo
+                .getRelationships()
+                .stream()
+                .filter(TableRelationship::isParent)
+                .findFirst()
+                .orElseThrow()
+                .getDestinationTableInfo()
+              : tableInfo;
+      String tbl = dataSetInfo
+              .getKnownAliases()
+              .getOrDefault(
+                      newTableInfo.getAdjustedTableName(), newTableInfo.getAdjustedTableName())
+              .toLowerCase(Locale.ROOT);
       TableInfo identifierTable =
-          dataSetInfo.getTableInfo(
-              DataSetInfo.KNOWN_ALIASES
-                      .getOrDefault(
-                          tableInfo.getAdjustedTableName(), tableInfo.getAdjustedTableName())
-                      .toLowerCase(Locale.ROOT)
-                  + "_identifier");
+              dataSetInfo.getTableInfo(
+                      tbl
+                              + (tbl.contains("_identifier") ? "" : "_identifier"));
 
       if (Objects.isNull(identifierTable)) {
         identifierTable = dataSetInfo.getTableInfo("subject_identifier");
       }
-      TableRelationship[] pathToIdentifier = tableInfo.getPathToTable(identifierTable);
+      TableRelationship[] pathToIdentifier = newTableInfo.getPathToTable(identifierTable);
 
       unnestStream =
           Stream.concat(
@@ -271,13 +289,16 @@ public class QueryApiController implements QueryApi {
               .addTableSchema(version, TableSchema.getSchema(version))
               .build();
 
-      List<Map.Entry<String, String>> columnsList = dataSetInfo.getFieldDescriptions();
       List<JsonNode> results =
-          columnsList.stream()
+          dataSetInfo.getColumnsData(new ColumnsReturnBuilder()).stream()
               .map(
-                  entry -> {
+                  columnsReturn -> {
                     ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-                    objectNode.set(entry.getKey(), TextNode.valueOf(entry.getValue()));
+                    objectNode.set("fieldName", TextNode.valueOf(columnsReturn.getFieldName()));
+                    objectNode.set("endpoint", TextNode.valueOf(columnsReturn.getEndpoint()));
+                    objectNode.set("description", TextNode.valueOf(columnsReturn.getDescription()));
+                    objectNode.set("type", TextNode.valueOf(columnsReturn.getType()));
+                    objectNode.set("mode", TextNode.valueOf(columnsReturn.getMode()));
 
                     return objectNode;
                   })

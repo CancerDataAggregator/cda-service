@@ -11,6 +11,4 @@ public @interface CountQueryGenerator {
   public String entity();
 
   public String[] fieldsToCount();
-
-  public String[] excludedFields();
 }
