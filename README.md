@@ -1,9 +1,8 @@
-# cda-service
 
+# cda-service
 This repository started as a clone of the [kernel-service-poc](https://github.com/DataBiosphere/kernel-service-poc) project.
 
 ## Sonarqube Static Code Analysis
-
 Clicking on the following image will take you to the CDA Sonarqube code analysis dashboard.
 <br />
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=CancerDataAggregator_cda-service&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=CancerDataAggregator_cda-service)
@@ -11,7 +10,7 @@ Clicking on the following image will take you to the CDA Sonarqube code analysis
 ## Getting Started (macOS)
 
 Building and running locally requires JDK 11 and gradle. On a Mac, you can use [brew](https://brew.sh/)
-to install these.
+to install these. 
 
 ```bash
 brew install openjdk@11
@@ -27,7 +26,6 @@ After this add the path to `openjdk@11` into your login script e.g. `export PATH
 ```
 
 The end of the test output should read something like:
-
 ```
 BUILD SUCCESSFUL in 8s
 6 actionable tasks: 6 executed
@@ -41,12 +39,13 @@ Running the server locally requires three environment variables. These can be se
 ./gradlew bootRun
 ```
 
-Accessing BigQuery requires credentials. If the credentals are stored in a file called
+Accessing BigQuery requires credentials. If the credentals are stored in a file called 
 `bq-credentials.json`, you can start the service as follows:
 
 ```bash
 GOOGLE_APPLICATION_CREDENTIALS=bq-credentials.json ./gradlew bootRun
 ```
+
 
 ### Testing the server
 
@@ -57,6 +56,7 @@ You can test out the two endpoints using `curl`:
 ```bash
 curl http://localhost:8080/status
 ```
+
 
 ### Example query
 
@@ -107,14 +107,13 @@ curl http://localhost:8080/status
 ```
 
 Curl line
-
 ```
 curl -X POST "http://localhost:8080/api/v1/boolean-query/v0" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"node_type\":\"AND\",\"l\":{\"node_type\":\"AND\",\"l\":{\"node_type\":\">=\",\"l\":{\"node_type\":\"column\",\"value\":\"Diagnosis.age_at_diagnosis\"},\"r\":{\"node_type\":\"unquoted\",\"value\":\"50\"}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"Specimen.associated_project\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"TCGA-OV\"}}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"Diagnosis.tumor_stage\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"Stage IIIC\"}}}"
 ```
 
 ### Generating Python Client APIs
 
-The OpenAPI YAML can be used to generate python client code. To do this, run the gradle
+The OpenAPI YAML can be used to generate python client code. To do this, run the gradle 
 task `buildPythonSdk`:
 
 ```shell
@@ -123,17 +122,15 @@ task `buildPythonSdk`:
 
 To push the generated code to the client code repo [cda-service-python-client](https://github.com/CancerDataAggregator/cda-service-python-client), run
 the git-push script:
-
 ```shell
-./misc/git-push.sh "Comment describing the change"
+./misc/git-push.sh "Comment describing the change" 
 ```
 
 Notes
-
 - This will completely overwrite the previous code with the newly generated code.
 - The python package version uses the openapi version (property `info.version`). Be sure to update the openapi yaml
-  version before generating a new python client, or the new client will have the same version.
-
+version before generating a new python client, or the new client will have the same version.
+  
 ## Logging
 
 By default, log output is in JSON format to make it easier to process in stackdriver. Since this can make the log
@@ -148,27 +145,24 @@ LOG_APPENDER=Console-Standard ./gradlew bootRun
 
 The API specification in OpenAPI V3 is at src/main/resources/api/service_openapi.yaml
 
-A swagger-ui page is available at /api/swagger-ui.html on any running instance.
-TEMPLATE: Once a service has a stable dev/alpha instance, a link to its
+A swagger-ui page is available at /api/swagger-ui.html on any running instance. 
+TEMPLATE: Once a service has a stable dev/alpha instance, a link to its 
 swagger-ui page should go here.
 
 ## Spring Boot
-
 We use Spring Boot as our framework for REST servers. The objective is to use a minimal set
 of Spring features; there are many ways to do the same thing and we would like to constrain ourselves
 to a common set of techniques.
 
 ### Configuration
-
 We only use Java configuration. We never use XML files.
 
-In general, we use type-safe configuration parameters as shown here:
+In general, we use type-safe configuration parameters as shown here: 
 [Type-safe Configuration Properties](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-external-config-typesafe-configuration-properties).
 That allows proper typing of parameters read from property files or environment variables. Parameters are
 then accessed with normal accessor methods. You should never need to use an `@Value` annotation.
 
 ### Initialization
-
 When the applications starts, Spring wires up the components based on the profiles in place.
 Setting different profiles allows different components to be included. This technique is used
 as the way to choose the cloud platform (Google, Azure, AWS) code to include.
@@ -177,12 +171,10 @@ We use the Spring idiom of the `postSetupInitialization`, found in ApplicationCo
 to perform initialization of the application between the point of having the entire application initialized and
 the point of opening the port to start accepting REST requests.
 
-### Annotating Singletons
-
-The typical pattern when using Spring is to make singleton classes for each service, controller, and DAO.
-You do not have to write the class with its own singleton support. Instead, annotate the class with
+### Annotating Singletons	
+The typical pattern when using Spring is to make singleton classes for each service, controller, and DAO.	
+You do not have to write the class with its own singleton support. Instead, annotate the class with	
 the appropriate Spring annotation. Here are ones we use:
-
 <ul>
 <li><code>@Component</code> Regular singleton class, like a service.</li>
 <li><code>@Repository</code> DAO component</li>
@@ -191,11 +183,9 @@ the appropriate Spring annotation. Here are ones we use:
 </ul>
 
 ### Common Annotations
-
 There are other annotations that are handy to know about.
 
 #### Autowiring
-
 Spring wires up the singletons and other beans when the application is launched.
 That allows us to use Spring profiles to control the collection of code that is
 run for different environments. Perhaps obviously, you can only autowire singletons to each other. You cannot autowire
@@ -204,7 +194,6 @@ dynamically created objects.
 There are two styles for declaring autowiring.
 The preferred method of autowiring, is to put the annotation on the constructor
 of the class. Spring will autowire all of the inputs to the constructor.
-
 ```
 @Component
 public class Foo {
@@ -217,10 +206,8 @@ public class Foo {
         this.foo = foo;
     }
 ```
-
 Spring will pass in the instances of Bar and Fribble into the constructor.
 It is possible to autowire a specific class member, but that is rarely necessary:
-
 ```
 @Component
 public class Foo {
@@ -229,7 +216,6 @@ public class Foo {
 ```
 
 #### REST Annotations
-
 <ul>
 <li><code>@RequestBody</code> Marks the controller input parameter receiving the body of the request</li>
 <li><code>@PathVariable("x")</code> Marks the controller input parameter receiving the parameter <code>x</code></li>
@@ -237,14 +223,12 @@ public class Foo {
 </ul>
 
 #### JSON Annotations
-
-We use the Jackson JSON library for serializing objects to and from JSON. Most of the time, you don't need to
+We use the Jackson JSON library for serializing objects to and from JSON. Most of the time, you don't need to 
 use JSON annotations. It is sufficient to provide setter/getter methods for class members
 and let Jackson figure things out with interospection. There are cases where it needs help
 and you have to be specific.
 
 The common JSON annotations are:
-
 <ul>
 <li><code>@JsonValue</code> Marks a class member as data that should be (de)serialized to(from) JSON.
 You can specify a name as a parameter to specify the JSON name for the member.</li>
@@ -255,9 +239,7 @@ You can specify a name as a parameter to specify the JSON name for the member.</
 For more details see [Jackson JSON Documentation](https://github.com/FasterXML/jackson-docs)
 
 ## Main Code Structure
-
 This section explains the code structure of the template. Here is the directory structure:
-
 ```
 /src
   /main
@@ -271,7 +253,6 @@ This section explains the code structure of the template. Here is the directory 
         /service
     /resources
 ```
-
 <ul>
 <li><code>/app</code> For the top of the application, including Main and the StartupInitializer</li>
 <li><code>/app/configuration</code> For all of the bean and property definitions</li>
@@ -289,27 +270,22 @@ within each service.</li>
 </ul>
 
 ## Test Structure
-
 Test methods are currently one of two kinds of tests. A unit test, which tests an individual
 method in a class, or a Mock MVC test, which uses mocked services to test a specific endpoint.
 
-Future tests could include integration tests, which would use endpoints to call into real
+Future tests could include integration tests, which would use endpoints to call into real 
 (not mocked) services.
 
 ## Deployment
-
 ### On commit to master
-
-When a commit is merged to master, the [master_push workflow](https://github.com/CancerDataAggregator/cda-service/blob/master/.github/workflows/master_push.yml) is triggered.
-
-It has two jobs. The first is in this repo: incrementing the tag, building the Docker image, and pushing it to GCR. The second reaches out to Broad DevOps, recording the new version in their systems [here](https://beehive.dsp-devops.broadinstitute.org/charts/cancerdata/app-versions).
-
-### Deploying to Broad's environments
-
-To deploy a version Broad's dev environment, visit [this page](https://beehive.dsp-devops.broadinstitute.org/environments/dev/chart-releases/cancerdata/change-versions), supply a new value under "Specify App Version" -> "Set Exact Version", and scroll down to hit "Calculate and Preview". The "Apply" button on the next page will do the deployment to dev.
-
-> **Info**
-> Once deployed to Broad's dev environment, that version will be automatically promoted through our environments until finally being deployed to production alongside the usually-weekly monolith rollout. Manual deployment to production is also available ([hotfix document here](https://docs.google.com/document/d/1B9iSfAo8eaFShONLwXHgno2Gm7EHx52tNbCF4xLcHvM/edit)). Feel free to reach out to [Broad's #dsp-devops-champions](https://broadinstitute.slack.com/archives/CADM7MZ35) with any questions.
+1. New commit is merged to master
+2. [The master_push workflow](https://github.com/DataBiosphere/kernel-service-poc/blob/gm-deployment/.github/workflows/master_push.yml) is triggered. It builds the image, tags the image & commit, and pushes the image to GCR. It then sends a [dispatch](https://help.github.com/en/actions/reference/events-that-trigger-workflows#external-events-repository_dispatch) with the new version for the service to the [framework-version repo](https://github.com/DataBiosphere/framework-version).
+3. This triggers the [update workflow](https://github.com/DataBiosphere/framework-version/blob/master/.github/workflows/update.yml), which updates the JSON that maps services to versions to map to the new version for the service whose repo sent the dispatch. The JSON is then committed and pushed.
+4. This triggers the [tag workflow](https://github.com/DataBiosphere/framework-version/blob/master/.github/workflows/tag.yml), which tags the new commit in the framework-version repo with a bumped semantic version, yielding a new version of the whole stack incorporating the newly available version of the service.
+5. The new commit corresponding to the above version of the stack is now visible on the [deliverybot dashboard](https://app.deliverybot.dev/DataBiosphere/framework-version/branch/master). It can now be manually selected for deployment to an environment.
+6. Deploying a version of the stack to an environment from the dashboard triggers the [deploy workflow](https://github.com/DataBiosphere/framework-version/blob/master/.github/workflows/deploy.yml). This sends a dispatch to the [framework-env repo](https://github.com/DataBiosphere/framework-env) with the version that the chosen commit is tagged with, and the desired environment.
+7. The dispatch triggers the [update workflow in that repo](https://github.com/DataBiosphere/framework-env/blob/master/.github/workflows/update.yml), which similarly to the one in the framework-version one, updates a JSON. This JSON maps environments to versions of the stack. It is updated to reflect the desired deployment of the new stack version to the specified environment and the change is pushed up.
+8. The change to the JSON triggers the [apply workflow](https://github.com/DataBiosphere/framework-env/blob/master/.github/workflows/apply.yml), which actually deploys the desired resources to k8s. It determines the services that must be updated by diffing the stack versions that the environment in question is transitioning between and re-deploys the services that need updates.
 
 ### Using cloud code and skaffold
 
