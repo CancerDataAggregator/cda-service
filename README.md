@@ -278,14 +278,16 @@ Future tests could include integration tests, which would use endpoints to call 
 
 ## Deployment
 ### On commit to master
-1. New commit is merged to master
-2. [The master_push workflow](https://github.com/DataBiosphere/kernel-service-poc/blob/gm-deployment/.github/workflows/master_push.yml) is triggered. It builds the image, tags the image & commit, and pushes the image to GCR. It then sends a [dispatch](https://help.github.com/en/actions/reference/events-that-trigger-workflows#external-events-repository_dispatch) with the new version for the service to the [framework-version repo](https://github.com/DataBiosphere/framework-version).
-3. This triggers the [update workflow](https://github.com/DataBiosphere/framework-version/blob/master/.github/workflows/update.yml), which updates the JSON that maps services to versions to map to the new version for the service whose repo sent the dispatch. The JSON is then committed and pushed.
-4. This triggers the [tag workflow](https://github.com/DataBiosphere/framework-version/blob/master/.github/workflows/tag.yml), which tags the new commit in the framework-version repo with a bumped semantic version, yielding a new version of the whole stack incorporating the newly available version of the service.
-5. The new commit corresponding to the above version of the stack is now visible on the [deliverybot dashboard](https://app.deliverybot.dev/DataBiosphere/framework-version/branch/master). It can now be manually selected for deployment to an environment.
-6. Deploying a version of the stack to an environment from the dashboard triggers the [deploy workflow](https://github.com/DataBiosphere/framework-version/blob/master/.github/workflows/deploy.yml). This sends a dispatch to the [framework-env repo](https://github.com/DataBiosphere/framework-env) with the version that the chosen commit is tagged with, and the desired environment.
-7. The dispatch triggers the [update workflow in that repo](https://github.com/DataBiosphere/framework-env/blob/master/.github/workflows/update.yml), which similarly to the one in the framework-version one, updates a JSON. This JSON maps environments to versions of the stack. It is updated to reflect the desired deployment of the new stack version to the specified environment and the change is pushed up.
-8. The change to the JSON triggers the [apply workflow](https://github.com/DataBiosphere/framework-env/blob/master/.github/workflows/apply.yml), which actually deploys the desired resources to k8s. It determines the services that must be updated by diffing the stack versions that the environment in question is transitioning between and re-deploys the services that need updates.
+When a commit is merged to master, the [master_push workflow](https://github.com/CancerDataAggregator/cda-service/blob/master/.github/workflows/master_push.yml) is triggered.
+
+It has two jobs. The first is in this repo: incrementing the tag, building the Docker image, and pushing it to GCR. The second reaches out to Broad DevOps, recording the new version in their systems [here](https://beehive.dsp-devops.broadinstitute.org/charts/cancerdata/app-versions).
+
+### Deploying to Broad's environments
+
+To deploy a version Broad's dev environment, visit [this page](https://beehive.dsp-devops.broadinstitute.org/environments/dev/chart-releases/cancerdata/change-versions), supply a new value under "Specify App Version" -> "Set Exact Version", and scroll down to hit "Calculate and Preview". The "Apply" button on the next page will do the deployment to dev.
+
+> **Info**
+> Once deployed to Broad's dev environment, that version will be automatically promoted through our environments until finally being deployed to production alongside the usually-weekly monolith rollout. Manual deployment to production is also available ([hotfix document here](https://docs.google.com/document/d/1B9iSfAo8eaFShONLwXHgno2Gm7EHx52tNbCF4xLcHvM/edit)). Feel free to reach out to [Broad's #dsp-devops-champions](https://broadinstitute.slack.com/archives/CADM7MZ35) with any questions.
 
 ### Using cloud code and skaffold
 
