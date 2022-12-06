@@ -14,6 +14,8 @@ env:
 jobs:
   tag-build-push:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
     - name: Checkout current code
       uses: actions/checkout@master
@@ -48,11 +50,13 @@ jobs:
       env:
         SERVICE_VERSION: ${{ steps.tag.outputs.tag }}
 
-    - name: Deploy to Terra Dev environment
-      if: github.event_name == 'push'
-      uses: broadinstitute/repository-dispatch@master
-      with:
-        token: ${{ secrets.BROADBOT_TOKEN }}
-        repository: broadinstitute/terra-helmfile
-        event-type: update-service
-        client-payload: '{"service": "cancerdata", "version": "${{ steps.tag.outputs.tag }}", "dev_only": true}'
+  report-to-sherlock:
+    # Report the new app version to Broad DevOps's systems
+    uses: broadinstitute/sherlock/.github/workflows/client-report-app-version.yaml@main
+    needs: tag-build-push
+    with:
+      new-version: ${{ needs.tag-build-push.outputs.tag }}
+      chart-name: 'cancerdata'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
