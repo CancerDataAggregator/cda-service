@@ -141,7 +141,7 @@ task buildPythonSdk(type: GenerateTask){
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
 	configOptions = [
-			 packageVersion : "9.22.2022"
+			 packageVersion : "12.6.2022"
 	]
 }
 

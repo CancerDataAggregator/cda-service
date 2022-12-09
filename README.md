@@ -73,7 +73,7 @@ curl http://localhost:8080/status
       "node_type": ">",
       "l": {
         "node_type": "column",
-        "value": "ResearchSubject.Diagnosis.age_at_diagnosis"
+        "value": "age_at_diagnosis"
       },
       "r": {
         "node_type": "unquoted",
@@ -84,7 +84,7 @@ curl http://localhost:8080/status
       "node_type": "=",
       "l": {
         "node_type": "column",
-        "value": "ResearchSubject.Specimen.associated_project"
+        "value": "specimen_associated_project"
       },
       "r": {
         "node_type": "quoted",
@@ -96,7 +96,7 @@ curl http://localhost:8080/status
     "node_type": "=",
     "l": {
       "node_type": "column",
-      "value": "ResearchSubject.Diagnosis.tumor_stage"
+      "value": "tumor_stage"
     },
     "r": {
       "node_type": "quoted",
