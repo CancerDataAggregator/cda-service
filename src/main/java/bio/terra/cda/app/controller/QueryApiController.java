@@ -192,11 +192,6 @@ public class QueryApiController implements QueryApi {
             tableInfo.getSuperTableInfo().getTableAlias(dataSetInfo));
 
     List<String> whereClauses = new ArrayList<>();
-    if (schemaDefinition.getType().equals(LegacySQLTypeName.STRING.toString())) {
-      whereClauses.add(String.format("IFNULL(%s, '') <> ''", queryField.getColumnText()));
-    } else {
-      whereClauses.add(String.format("%s IS NOT NULL", queryField.getColumnText()));
-    }
 
     Stream<Unnest> unnestStream = Stream.empty();
     unnestStream =
@@ -242,20 +237,24 @@ public class QueryApiController implements QueryApi {
     String unnestConcat = unnestStream.map(Unnest::toString).collect(Collectors.joining(" "));
     var querySql = "";
 
+    String whereStr = "";
+    if (!whereClauses.isEmpty()) {
+      whereStr = " WHERE " + String.join(" AND ", whereClauses);
+    }
+
+
     if (Boolean.TRUE.equals(count)) {
       querySql =
           "SELECT"
               + " "
               + queryField.getColumnText()
               + ","
-              + "COUNT("
-              + queryField.getColumnText()
+              + "COUNT(*"
               + ") AS Count "
               + "FROM "
               + tableName
               + unnestConcat
-              + " WHERE "
-              + String.join(" AND ", whereClauses)
+              + whereStr
               + " GROUP BY "
               + queryField.getColumnText()
               + " "
@@ -268,8 +267,7 @@ public class QueryApiController implements QueryApi {
               + " FROM "
               + tableName
               + unnestConcat
-              + " WHERE "
-              + String.join(" AND ", whereClauses)
+              + whereStr
               + " ORDER BY "
               + queryField.getColumnText();
     }

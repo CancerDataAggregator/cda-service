@@ -46,6 +46,8 @@ class QueryApiControllerTest {
     assertThat(response.getQuerySql(), equalTo(expected));
   }
 
+  // TODO add test for unique terms with count
+  
   @Test
   void uniqueValuesTest() throws Exception {
     String version = "all_Subjects_v3_0_final";
@@ -67,7 +69,7 @@ class QueryApiControllerTest {
             });
 
     var expected =
-        "SELECT DISTINCT Subject.sex FROM gdc-bq-sample.dev.all_Subjects_v3_0_final AS Subject INNER JOIN UNNEST(Subject.identifier) AS _subject_identifier WHERE IFNULL(Subject.sex, '') <> '' AND _subject_identifier.system = 'GDC' ORDER BY Subject.sex";
+        "SELECT DISTINCT Subject.sex FROM gdc-bq-sample.dev.all_Subjects_v3_0_final AS Subject INNER JOIN UNNEST(Subject.identifier) AS _subject_identifier WHERE _subject_identifier.system = 'GDC' ORDER BY Subject.sex";
     var result =
         mvc.perform(
                 post("/api/v1/unique-values/{version}", version)
