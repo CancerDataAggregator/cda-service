@@ -20,6 +20,17 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.stream.Collectors;
 
+/*
+* DataSetInfo
+*
+* This class contains information about the various schemas that exist in the CDA database. There are two maps that are
+* of great importance for fieldMap and tableInfoMap. The fieldMap contains a mapping between field names and the data
+* around those fields, aka what table they belong to, their data type and mode. The tableInfoMap is used to contain a
+* mapping between table names and their corresponding TableInfo objects. The TableInfo class, in turn, contains schema
+* information for the table as well as relationships to other TableInfo objects, building a relationship graph that can
+* be traversed to allow for the query generators to apply the correct unnests and joins while writing out a query.
+*
+* */
 public class DataSetInfo {
   private final Map<String, TableInfo> tableInfoMap;
   private final Map<String, FieldData> fieldMap;
@@ -142,6 +153,23 @@ public class DataSetInfo {
     }
   }
 
+  /*
+   * DataSetInfoBuilder
+   *
+   * This is a builder class for creating the DataSetInfo object, used to contains information about
+   * the data schema. This builder will take a table schema and process each of the fields in that schema.
+   * If the field has a relationship specified to another table, the addTableSchema function is then recursively called
+   * for that table.
+   *
+   * Every repeated record field in the schema is also listed as a TableInfo object, with the type of NESTED. Each NESTED
+   * TableInfo object will have a relationship added to their parent TableInfo, with the TableRelationship including a flag
+   * for parent = true;
+   *
+   * For fields that are found in the schema that have the same name, but under a different TableInfo, this builder will adjust
+   * the name so that it is prefixed with the name of the TableInfo it belongs to. This is so that all of the fields
+   * that exist in the fieldMap are completely unique.
+   *
+   * */
   public static class DataSetInfoBuilder {
     private final Map<String, TableInfo> tableInfoMap;
     private final Map<String, FieldData> fieldMap;

@@ -708,25 +708,6 @@ paths:
         200:
           $ref: "#/components/responses/QueryCreated"
 
-  /api/v1/sql-query:
-    post:
-      summary: Execute SQL directly on a version of the dataset
-      operationId: sqlQuery
-      tags:
-        - query
-
-      requestBody:
-        description: BigQuery SQL to run on data table
-        required: true
-        content:
-          text/plain:
-            schema:
-              type: string
-
-      responses:
-        200:
-          $ref: "#/components/responses/QueryCreated"
-
   /api/v1/query/{id}:
     get:
       summary: Given a query ID, return the a page of data from the query result.
