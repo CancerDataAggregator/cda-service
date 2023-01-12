@@ -26,6 +26,7 @@ plugins {
   	id "org.sonarqube" version "3.3"
 	id 'jacoco'
 	id 'com.srcclr.gradle' version '3.1.12'
+	id("java-gradle-plugin")
 }
 
 ext['log4j2.version'] = '2.17.1'
@@ -76,6 +77,9 @@ dependencies {
 	implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
 	implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
 	implementation 'org.hamcrest:hamcrest-library:2.2'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.4'
+	implementation group: 'org.openapitools', name: 'openapi-generator-gradle-plugin', version: '6.1.0'
+
 	// -- --
 
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
@@ -254,5 +258,41 @@ sonarqube {
 	property "sonar.exclusions", "build/generated/**"
   }
 }
+
+abstract class GreetingTask extends DefaultTask{
+	@TaskAction
+	def greet(){
+		String pyproject_toml = """
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools", "wheel"]  # PEP 508 specifications.
+[tool.poetry.dependencies]
+"""
+		def dependencie_list =  ['wheel ="0.36.2"']
+
+
+		dependencie_list.each ({ line ->
+			{
+
+				pyproject_toml += line + "\n"
+			}
+		})
+
+		new File("./build/generated-client/requirements.txt").eachLine {line ->{
+					String[] parts = line.split("[><=]")
+					String op = "="
+					println op
+					pyproject_toml += "${parts[0].trim()} ${op} \"${parts[parts.length - 1].trim()}\" \n"
+				}
+			}
+
+
+		new File("./build/generated-client/pyproject.toml").write(pyproject_toml)
+		println pyproject_toml
+	}
+}
+
+// Apply the plugin
+tasks.register("update_python",GreetingTask)
 
 

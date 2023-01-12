@@ -17,6 +17,7 @@ import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.operators.Limit;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
@@ -236,14 +237,27 @@ public class SqlGenerator {
               fromString,
               condition,
               ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+
     }
 
+    String limitString = "";
+
+    if (ctx.getLimit().isPresent()){
+      limitString =String.format(" LIMIT %d " ,ctx.getLimit().get());
+    }
     return SqlTemplate.resultsQuery(
         getPartitionByFields(ctx).collect(Collectors.joining(", ")),
         selectFields,
         fromString,
         condition,
-        ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+        ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")),
+            limitString
+    );
+
+
+
+
+
   }
 
   protected Stream<String> getPartitionByFields(QueryContext ctx) {
