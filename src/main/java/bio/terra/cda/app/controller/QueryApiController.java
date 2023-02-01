@@ -42,7 +42,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.cloud.bigquery.BigQueryException;
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -200,24 +199,22 @@ public class QueryApiController implements QueryApi {
             unnestBuilder.fromRelationshipPath(tablePath, SqlUtil.JoinType.INNER, true));
 
     if (system != null && system.length() > 0) {
-      TableInfo newTableInfo = tableInfo.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)
-              ? tableInfo
-                .getRelationships()
-                .stream()
-                .filter(TableRelationship::isParent)
-                .findFirst()
-                .orElseThrow()
-                .getDestinationTableInfo()
+      TableInfo newTableInfo =
+          tableInfo.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)
+              ? tableInfo.getRelationships().stream()
+                  .filter(TableRelationship::isParent)
+                  .findFirst()
+                  .orElseThrow()
+                  .getDestinationTableInfo()
               : tableInfo;
-      String tbl = dataSetInfo
+      String tbl =
+          dataSetInfo
               .getKnownAliases()
               .getOrDefault(
-                      newTableInfo.getAdjustedTableName(), newTableInfo.getAdjustedTableName())
+                  newTableInfo.getAdjustedTableName(), newTableInfo.getAdjustedTableName())
               .toLowerCase(Locale.ROOT);
       TableInfo identifierTable =
-              dataSetInfo.getTableInfo(
-                      tbl
-                              + (tbl.contains("_identifier") ? "" : "_identifier"));
+          dataSetInfo.getTableInfo(tbl + (tbl.contains("_identifier") ? "" : "_identifier"));
 
       if (Objects.isNull(identifierTable)) {
         identifierTable = dataSetInfo.getTableInfo("subject_identifier");
@@ -241,7 +238,6 @@ public class QueryApiController implements QueryApi {
     if (!whereClauses.isEmpty()) {
       whereStr = " WHERE " + String.join(" AND ", whereClauses);
     }
-
 
     if (Boolean.TRUE.equals(count)) {
       querySql =

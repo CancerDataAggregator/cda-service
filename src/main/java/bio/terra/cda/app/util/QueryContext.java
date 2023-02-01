@@ -41,8 +41,6 @@ public class QueryContext {
   private ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder;
   private TableInfo tableInfo;
 
-
-
   public QueryContext(String table, String project) {
     this.table = table;
     this.project = project;
@@ -153,8 +151,6 @@ public class QueryContext {
   public void setOffset(Integer offset) {
     this.offset = Optional.ofNullable(offset);
   }
-
-
 
   public ViewListBuilder<? extends View, ? extends ViewBuilder> getViewListBuilder() {
     return this.viewListBuilder;
