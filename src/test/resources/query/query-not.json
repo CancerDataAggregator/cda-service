@@ -3,12 +3,12 @@
   "l": {
     "node_type": "=",
     "l": {
-      "node_type": "quoted",
-      "value": "cancer"
+      "node_type": "column",
+      "value": "primary_diagnosis_condition"
     },
     "r": {
-      "node_type": "column",
-      "value": "ResearchSubject.primary_diagnosis_condition"
+      "node_type": "quoted",
+      "value": "cancer"
     }
   }
 }

@@ -7,6 +7,10 @@ import bio.terra.cda.generated.model.Query;
 public class Quoted extends BasicOperator {
   @Override
   public String buildQuery(QueryContext ctx) {
-    return String.format("UPPER('%s')", getValue());
+    var parameterBuilder = ctx.getParameterBuilder();
+    String parameterName =
+        parameterBuilder.addParameterValue(
+            ctx.getQueryFieldBuilder().fromPath(this.getParent().getL().getValue()), getValue());
+    return String.format("UPPER(%s)", parameterName);
   }
 }

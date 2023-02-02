@@ -2,37 +2,38 @@ package bio.terra.cda.app.models;
 
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
+import java.util.Objects;
 
 public class Unnest {
   private final SqlUtil.JoinType joinType;
   private final String path;
   private final String alias;
   private final boolean isJoin;
-  private final String firstJoinPath;
-  private final String secondJoinPath;
+  private final String joinPath;
+  private final TableInfo tableInfo;
 
   public Unnest(
       SqlUtil.JoinType joinType,
       String path,
       String alias,
       boolean isJoin,
-      String firstJoinPath,
-      String secondJoinPath) {
+      String joinPath,
+      TableInfo tableInfo) {
     this.joinType = joinType;
     this.path = path;
     this.alias = alias;
     this.isJoin = isJoin;
-    this.firstJoinPath = firstJoinPath;
-    this.secondJoinPath = secondJoinPath;
+    this.joinPath = joinPath;
+    this.tableInfo = tableInfo;
   }
 
-  public Unnest(SqlUtil.JoinType joinType, String path, String alias) {
+  public Unnest(SqlUtil.JoinType joinType, String path, String alias, TableInfo tableInfo) {
     this.joinType = joinType;
     this.path = path;
     this.alias = alias;
     this.isJoin = false;
-    this.firstJoinPath = null;
-    this.secondJoinPath = null;
+    this.joinPath = null;
+    this.tableInfo = tableInfo;
   }
 
   public SqlUtil.JoinType getJoinType() {
@@ -50,11 +51,8 @@ public class Unnest {
   @Override
   public String toString() {
     return isJoin
-        ? SqlTemplate.join(joinType.value, path, alias, firstJoinPath, secondJoinPath)
-        : SqlTemplate.unnest(joinType.value, path, alias);
-  }
-
-  public boolean getIsJoin() {
-    return isJoin;
+        ? SqlTemplate.join(joinType.value, path, alias, joinPath)
+        : SqlTemplate.unnest(
+            joinType.value, path, alias, Objects.nonNull(joinPath) ? joinPath : "");
   }
 }

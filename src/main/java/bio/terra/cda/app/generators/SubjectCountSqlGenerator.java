@@ -8,13 +8,12 @@ import java.io.IOException;
     entity = "Subject",
     fieldsToCount = {
       TableSchema.FILES_COLUMN,
-      TableSchema.SYSTEM_IDENTIFIER,
+      "subject_identifier_system",
       "sex",
       "race",
       "ethnicity",
       "cause_of_death"
-    },
-    excludedFields = {"ResearchSubject"})
+    })
 public class SubjectCountSqlGenerator extends EntityCountSqlGenerator {
   public SubjectCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {

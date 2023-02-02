@@ -1,0 +1,18 @@
+{
+  "node_type": "ORDERBY",
+  "l": {
+    "node_type": "ORDERBYVALUES",
+    "value": "not_a_column"
+  },
+  "r": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "subject_id"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "test"
+    }
+  }
+}

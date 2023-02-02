@@ -24,7 +24,7 @@ public class SelectValues extends BasicOperator {
             .map(String::trim)
             .map(ctx.getQueryFieldBuilder()::fromPath)
             .filter(field -> !field.getMode().equals(Field.Mode.REPEATED.toString()))
-            .flatMap(ctx.getUnnestBuilder()::fromQueryField));
+            .flatMap(field -> ctx.getUnnestBuilder().fromQueryField(field)));
   }
 
   private void addSelects(QueryContext ctx) {
@@ -39,7 +39,6 @@ public class SelectValues extends BasicOperator {
     ctx.addPartitions(
         Arrays.stream(getValue().split(","))
             .map(String::trim)
-            .filter(select -> select.contains("."))
             .map(ctx.getQueryFieldBuilder()::fromPath)
             .map(ctx.getPartitionBuilder()::fromQueryField));
   }

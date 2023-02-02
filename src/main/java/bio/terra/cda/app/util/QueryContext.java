@@ -1,13 +1,19 @@
 package bio.terra.cda.app.util;
 
+import bio.terra.cda.app.builders.OrderByBuilder;
+import bio.terra.cda.app.builders.ParameterBuilder;
 import bio.terra.cda.app.builders.PartitionBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
-import bio.terra.cda.app.models.EntitySchema;
+import bio.terra.cda.app.builders.ViewBuilder;
+import bio.terra.cda.app.builders.ViewListBuilder;
+import bio.terra.cda.app.models.OrderBy;
 import bio.terra.cda.app.models.Partition;
 import bio.terra.cda.app.models.Select;
+import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.Unnest;
+import bio.terra.cda.app.models.View;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,13 +26,17 @@ public class QueryContext {
   private List<Unnest> unnests;
   private List<Select> select;
   private List<Partition> partitions;
-  private EntitySchema entitySchema;
+  private List<OrderBy> orderBys;
   private Boolean includeSelect;
   private Boolean filesQuery;
   private QueryFieldBuilder queryFieldBuilder;
   private SelectBuilder selectBuilder;
   private UnnestBuilder unnestBuilder;
   private PartitionBuilder partitionBuilder;
+  private ParameterBuilder parameterBuilder;
+  private OrderByBuilder orderByBuilder;
+  private ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder;
+  private TableInfo tableInfo;
 
   public QueryContext(String table, String project) {
     this.table = table;
@@ -35,6 +45,7 @@ public class QueryContext {
     this.unnests = new ArrayList<>();
     this.select = new ArrayList<>();
     this.partitions = new ArrayList<>();
+    this.orderBys = new ArrayList<>();
   }
 
   public QueryContext setFilesQuery(boolean value) {
@@ -50,13 +61,13 @@ public class QueryContext {
     return this.project;
   }
 
-  public QueryContext setEntitySchema(EntitySchema schema) {
-    this.entitySchema = schema;
+  public QueryContext setTableInfo(TableInfo tableInfo) {
+    this.tableInfo = tableInfo;
     return this;
   }
 
-  public EntitySchema getEntitySchema() {
-    return this.entitySchema;
+  public TableInfo getTableInfo() {
+    return this.tableInfo;
   }
 
   public QueryContext setIncludeSelect(Boolean value) {
@@ -101,6 +112,34 @@ public class QueryContext {
 
   public QueryContext setPartitionBuilder(PartitionBuilder builder) {
     this.partitionBuilder = builder;
+    return this;
+  }
+
+  public ParameterBuilder getParameterBuilder() {
+    return this.parameterBuilder;
+  }
+
+  public QueryContext setParameterBuilder(ParameterBuilder builder) {
+    this.parameterBuilder = builder;
+    return this;
+  }
+
+  public OrderByBuilder getOrderByBuilder() {
+    return this.orderByBuilder;
+  }
+
+  public QueryContext setOrderByBuilder(OrderByBuilder builder) {
+    this.orderByBuilder = builder;
+    return this;
+  }
+
+  public ViewListBuilder<? extends View, ? extends ViewBuilder> getViewListBuilder() {
+    return this.viewListBuilder;
+  }
+
+  public QueryContext setViewListBuilder(
+      ViewListBuilder<? extends View, ? extends ViewBuilder> builder) {
+    this.viewListBuilder = builder;
     return this;
   }
 
@@ -150,12 +189,32 @@ public class QueryContext {
   }
 
   public QueryContext addPartitions(Stream<Partition> newPartitions) {
-    this.partitions.addAll(newPartitions.collect(Collectors.toList()));
+    List<Partition> newPartitionsList = newPartitions.collect(Collectors.toList());
+    if (newPartitionsList.isEmpty()) {
+      return this;
+    }
+
+    this.partitions.addAll(newPartitionsList);
     return this;
   }
 
   public QueryContext addSelects(Stream<Select> selects) {
-    this.select.addAll(selects.collect(Collectors.toList()));
+    List<Select> newSelectsList = selects.collect(Collectors.toList());
+    if (newSelectsList.isEmpty()) {
+      return this;
+    }
+
+    this.select.addAll(newSelectsList);
+    return this;
+  }
+
+  public QueryContext addOrderBys(Stream<OrderBy> orderByStream) {
+    List<OrderBy> newOrderByList = orderByStream.collect(Collectors.toList());
+    if (newOrderByList.isEmpty()) {
+      return this;
+    }
+
+    this.orderBys.addAll(newOrderByList);
     return this;
   }
 
@@ -175,7 +234,7 @@ public class QueryContext {
     return partitions;
   }
 
-  public String[] getEntityParts() {
-    return this.entitySchema.getParts();
+  public List<OrderBy> getOrderBys() {
+    return orderBys;
   }
 }

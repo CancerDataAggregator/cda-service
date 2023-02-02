@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+
+<configuration>
+    <appender name="Console-Standard" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder name="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%date %-5level [%thread] %logger{36}: %message%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="Console-Stackdriver" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.springframework.cloud.gcp.logging.StackdriverJsonLayout" includeTraceId="True" includeSpanId="True" />
+        </encoder>
+    </appender>
+
+    <logger name="io.swagger.models.parameters.AbstractSerializableParameter" level="ERROR" />
+
+    <root level="INFO">
+        <appender-ref ref="Console-Standard"/>
+        <appender-ref ref="Console-Stackdriver" />
+    </root>
+</configuration>

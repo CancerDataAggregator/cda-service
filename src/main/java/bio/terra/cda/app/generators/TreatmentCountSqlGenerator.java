@@ -1,13 +1,11 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 
 @CountQueryGenerator(
     entity = "Treatment",
-    fieldsToCount = {TableSchema.SYSTEM_IDENTIFIER, "treatment_type", "treatment_effect"},
-    excludedFields = {})
+    fieldsToCount = {"treatment_identifier_system", "treatment_type", "treatment_effect"})
 public class TreatmentCountSqlGenerator extends EntityCountSqlGenerator {
   public TreatmentCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
       throws IOException {

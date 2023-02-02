@@ -1,27 +1,35 @@
 package bio.terra.cda.app.util;
 
-import bio.terra.cda.app.models.EntitySchema;
+import bio.terra.cda.app.models.CountByField;
+import bio.terra.cda.app.models.ForeignKey;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
-import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Objects;
 import org.springframework.core.io.ClassPathResource;
 
 public class TableSchema {
+  // region TableDefinition
+  public static class TableDefinition {
+    private String tableAlias;
+    private SchemaDefinition[] definitions;
+
+    public String getTableAlias() {
+      return this.tableAlias;
+    }
+
+    public SchemaDefinition[] getDefinitions() {
+      return definitions;
+    }
+  }
+  // endregion
+
   // region SchemaDefinition
   public static class SchemaDefinition {
     private String mode;
@@ -29,6 +37,11 @@ public class TableSchema {
     private String type;
     private String description;
     private SchemaDefinition[] fields;
+    private ForeignKey[] foreignKeys;
+    private Boolean partitionBy;
+    private String alias;
+    private CountByField[] countByFields;
+    private boolean excludeFromSelect;
 
     public String getMode() {
       return mode;
@@ -69,130 +82,75 @@ public class TableSchema {
     public String getDescription() {
       return this.description;
     }
+
+    public ForeignKey[] getForeignKeys() {
+      return foreignKeys;
+    }
+
+    public void setForeignKeys(ForeignKey[] foreignKeys) {
+      this.foreignKeys = foreignKeys;
+    }
+
+    public Boolean getPartitionBy() {
+      return !Objects.isNull(partitionBy) && partitionBy;
+    }
+
+    public void setPartitionBy(Boolean partitionBy) {
+      this.partitionBy = partitionBy;
+    }
+
+    public String getAlias() {
+      return alias;
+    }
+
+    public void setAlias(String alias) {
+      this.alias = alias;
+    }
+
+    public CountByField[] getCountByFields() {
+      return countByFields;
+    }
+
+    public void setCountByFields(CountByField[] countByFields) {
+      this.countByFields = countByFields;
+    }
+
+    public boolean isExcludeFromSelect() {
+      return excludeFromSelect;
+    }
+
+    public void setExcludeFromSelect(boolean excludeFromSelect) {
+      this.excludeFromSelect = excludeFromSelect;
+    }
   }
   // endregion
 
   public static final String FILE_PREFIX = "File";
-  public static final String ID_COLUMN = "id";
   public static final String FILES_COLUMN = "Files";
-  public static final String IDENTIFIER_COLUMN = "identifier";
-  public static final String SYSTEM_IDENTIFIER = "identifier.system";
 
   private TableSchema() {}
 
-  public static List<SchemaDefinition> getSchema(String version) throws IOException {
+  public static TableDefinition getSchema(String version) throws IOException {
     return loadSchemaFromFile(getFileName(version));
   }
 
-  public static Map<String, SchemaDefinition> buildSchemaMap(List<SchemaDefinition> definitions) {
+  public static Map<String, SchemaDefinition> buildSchemaMap(TableDefinition tableDefinition) {
     Map<String, SchemaDefinition> definitionMap = new HashMap<>();
-    addToMap("", definitions, definitionMap);
+    addToMap("", Arrays.asList(tableDefinition.getDefinitions()), definitionMap);
     return definitionMap;
-  }
-
-  public static List<SchemaDefinition> getSchemaByColumnName(
-      List<SchemaDefinition> definitions, String columnName) {
-    List<SchemaDefinition> newSchema = new ArrayList<>();
-
-    definitions.forEach(def -> hasColumn(def, columnName).ifPresent(newSchema::add));
-
-    return newSchema;
-  }
-
-  public static EntitySchema getDefinitionByName(List<SchemaDefinition> definitions, String name) {
-    return TableSchema.getDefinitionTupleByName(definitions, name, "");
-  }
-
-  public static List<String> supportedSchemas() throws IOException {
-    ClassLoader classLoader = TableSchema.class.getClassLoader();
-
-    URL resource = classLoader.getResource("schema");
-
-    if (resource == null) {
-      throw new IOException("Schema does not exist");
-    }
-
-    try (Stream<Path> fileStream = Files.walk(Paths.get(resource.toURI()))) {
-      return fileStream
-          .filter(path -> path.getFileName().toString().endsWith(".json"))
-          .map(
-              path -> {
-                var file = path.getFileName().toString();
-                return file.substring(0, file.length() - 5).toLowerCase();
-              })
-          .collect(Collectors.toList());
-    } catch (Exception e) {
-      throw new IOException(e.getMessage());
-    }
-  }
-
-  // region private helpers
-  private static EntitySchema getDefinitionTupleByName(
-      List<SchemaDefinition> definitions, String name, String prefix) {
-    for (var definition : definitions) {
-      String newPrefix = prefix.equals("") ? prefix : String.format("%s.", prefix);
-      if (definition.getName().equals(name)) {
-        return new EntitySchema(String.format("%s%s", newPrefix, definition.getName()), definition);
-      }
-
-      if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())
-          && definition.getMode().equals(Field.Mode.REPEATED.toString())) {
-        var result =
-            TableSchema.getDefinitionTupleByName(
-                Arrays.asList(definition.getFields()),
-                name,
-                String.format("%s%s", newPrefix, definition.getName()));
-        if (result.wasFound()) {
-          return result;
-        }
-      }
-    }
-
-    return new EntitySchema();
-  }
-
-  private static Optional<SchemaDefinition> hasColumn(
-      SchemaDefinition definition, String columnName) {
-    SchemaDefinition newDef = new SchemaDefinition();
-    newDef.setDescription(definition.getDescription());
-    newDef.setMode(definition.getMode());
-    newDef.setName(definition.getName());
-    newDef.setType(definition.getType());
-
-    if (newDef.getName().equals(columnName)) {
-      return Optional.of(newDef);
-    }
-
-    if (definition.getFields() == null) {
-      return Optional.empty();
-    }
-
-    List<SchemaDefinition> newFields = new ArrayList<>();
-    Arrays.stream(definition.getFields())
-        .forEach(def -> hasColumn(def, columnName).ifPresent(newFields::add));
-
-    if (newFields.isEmpty()) {
-      return Optional.empty();
-    }
-
-    SchemaDefinition[] fields = new SchemaDefinition[newFields.size()];
-    newDef.setFields(newFields.toArray(fields));
-
-    return Optional.of(newDef);
   }
 
   private static String getFileName(String version) {
     return String.format("schema/%s.json", version);
   }
 
-  private static List<SchemaDefinition> loadSchemaFromFile(String fileName) throws IOException {
+  private static TableDefinition loadSchemaFromFile(String fileName) throws IOException {
     ClassPathResource resource = new ClassPathResource(fileName);
     InputStream inputStream = resource.getInputStream();
     ObjectMapper mapper = new ObjectMapper();
-    CollectionType collectionType =
-        mapper.getTypeFactory().constructCollectionType(List.class, SchemaDefinition.class);
+    JavaType javaType = mapper.getTypeFactory().constructType(TableDefinition.class);
 
-    return mapper.readValue(inputStream, collectionType);
+    return mapper.readValue(inputStream, javaType);
   }
 
   private static void addToMap(

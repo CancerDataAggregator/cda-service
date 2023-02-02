@@ -1,0 +1,18 @@
+{
+  "node_type": "SELECT",
+  "l": {
+    "node_type": "SELECTVALUES",
+    "value": "subject_id, not_a_column"
+  },
+  "r": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "subject_id"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "test"
+    }
+  }
+}

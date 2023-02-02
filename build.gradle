@@ -5,27 +5,34 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath("org.springframework.boot:spring-boot-gradle-plugin:2.4.3.RELEASE")
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:2.7.4.RELEASE")
+		classpath("com.google.guava:guava:30.1.1-jre")
+	}
+	configurations.all {
+		resolutionStrategy {
+			force 'com.google.guava:guava:30.1.1-jre'
+		}
 	}
 }
 
 plugins {
 	id 'java'
 	id 'idea'
-	id 'org.springframework.boot' version '2.5.4'
+	id 'org.springframework.boot' version '2.7.4'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'com.google.cloud.tools.jib' version '2.8.0'
-	id 'org.openapi.generator' version '5.1.1'
+	id 'org.openapi.generator' version '6.0.1'
 	id 'com.diffplug.spotless' version '5.12.4'
   	id "org.sonarqube" version "3.3"
 	id 'jacoco'
+	id 'com.srcclr.gradle' version '3.1.12'
 }
 
 ext['log4j2.version'] = '2.17.1'
 
 group = 'bio.terra.cda'
 
-version = '3.0.2'
+version = '3.2.0'
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
@@ -48,13 +55,18 @@ dependencies {
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
 	implementation group: 'javax.validation', name: 'validation-api'
-	implementation group: 'org.webjars', name: 'swagger-ui', version: '3.24.0'
+	implementation group: 'org.webjars', name: 'swagger-ui', version: '4.14.0'
 	implementation group: 'org.aspectj', name: 'aspectjweaver', version: '1.8.8'
-	implementation group: 'com.google.cloud', name: 'google-cloud-bigquery', version: '1.124.7'
+	implementation group: 'com.google.cloud', name: 'google-cloud-bigquery', version: '2.16.1'
+
 
 	// These dependencies are required to load the logback config file.
 	implementation group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
 	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-logging', version: '1.2.8.RELEASE'
+
+	// These are temporary until the including library catches up with these vulnerability fixes
+	implementation group: 'org.yaml', name: 'snakeyaml', version: '1.33'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.0-rc1'
 
 	// -- OpenAPI CodeGen dependencies --
 	implementation group: 'io.swagger.core.v3', name: 'swagger-annotations', version: '2.1.7'
@@ -129,7 +141,7 @@ task buildPythonSdk(type: GenerateTask){
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
 	configOptions = [
-			"packageVersion" : "6.22.2022",
+			 packageVersion : "12.12.2022"
 	]
 }
 
