@@ -1,159 +1,60 @@
 package bio.terra.cda.app.util;
 
 import bio.terra.cda.app.models.CountByField;
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.ForeignKey;
+import bio.terra.cda.app.models.SchemaDefinition;
+import bio.terra.cda.app.models.TableDefinition;
+import bio.terra.cda.app.service.StorageService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.springframework.core.io.ClassPathResource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+
+@Component
+@CacheConfig(cacheNames = "schemas")
 public class TableSchema {
-  // region TableDefinition
-  public static class TableDefinition {
-    private String tableAlias;
-    private SchemaDefinition[] definitions;
+  private final StorageService storageService;
+  private final CacheManager cacheManager;
 
-    public String getTableAlias() {
-      return this.tableAlias;
-    }
+    private static final Logger logger = LoggerFactory.getLogger(TableSchema.class);
 
-    public SchemaDefinition[] getDefinitions() {
-      return definitions;
-    }
-  }
-  // endregion
-
-  // region SchemaDefinition
-  public static class SchemaDefinition {
-    private String mode;
-    private String name;
-    private String type;
-    private String description;
-    private SchemaDefinition[] fields;
-    private ForeignKey[] foreignKeys;
-    private Boolean partitionBy;
-    private String alias;
-    private CountByField[] countByFields;
-    private boolean excludeFromSelect;
-
-    public String getMode() {
-      return mode;
-    }
-
-    public void setMode(String mode) {
-      this.mode = mode;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    public String getType() {
-      return type;
-    }
-
-    public void setType(String type) {
-      this.type = type;
-    }
-
-    public void setFields(SchemaDefinition[] fields) {
-      this.fields = fields;
-    }
-
-    public SchemaDefinition[] getFields() {
-      return this.fields;
-    }
-
-    public void setDescription(String description) {
-      this.description = description;
-    }
-
-    public String getDescription() {
-      return this.description;
-    }
-
-    public ForeignKey[] getForeignKeys() {
-      return foreignKeys;
-    }
-
-    public void setForeignKeys(ForeignKey[] foreignKeys) {
-      this.foreignKeys = foreignKeys;
-    }
-
-    public Boolean getPartitionBy() {
-      return !Objects.isNull(partitionBy) && partitionBy;
-    }
-
-    public void setPartitionBy(Boolean partitionBy) {
-      this.partitionBy = partitionBy;
-    }
-
-    public String getAlias() {
-      return alias;
-    }
-
-    public void setAlias(String alias) {
-      this.alias = alias;
-    }
-
-    public CountByField[] getCountByFields() {
-      return countByFields;
-    }
-
-    public void setCountByFields(CountByField[] countByFields) {
-      this.countByFields = countByFields;
-    }
-
-    public boolean isExcludeFromSelect() {
-      return excludeFromSelect;
-    }
-
-    public void setExcludeFromSelect(boolean excludeFromSelect) {
-      this.excludeFromSelect = excludeFromSelect;
-    }
-  }
-  // endregion
-
-  public static final String FILE_PREFIX = "File";
-  public static final String FILES_COLUMN = "Files";
-
-  private TableSchema() {}
-
-  public static TableDefinition getSchema(String version) throws IOException {
-    return loadSchemaFromFile(getFileName(version));
+  public TableSchema(StorageService storageService, CacheManager cacheManager) {
+    this.cacheManager = cacheManager;
+    this.storageService = storageService;
   }
 
-  public static Map<String, SchemaDefinition> buildSchemaMap(TableDefinition tableDefinition) {
+  @CacheEvict(cacheNames = "schemas")
+  public void clearVersionSchemaCache() {
+      logger.debug("Scheduler has updated schema cache");
+  }
+
+  @Cacheable(cacheNames = "schemas")
+  public DataSetInfo getDataSetInfo(String version) throws IOException {
+      return DataSetInfo.of(version, this.storageService);
+  }
+
+  public Map<String, SchemaDefinition> buildSchemaMap(TableDefinition tableDefinition) {
     Map<String, SchemaDefinition> definitionMap = new HashMap<>();
     addToMap("", Arrays.asList(tableDefinition.getDefinitions()), definitionMap);
     return definitionMap;
   }
 
-  private static String getFileName(String version) {
-    return String.format("schema/%s.json", version);
-  }
-
-  private static TableDefinition loadSchemaFromFile(String fileName) throws IOException {
-    ClassPathResource resource = new ClassPathResource(fileName);
-    InputStream inputStream = resource.getInputStream();
-    ObjectMapper mapper = new ObjectMapper();
-    JavaType javaType = mapper.getTypeFactory().constructType(TableDefinition.class);
-
-    return mapper.readValue(inputStream, javaType);
-  }
-
-  private static void addToMap(
+  private void addToMap(
       String prefix,
       List<SchemaDefinition> definitions,
       Map<String, SchemaDefinition> definitionMap) {
@@ -161,11 +62,11 @@ public class TableSchema {
         definition -> {
           var mapName =
               prefix.isEmpty()
-                  ? definition.name
-                  : String.format(SqlUtil.ALIAS_FIELD_FORMAT, prefix, definition.name);
+                  ? definition.getName()
+                  : String.format(SqlUtil.ALIAS_FIELD_FORMAT, prefix, definition.getName());
           definitionMap.put(mapName, definition);
-          if (definition.type.equals(LegacySQLTypeName.RECORD.toString())) {
-            addToMap(mapName, List.of(definition.fields), definitionMap);
+          if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
+            addToMap(mapName, List.of(definition.getFields()), definitionMap);
           }
         });
   }

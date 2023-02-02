@@ -11,12 +11,14 @@ import bio.terra.cda.app.builders.ViewListBuilder;
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.OrderBy;
 import bio.terra.cda.app.models.Partition;
+import bio.terra.cda.app.models.SchemaDefinition;
 import bio.terra.cda.app.models.Select;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.service.StorageService;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
@@ -38,7 +40,6 @@ public class SqlGenerator {
   final String table;
   final String fileTable;
   final String project;
-  final TableSchema.TableDefinition tableDefinition;
   final DataSetInfo dataSetInfo;
   final boolean filesQuery;
   List<String> filteredFields;
@@ -51,8 +52,9 @@ public class SqlGenerator {
   ViewListBuilder<View, ViewBuilder> viewListBuilder;
   OrderByBuilder orderByBuilder;
   TableInfo entityTable;
+  TableSchema tableSchema;
 
-  public SqlGenerator(String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
+  public SqlGenerator(TableSchema tableSchema, String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
     this.qualifiedTable = qualifiedTable;
     this.rootQuery = rootQuery;
@@ -63,11 +65,10 @@ public class SqlGenerator {
     this.table = dotPos == -1 ? qualifiedTable : qualifiedTable.substring(dotPos + 1);
     this.fileTable =
         dotPos == -1
-            ? qualifiedTable.replace("Subjects", TableSchema.FILES_COLUMN)
-            : qualifiedTable.substring(dotPos + 1).replace("Subjects", TableSchema.FILES_COLUMN);
-    this.tableDefinition = TableSchema.getSchema(version);
-    this.dataSetInfo =
-        new DataSetInfo.DataSetInfoBuilder().addTableSchema(version, this.tableDefinition).build();
+            ? qualifiedTable.replace("Subjects", DataSetInfo.FILES_COLUMN)
+            : qualifiedTable.substring(dotPos + 1).replace("Subjects", DataSetInfo.FILES_COLUMN);
+    this.tableSchema = tableSchema;
+    this.dataSetInfo = tableSchema.getDataSetInfo(version);
 
     preInit();
     initializeEntityFields();
@@ -75,6 +76,7 @@ public class SqlGenerator {
   }
 
   public SqlGenerator(
+      TableSchema tableSchema,
       String qualifiedTable,
       Query rootQuery,
       String version,
@@ -82,7 +84,7 @@ public class SqlGenerator {
       ParameterBuilder parameterBuilder,
       ViewListBuilder<View, ViewBuilder> viewListBuilder)
       throws IOException {
-    this(qualifiedTable, rootQuery, version, filesQuery);
+    this(tableSchema, qualifiedTable, rootQuery, version, filesQuery);
 
     this.parameterBuilder = parameterBuilder;
     this.viewListBuilder = viewListBuilder;
@@ -104,8 +106,8 @@ public class SqlGenerator {
 
     this.filteredFields =
         Arrays.stream(this.entityTable.getSchemaDefinitions())
-            .filter(TableSchema.SchemaDefinition::isExcludeFromSelect)
-            .map(TableSchema.SchemaDefinition::getName)
+            .filter(SchemaDefinition::isExcludeFromSelect)
+            .map(SchemaDefinition::getName)
             .collect(Collectors.toList());
   }
 
@@ -178,7 +180,7 @@ public class SqlGenerator {
     TableInfo tableInfo = ctx.getTableInfo();
 
     TableRelationship[] pathToFile =
-        tableInfo.getPathToTable(this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX));
+        tableInfo.getPathToTable(this.dataSetInfo.getTableInfo(DataSetInfo.FILE_PREFIX));
     TableRelationship[] entityPath = tableInfo.getTablePath();
 
     TableInfo startTable =
@@ -251,7 +253,7 @@ public class SqlGenerator {
             Stream.of(
                 ctx.getFilesQuery()
                     ? this.dataSetInfo
-                        .getTableInfo(TableSchema.FILE_PREFIX)
+                        .getTableInfo(DataSetInfo.FILE_PREFIX)
                         .getPartitionKeyAlias(this.dataSetInfo)
                     : ctx.getTableInfo().getPartitionKeyAlias(this.dataSetInfo)),
             ctx.getPartitions().stream().map(Partition::toString))
@@ -266,7 +268,7 @@ public class SqlGenerator {
           ctx,
           ctx.getFilesQuery()
               ? this.dataSetInfo
-                  .getTableInfo(TableSchema.FILE_PREFIX)
+                  .getTableInfo(DataSetInfo.FILE_PREFIX)
                   .getTableAlias(this.dataSetInfo)
               : table,
           skipExcludes);
@@ -331,18 +333,18 @@ public class SqlGenerator {
 
   protected Stream<String> combinedSelects(
       QueryContext ctx, String prefix, boolean skipExcludes, Stream<String> idSelects) {
-    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX);
+    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(DataSetInfo.FILE_PREFIX);
     List<String> fileFilteredFields =
         Arrays.stream(fileTableInfo.getSchemaDefinitions())
-            .filter(TableSchema.SchemaDefinition::isExcludeFromSelect)
-            .map(TableSchema.SchemaDefinition::getName)
+            .filter(SchemaDefinition::isExcludeFromSelect)
+            .map(SchemaDefinition::getName)
             .collect(Collectors.toList());
 
     return Stream.concat(
             Arrays.stream(
                     ctx.getFilesQuery()
                         ? this.dataSetInfo
-                            .getTableInfo(TableSchema.FILE_PREFIX)
+                            .getTableInfo(DataSetInfo.FILE_PREFIX)
                             .getSchemaDefinitions()
                         : this.entityTable.getSchemaDefinitions())
                 .filter(

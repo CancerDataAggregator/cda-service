@@ -1,5 +1,6 @@
 package bio.terra.cda.app.util;
 
+import bio.terra.cda.app.models.SchemaDefinition;
 import com.google.cloud.bigquery.Field;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -16,7 +17,7 @@ public class NestedColumn {
   }
 
   public static NestedColumn generate(
-      String qualifiedColumnName, Map<String, TableSchema.SchemaDefinition> tableSchemaMap) {
+      String qualifiedColumnName, Map<String, SchemaDefinition> tableSchemaMap) {
     return Builder.generate(qualifiedColumnName, tableSchemaMap);
   }
 
@@ -28,7 +29,7 @@ public class NestedColumn {
      * AS _B, UNNEST(_B.C) AS _C, UNNEST(_C.D) AS _D
      */
     public static NestedColumn generate(
-        String qualifiedColumnName, Map<String, TableSchema.SchemaDefinition> tableSchemaMap)
+        String qualifiedColumnName, Map<String, SchemaDefinition> tableSchemaMap)
         throws IllegalArgumentException {
       Set<String> unnestClauses = new LinkedHashSet<String>();
       String newColumn = null;

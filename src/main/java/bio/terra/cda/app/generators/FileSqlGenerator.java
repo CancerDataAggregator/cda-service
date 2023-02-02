@@ -1,9 +1,12 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.ForeignKey;
+import bio.terra.cda.app.models.SchemaDefinition;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
+import bio.terra.cda.app.service.StorageService;
 import bio.terra.cda.app.util.EndpointUtil;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlTemplate;
@@ -28,9 +31,9 @@ public class FileSqlGenerator extends SqlGenerator {
   private boolean startsWithFile;
   private HashMap<String, Unnest> idUnnests;
 
-  public FileSqlGenerator(String qualifiedTable, Query rootQuery, String version)
+  public FileSqlGenerator(TableSchema tableSchema, String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version, true);
+    super(tableSchema, qualifiedTable, rootQuery, version, true);
 
     idUnnests = new HashMap<>();
   }
@@ -39,7 +42,7 @@ public class FileSqlGenerator extends SqlGenerator {
   protected void preInit() {
     tableInfoList = getTableInfosAsSortedList();
 
-    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX);
+    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(DataSetInfo.FILE_PREFIX);
 
     boolean hasPathToAll = true;
     for (TableInfo ti : tableInfoList) {
@@ -58,7 +61,7 @@ public class FileSqlGenerator extends SqlGenerator {
 
     this.entityTable =
         startsWithFile
-            ? this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX)
+            ? this.dataSetInfo.getTableInfo(DataSetInfo.FILE_PREFIX)
             : queryGenerator != null
                 ? this.dataSetInfo.getTableInfo(queryGenerator.entity())
                 : this.dataSetInfo.getTableInfo(version);
@@ -71,7 +74,7 @@ public class FileSqlGenerator extends SqlGenerator {
                         || (startsWithFile
                             && Objects.nonNull(schemaDefinition.getForeignKeys())
                             && schemaDefinition.getForeignKeys().length > 0))
-            .map(TableSchema.SchemaDefinition::getName)
+            .map(SchemaDefinition::getName)
             .collect(Collectors.toList());
   }
 

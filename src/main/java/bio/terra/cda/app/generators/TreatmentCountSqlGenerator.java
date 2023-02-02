@@ -1,5 +1,6 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 
@@ -7,8 +8,8 @@ import java.io.IOException;
     entity = "Treatment",
     fieldsToCount = {"treatment_identifier_system", "treatment_type", "treatment_effect"})
 public class TreatmentCountSqlGenerator extends EntityCountSqlGenerator {
-  public TreatmentCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
+  public TreatmentCountSqlGenerator(TableSchema tableSchema, String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version, false);
+    super(tableSchema, qualifiedTable, rootQuery, version, false);
   }
 }

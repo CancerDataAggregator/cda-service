@@ -10,20 +10,21 @@ import bio.terra.cda.app.builders.ViewBuilder;
 import bio.terra.cda.app.builders.ViewListBuilder;
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.View;
+import bio.terra.cda.app.service.StorageService;
 import bio.terra.cda.app.util.QueryContext;
+import bio.terra.cda.app.util.TableSchema;
+
 import java.io.IOException;
 
 public class QueryHelper {
   private QueryHelper() {}
 
   public static QueryContext getNewQueryContext(
-      String table, String fileTable, String entity, String project, boolean includeSelect)
+          TableSchema tableSchema, String table, String fileTable, String entity, String project, boolean includeSelect)
       throws IOException {
     var schemas = new Schemas.SchemaBuilder(table, fileTable).build();
     DataSetInfo dataSetInfo =
-        new DataSetInfo.DataSetInfoBuilder()
-            .addTableSchema("all_Subjects_v3_0_final", schemas.getSchema())
-            .build();
+        DataSetInfo.of("all_Subjects_v3_0_final", new TableSchema(StorageService.newBuilder().build()));
     QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
     ViewListBuilder<View, ViewBuilder> viewListBuilder =
         new ViewListBuilder<>(ViewBuilder.class, dataSetInfo, project);

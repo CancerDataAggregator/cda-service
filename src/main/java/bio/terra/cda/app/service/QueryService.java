@@ -60,7 +60,7 @@ public class QueryService {
 
   SystemStatus systemStatus = new SystemStatus();
 
-  @Cacheable
+  @Cacheable(cacheNames = "system-status")
   public SystemStatus bigQueryCheck() {
     SystemStatusSystemsValue bigQuerySystemStatus = new SystemStatusSystemsValue();
     boolean success = false;
@@ -265,7 +265,7 @@ public class QueryService {
     return getQuerySqlFromConfiguration(queryJob.getConfiguration());
   }
 
-  @Cacheable
+  @Cacheable(cacheNames = "system-status")
   public JobStatusData getQueryStatusFromJob(String queryId) {
     final Job job = bigQuery.getJob(queryId);
     if (job == null || !job.exists()) {

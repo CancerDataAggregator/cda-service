@@ -1,5 +1,6 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 
@@ -13,8 +14,8 @@ import java.io.IOException;
       "One_Consequence"
     })
 public class MutationCountSqlGenerator extends EntityCountSqlGenerator {
-  public MutationCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
+  public MutationCountSqlGenerator(TableSchema tableSchema, String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version, false);
+    super(tableSchema, qualifiedTable, rootQuery, version, false);
   }
 }

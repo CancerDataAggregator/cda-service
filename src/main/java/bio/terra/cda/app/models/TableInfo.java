@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class TableInfo {
   private final String tableName;
   private String adjustedTableName;
-  private final TableSchema.SchemaDefinition[] schemaDefinitions;
+  private final SchemaDefinition[] schemaDefinitions;
   private final List<TableRelationship> relationships;
   private final TableInfoTypeEnum type;
   private final String partitionKey;
@@ -25,7 +25,7 @@ public class TableInfo {
       String tableName,
       String adjustedTableName,
       TableInfoTypeEnum type,
-      TableSchema.SchemaDefinition[] schemaDefinitions,
+      SchemaDefinition[] schemaDefinitions,
       String partitionKey) {
     this.tableName = tableName;
     this.adjustedTableName = adjustedTableName;
@@ -76,7 +76,7 @@ public class TableInfo {
     return type;
   }
 
-  public TableSchema.SchemaDefinition[] getSchemaDefinitions() {
+  public SchemaDefinition[] getSchemaDefinitions() {
     return schemaDefinitions;
   }
 
@@ -240,7 +240,7 @@ public class TableInfo {
   public static TableInfo of(
       String tableName,
       TableInfoTypeEnum type,
-      TableSchema.SchemaDefinition[] schemaDefinitions,
+      SchemaDefinition[] schemaDefinitions,
       String partitionKey) {
     return new TableInfoBuilder()
         .setTableName(tableName)
@@ -254,7 +254,7 @@ public class TableInfo {
       String tableName,
       String adjustedTableName,
       TableInfoTypeEnum type,
-      TableSchema.SchemaDefinition[] schemaDefinitions,
+      SchemaDefinition[] schemaDefinitions,
       String partitionKey) {
     return new TableInfoBuilder()
         .setTableName(tableName)
@@ -269,7 +269,7 @@ public class TableInfo {
     private TableInfoTypeEnum type;
     private String tableName;
     private String adjustedTableName;
-    private TableSchema.SchemaDefinition[] schemaDefinitions;
+    private SchemaDefinition[] schemaDefinitions;
     private String partitionKey;
 
     public TableInfoBuilder() {
@@ -292,8 +292,8 @@ public class TableInfo {
     }
 
     public TableInfoBuilder setSchemaDefinitions(
-        List<TableSchema.SchemaDefinition> schemaDefinitions) {
-      this.schemaDefinitions = schemaDefinitions.toArray(TableSchema.SchemaDefinition[]::new);
+        List<SchemaDefinition> schemaDefinitions) {
+      this.schemaDefinitions = schemaDefinitions.toArray(SchemaDefinition[]::new);
       return this;
     }
 

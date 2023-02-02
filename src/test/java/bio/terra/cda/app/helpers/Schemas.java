@@ -1,39 +1,41 @@
 package bio.terra.cda.app.helpers;
 
+import bio.terra.cda.app.models.SchemaDefinition;
+import bio.terra.cda.app.models.TableDefinition;
 import bio.terra.cda.app.util.TableSchema;
 import java.io.IOException;
 import java.util.Map;
 
 public class Schemas {
-  private final Map<String, TableSchema.SchemaDefinition> schemaMap;
-  private final Map<String, TableSchema.SchemaDefinition> fileSchemaMap;
-  private final TableSchema.TableDefinition schema;
-  private final TableSchema.TableDefinition fileSchema;
+  private final Map<String, SchemaDefinition> schemaMap;
+  private final Map<String, SchemaDefinition> fileSchemaMap;
+  private final TableDefinition schema;
+  private final TableDefinition fileSchema;
 
   private Schemas(
-      Map<String, TableSchema.SchemaDefinition> schemaMap,
-      Map<String, TableSchema.SchemaDefinition> fileSchemaMap,
-      TableSchema.TableDefinition schema,
-      TableSchema.TableDefinition fileSchema) {
+      Map<String, SchemaDefinition> schemaMap,
+      Map<String, SchemaDefinition> fileSchemaMap,
+      TableDefinition schema,
+      TableDefinition fileSchema) {
     this.schemaMap = schemaMap;
     this.fileSchemaMap = fileSchemaMap;
     this.schema = schema;
     this.fileSchema = fileSchema;
   }
 
-  public Map<String, TableSchema.SchemaDefinition> getSchemaMap() {
+  public Map<String, SchemaDefinition> getSchemaMap() {
     return schemaMap;
   }
 
-  public Map<String, TableSchema.SchemaDefinition> getFileSchemaMap() {
+  public Map<String, SchemaDefinition> getFileSchemaMap() {
     return fileSchemaMap;
   }
 
-  public TableSchema.TableDefinition getSchema() {
+  public TableDefinition getSchema() {
     return schema;
   }
 
-  public TableSchema.TableDefinition getFileSchema() {
+  public TableDefinition getFileSchema() {
     return fileSchema;
   }
 

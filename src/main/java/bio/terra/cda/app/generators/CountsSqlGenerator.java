@@ -6,6 +6,7 @@ import bio.terra.cda.app.operators.Select;
 import bio.terra.cda.app.operators.SelectValues;
 import bio.terra.cda.app.util.EndpointUtil;
 import bio.terra.cda.app.util.QueryUtil;
+import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
@@ -15,9 +16,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class CountsSqlGenerator extends SqlGenerator {
-  public CountsSqlGenerator(String qualifiedTable, Query rootQuery, String version)
+  public CountsSqlGenerator(TableSchema tableSchema, String qualifiedTable, Query rootQuery, String version)
       throws IOException {
-    super(qualifiedTable, rootQuery, version, false);
+    super(tableSchema, qualifiedTable, rootQuery, version, false);
   }
 
   @Override
@@ -61,6 +62,7 @@ public class CountsSqlGenerator extends SqlGenerator {
               "%s as (%s)",
               resultsAlias,
               new SqlGenerator(
+                      this.tableSchema,
                       this.qualifiedTable,
                       newQuery,
                       this.version,

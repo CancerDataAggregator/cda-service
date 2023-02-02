@@ -6,15 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import bio.terra.cda.app.helpers.Schemas;
 import java.io.IOException;
 import java.util.Objects;
+
+import bio.terra.cda.app.service.StorageService;
+import bio.terra.cda.app.util.TableSchema;
 import org.junit.jupiter.api.Test;
 
 public class DataSetInfoTest {
   private final Schemas schemas =
       new Schemas.SchemaBuilder("all_Subjects_v3_0_final", "all_Files_v3_0_final").build();
   private final DataSetInfo dataSetInfo =
-      new DataSetInfo.DataSetInfoBuilder()
-          .addTableSchema("all_Subjects_v3_0_final", schemas.getSchema())
-          .build();
+      DataSetInfo.of("all_Subjects_v3_0_final", new TableSchema(StorageService.newBuilder().build()));
 
   public DataSetInfoTest() throws IOException {}
 

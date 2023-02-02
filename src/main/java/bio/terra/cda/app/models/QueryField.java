@@ -9,7 +9,7 @@ public class QueryField {
   private final String[] parts;
   private final String alias;
   private final String columnText;
-  private final TableSchema.SchemaDefinition schemaDefinition;
+  private final SchemaDefinition schemaDefinition;
   private final boolean filesQuery;
   private final String tableName;
   private final boolean fileField;
@@ -25,7 +25,7 @@ public class QueryField {
       String columnText,
       String tableName,
       String modifier,
-      TableSchema.SchemaDefinition schemaDefinition,
+      SchemaDefinition schemaDefinition,
       boolean filesQuery,
       boolean fileField) {
     this.name = name;
@@ -70,7 +70,7 @@ public class QueryField {
     return this.schemaDefinition.getType();
   }
 
-  public TableSchema.SchemaDefinition[] getFields() {
+  public SchemaDefinition[] getFields() {
     return this.schemaDefinition.getFields();
   }
 

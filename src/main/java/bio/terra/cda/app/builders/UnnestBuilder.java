@@ -3,6 +3,7 @@ package bio.terra.cda.app.builders;
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.QueryField;
+import bio.terra.cda.app.models.SchemaDefinition;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
@@ -127,11 +128,6 @@ public class UnnestBuilder {
 
     if (isJoin) {
       List<ForeignKey> foreignKeyList = tableRelationship.getForeignKeys();
-      //       TableRelationship otherWay = destinationTable.getRelationships()
-      //               .stream().filter(rel ->
-      // rel.getTableInfo().getTableName().equals(tableInfo.getTableName()))
-      //               .findFirst().orElseThrow();
-      //       List<ForeignKey> targetForeignKeyList = otherWay.getForeignKeys();
 
       List<String> joinConditions = new ArrayList<String>();
 
@@ -140,7 +136,7 @@ public class UnnestBuilder {
       Stream<Unnest> unnestStream = Stream.empty();
       String fieldName = tableRelationship.getField();
 
-      TableSchema.SchemaDefinition schemaDefinition =
+      SchemaDefinition schemaDefinition =
           this.dataSetInfo.getSchemaDefinitionByFieldName(fieldName);
 
       if (Objects.isNull(schemaDefinition)) {

@@ -2,9 +2,9 @@ package bio.terra.cda.app.builders;
 
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
+import bio.terra.cda.app.models.SchemaDefinition;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
 import java.util.Arrays;
 import java.util.Objects;
@@ -23,7 +23,7 @@ public class QueryFieldBuilder {
     String[] modSplit = path.split(" ");
     String modPath = modSplit[0];
     String[] parts = SqlUtil.getParts(modPath);
-    TableSchema.SchemaDefinition schemaDefinition =
+    SchemaDefinition schemaDefinition =
         dataSetInfo.getSchemaDefinitionByFieldName(modPath);
     TableInfo tableInfo = dataSetInfo.getTableInfoFromField(modPath);
 
@@ -57,10 +57,10 @@ public class QueryFieldBuilder {
         modifier,
         schemaDefinition,
         filesQuery,
-        Objects.nonNull(tableAlias) && tableAlias.equals(TableSchema.FILE_PREFIX));
+        Objects.nonNull(tableAlias) && tableAlias.equals(DataSetInfo.FILE_PREFIX));
   }
 
-  protected String getColumnText(TableSchema.SchemaDefinition schemaDefinition, String tableAlias) {
+  protected String getColumnText(SchemaDefinition schemaDefinition, String tableAlias) {
     String mode = schemaDefinition.getMode();
 
     if (mode.equals(Field.Mode.REPEATED.toString())) {

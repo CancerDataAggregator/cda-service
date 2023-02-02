@@ -35,7 +35,7 @@ public class EndpointUtil {
             cls -> {
               QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
               TableInfo tableInfo = dataSetInfo.getTableInfo(generator.entity());
-              TableInfo fileTableInfo = dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX);
+              TableInfo fileTableInfo = dataSetInfo.getTableInfo(DataSetInfo.FILE_PREFIX);
               return Objects.nonNull(tableInfo.getPathToTable(fileTableInfo, true))
                   && generator.hasFiles();
             });

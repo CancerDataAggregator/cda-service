@@ -2,11 +2,17 @@ package bio.terra.cda.app.models;
 
 import bio.terra.cda.app.builders.ColumnsReturnBuilder;
 import bio.terra.cda.app.generators.QueryGenerator;
+import bio.terra.cda.app.service.StorageService;
 import bio.terra.cda.app.util.EndpointUtil;
-import bio.terra.cda.app.util.TableSchema;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +41,10 @@ public class DataSetInfo {
   private final Map<String, TableInfo> tableInfoMap;
   private final Map<String, FieldData> fieldMap;
   private final Map<String, String> knownAliases;
+  public static final String FILE_PREFIX = "File";
+  public static final String FILES_COLUMN = "Files";
+
+  private static final Logger logger = LoggerFactory.getLogger(DataSetInfo.class);
 
   private DataSetInfo(
       Map<String, TableInfo> tableInfoMap,
@@ -53,7 +63,7 @@ public class DataSetInfo {
     return this.fieldMap.entrySet().stream()
         .filter(
             entry -> {
-              TableSchema.SchemaDefinition schemaDefinition =
+              SchemaDefinition schemaDefinition =
                   entry.getValue().getSchemaDefinition();
 
               return !schemaDefinition.getType().equals(LegacySQLTypeName.RECORD.toString())
@@ -79,7 +89,7 @@ public class DataSetInfo {
                   return generator.entity();
                 })
             .collect(Collectors.toList());
-    endpoints.add(TableSchema.FILE_PREFIX);
+    endpoints.add(DataSetInfo.FILE_PREFIX);
 
     if (endpoints.contains(endpointTable.getAdjustedTableName())) {
       return endpointTable.getAdjustedTableName().toLowerCase(Locale.ROOT);
@@ -108,7 +118,7 @@ public class DataSetInfo {
     return knownAliases;
   }
 
-  public TableSchema.SchemaDefinition getSchemaDefinitionByFieldName(String fieldName) {
+  public SchemaDefinition getSchemaDefinitionByFieldName(String fieldName) {
     FieldData fieldData = this.fieldMap.get(fieldName);
 
     if (Objects.isNull(fieldData)) {
@@ -135,11 +145,21 @@ public class DataSetInfo {
     return String.join("_", List.of(prefix.toLowerCase(Locale.ROOT), name));
   }
 
+  public static DataSetInfoBuilder newBuilder(StorageService storageService) {
+    return new DataSetInfoBuilder(storageService);
+  }
+
+  public static DataSetInfo of(String version, StorageService storageService) throws IOException {
+    return new DataSetInfoBuilder(storageService)
+            .addTableSchema(version)
+            .build();
+  }
+
   private static class FieldData {
     private final TableInfo tableInfo;
-    private final TableSchema.SchemaDefinition schemaDefinition;
+    private final SchemaDefinition schemaDefinition;
 
-    private FieldData(TableInfo tableInfo, TableSchema.SchemaDefinition schemaDefinition) {
+    private FieldData(TableInfo tableInfo, SchemaDefinition schemaDefinition) {
       this.tableInfo = tableInfo;
       this.schemaDefinition = schemaDefinition;
     }
@@ -148,7 +168,7 @@ public class DataSetInfo {
       return tableInfo;
     }
 
-    public TableSchema.SchemaDefinition getSchemaDefinition() {
+    public SchemaDefinition getSchemaDefinition() {
       return schemaDefinition;
     }
   }
@@ -175,28 +195,34 @@ public class DataSetInfo {
     private final Map<String, FieldData> fieldMap;
     private final Map<String, Boolean> usedFields;
     private final Map<String, String> knownAliases;
+    private final StorageService storageService;
 
-    public DataSetInfoBuilder() {
+    private static final Logger logger = LoggerFactory.getLogger(DataSetInfoBuilder.class);
+
+    private DataSetInfoBuilder(StorageService storageService) {
       this.tableInfoMap = new HashMap<>();
       this.fieldMap = new HashMap<>();
       this.usedFields = new HashMap<>();
       this.knownAliases = new HashMap<>();
+
+      this.storageService = storageService;
     }
 
     public DataSetInfoBuilder addTableSchema(
-        String tableName, TableSchema.TableDefinition tableDefinition) throws IOException {
+        String tableName) throws IOException {
+      TableDefinition tableDefinition = getSchema(tableName);
       TableInfo tableInfo = this.addTableIfNotExists(tableName, tableDefinition);
 
-      Queue<Tuple<TableInfo, TableSchema.SchemaDefinition>> queue = new LinkedList<>();
-      for (TableSchema.SchemaDefinition schemaDefinition : tableDefinition.getDefinitions()) {
+      Queue<Tuple<TableInfo, SchemaDefinition>> queue = new LinkedList<>();
+      for (SchemaDefinition schemaDefinition : tableDefinition.getDefinitions()) {
         queue.add(Tuple.of(tableInfo, schemaDefinition));
       }
 
       while (!queue.isEmpty()) {
-        Tuple<TableInfo, TableSchema.SchemaDefinition> tuple = queue.remove();
+        Tuple<TableInfo, SchemaDefinition> tuple = queue.remove();
         tableInfo = tuple.x();
 
-        TableSchema.SchemaDefinition definition = tuple.y();
+        SchemaDefinition definition = tuple.y();
 
         if (tableInfo.getTableName().equals("all_Files_v3_0_final")
             && List.of("ResearchSubject", "Specimen", "Subject").contains(definition.getName())) {
@@ -247,7 +273,7 @@ public class DataSetInfo {
               this.tableInfoMap.put(newRecordName, existingTableInfo);
               this.tableInfoMap.remove(definition.getName());
 
-              for (TableSchema.SchemaDefinition definition1 :
+              for (SchemaDefinition definition1 :
                   existingTableInfo.getSchemaDefinitions()) {
                 if (this.usedFields.containsKey(definition1.getName())) {
                   String newDefName =
@@ -260,7 +286,7 @@ public class DataSetInfo {
               }
 
               FieldData existingFieldData = this.fieldMap.get(definition.getName());
-              TableSchema.SchemaDefinition existingDefinition =
+              SchemaDefinition existingDefinition =
                   existingFieldData.getSchemaDefinition();
               existingDefinition.setAlias(newRecordName);
 
@@ -271,14 +297,14 @@ public class DataSetInfo {
             }
           }
 
-          TableSchema.SchemaDefinition partition = definition;
+          SchemaDefinition partition = definition;
           TableInfo.TableInfoTypeEnum tableInfoType = TableInfo.TableInfoTypeEnum.ARRAY;
-          TableSchema.SchemaDefinition[] fields = new TableSchema.SchemaDefinition[0];
+          SchemaDefinition[] fields = new SchemaDefinition[0];
 
           if (definition.getType().equals(LegacySQLTypeName.RECORD.toString())) {
             partition =
                 Arrays.stream(definition.getFields())
-                    .filter(TableSchema.SchemaDefinition::getPartitionBy)
+                    .filter(SchemaDefinition::getPartitionBy)
                     .findFirst()
                     .orElseThrow();
 
@@ -353,7 +379,7 @@ public class DataSetInfo {
                 newPrefix = knownAliases.get(newPrefix);
               }
 
-              TableSchema.SchemaDefinition initialDefinition = initialField.getSchemaDefinition();
+              SchemaDefinition initialDefinition = initialField.getSchemaDefinition();
               String newName =
                   String.join(
                       "_", List.of(newPrefix.toLowerCase(Locale.ROOT), definition.getName()));
@@ -379,12 +405,12 @@ public class DataSetInfo {
     }
 
     private TableInfo addTableIfNotExists(
-        String tableName, TableSchema.TableDefinition tableDefinition) {
+        String tableName, TableDefinition tableDefinition) {
       TableInfo tableInfo = this.tableInfoMap.get(tableName);
       if (Objects.isNull(tableInfo)) {
-        TableSchema.SchemaDefinition partition =
+        SchemaDefinition partition =
             Arrays.stream(tableDefinition.getDefinitions())
-                .filter(TableSchema.SchemaDefinition::getPartitionBy)
+                .filter(SchemaDefinition::getPartitionBy)
                 .findFirst()
                 .orElseThrow();
 
@@ -406,7 +432,7 @@ public class DataSetInfo {
     }
 
     private TableRelationship.TableRelationshipBuilder addRelationship(
-        ForeignKey foreignKey, TableSchema.SchemaDefinition definition, TableInfo tableInfo)
+        ForeignKey foreignKey, SchemaDefinition definition, TableInfo tableInfo)
         throws IOException {
       TableInfo fkTableInfo =
           this.tableInfoMap.get(
@@ -414,7 +440,7 @@ public class DataSetInfo {
 
       if (Objects.isNull(fkTableInfo)) {
         this.addTableSchema(
-            foreignKey.getTableName(), TableSchema.getSchema(foreignKey.getTableName()));
+            foreignKey.getTableName());
         fkTableInfo =
             this.tableInfoMap.get(
                 this.knownAliases.getOrDefault(
@@ -441,7 +467,7 @@ public class DataSetInfo {
       }
     }
 
-    private void setCountByTableInfo(TableSchema.SchemaDefinition definition, TableInfo tableInfo) {
+    private void setCountByTableInfo(SchemaDefinition definition, TableInfo tableInfo) {
       CountByField[] countByFields = definition.getCountByFields();
       if (Objects.nonNull(countByFields) && countByFields.length > 0) {
         for (CountByField countByField : countByFields) {
@@ -457,6 +483,20 @@ public class DataSetInfo {
           }
         }
       }
+    }
+
+    private TableDefinition getSchema(String schemaName)
+            throws IOException {
+      return loadSchemaFromStorage(schemaName);
+    }
+
+    private TableDefinition loadSchemaFromStorage(String schemaName)
+            throws JsonProcessingException {
+      String schemaContent = storageService.getSchemaContent(schemaName);
+      ObjectMapper mapper = new ObjectMapper();
+      JavaType javaType = mapper.getTypeFactory().constructType(TableDefinition.class);
+
+      return mapper.readValue(schemaContent, javaType);
     }
   }
 }
