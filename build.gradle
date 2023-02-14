@@ -136,7 +136,10 @@ task GetFilesSchema(type: Exec){
 task GetSubjectViewSchema(type: Exec){
 	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.all_v3_0_subjects_meta > all_v3_0_subjects_meta.json"
 }
-tasks.register("update_pyproject_toml",BUILD_PYPROJECT_TOML )
+
+
+// adds custom plugin BuildPythonToml to the tasks
+tasks.register("update_pyproject_toml",BuildPythonToml)
 task buildPythonSdk(type: GenerateTask){
 	println("Building Python Sdk")
 	generatorName = "python"
@@ -263,36 +266,37 @@ sonarqube {
   }
 }
 
-abstract class BUILD_PYPROJECT_TOML extends DefaultTask{
+/**
+ * This is a class made for building pyproject.toml
+ */
+class BuildPythonToml extends DefaultTask{
 	@TaskAction
-	def greet(){
-		String pyproject_toml = """
+	def build(){
+		// the spacing for the string is important for writing to the pyproject.toml
+		String pyprojectTomlTemplate = """
 [build-system]
 # Minimum requirements for the build system to execute.
 requires = ["setuptools", "wheel"]  # PEP 508 specifications.
 [tool.poetry.dependencies]
 """
-		ArrayList<String> dependency_list =  ['wheel ="0.36.2"']
 
+		ArrayList<String> dependencyList =  ['wheel ="0.38.4"']
 
-		for(line  in dependency_list ){
-			 pyproject_toml += line + "\n"
+		for(line in dependencyList ){
+			pyprojectTomlTemplate += line + "\n"
 		}
 
 		for( line  in new File("./build/generated-client/requirements.txt")){
 					String[] parts = line.split("[><=]")
 					String op = "="
-					pyproject_toml += "${parts[0].trim()} ${op} \"${parts[parts.length - 1].trim()}\" \n"
+			pyprojectTomlTemplate += "${parts[0].trim()} ${op} \"${parts[parts.length - 1].trim()}\" \n"
 		}
 
-
-
-		new File("./build/generated-client/pyproject.toml").write(pyproject_toml)
-		println pyproject_toml
+		new File("./build/generated-client/pyproject.toml").write(pyprojectTomlTemplate)
+		println pyprojectTomlTemplate
 	}
 }
 
-// Apply the plugin
 
 
 

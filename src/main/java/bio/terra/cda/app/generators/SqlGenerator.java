@@ -23,7 +23,6 @@ import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
@@ -51,11 +50,9 @@ public class SqlGenerator {
   ViewListBuilder<View, ViewBuilder> viewListBuilder;
   OrderByBuilder orderByBuilder;
   TableInfo entityTable;
-  ObjectMapper objectMapper;
 
   public SqlGenerator(String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
       throws IOException {
-    this.objectMapper = new ObjectMapper();
     this.qualifiedTable = qualifiedTable;
     this.rootQuery = rootQuery;
     this.version = version;
@@ -85,7 +82,6 @@ public class SqlGenerator {
       ViewListBuilder<View, ViewBuilder> viewListBuilder)
       throws IOException {
     this(qualifiedTable, rootQuery, version, filesQuery);
-    this.objectMapper = new ObjectMapper();
     this.parameterBuilder = parameterBuilder;
     this.viewListBuilder = viewListBuilder;
   }
@@ -142,28 +138,11 @@ public class SqlGenerator {
         .setViewListBuilder(viewListBuilder);
   }
 
-  private void buildLabels(Query query, Map<String, String> queryMap) {
-    if (Objects.isNull(query)) {
-      return;
-    }
-    if (query.getNodeType().equals(Query.NodeTypeEnum.OFFSET)) {
-      queryMap.put("query_offset", query.getValue());
-    }
-    if (query.getNodeType().equals(Query.NodeTypeEnum.LIMIT)) {
-      queryMap.put("query_limit", query.getValue());
-    }
-    buildLabels(query.getL(), queryMap);
-    buildLabels(query.getR(), queryMap);
-  }
-
   public QueryJobConfiguration.Builder generate()
       throws IllegalArgumentException, JsonProcessingException {
     String querySql = sql(qualifiedTable, rootQuery, false, false, false);
     QueryJobConfiguration.Builder queryJobConfigBuilder =
         QueryJobConfiguration.newBuilder(querySql);
-    Map<String, String> qMap = new HashMap<>();
-    buildLabels(rootQuery, qMap);
-    queryJobConfigBuilder.setLabels(qMap);
     this.parameterBuilder.getParameterValueMap().forEach(queryJobConfigBuilder::addNamedParameter);
     return queryJobConfigBuilder;
   }
