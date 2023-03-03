@@ -144,7 +144,7 @@
                         "subject_id"
                     ],
                     "type": "SINGLE",
-                    "tableName": "all_Subjects_v3_1_test1",
+                    "tableName": "all_merged_subjects_arthur_dev",
                     "tableAlias": "subjects",
                     "location": ""
                 }
@@ -162,7 +162,7 @@
                         "researchsubject_id"
                     ],
                     "type": "SINGLE",
-                    "tableName": "all_Subjects_v3_1_test1",
+                    "tableName": "all_merged_subjects_arthur_dev",
                     "tableAlias": "subjects",
                     "location": "ResearchSubject"
                 }
@@ -180,7 +180,7 @@
                         "specimen_id"
                     ],
                     "type": "SINGLE",
-                    "tableName": "all_Subjects_v3_1_test1",
+                    "tableName": "all_merged_subjects_arthur_dev",
                     "tableAlias": "specimens",
                     "location": "ResearchSubject.Specimen"
                 }
