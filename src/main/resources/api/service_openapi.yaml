@@ -1063,10 +1063,10 @@ components:
 
     OperatorArray:
       type: array
-        items:
-          oneOf:
-              - type: string
-              - $ref: "#/components/schemas/Operator"
+      items:
+        anyOf:
+            - type: string
+            - $ref: "#/components/schemas/Operator"
 
     Query:
       type: object

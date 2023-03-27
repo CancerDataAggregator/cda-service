@@ -4,10 +4,10 @@ import bio.terra.cda.app.builders.ParameterBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.generated.model.Operator;
 import java.util.Arrays;
 
-@QueryOperator(nodeType = {Query.NodeTypeEnum.IN, Query.NodeTypeEnum.NOT_IN})
+@QueryOperator(nodeType = {Operator.NodeTypeEnum.IN, Operator.NodeTypeEnum.NOT_IN})
 public class In extends BasicOperator {
   @Override
   public String buildQuery(QueryContext ctx) {
@@ -19,7 +19,7 @@ public class In extends BasicOperator {
 
     ParameterBuilder parameterBuilder = ctx.getParameterBuilder();
     QueryFieldBuilder queryFieldBuilder = ctx.getQueryFieldBuilder();
-    QueryField queryField = queryFieldBuilder.fromPath(this.getL().getValue());
+    QueryField queryField = queryFieldBuilder.fromPath(((BasicOperator) getL()).getValue());
 
     if (right.contains("\"") || right.contains("'")) {
       right = right.substring(1, right.length() - 1);

@@ -1,10 +1,14 @@
 package bio.terra.cda.app.operators;
 
 import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.generated.model.Operator;
 
-public class BasicOperator extends Query {
+import java.util.List;
+
+public class BasicOperator extends Operator {
   private BasicOperator parent;
+  private String value;
+  private List<Operator> operators;
 
   public String buildQuery(QueryContext ctx) {
     return String.format(
@@ -27,5 +31,23 @@ public class BasicOperator extends Query {
     ctx.addUnnests(
         ctx.getUnnestBuilder()
             .fromQueryField(ctx.getQueryFieldBuilder().fromPath(getValue()), true));
+  }
+
+  public BasicOperator setOperators(List<Operator> operators) {
+    this.operators = operators;
+    return this;
+  }
+
+  public List<Operator> getOperators() {
+    return operators;
+  }
+
+  public BasicOperator setValue(String value) {
+    this.value = value;
+    return this;
+  }
+
+  public String getValue() {
+    return this.value;
   }
 }
