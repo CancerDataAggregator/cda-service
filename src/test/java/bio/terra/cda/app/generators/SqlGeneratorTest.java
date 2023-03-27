@@ -1,8 +1,14 @@
 package bio.terra.cda.app.generators;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
+import bio.terra.cda.app.helpers.StorageServiceHelper;
+import bio.terra.cda.app.helpers.TableSchemaHelper;
 import bio.terra.cda.app.operators.QueryModule;
+import bio.terra.cda.app.service.StorageService;
+import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
@@ -12,6 +18,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 
 class SqlGeneratorTest {
 
@@ -65,8 +72,9 @@ class SqlGeneratorTest {
     String expectedSql = String.format(expectedQueryFormat, qualifiedTable, table);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
+    TableSchema tableSchema = TableSchemaHelper.getNewTableSchema("v3");
     String translatedQuery =
-        new SqlGenerator(qualifiedTable, query, table, false).generate().build().getQuery();
+        new SqlGenerator(tableSchema, qualifiedTable, query, table, false).generate().build().getQuery();
 
     assertEquals(expectedSql, translatedQuery);
   }

@@ -6,7 +6,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import bio.terra.cda.app.helpers.StorageServiceHelper;
 import bio.terra.cda.app.service.QueryService;
+import bio.terra.cda.app.service.StorageService;
 import bio.terra.cda.generated.model.Query;
 import bio.terra.cda.generated.model.QueryCreatedData;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +32,8 @@ class QueryApiControllerTest {
   @Autowired private ObjectMapper objectMapper;
 
   @MockBean private QueryService queryService;
+
+  @MockBean private StorageService storageService;
 
   private void callQueryApi(boolean dryRun) throws Exception {
     var query = new Query().nodeType(Query.NodeTypeEnum.COLUMN).value("test");
@@ -67,6 +71,9 @@ class QueryApiControllerTest {
 
               return response;
             });
+
+    when(storageService.getSchemaMap(any()))
+            .thenAnswer(a -> StorageServiceHelper.getTableSchemaMap("v3"));
 
     var expected =
         "SELECT DISTINCT Subject.sex FROM gdc-bq-sample.dev.all_Subjects_v3_0_final AS Subject INNER JOIN UNNEST(Subject.identifier) AS _subject_identifier WHERE _subject_identifier.system = 'GDC' ORDER BY Subject.sex";

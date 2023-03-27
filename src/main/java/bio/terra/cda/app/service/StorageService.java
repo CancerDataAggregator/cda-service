@@ -1,8 +1,12 @@
 package bio.terra.cda.app.service;
 
+import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import org.springframework.cache.annotation.Cacheable;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class StorageService {
     private final Storage storage;
@@ -29,6 +33,26 @@ public class StorageService {
                 String.format("%s/%s.json",
                         bucketOptions.getSchemaDirectory(),
                         schemaVersion));
+    }
+
+    public Map<String, String> getSchemaMap(String version) {
+        String prefix = String.format("%s/%s/", bucketOptions.getSchemaDirectory(), version);
+        Page<Blob> blobs = this.storage.list(
+                bucketOptions.getBucketName(),
+                Storage.BlobListOption.prefix(prefix));
+
+        Map<String, String> schemaMap = new HashMap<>();
+
+        for (Blob blob : blobs.iterateAll()) {
+            if (blob.getName().contains(".json")) {
+                schemaMap.put(blob.getName()
+                                  .replace(prefix, "")
+                                  .replace(".json", ""),
+                        new String(blob.getContent()));
+            }
+        }
+
+        return schemaMap;
     }
 
     public static StorageServiceBuilder newBuilder() {

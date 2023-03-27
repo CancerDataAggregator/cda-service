@@ -3,24 +3,25 @@ package bio.terra.cda.app.models;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import bio.terra.cda.app.helpers.Schemas;
 import java.io.IOException;
 import java.util.Objects;
 
+import bio.terra.cda.app.helpers.TableSchemaHelper;
 import bio.terra.cda.app.service.StorageService;
 import bio.terra.cda.app.util.TableSchema;
+import com.google.cloud.storage.StorageOptions;
 import org.junit.jupiter.api.Test;
 
 public class DataSetInfoTest {
-  private final Schemas schemas =
-      new Schemas.SchemaBuilder("all_Subjects_v3_0_final", "all_Files_v3_0_final").build();
-  private final DataSetInfo dataSetInfo =
-      DataSetInfo.of("all_Subjects_v3_0_final", new TableSchema(StorageService.newBuilder().build()));
+  private DataSetInfo getDataSetInfo() throws IOException {
+    return TableSchemaHelper.getNewTableSchema("v3").getDataSetInfo("v3");
+  }
 
   public DataSetInfoTest() throws IOException {}
 
   @Test
-  void testAllTablesLoaded() {
+  void testAllTablesLoaded() throws IOException {
+    DataSetInfo dataSetInfo = getDataSetInfo();
     TableInfo subjectTable = dataSetInfo.getTableInfo("Subject");
     TableInfo researchSubjectTable = dataSetInfo.getTableInfo("ResearchSubject");
     TableInfo subjectAssociatedProject = dataSetInfo.getTableInfo("subject_associated_project");
@@ -41,7 +42,8 @@ public class DataSetInfoTest {
   }
 
   @Test
-  void testSearchableFields() {
+  void testSearchableFields() throws IOException {
+    DataSetInfo dataSetInfo = getDataSetInfo();
     assertTrue(Objects.isNull(dataSetInfo.getSchemaDefinitionByFieldName("id")));
     assertTrue(Objects.nonNull(dataSetInfo.getSchemaDefinitionByFieldName("subject_id")));
     assertTrue(Objects.nonNull(dataSetInfo.getSchemaDefinitionByFieldName("file_id")));

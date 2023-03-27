@@ -8,6 +8,7 @@ import bio.terra.cda.app.builders.SelectBuilder;
 import bio.terra.cda.app.builders.UnnestBuilder;
 import bio.terra.cda.app.builders.ViewBuilder;
 import bio.terra.cda.app.builders.ViewListBuilder;
+import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.OrderBy;
 import bio.terra.cda.app.models.Partition;
@@ -37,8 +38,6 @@ public class SqlGenerator {
   final String qualifiedTable;
   final Query rootQuery;
   final String version;
-  final String table;
-  final String fileTable;
   final String project;
   final DataSetInfo dataSetInfo;
   final boolean filesQuery;
@@ -53,20 +52,29 @@ public class SqlGenerator {
   OrderByBuilder orderByBuilder;
   TableInfo entityTable;
   TableSchema tableSchema;
+  ApplicationConfiguration applicationConfiguration;
 
-  public SqlGenerator(TableSchema tableSchema, String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
+  public SqlGenerator(
+          ApplicationConfiguration applicationConfiguration,
+          TableSchema tableSchema,
+          String qualifiedTable,
+          Query rootQuery,
+          String version,
+          boolean filesQuery)
       throws IOException {
-    this.qualifiedTable = qualifiedTable;
     this.rootQuery = rootQuery;
     this.version = version;
     this.filesQuery = filesQuery;
-    int dotPos = qualifiedTable.lastIndexOf('.');
-    this.project = dotPos == -1 ? "" : qualifiedTable.substring(0, dotPos);
-    this.table = dotPos == -1 ? qualifiedTable : qualifiedTable.substring(dotPos + 1);
-    this.fileTable =
-        dotPos == -1
-            ? qualifiedTable.replace("Subjects", DataSetInfo.FILES_COLUMN)
-            : qualifiedTable.substring(dotPos + 1).replace("Subjects", DataSetInfo.FILES_COLUMN);
+
+    if (Objects.isNull(qualifiedTable)) {
+      this.project = applicationConfiguration.getProject();
+      this.qualifiedTable = String.format("%s.%s", this.project, applicationConfiguration.getBqTable());
+    } else {
+      int dotPos = qualifiedTable.lastIndexOf('.');
+      this.project = dotPos == -1 ? "" : qualifiedTable.substring(0, dotPos);
+      this.qualifiedTable = qualifiedTable;
+    }
+
     this.tableSchema = tableSchema;
     this.dataSetInfo = tableSchema.getDataSetInfo(version);
 
@@ -76,6 +84,7 @@ public class SqlGenerator {
   }
 
   public SqlGenerator(
+      ApplicationConfiguration applicationConfiguration,
       TableSchema tableSchema,
       String qualifiedTable,
       Query rootQuery,
@@ -84,7 +93,7 @@ public class SqlGenerator {
       ParameterBuilder parameterBuilder,
       ViewListBuilder<View, ViewBuilder> viewListBuilder)
       throws IOException {
-    this(tableSchema, qualifiedTable, rootQuery, version, filesQuery);
+    this(applicationConfiguration, tableSchema, qualifiedTable, rootQuery, version, filesQuery);
 
     this.parameterBuilder = parameterBuilder;
     this.viewListBuilder = viewListBuilder;
@@ -129,7 +138,7 @@ public class SqlGenerator {
 
   protected QueryContext buildQueryContext(
       TableInfo entityTable, boolean filesQuery, boolean subQuery) {
-    return new QueryContext(table, project)
+    return new QueryContext(project)
         .setFilesQuery(filesQuery)
         .setTableInfo(entityTable)
         .setIncludeSelect(!subQuery)

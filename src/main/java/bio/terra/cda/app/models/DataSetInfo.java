@@ -150,8 +150,9 @@ public class DataSetInfo {
   }
 
   public static DataSetInfo of(String version, StorageService storageService) throws IOException {
+    Map<String, String> schemaMap = storageService.getSchemaMap(version);
     return new DataSetInfoBuilder(storageService)
-            .addTableSchema(version)
+            .addSchemaMap(schemaMap)
             .build();
   }
 
@@ -196,6 +197,7 @@ public class DataSetInfo {
     private final Map<String, Boolean> usedFields;
     private final Map<String, String> knownAliases;
     private final StorageService storageService;
+    private Map<String, String> schemaMap;
 
     private static final Logger logger = LoggerFactory.getLogger(DataSetInfoBuilder.class);
 
@@ -208,10 +210,24 @@ public class DataSetInfo {
       this.storageService = storageService;
     }
 
-    public DataSetInfoBuilder addTableSchema(
+    public DataSetInfoBuilder addSchemaMap(Map<String, String> schemaMap) {
+      if (Objects.nonNull(this.schemaMap)) {
+        this.schemaMap.putAll(schemaMap);
+        return this;
+      }
+
+      this.schemaMap = schemaMap;
+      return this;
+    }
+
+    private void addTableSchema(
         String tableName) throws IOException {
       TableDefinition tableDefinition = getSchema(tableName);
       TableInfo tableInfo = this.addTableIfNotExists(tableName, tableDefinition);
+
+      if (Objects.isNull(tableInfo)) {
+        return;
+      }
 
       Queue<Tuple<TableInfo, SchemaDefinition>> queue = new LinkedList<>();
       for (SchemaDefinition schemaDefinition : tableDefinition.getDefinitions()) {
@@ -286,14 +302,16 @@ public class DataSetInfo {
               }
 
               FieldData existingFieldData = this.fieldMap.get(definition.getName());
-              SchemaDefinition existingDefinition =
-                  existingFieldData.getSchemaDefinition();
-              existingDefinition.setAlias(newRecordName);
+              if (Objects.nonNull(existingFieldData)) {
+                SchemaDefinition existingDefinition =
+                        existingFieldData.getSchemaDefinition();
+                existingDefinition.setAlias(newRecordName);
 
-              this.fieldMap.put(
-                  newRecordName, new FieldData(existingTableInfo, existingDefinition));
-              this.fieldMap.remove(definition.getName());
-              definition.setAlias(newRecordName);
+                this.fieldMap.put(
+                        newRecordName, new FieldData(existingTableInfo, existingDefinition));
+                this.fieldMap.remove(definition.getName());
+                definition.setAlias(newRecordName);
+              }
             }
           }
 
@@ -397,16 +415,19 @@ public class DataSetInfo {
           this.usedFields.put(fieldName, true);
         }
       }
-      return this;
     }
 
-    public DataSetInfo build() {
+    public DataSetInfo build() throws IOException {
+      for (String key : this.schemaMap.keySet()) {
+        this.addTableSchema(key);
+      }
+
       return new DataSetInfo(tableInfoMap, fieldMap, knownAliases);
     }
 
     private TableInfo addTableIfNotExists(
         String tableName, TableDefinition tableDefinition) {
-      TableInfo tableInfo = this.tableInfoMap.get(tableName);
+      TableInfo tableInfo = this.tableInfoMap.get(this.knownAliases.getOrDefault(tableName, tableName));
       if (Objects.isNull(tableInfo)) {
         SchemaDefinition partition =
             Arrays.stream(tableDefinition.getDefinitions())
@@ -426,9 +447,11 @@ public class DataSetInfo {
                 .build());
 
         knownAliases.put(tableName, tableDefinition.getTableAlias());
+
+        return this.tableInfoMap.get(this.knownAliases.getOrDefault(tableName, tableName));
       }
 
-      return this.tableInfoMap.get(this.knownAliases.getOrDefault(tableName, tableName));
+      return null;
     }
 
     private TableRelationship.TableRelationshipBuilder addRelationship(
@@ -487,12 +510,7 @@ public class DataSetInfo {
 
     private TableDefinition getSchema(String schemaName)
             throws IOException {
-      return loadSchemaFromStorage(schemaName);
-    }
-
-    private TableDefinition loadSchemaFromStorage(String schemaName)
-            throws JsonProcessingException {
-      String schemaContent = storageService.getSchemaContent(schemaName);
+      String schemaContent = this.schemaMap.get(schemaName);
       ObjectMapper mapper = new ObjectMapper();
       JavaType javaType = mapper.getTypeFactory().constructType(TableDefinition.class);
 

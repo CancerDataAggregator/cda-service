@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class QueryContext {
-  private final String table;
   private final String project;
   private List<Unnest> unnests;
   private List<Select> select;
@@ -38,8 +37,7 @@ public class QueryContext {
   private ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder;
   private TableInfo tableInfo;
 
-  public QueryContext(String table, String project) {
-    this.table = table;
+  public QueryContext(String project) {
     this.project = project;
 
     this.unnests = new ArrayList<>();
@@ -216,10 +214,6 @@ public class QueryContext {
 
     this.orderBys.addAll(newOrderByList);
     return this;
-  }
-
-  public String getTable() {
-    return this.table;
   }
 
   public List<Select> getSelect() {

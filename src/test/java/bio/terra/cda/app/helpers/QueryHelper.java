@@ -13,6 +13,7 @@ import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.service.StorageService;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.TableSchema;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 import java.io.IOException;
 
@@ -22,14 +23,12 @@ public class QueryHelper {
   public static QueryContext getNewQueryContext(
           TableSchema tableSchema, String table, String fileTable, String entity, String project, boolean includeSelect)
       throws IOException {
-    var schemas = new Schemas.SchemaBuilder(table, fileTable).build();
-    DataSetInfo dataSetInfo =
-        DataSetInfo.of("all_Subjects_v3_0_final", new TableSchema(StorageService.newBuilder().build()));
+    DataSetInfo dataSetInfo = tableSchema.getDataSetInfo("v3");
     QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
     ViewListBuilder<View, ViewBuilder> viewListBuilder =
         new ViewListBuilder<>(ViewBuilder.class, dataSetInfo, project);
 
-    return new QueryContext(table, project)
+    return new QueryContext(project)
         .setIncludeSelect(includeSelect)
         .setQueryFieldBuilder(queryFieldBuilder)
         .setUnnestBuilder(
