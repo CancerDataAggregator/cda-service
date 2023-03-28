@@ -134,8 +134,6 @@ public class OperatorDeserializer extends JsonDeserializer<Operator> {
           operator.setOperators(content);
           break;
       }
-    } else {
-      operator.setContent(null);
     }
 
     return operator;
