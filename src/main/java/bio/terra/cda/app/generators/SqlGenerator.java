@@ -18,6 +18,7 @@ import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.operators.BasicOperator;
 import bio.terra.cda.app.operators.DeserializedQuery;
+import bio.terra.cda.app.operators.ListOperator;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
@@ -225,9 +226,9 @@ public class SqlGenerator {
     }
 
     protected Stream<String> getSelect(QueryContext ctx,Query query, String table, boolean skipExcludes) {
-        if (Objects.nonNull(query.getSelect()) || query.getSelect().isEmpty()) {
-            return ((DeserializedQuery) query).getSelectOperators().stream()
-                    .map(select -> select.buildQuery(ctx));
+        if (Objects.nonNull(query.getSelect()) && !query.getSelect().isEmpty()) {
+            return query.getSelect().stream()
+                    .map(select -> ((ListOperator)select).buildQuery(ctx));
         } else {
             return getSelectsFromEntity(ctx,
                     ctx.getFilesQuery()

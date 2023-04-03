@@ -10,10 +10,11 @@ public class BasicOperator extends Operator {
     private BasicOperator parent;
     private String value;
     private List<BasicOperator> operators;
-
+    private boolean isNullable;
 
     public BasicOperator(){
         QueryOperator operator = this.getClass().getAnnotation(QueryOperator.class);
+        this.isNullable = false;
         if (Objects.nonNull(operator)){
             this.setNodeType(operator.nodeType());
         }
@@ -21,6 +22,7 @@ public class BasicOperator extends Operator {
     public BasicOperator(Operator.NodeTypeEnum nodeType) {
         this.setNodeType(nodeType);
     }
+
 
 
 
@@ -83,5 +85,13 @@ public class BasicOperator extends Operator {
         return sb.toString();
     }
 
+    public boolean isNullable() {
+        return isNullable;
+    }
+
+    public BasicOperator setNullable(boolean nullable) {
+        isNullable = nullable;
+        return this;
+    }
 }
 

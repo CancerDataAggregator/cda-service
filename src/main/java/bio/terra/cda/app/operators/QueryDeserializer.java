@@ -106,6 +106,7 @@ public class QueryDeserializer extends JsonDeserializer<Query> {
                     } else {
                         BasicOperator column =
                                 new Column().setValue(operator.textValue());
+                        column.setNullable(true);
                         ((ListOperator) newOperator).setOperator(column);
                         operatorList.add(newOperator);
                     }

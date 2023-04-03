@@ -1128,7 +1128,8 @@ components:
           $ref: "#/components/schemas/Operator"
         right:
           $ref: "#/components/schemas/Operator"
-
+        defualtValue:
+            type: bool
   responses:
     StatusResponse:
       description: common status response
