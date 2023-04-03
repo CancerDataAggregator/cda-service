@@ -1,0 +1,52 @@
+{
+    "select": ["id", "sex",{"node_type": "column", "value": "gender", "modifier": "g"}],
+    "where": {
+        "node_type": "=",
+        "left": {
+            "node_type": "column",
+            "value": "sex"
+        },
+        "right": {
+            "node_type": "quoted",
+            "value": "male"
+        }
+    },
+    "orderBy": [],
+    "groupBy": []
+}
+
+//Query {
+//    select = [
+//    Select {
+//        operators = [
+//        Column {
+//            value = id
+//        }
+//    ]
+//},
+//    Select {
+//        operators = [
+//        Column {
+//            value = sex
+//        }
+//    ]
+//},
+//    Select {
+//        operators = [
+//        Column {
+//            value = gender
+//        }
+//    ],
+//    modifier = "g"
+//    }
+//],
+//where = BasicOperator {
+//nodeType = "=",
+//left = Column {
+//value = "sex"
+//},
+//right = Quoted {
+//value = "male"
+//}
+//}
+//}

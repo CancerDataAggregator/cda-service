@@ -67,38 +67,38 @@ curl http://localhost:8080/status
 ```
 {
   "node_type": "AND",
-  "l": {
+  "left": {
     "node_type": "AND",
-    "l": {
+    "left": {
       "node_type": ">",
-      "l": {
+      "left": {
         "node_type": "column",
         "value": "age_at_diagnosis"
       },
-      "r": {
+     "right": {
         "node_type": "unquoted",
         "value": "50 * 365"
       }
     },
-    "r": {
+   "right": {
       "node_type": "=",
-      "l": {
+      "left": {
         "node_type": "column",
         "value": "specimen_associated_project"
       },
-      "r": {
+     "right": {
         "node_type": "quoted",
         "value": "TCGA-ESCA"
       }
     }
   },
-  "r": {
+ "right": {
     "node_type": "=",
-    "l": {
+    "left": {
       "node_type": "column",
       "value": "tumor_stage"
     },
-    "r": {
+   "right": {
       "node_type": "quoted",
       "value": "stage iiic"
     }

@@ -1,21 +1,32 @@
 package bio.terra.cda.app.operators;
 
 import bio.terra.cda.generated.model.Operator;
+import bio.terra.cda.generated.model.OperatorArrayInner;
 import bio.terra.cda.generated.model.Query;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.google.cloud.Tuple;
 
+import javax.el.LambdaExpression;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+
 
 public class QueryDeserializer extends JsonDeserializer<Query> {
     @Override
-    public Query deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    public Query deserialize(JsonParser p, DeserializationContext ctxt)
+            throws IOException, JacksonException {
+
         // Get reference to ObjectCodec
         ObjectCodec codec = p.getCodec();
 
@@ -26,42 +37,87 @@ public class QueryDeserializer extends JsonDeserializer<Query> {
             return null;
         }
 
+
         JsonNode selectNode = node.get("select");
         JsonNode whereNode = node.get("where");
         JsonNode orderByNode = node.get("orderBy");
-        JsonNode groupByNode = node.get("groupBy");
+        JsonNode groupByNode = node.get("groupBy"); // Todo: Create a Groupby class
 
-        DeserializedQuery query = new DeserializedQuery();
-        query.setWhereOperator(((BasicOperator) codec.treeToValue(whereNode, Operator.class)));
+        Query query = new Query();
+        query.setWhere(codec.treeToValue(whereNode, Operator.class));
 
-        if (selectNode.isArray()) {
-            List<Operator> selectList = new ArrayList<>();
-            for (JsonNode select : selectNode) {
-                Select newSelect = new Select();
-                newSelect.setNodeType(Operator.NodeTypeEnum.SELECT);
+        // Todo add if statment for groupby
 
-                if (select.hasNonNull("node_type")) {
-                    newSelect.setOperators(List.of(codec.treeToValue(select, Operator.class)));
-                    if (select.hasNonNull("modifier")) {
-                        newSelect.setValue(select.get("modifier").textValue());
-                    }
-                    selectList.add(newSelect);
-                } else {
-                    Column column = new Column();
-                    column.setNodeType(Operator.NodeTypeEnum.COLUMN);
-                    column.setValue(select.textValue());
-                    newSelect.setOperators(List.of(column));
-                    selectList.add(column);
-                }
 
-                newSelect.setOperators(List.of(newSelect));
+        if (Objects.nonNull(selectNode) &&  selectNode.isArray()) {
+            try {
+                query.setSelect(new InnerQueryDeserializer<>().buildNodeOrColumn(
+                        selectNode, codec, Select.class));
+            } catch (JsonProcessingException exception) {
+                throw exception;
             }
-
-            query.setSelect(selectList);
         }
+        if (Objects.nonNull(orderByNode) && orderByNode.isArray()) {
+            try {
+                query.setOrderBy(new InnerQueryDeserializer<>().buildNodeOrColumn(
+                        orderByNode, codec, OrderBy.class));
+            } catch (JsonProcessingException exception) {
+                throw exception;
+            }
+        }
+
 
         return query;
     }
 
-    private List<>
+
+
+    private static class InnerQueryDeserializer<T extends OperatorArrayInner> {
+        /**
+         * This made to create new Operators by reading json object to java class
+         * 
+         * @param arrayJsonNode
+         * @param codec
+         * @param clz
+         * @return
+         * 
+         * @throws JsonProcessingException
+         */
+
+
+        public List<T> buildNodeOrColumn(JsonNode arrayJsonNode, ObjectCodec codec, Class<? extends T> clz) throws JsonProcessingException {
+            List<T> operatorList = new ArrayList<>();
+            for (JsonNode operator : arrayJsonNode) {
+                T newOperator = null;
+                try {
+                    newOperator = clz.getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                if (Objects.nonNull(newOperator)) {
+                    if (operator.hasNonNull("node_type")) {
+
+                        ((ListOperator)newOperator).setOperator((BasicOperator) codec.treeToValue(operator, Operator.class));
+                        if (operator.hasNonNull("modifier")) {
+                            newOperator.setModifier(operator.get("modifier").textValue());
+                        }
+
+                        operatorList.add(newOperator);
+                    } else {
+                        BasicOperator column =
+                                new Column().setValue(operator.textValue());
+                        ((ListOperator) newOperator).setOperator(column);
+                        operatorList.add(newOperator);
+                    }
+
+
+                }
+
+            }
+            return operatorList;
+        }
+
+    }
 }
+
+

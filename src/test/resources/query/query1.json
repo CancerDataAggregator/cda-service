@@ -1,11 +1,13 @@
 {
-  "node_type": "=",
-  "l": {
-    "node_type": "column",
-    "value": "subject_id"
-  },
-  "r": {
-    "node_type": "quoted",
-    "value": "value"
+  "where": {
+    "node_type": "=",
+    "left": {
+      "node_type": "column",
+      "content": "subject_id"
+    },
+    "right": {
+      "node_type": "quoted",
+      "content": "value"
+    }
   }
 }

@@ -19,54 +19,51 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-  private final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-  // -- Error Report - one of our exceptions --
-  @ExceptionHandler(ErrorReportException.class)
-  public ResponseEntity<ErrorReport> errorReportHandler(ErrorReportException ex) {
-    if (ex == null) {
-      return null;
-    }
-    return buildErrorReport(ex, ex.getStatusCode(), ex.getCauses());
-  }
-
-  // -- validation exceptions - we don't control the exception raised
-  @ExceptionHandler({
-    MethodArgumentNotValidException.class,
-    IllegalArgumentException.class,
-    NoHandlerFoundException.class
-  })
-  public ResponseEntity<ErrorReport> validationExceptionHandler(Exception ex) {
-    return buildErrorReport(ex, HttpStatus.BAD_REQUEST, null);
-  }
-
-  // -- catchall - log so we can understand what we have missed in the handlers
-  // above
-  @ExceptionHandler(Exception.class)
-  public ResponseEntity<ErrorReport> catchallHandler(Exception ex) {
-    logger.error("Exception caught by catchall hander", ex);
-    return buildErrorReport(ex, HttpStatus.INTERNAL_SERVER_ERROR, null);
-  }
-
-  private ResponseEntity<ErrorReport> buildErrorReport(
-      Throwable ex, HttpStatus statusCode, List<String> causes) {
-    logger.error("Global exception handler: catch stack", ex);
-
-    List<String> collectCauses = new ArrayList<>();
-    for (Throwable cause = ex; cause != null; cause = cause.getCause()) {
-      logger.error("   cause: " + cause.toString());
-      collectCauses.add(cause.getMessage());
+    // -- Error Report - one of our exceptions --
+    @ExceptionHandler(ErrorReportException.class)
+    public ResponseEntity<ErrorReport> errorReportHandler(ErrorReportException ex) {
+        if (ex == null) {
+            return null;
+        }
+        return buildErrorReport(ex, ex.getStatusCode(), ex.getCauses());
     }
 
-    if (causes == null) {
-      causes = collectCauses;
+    // -- validation exceptions - we don't control the exception raised
+    @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class,
+            NoHandlerFoundException.class})
+    public ResponseEntity<ErrorReport> validationExceptionHandler(Exception ex) {
+        return buildErrorReport(ex, HttpStatus.BAD_REQUEST, null);
     }
 
-    ErrorReport errorReport = null;
-    if (ex != null) {
-      errorReport =
-          new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
+    // -- catchall - log so we can understand what we have missed in the handlers
+    // above
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorReport> catchallHandler(Exception ex) {
+        logger.error("Exception caught by catchall hander", ex);
+        return buildErrorReport(ex, HttpStatus.INTERNAL_SERVER_ERROR, null);
     }
-    return new ResponseEntity<>(errorReport, statusCode);
-  }
+
+    private ResponseEntity<ErrorReport> buildErrorReport(Throwable ex, HttpStatus statusCode,
+            List<String> causes) {
+        logger.error("Global exception handler: catch stack", ex);
+
+        List<String> collectCauses = new ArrayList<>();
+        for (Throwable cause = ex; cause != null; cause = cause.getCause()) {
+            logger.error("   cause: " + cause.toString());
+            collectCauses.add(cause.getMessage());
+        }
+
+        if (causes == null) {
+            causes = collectCauses;
+        }
+
+        ErrorReport errorReport = null;
+        if (ex != null) {
+            errorReport = new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value())
+                    .causes(causes);
+        }
+        return new ResponseEntity<>(errorReport, statusCode);
+    }
 }

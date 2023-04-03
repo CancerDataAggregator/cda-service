@@ -1,18 +1,14 @@
 {
-  "node_type": "ORDERBY",
-  "l": {
-    "node_type": "ORDERBYVALUES",
-    "value": "not_a_column"
-  },
-  "r": {
+  "orderBy": ["not_a_column"],
+  "where": {
     "node_type": "=",
-    "l": {
+    "left": {
       "node_type": "column",
-      "value": "subject_id"
+      "content": "subject_id"
     },
-    "r": {
+   "right": {
       "node_type": "quoted",
-      "value": "test"
+      "content": "test"
     }
   }
 }

@@ -1,11 +1,13 @@
 {
-  "node_type": "IN",
-  "l": {
-    "node_type": "column",
-    "value": "primary_diagnosis_condition"
-  },
-  "r": {
-    "node_type": "unquoted",
-    "value": "('test', 'test2')"
+  "where": {
+    "node_type": "IN",
+    "left": {
+      "node_type": "column",
+      "content": "primary_diagnosis_condition"
+    },
+   "right": {
+      "node_type": "unquoted",
+      "content": "('test', 'test2')"
+    }
   }
 }

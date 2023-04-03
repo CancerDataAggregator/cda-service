@@ -1,25 +1,27 @@
 {
-  "node_type": "SUBQUERY",
-  "l": {
-    "node_type": "=",
-    "l": {
-      "node_type": "column",
-      "value": "researchsubject_identifier_system"
+  "where": {
+    "node_type": "SUBQUERY",
+    "left": {
+      "node_type": "=",
+      "left": {
+        "node_type": "column",
+        "content": "researchsubject_identifier_system"
+      },
+     "right": {
+        "node_type": "quoted",
+        "content": "GDC"
+      }
     },
-    "r": {
-      "node_type": "quoted",
-      "value": "GDC"
-    }
-  },
-  "r": {
-    "node_type": "=",
-    "l": {
-      "node_type": "column",
-      "value": "researchsubject_identifier_system"
-    },
-    "r": {
-      "node_type": "quoted",
-      "value": "PDC"
+   "right": {
+      "node_type": "=",
+      "left": {
+        "node_type": "column",
+        "content": "researchsubject_identifier_system"
+      },
+     "right": {
+        "node_type": "quoted",
+        "content": "PDC"
+      }
     }
   }
 }

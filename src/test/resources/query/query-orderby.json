@@ -1,18 +1,26 @@
 {
-  "node_type": "ORDERBY",
-  "l": {
-    "node_type": "ORDERBYVALUES",
-    "value": "subject_id, primary_diagnosis_site ASC, primary_diagnosis_condition DESC"
-  },
-  "r": {
+  "orderBy": [
+    "subject_id",
+      {
+        "node_type" : "column",
+        "content": "primary_diagnosis_site",
+        "modifier" : "ASC"
+      },
+      {
+        "node_type" : "column",
+        "content": "primary_diagnosis_condition",
+        "modifier" : "DESC"
+      }
+    ],
+  "where": {
     "node_type": "=",
-    "l": {
+    "left": {
       "node_type": "column",
-      "value": "subject_id"
+      "content": "subject_id"
     },
-    "r": {
+   "right": {
       "node_type": "quoted",
-      "value": "test"
+      "content": "test"
     }
   }
 }

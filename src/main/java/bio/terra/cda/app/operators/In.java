@@ -6,40 +6,39 @@ import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.generated.model.Operator;
 import java.util.Arrays;
+import java.util.List;
 
-@QueryOperator(nodeType = {Operator.NodeTypeEnum.IN, Operator.NodeTypeEnum.NOT_IN})
+@QueryOperator(nodeType = Operator.NodeTypeEnum.IN)
 public class In extends BasicOperator {
-  @Override
-  public String buildQuery(QueryContext ctx) {
-    String right = ((BasicOperator) getR()).getValue();
-    if (!right.contains("[") && !right.contains("("))
-      throw new IllegalArgumentException("To use IN you need to add [ or (");
 
-    right = right.substring(1, right.length() - 1);
+    @Override
+    public String buildQuery(QueryContext ctx) {
+        String right = ((BasicOperator) getRight()).getValue();
+        if (!right.contains("[") && !right.contains("("))
+            throw new IllegalArgumentException("To use IN you need to add [ or (");
 
-    ParameterBuilder parameterBuilder = ctx.getParameterBuilder();
-    QueryFieldBuilder queryFieldBuilder = ctx.getQueryFieldBuilder();
-    QueryField queryField = queryFieldBuilder.fromPath(((BasicOperator) getL()).getValue());
+        right = right.substring(1, right.length() - 1);
 
-    if (right.contains("\"") || right.contains("'")) {
-      right = right.substring(1, right.length() - 1);
+        ParameterBuilder parameterBuilder = ctx.getParameterBuilder();
+        QueryFieldBuilder queryFieldBuilder = ctx.getQueryFieldBuilder();
+        QueryField queryField = queryFieldBuilder.fromPath(((BasicOperator) getLeft()).getValue());
 
-      String parameterName =
-          parameterBuilder.addParameterValue(queryField, right.split("[\"|'](\\s)*,(\\s)*[\"|']"));
+        if (right.contains("\"") || right.contains("'")) {
+            right = right.substring(1, right.length() - 1);
 
-      right =
-          String.format(
-              "(SELECT UPPER(_%2$s) FROM UNNEST(%1$s) as _%2$s)",
-              parameterName, parameterName.substring(1));
-    } else {
-      String parameterName =
-          parameterBuilder.addParameterValue(
-              queryField, Arrays.stream(right.split(",")).map(String::trim).toArray());
+            String parameterName = parameterBuilder.addParameterValue(queryField,
+                    right.split("[\"|'](\\s)*,(\\s)*[\"|']"));
 
-      right = String.format("UNNEST(%s)", parameterName);
+            right = String.format("(SELECT UPPER(_%2$s) FROM UNNEST(%1$s) as _%2$s)", parameterName,
+                    parameterName.substring(1));
+        } else {
+            String parameterName = parameterBuilder.addParameterValue(queryField,
+                    Arrays.stream(right.split(",")).map(String::trim).toArray());
+
+            right = String.format("UNNEST(%s)", parameterName);
+        }
+
+        String left = ((BasicOperator) getLeft()).buildQuery(ctx);
+        return String.format("(%s %s %s)", left, this.getNodeType(), right);
     }
-
-    String left = ((BasicOperator) getL()).buildQuery(ctx);
-    return String.format("(%s %s %s)", left, this.getNodeType(), right);
-  }
 }

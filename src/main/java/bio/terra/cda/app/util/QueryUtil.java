@@ -1,26 +1,21 @@
 package bio.terra.cda.app.util;
 
+import bio.terra.cda.generated.model.Operator;
 import bio.terra.cda.generated.model.Query;
+
+import java.util.List;
 import java.util.Objects;
 
 public class QueryUtil {
-  private QueryUtil() {}
+    private QueryUtil() {}
 
-  public static Query deSelectifyQuery(Query query) {
-    return removeSelectsFromQuery(query);
-  }
-
-  private static Query removeSelectsFromQuery(Query currentQuery) {
-    if (Objects.isNull(currentQuery)) {
-      return null;
+    /**
+     * Becaouse selcet is now a array this will clear the value with a blank array
+     * @param query
+     * @return
+     */
+    public static Query deSelectifyQuery(Query query) {
+        query.setSelect(List.of());
+        return query;
     }
-
-    if (currentQuery.getNodeType().equals(Query.NodeTypeEnum.SELECT)) {
-      return removeSelectsFromQuery(currentQuery.getR());
-    } else {
-      currentQuery.setL(removeSelectsFromQuery(currentQuery.getL()));
-      currentQuery.setR(removeSelectsFromQuery(currentQuery.getR()));
-      return currentQuery;
-    }
-  }
 }

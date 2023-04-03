@@ -1,5 +1,6 @@
 package bio.terra.cda.app.operators;
 
+import bio.terra.cda.generated.model.Operator;
 import bio.terra.cda.generated.model.Query;
 
 import java.util.List;

@@ -19,123 +19,115 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 /*
-* OperatorDeserializer
-*
-* This class is meant to specify how to deserialize the json related to query objects
-* into a structure that makes sense for performing different operations based off of
-* node type.
-*
-* This deserializer will use the QueryOperator annotation to find the correct class
-* based off of node_type and instantiate that class as part of the query tree.
-*
-*/
+ * OperatorDeserializer
+ *
+ * This class is meant to specify how to deserialize the json related to query objects into a
+ * structure that makes sense for performing different operations based off of node type.
+ *
+ * This deserializer will use the QueryOperator annotation to find the correct class based off of
+ * node_type and instantiate that class as part of the query tree.
+ *
+ */
 public class OperatorDeserializer extends JsonDeserializer<Operator> {
-  @Override
-  public Operator deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    // Get reference to ObjectCodec
-    ObjectCodec codec = p.getCodec();
+    @Override
+    public Operator deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+        // Get reference to ObjectCodec part of jackson
+        ObjectCodec codec = p.getCodec();
 
-    // Parse "object" node into Jackson's tree model
-    JsonNode node = codec.readTree(p);
+        // Parse "object" node into Jackson's tree model
+        JsonNode node = codec.readTree(p);
 
-    if (node.isNull()) {
-      return null;
-    }
+        if (node.isNull()) {
+            return null;
+        }
 
-    var nodeType = node.get("node_type");
+        var nodeType = node.get("node_type");
 
-    Operator.NodeTypeEnum type = Operator.NodeTypeEnum.fromValue(nodeType.textValue());
+        Operator.NodeTypeEnum type = Operator.NodeTypeEnum.fromValue(nodeType.textValue());
+        // This will scan the class path and look for Annotation that have QueryOperator()
+        ClassPathScanningCandidateComponentProvider scanner =
+                new ClassPathScanningCandidateComponentProvider(false);
 
-    ClassPathScanningCandidateComponentProvider scanner =
-        new ClassPathScanningCandidateComponentProvider(false);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(QueryOperator.class));
+        // look in operators folder to find all class that match the filter
+        var clazz =
+                scanner.findCandidateComponents("bio.terra.cda.app.operators").stream().map(cls -> {
+                    try {
+                        return Class.forName(cls.getBeanClassName());
+                    } catch (ClassNotFoundException e) {
+                        return null;
+                    }
+                }).filter(Objects::nonNull).filter(cls -> {
+                    QueryOperator operator = cls.getAnnotation(QueryOperator.class);
+                    return operator.nodeType().equals(type);
+                }).findFirst();
 
-    scanner.addIncludeFilter(new AnnotationTypeFilter(QueryOperator.class));
+        BasicOperator operator;
 
-    var clazz =
-        scanner.findCandidateComponents("bio.terra.cda.app.operators").stream()
-            .map(
-                cls -> {
-                  try {
-                    return Class.forName(cls.getBeanClassName());
-                  } catch (ClassNotFoundException e) {
-                    return null;
-                  }
-                })
-            .filter(Objects::nonNull)
-            .filter(
-                cls -> {
-                  QueryOperator operator = cls.getAnnotation(QueryOperator.class);
-                  return Arrays.asList(operator.nodeType()).contains(type);
-                })
-            .findFirst();
-
-    BasicOperator operator;
-
-    if (clazz.isPresent()) {
-      Constructor<?> ctor = null;
-      try {
-        ctor = clazz.get().getConstructor();
-      } catch (NoSuchMethodException e) {
-        return null;
-      }
-      try {
-        operator = (BasicOperator) ctor.newInstance();
-      } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-        return null;
-      }
-    } else {
-      operator = new BasicOperator();
-    }
-
-    operator.setNodeType(type);
-    operator.setL(codec.treeToValue(node.get("l"), Operator.class));
-
-    Operator left = operator.getL();
-    if (Objects.nonNull(left)) {
-      ((BasicOperator) left).setParent(operator);
-    }
-
-    operator.setR(codec.treeToValue(node.get("r"), Operator.class));
-
-    Operator right = operator.getR();
-    if (Objects.nonNull(right)) {
-      ((BasicOperator) right).setParent(operator);
-    }
-
-    if (node.hasNonNull("content")) {
-      List<Operator> content = new ArrayList<>();
-      var contentObjs = node.get("content");
-
-      switch (type) {
-        case COLUMN:
-        case QUOTED:
-        case UNQUOTED:
-          if (contentObjs.isArray()) {
+        if (clazz.isPresent()) {
+            Constructor<?> ctor = null;
             try {
-              operator.setValue(contentObjs.get(0).textValue());
-            } catch (ArrayIndexOutOfBoundsException exception) {
-              throw new IllegalArgumentException("Content cannot be empty.");
+                ctor = clazz.get().getConstructor();
+            } catch (NoSuchMethodException e) {
+                return null;
             }
-          } else {
-            operator.setValue(contentObjs.textValue());
-          }
-          break;
-        default:
-          for (JsonNode arrNode : contentObjs) {
-            if (arrNode.hasNonNull("node_type")) {
-              content.add(codec.treeToValue(arrNode, Operator.class));
-            } else {
-              Column column = new Column();
-              column.setNodeType(Operator.NodeTypeEnum.COLUMN);
-              column.setValue(arrNode.textValue());
-              content.add(column);
+            try {
+                operator = (BasicOperator) ctor.newInstance();
+            } catch (InstantiationException | IllegalAccessException
+                    | InvocationTargetException e) {
+                return null;
             }
-          }
-          operator.setOperators(content);
-          break;
-      }
-    }
+        } else {
+            operator = new BasicOperator(type);
+        }
 
-    return operator;
-  }
+        operator.setLeft(codec.treeToValue(node.get("left"), Operator.class));
+
+        Operator left = operator.getLeft();
+        if (Objects.nonNull(left)) {
+            ((BasicOperator) left).setParent(operator);
+        }
+
+        operator.setRight(codec.treeToValue(node.get("right"), Operator.class));
+
+        Operator right = operator.getRight();
+        if (Objects.nonNull(right)) {
+            ((BasicOperator) right).setParent(operator);
+        }
+
+        if (node.hasNonNull("content")) {
+            List<BasicOperator> content = new ArrayList<>();
+            var contentObjs = node.get("content");
+
+            switch (type) {
+                case COLUMN:
+                case QUOTED:
+                case UNQUOTED:
+                    if (contentObjs.isArray()) {
+                        try {
+                            operator.setValue(contentObjs.get(0).textValue());
+                        } catch (ArrayIndexOutOfBoundsException exception) {
+                            throw new IllegalArgumentException("Content cannot be empty.");
+                        }
+                    } else {
+                        operator.setValue(contentObjs.textValue());
+                    }
+                    break;
+                default:
+                    for (JsonNode arrNode : contentObjs) {
+                        if (arrNode.hasNonNull("node_type")) {
+                            content.add((BasicOperator) codec.treeToValue(arrNode, Operator.class));
+                        } else {
+                            BasicOperator column =
+                                    new Column().setValue(arrNode.textValue());
+                            content.add(column);
+                        }
+                    }
+                    operator.setOperators(content);
+                    break;
+            }
+        }
+
+        return operator;
+    }
 }

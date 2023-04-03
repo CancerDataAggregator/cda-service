@@ -1,39 +1,41 @@
 {
-  "node_type": "AND",
-  "l": {
+  "where": {
     "node_type": "AND",
-    "l": {
-      "node_type": ">=",
-      "l": {
-        "node_type": "column",
-        "value": "member_of_research_project"
+    "left": {
+      "node_type": "AND",
+      "left": {
+        "node_type": ">=",
+        "left": {
+          "node_type": "column",
+          "content": "member_of_research_project"
+        },
+       "right": {
+          "node_type": "quoted",
+          "content": "value"
+        }
       },
-      "r": {
-        "node_type": "quoted",
-        "value": "value"
+     "right": {
+        "node_type": "=",
+        "left": {
+          "node_type": "column",
+          "content": "specimen_type"
+        },
+       "right": {
+          "node_type": "quoted",
+          "content": "value"
+        }
       }
     },
-    "r": {
+   "right": {
       "node_type": "=",
-      "l": {
+      "left": {
         "node_type": "column",
-        "value": "specimen_type"
+        "content": "primary_diagnosis_condition"
       },
-      "r": {
+     "right": {
         "node_type": "quoted",
-        "value": "value"
+        "content": "value"
       }
-    }
-  },
-  "r": {
-    "node_type": "=",
-    "l": {
-      "node_type": "column",
-      "value": "primary_diagnosis_condition"
-    },
-    "r": {
-      "node_type": "quoted",
-      "value": "value"
     }
   }
 }

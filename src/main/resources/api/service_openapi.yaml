@@ -80,7 +80,6 @@ paths:
         200:
           $ref: "#/components/responses/QueryCreated"
 
-
   /api/v1/boolean-query/{version}:
     post:
       summary: Execute boolean query
@@ -100,7 +99,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The boolean query
@@ -134,7 +132,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The subject query
         required: true
@@ -166,7 +163,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The subject query
@@ -200,7 +196,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The subjects query
         required: true
@@ -232,7 +227,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The subjects query
@@ -266,7 +260,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The Research Subject query
         required: true
@@ -298,7 +291,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The research subject query
@@ -332,7 +324,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The research subjects query
         required: true
@@ -364,7 +355,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The research subjects query
@@ -398,7 +388,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The specimen query
         required: true
@@ -430,7 +419,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The specimen query
@@ -464,7 +452,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The specimen query
         required: true
@@ -496,7 +483,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The specimen query
@@ -530,7 +516,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The diagnosis query
         required: true
@@ -562,7 +547,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The diagnosis query
@@ -596,7 +580,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The diagnosis query
         required: true
@@ -628,7 +611,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The mutation query
@@ -662,7 +644,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The treatments query
         required: true
@@ -694,7 +675,6 @@ paths:
             type: boolean
             default: false
         - $ref: "#/components/parameters/Table"
-
 
       requestBody:
         description: The treatment query
@@ -867,7 +847,6 @@ paths:
             default: false
         - $ref: "#/components/parameters/Table"
 
-
       requestBody:
         description: The files query
         required: true
@@ -903,11 +882,11 @@ components:
         type: string
       description: Filter on system for results
     Count:
-        in: query
-        name: count
-        schema:
-          type: boolean
-        description: Filter on system for results
+      in: query
+      name: count
+      schema:
+        type: boolean
+      description: Filter on system for results
     AddTable:
       in: query
       name: table name
@@ -1065,20 +1044,20 @@ components:
       type: array
       items:
         anyOf:
-            - type: string
-            - $ref: "#/components/schemas/Operator"
+          - type: string
+          - $ref: "#/components/schemas/Operator"
 
     Query:
       type: object
       properties:
         select:
-          $ref: '#/components/schemas/OperatorArray'
+          $ref: "#/components/schemas/OperatorArray"
         where:
           $ref: "#/components/schemas/Operator"
         orderBy:
-          $ref: '#/components/schemas/OperatorArray'
+          $ref: "#/components/schemas/OperatorArray"
         groupBy:
-          $ref: '#/components/schemas/OperatorArray'
+          $ref: "#/components/schemas/OperatorArray"
 
     Operator:
       type: object
@@ -1092,11 +1071,11 @@ components:
         ```
         {
           "node_type": "<",
-          "l": {
+          "left": {
             "node_type": "column",
             "value": "age"
           },
-          "r": {
+         "right": {
             "node_type": "unquoted",
             "value": 50
           }
@@ -1131,7 +1110,7 @@ components:
               "NOT IN",
               "NOT LIKE",
               ORDERBY,
-              ORDERBYVALUES
+              ORDERBYVALUES,
             ]
           description: >
             Operator contents and behavior depends on `node_type`:
@@ -1142,10 +1121,12 @@ components:
              * `SUBQUERY` - `l` is run as a query on the results of query `r`
              * `NOT` - `l` is used to create the expression `NOT l`
         content:
-          $ref: '#/components/schemas/OperatorArray'
-        l:
+          $ref: "#/components/schemas/OperatorArray"
+        modifier:
+          type: string
+        left:
           $ref: "#/components/schemas/Operator"
-        r:
+        right:
           $ref: "#/components/schemas/Operator"
 
   responses:
