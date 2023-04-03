@@ -3,7 +3,8 @@
     "node_type": "=",
     "left": {
       "node_type": "column",
-      "content": "days_to_collection"
+      "content": "days_to_collection",
+      "defaultValue": ""
     },
    "right": {
       "node_type": "unquoted",

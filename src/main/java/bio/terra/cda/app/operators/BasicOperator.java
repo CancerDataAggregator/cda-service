@@ -10,11 +10,9 @@ public class BasicOperator extends Operator {
     private BasicOperator parent;
     private String value;
     private List<BasicOperator> operators;
-    private boolean isNullable;
 
     public BasicOperator(){
         QueryOperator operator = this.getClass().getAnnotation(QueryOperator.class);
-        this.isNullable = false;
         if (Objects.nonNull(operator)){
             this.setNodeType(operator.nodeType());
         }
@@ -22,9 +20,6 @@ public class BasicOperator extends Operator {
     public BasicOperator(Operator.NodeTypeEnum nodeType) {
         this.setNodeType(nodeType);
     }
-
-
-
 
     public String buildQuery(QueryContext ctx) {
         return String.format("(%s %s %s)", ((BasicOperator) getLeft()).buildQuery(ctx),
@@ -73,8 +68,7 @@ public class BasicOperator extends Operator {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-
-        sb.append(String.format("class %s {\n",this.getClass().getName()));
+        sb.append(String.format("class %s {\n",this.getClass().getCanonicalName()));
         sb.append("    nodeType: ").append(toIndentedString(this.getNodeType())).append("\n");
         sb.append("    operators: ").append(toIndentedString(this.getOperators())).append("\n");
         sb.append("    value: ").append(toIndentedString(this.getValue())).append("\n");
@@ -82,16 +76,8 @@ public class BasicOperator extends Operator {
         sb.append("    left: ").append(toIndentedString(this.getLeft())).append("\n");
         sb.append("    right: ").append(toIndentedString(this.getRight())).append("\n");
         sb.append("}");
+
         return sb.toString();
-    }
-
-    public boolean isNullable() {
-        return isNullable;
-    }
-
-    public BasicOperator setNullable(boolean nullable) {
-        isNullable = nullable;
-        return this;
     }
 }
 

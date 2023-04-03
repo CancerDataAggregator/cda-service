@@ -37,7 +37,6 @@ public class QueryDeserializer extends JsonDeserializer<Query> {
             return null;
         }
 
-
         JsonNode selectNode = node.get("select");
         JsonNode whereNode = node.get("where");
         JsonNode orderByNode = node.get("orderBy");
@@ -57,6 +56,7 @@ public class QueryDeserializer extends JsonDeserializer<Query> {
                 throw exception;
             }
         }
+
         if (Objects.nonNull(orderByNode) && orderByNode.isArray()) {
             try {
                 query.setOrderBy(new InnerQueryDeserializer<>().buildNodeOrColumn(
@@ -102,11 +102,14 @@ public class QueryDeserializer extends JsonDeserializer<Query> {
                             newOperator.setModifier(operator.get("modifier").textValue());
                         }
 
+                        if (operator.hasNonNull("defaultValue")) {
+                            newOperator.setDefaultValue(operator.get("defaultValue").textValue());
+                        }
+
                         operatorList.add(newOperator);
                     } else {
                         BasicOperator column =
                                 new Column().setValue(operator.textValue());
-                        column.setNullable(true);
                         ((ListOperator) newOperator).setOperator(column);
                         operatorList.add(newOperator);
                     }

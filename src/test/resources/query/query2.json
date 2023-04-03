@@ -7,7 +7,8 @@
         "node_type": ">=",
         "left": {
           "node_type": "column",
-          "content": "member_of_research_project"
+          "content": "member_of_research_project",
+          "defaultValue": ""
         },
        "right": {
           "node_type": "quoted",
@@ -18,7 +19,8 @@
         "node_type": "=",
         "left": {
           "node_type": "column",
-          "content": "specimen_type"
+          "content": "specimen_type",
+          "defaultValue": ""
         },
        "right": {
           "node_type": "quoted",
@@ -30,7 +32,8 @@
       "node_type": "=",
       "left": {
         "node_type": "column",
-        "content": "primary_diagnosis_condition"
+        "content": "primary_diagnosis_condition",
+        "defaultValue": ""
       },
      "right": {
         "node_type": "quoted",

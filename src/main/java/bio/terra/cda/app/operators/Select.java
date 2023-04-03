@@ -13,7 +13,6 @@ public class Select extends ListOperator {
     public String buildQuery(QueryContext ctx) throws IllegalArgumentException {
         String modifier = this.getModifier();
 
-
         return Objects.isNull(modifier) || modifier.isEmpty()
                 ? this.getOperator().buildQuery(ctx)
                 : String.format("%s AS %s",this.getOperator().buildQuery(ctx),modifier);

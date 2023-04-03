@@ -20,11 +20,26 @@ public class Column extends BasicOperator {
 
         BasicOperator parent = getParent();
 
-        return queryField.getType().equals(LegacySQLTypeName.STRING.toString())
-                &&
-                (Objects.isNull(parent) ||
-                !List.of(NodeTypeEnum.IS, NodeTypeEnum.IS_NOT).contains(parent.getNodeType()))
-                        ? String.format("IFNULL(UPPER(%s), '')", columnText)
-                        : columnText;
+        String defaultValue = this.getDefaultValue();
+
+        if (Objects.nonNull(parent)
+                && List.of(NodeTypeEnum.IS, NodeTypeEnum.IS_NOT).contains(parent.getNodeType())) {
+            return columnText;
+        }
+
+        String result = queryField.getType().equals(LegacySQLTypeName.STRING.toString())
+                ? String.format("UPPER(%s)", columnText)
+                : columnText;
+
+        var parameterBuilder = ctx.getParameterBuilder();
+
+        if (Objects.nonNull(defaultValue)) {
+            result = String.format(
+                    "IFNULL(%s, %s)",
+                    result,
+                    parameterBuilder.addParameterValue(queryField, defaultValue));
+        }
+
+        return result;
     }
 }

@@ -7,7 +7,8 @@
         "node_type": "=",
         "left": {
           "node_type": "column",
-          "content": "stage"
+          "content": "stage",
+          "defaultValue": ""
         },
        "right": {
           "node_type": "quoted",
@@ -18,7 +19,8 @@
         "node_type": "=",
         "left": {
           "node_type": "column",
-          "content": "stage"
+          "content": "stage",
+          "defaultValue": ""
         },
        "right": {
           "node_type": "quoted",
@@ -30,7 +32,8 @@
       "node_type": "=",
       "left": {
         "node_type": "column",
-        "content": "primary_diagnosis_site"
+        "content": "primary_diagnosis_site",
+        "defaultValue": ""
       },
      "right": {
         "node_type": "quoted",
