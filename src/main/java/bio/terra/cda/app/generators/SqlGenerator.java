@@ -22,12 +22,11 @@ import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -83,7 +82,6 @@ public class SqlGenerator {
       ViewListBuilder<View, ViewBuilder> viewListBuilder)
       throws IOException {
     this(qualifiedTable, rootQuery, version, filesQuery);
-
     this.parameterBuilder = parameterBuilder;
     this.viewListBuilder = viewListBuilder;
   }
@@ -140,11 +138,11 @@ public class SqlGenerator {
         .setViewListBuilder(viewListBuilder);
   }
 
-  public QueryJobConfiguration.Builder generate() throws IllegalArgumentException {
+  public QueryJobConfiguration.Builder generate()
+      throws IllegalArgumentException, JsonProcessingException {
     String querySql = sql(qualifiedTable, rootQuery, false, false, false);
     QueryJobConfiguration.Builder queryJobConfigBuilder =
         QueryJobConfiguration.newBuilder(querySql);
-
     this.parameterBuilder.getParameterValueMap().forEach(queryJobConfigBuilder::addNamedParameter);
     return queryJobConfigBuilder;
   }
@@ -211,7 +209,8 @@ public class SqlGenerator {
     }
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
-    String selectFields = subQuery
+    String selectFields =
+        subQuery
             ? ""
             : getSelect(ctx, tableInfo.getTableAlias(this.dataSetInfo), !this.modularEntity)
                 .collect(Collectors.joining(", "));
@@ -232,10 +231,23 @@ public class SqlGenerator {
 
     if (subQuery) {
       return SqlTemplate.regularQuery(
-              String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
-              fromString,
-              condition,
-              ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+          String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
+          fromString,
+          condition,
+          ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+    }
+
+    String limitString = "";
+    String offsetString = "";
+
+    if (ctx.getLimit().isPresent()) {
+      limitString = String.format(" LIMIT %d ", ctx.getLimit().get());
+    }
+    if (ctx.getOffset().isPresent()) {
+      if (ctx.getLimit().isEmpty()) {
+        throw new IllegalArgumentException("OFFSET requires a LIMIT");
+      }
+      offsetString = String.format(" OFFSET %d ", ctx.getOffset().get());
     }
 
     return SqlTemplate.resultsQuery(
@@ -243,7 +255,9 @@ public class SqlGenerator {
         selectFields,
         fromString,
         condition,
-        ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+        ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")),
+        limitString,
+        offsetString);
   }
 
   protected Stream<String> getPartitionByFields(QueryContext ctx) {

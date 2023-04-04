@@ -17,6 +17,7 @@ import bio.terra.cda.app.models.View;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,6 +36,8 @@ public class QueryContext {
   private PartitionBuilder partitionBuilder;
   private ParameterBuilder parameterBuilder;
   private OrderByBuilder orderByBuilder;
+  private Optional<Integer> limit = Optional.empty();
+  private Optional<Integer> offset = Optional.empty();
   private ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder;
   private TableInfo tableInfo;
 
@@ -131,6 +134,22 @@ public class QueryContext {
   public QueryContext setOrderByBuilder(OrderByBuilder builder) {
     this.orderByBuilder = builder;
     return this;
+  }
+
+  public Optional<Integer> getLimit() {
+    return limit;
+  }
+
+  public void setLimit(Integer limit) {
+    this.limit = Optional.ofNullable(limit);
+  }
+
+  public Optional<Integer> getOffset() {
+    return offset;
+  }
+
+  public void setOffset(Integer offset) {
+    this.offset = Optional.ofNullable(offset);
   }
 
   public ViewListBuilder<? extends View, ? extends ViewBuilder> getViewListBuilder() {
