@@ -8,9 +8,9 @@ public class Quoted extends BasicOperator {
   @Override
   public String buildQuery(QueryContext ctx) {
     var parameterBuilder = ctx.getParameterBuilder();
+
     String parameterName =
-        parameterBuilder.addParameterValue(
-            ctx.getQueryFieldBuilder().fromPath(this.getParent().getL().getValue()), getValue());
+        parameterBuilder.addParameterValue(this.getSQLType(this, ctx), getValue());
     return String.format("UPPER(%s)", parameterName);
   }
 }

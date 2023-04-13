@@ -1114,7 +1114,11 @@ components:
               ORDERBY,
               ORDERBYVALUES,
               LIMIT,
-              OFFSET
+              OFFSET,
+              "+",
+              "-",
+              "/",
+              "*"
             ]
           description: >
             Query contents and behavior depends on `node_type`:

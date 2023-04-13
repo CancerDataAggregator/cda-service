@@ -168,6 +168,7 @@ task integrationTest(type: Test) {
     mustRunAfter test
 }
 
+
 jib {
 	from {
 		image = 'us.gcr.io/broad-dsp-gcr-public/base/jre:11-distroless'

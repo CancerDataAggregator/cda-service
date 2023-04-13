@@ -11,29 +11,22 @@ import java.util.stream.Collectors;
 
 public class ParameterBuilder {
   private final Map<String, QueryParameterValue> parameterValueMap;
+  private int index;
 
   public ParameterBuilder() {
     this.parameterValueMap = new HashMap<>();
+    this.index = 0;
   }
 
   public Map<String, QueryParameterValue> getParameterValueMap() {
     return parameterValueMap;
   }
 
-  public String addParameterValue(QueryField queryField, Object value) {
-    String parameterName = String.format("%s_1", queryField.getAlias());
-
-    while (this.parameterValueMap.containsKey(parameterName)) {
-      String number = parameterName.substring(parameterName.length() - 1);
-      int index = Integer.parseInt(number);
-      parameterName =
-          String.format("%s%s", parameterName.substring(0, parameterName.length() - 1), ++index);
-    }
-
+  public String addParameterValue(String type, Object value) {
+    String parameterName = String.format("parameter_%s", ++index);
     QueryParameterValue queryParameterValue;
 
-    StandardSQLTypeName fieldType =
-        LegacySQLTypeName.valueOf(queryField.getType()).getStandardType();
+    StandardSQLTypeName fieldType = LegacySQLTypeName.valueOf(type).getStandardType();
 
     if (value.getClass().isArray()) {
       queryParameterValue =
@@ -58,5 +51,9 @@ public class ParameterBuilder {
     this.parameterValueMap.put(parameterName, queryParameterValue);
 
     return String.format("@%s", parameterName);
+  }
+
+  public String addParameterValue(QueryField queryField, Object value) {
+    return this.addParameterValue(queryField.getType(), value);
   }
 }
