@@ -66,7 +66,6 @@ public class QueryDeserializer extends JsonDeserializer<Query> {
             }
         }
 
-
         return query;
     }
 
@@ -102,19 +101,14 @@ public class QueryDeserializer extends JsonDeserializer<Query> {
                             newOperator.setModifier(operator.get("modifier").textValue());
                         }
 
-                        if (operator.hasNonNull("defaultValue")) {
-                            newOperator.setDefaultValue(operator.get("defaultValue").textValue());
-                        }
-
                         operatorList.add(newOperator);
                     } else {
-                        BasicOperator column =
-                                new Column().setValue(operator.textValue());
+                        Column column =
+                                (Column) new Column().setValue(operator.textValue());
+                        column.setIgnoreDefault(true);
                         ((ListOperator) newOperator).setOperator(column);
                         operatorList.add(newOperator);
                     }
-
-
                 }
 
             }

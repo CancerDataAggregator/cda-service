@@ -3,8 +3,7 @@
     "node_type": "=",
     "left": {
       "node_type": "column",
-      "content": "subject_id",
-      "defaultValue": ""
+      "content": "subject_id"
     },
     "right": {
       "node_type": "quoted",

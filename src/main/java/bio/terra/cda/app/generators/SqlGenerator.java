@@ -196,6 +196,10 @@ public class SqlGenerator {
                 : getSelect(ctx,query, tableInfo.getTableAlias(this.dataSetInfo), !this.modularEntity)
                         .collect(Collectors.joining(", "));
 
+        String orderByFields = query.getOrderBy()
+                .stream().map(ob -> ((ListOperator) ob).buildQuery(ctx))
+                .collect(Collectors.joining(", "));
+
         var fromClause = Stream.concat(
                 hasSubClause ? Stream.of(tableOrSubClause)
                         : Stream.of(String.format("%s.%s AS %s", project, startTable.getTableName(),
@@ -212,8 +216,7 @@ public class SqlGenerator {
         }
 
         return SqlTemplate.resultsQuery(getPartitionByFields(ctx).collect(Collectors.joining(", ")),
-                selectFields, fromString, condition, ctx.getOrderBys().stream()
-                        .map(OrderBy::toString).collect(Collectors.joining(", ")));
+                selectFields, fromString, condition, orderByFields);
     }
 
     protected Stream<String> getPartitionByFields(QueryContext ctx) {

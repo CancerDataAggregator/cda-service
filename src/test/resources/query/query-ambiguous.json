@@ -5,8 +5,7 @@
       "node_type": "=",
       "left": {
         "node_type": "column",
-        "content": "species",
-        "defaultValue": ""
+        "content": "species"
       },
      "right": {
         "node_type": "quoted",
@@ -17,8 +16,7 @@
       "node_type": "=",
       "left": {
         "node_type": "column",
-        "content": "species",
-        "defaultValue": ""
+        "content": "species"
       },
      "right": {
         "node_type": "quoted",

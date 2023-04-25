@@ -37,9 +37,6 @@ public class CountsSqlGenerator extends SqlGenerator {
             tableInfoMap.put(annotation.entity(), tableInfo);
         });
 
-
-
-
         // This it builds the Select by build columns
         query.setSelect(tableInfoMap.keySet().stream().map(key -> new Select().setOperator(
                      new Column().setValue(tableInfoMap.get(key)

@@ -3,8 +3,7 @@
     "node_type": "NOT IN",
     "left": {
       "node_type": "column",
-      "content": "primary_diagnosis_condition",
-      "defaultValue": ""
+      "content": "primary_diagnosis_condition"
     },
    "right": {
       "node_type": "unquoted",

@@ -3,8 +3,7 @@
     "node_type": "=",
     "left": {
       "node_type": "column",
-      "content": "data_modality",
-      "defaultValue": ""
+      "content": "data_modality"
     },
    "right": {
       "node_type": "quoted",

@@ -95,6 +95,10 @@ public class OperatorDeserializer extends JsonDeserializer<Operator> {
             ((BasicOperator) right).setParent(operator);
         }
 
+        if (node.hasNonNull("defaultValue")) {
+            operator.setDefaultValue(node.get("defaultValue").textValue());
+        }
+
         if (node.hasNonNull("content")) {
             List<BasicOperator> content = new ArrayList<>();
             var contentObjs = node.get("content");

@@ -9,6 +9,7 @@ import java.util.Objects;
 
 @QueryOperator(nodeType = Operator.NodeTypeEnum.COLUMN)
 public class Column extends BasicOperator {
+    private boolean ignoreDefault = false;
 
     @Override
     public String buildQuery(QueryContext ctx) {
@@ -31,15 +32,32 @@ public class Column extends BasicOperator {
                 ? String.format("UPPER(%s)", columnText)
                 : columnText;
 
-        var parameterBuilder = ctx.getParameterBuilder();
+        if (!this.ignoreDefault) {
+            var parameterBuilder = ctx.getParameterBuilder();
 
-        if (Objects.nonNull(defaultValue)) {
-            result = String.format(
-                    "IFNULL(%s, %s)",
-                    result,
-                    parameterBuilder.addParameterValue(queryField, defaultValue));
+            String newDefault = defaultValue;
+            if (Objects.isNull(newDefault)) {
+                newDefault = queryField.getType().equals(LegacySQLTypeName.STRING.toString())
+                        ? "''"
+                        : "";
+
+            } else {
+                result = String.format(
+                        "IFNULL(%s, %s)",
+                        result,
+                        parameterBuilder.addParameterValue(queryField, newDefault));
+            }
         }
 
         return result;
+    }
+
+    public boolean getIgnoreDefault() {
+        return this.ignoreDefault;
+    }
+
+    public Column setIgnoreDefault(boolean ignore) {
+        this.ignoreDefault = ignore;
+        return this;
     }
 }
