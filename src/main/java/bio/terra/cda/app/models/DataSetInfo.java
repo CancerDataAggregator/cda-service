@@ -192,6 +192,8 @@ public class DataSetInfo {
         queue.add(Tuple.of(tableInfo, schemaDefinition));
       }
 
+      Map<String, TableRelationship> existingRelationshipMap = new HashMap<>();
+
       while (!queue.isEmpty()) {
         Tuple<TableInfo, TableSchema.SchemaDefinition> tuple = queue.remove();
         tableInfo = tuple.x();
@@ -289,6 +291,7 @@ public class DataSetInfo {
           TableInfo nested =
               TableInfo.of(definition.getName(), name, tableInfoType, fields, partition.getName());
           nested.addRelationship(
+              name,
               TableRelationship.of(
                   nested,
                   name,
@@ -296,6 +299,7 @@ public class DataSetInfo {
                   tableInfo,
                   true));
           tableInfo.addRelationship(
+              tableInfo.getTableName(),
               TableRelationship.of(
                   tableInfo,
                   tableInfo.getTableName(),
@@ -307,6 +311,7 @@ public class DataSetInfo {
                   tableRelationshipBuilders.forEach(
                       tableRelationshipBuilder ->
                           nested.addRelationship(
+                              definition.getName(),
                               tableRelationshipBuilder.setFromTableInfo(nested).build())));
 
           this.tableInfoMap.put(name, nested);
@@ -369,6 +374,20 @@ public class DataSetInfo {
           setCountByTableInfo(definition, tableInfo);
           this.fieldMap.put(fieldName, new FieldData(tableInfo, definition));
           this.usedFields.put(fieldName, true);
+
+          if (relationshipsToAdd.isPresent()) {
+            for (TableRelationship.TableRelationshipBuilder tableRelationshipBuilder
+                    : relationshipsToAdd.get()) {
+              String destinationTableName = tableRelationshipBuilder.getDestinationTableInfo().getTableName();
+              if (existingRelationshipMap.containsKey(destinationTableName)) {
+                TableRelationship tableRelationship = existingRelationshipMap.get(destinationTableName);
+                tableRelationship.addForeignKeys(fieldName, tableRelationshipBuilder.build().getForeignKeys());
+              } else {
+                existingRelationshipMap.put(destinationTableName, tableRelationshipBuilder.build());
+                tableInfo.addRelationship(fieldName, tableRelationshipBuilder.build());
+              }
+            }
+          }
         }
       }
       return this;
@@ -408,9 +427,16 @@ public class DataSetInfo {
     private TableRelationship.TableRelationshipBuilder addRelationship(
         ForeignKey foreignKey, TableSchema.SchemaDefinition definition, TableInfo tableInfo)
         throws IOException {
+      String location = foreignKey.getLocation();
+      String tableName = Objects.nonNull(location) && location.length() > 0
+              ? location.contains(".")
+                ? location.substring(location.lastIndexOf("."))
+                : location
+              : foreignKey.getTableName();
+
       TableInfo fkTableInfo =
           this.tableInfoMap.get(
-              this.knownAliases.getOrDefault(foreignKey.getTableName(), foreignKey.getTableName()));
+              this.knownAliases.getOrDefault(tableName, tableName));
 
       if (Objects.isNull(fkTableInfo)) {
         this.addTableSchema(
@@ -418,27 +444,16 @@ public class DataSetInfo {
         fkTableInfo =
             this.tableInfoMap.get(
                 this.knownAliases.getOrDefault(
-                    foreignKey.getTableName(), foreignKey.getTableName()));
+                        tableName, tableName));
       }
 
-      if (definition.getMode().equals(Field.Mode.REPEATED.toString())) {
-        return new TableRelationship.TableRelationshipBuilder()
-            .setDestinationTableInfo(fkTableInfo)
-            .setParent(false)
-            .setType(TableRelationship.TableRelationshipTypeEnum.JOIN)
-            .setForeignKeys(List.of(foreignKey))
-            .setField(definition.getName())
-            .setArray(true);
-      } else {
-        tableInfo.addRelationship(
-            TableRelationship.of(
-                    tableInfo,
-                    definition.getName(),
-                    TableRelationship.TableRelationshipTypeEnum.JOIN,
-                    fkTableInfo)
-                .addForeignKey(foreignKey));
-        return null;
-      }
+      return new TableRelationship.TableRelationshipBuilder()
+              .setDestinationTableInfo(fkTableInfo)
+              .setParent(false)
+              .setType(TableRelationship.TableRelationshipTypeEnum.JOIN)
+              .setForeignKeys(List.of(foreignKey))
+              .setField(definition.getName())
+              .setArray(definition.getMode().equals(Field.Mode.REPEATED.toString()));
     }
 
     private void setCountByTableInfo(TableSchema.SchemaDefinition definition, TableInfo tableInfo) {

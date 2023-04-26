@@ -1,12 +1,11 @@
 package bio.terra.cda.app.models;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class TableRelationship {
   private final String field;
+
+  private final Map<String, List<ForeignKey>> foreignKeyMap;
   private final TableRelationshipTypeEnum type;
   private final TableInfo fromTableInfo;
   private final TableInfo destinationTableInfo;
@@ -29,6 +28,8 @@ public class TableRelationship {
     this.parent = parent;
     this.foreignKeys = Objects.nonNull(foreignKeys) ? foreignKeys : new ArrayList<>();
     this.array = array;
+    this.foreignKeyMap = new HashMap<>();
+    this.foreignKeyMap.put(field, foreignKeys);
   }
 
   public TableRelationshipTypeEnum getType() {
@@ -47,9 +48,26 @@ public class TableRelationship {
     return foreignKeys;
   }
 
-  public TableRelationship addForeignKey(ForeignKey foreignKey) {
-    this.foreignKeys.add(foreignKey);
+  public TableRelationship addForeignKey(String fieldName, ForeignKey foreignKey) {
+    if (this.foreignKeyMap.containsKey(fieldName)) {
+      this.foreignKeyMap.get(fieldName).add(foreignKey);
+    } else {
+      this.foreignKeyMap.put(fieldName, List.of(foreignKey));
+    }
     return this;
+  }
+
+  public TableRelationship addForeignKeys(String fieldName, List<ForeignKey> foreignKeyList) {
+    if (this.foreignKeyMap.containsKey(fieldName)) {
+      this.foreignKeyMap.get(fieldName).addAll(foreignKeyList);
+    } else {
+      this.foreignKeyMap.put(fieldName, foreignKeyList);
+    }
+    return this;
+  }
+
+  public Map<String, List<ForeignKey>> getForeignKeyMap() {
+    return this.foreignKeyMap;
   }
 
   public static TableRelationship of(
@@ -135,6 +153,10 @@ public class TableRelationship {
     public TableRelationshipBuilder setDestinationTableInfo(TableInfo tableInfo) {
       this.destinationTableInfo = tableInfo;
       return this;
+    }
+
+    public TableInfo getDestinationTableInfo() {
+      return this.destinationTableInfo;
     }
 
     public TableRelationshipBuilder setField(String field) {

@@ -9,6 +9,8 @@ public class ForeignKey {
   private String tableAlias;
   private String location;
 
+  private String value;
+
   public enum ForeignKeyTypeEnum {
     SINGLE("SINGLE"),
     COMPOSITE_OR("COMPOSITE_OR"),
@@ -81,5 +83,13 @@ public class ForeignKey {
 
   public void setLocation(String location) {
     this.location = location;
+  }
+
+  public String getValue() {
+    return value;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
   }
 }

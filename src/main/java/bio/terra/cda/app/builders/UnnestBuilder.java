@@ -10,13 +10,8 @@ import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Queue;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -124,113 +119,122 @@ public class UnnestBuilder {
     }
 
     TableInfo destinationTable = tableRelationship.getDestinationTableInfo();
+    String tableString =
+            String.format(SqlUtil.ALIAS_FIELD_FORMAT, project, destinationTable.getTableName());
 
     if (isJoin) {
-      List<ForeignKey> foreignKeyList = tableRelationship.getForeignKeys();
-      //       TableRelationship otherWay = destinationTable.getRelationships()
-      //               .stream().filter(rel ->
-      // rel.getTableInfo().getTableName().equals(tableInfo.getTableName()))
-      //               .findFirst().orElseThrow();
-      //       List<ForeignKey> targetForeignKeyList = otherWay.getForeignKeys();
-
       List<String> joinConditions = new ArrayList<String>();
-
-      ForeignKey.ForeignKeyTypeEnum foreignKeyTypeEnum = foreignKeyList.get(0).getType();
-
       Stream<Unnest> unnestStream = Stream.empty();
-      String fieldName = tableRelationship.getField();
 
-      TableSchema.SchemaDefinition schemaDefinition =
-          this.dataSetInfo.getSchemaDefinitionByFieldName(fieldName);
-
-      if (Objects.isNull(schemaDefinition)) {
-        fieldName =
-            tableRelationship.isArray()
-                ? tableInfo.getAdjustedTableName()
-                : DataSetInfo.getNewNameForDuplicate(
-                    this.dataSetInfo.getKnownAliases(), fieldName, tableInfo.getTableName());
-      }
-
-      QueryField queryField = this.queryFieldBuilder.fromPath(fieldName);
-
-      unnestStream = Stream.concat(unnestStream, this.fromQueryField(queryField, true));
-
-      String originTableJoin =
-          queryField.getMode().equals(Field.Mode.REPEATED.toString())
-              ? queryField.getColumnText()
-              : String.format(
-                  "%s.%s", tableInfo.getTableAlias(this.dataSetInfo), queryField.getName());
-
-      String tableString =
-          String.format(SqlUtil.ALIAS_FIELD_FORMAT, project, destinationTable.getTableName());
-
+      Map<String, List<ForeignKey>> foreignKeyMap = tableRelationship.getForeignKeyMap();
       boolean skip = false;
       boolean added = false;
 
-      for (ForeignKey sourceKey : foreignKeyList) {
-        for (QueryField field :
-            Arrays.stream(sourceKey.getFields())
-                .map(queryFieldBuilder::fromPath)
-                .collect(Collectors.toList())) {
+      ForeignKey.ForeignKeyTypeEnum foreignKeyTypeEnum = ForeignKey.ForeignKeyTypeEnum.COMPOSITE_AND;
 
-          String fieldToJoin =
-              field.getMode().equals(Field.Mode.REPEATED.toString())
-                  ? field.getColumnText()
-                  : String.format(
-                      "%s.%s",
-                      tableRelationship.getDestinationTableInfo().getTableAlias(this.dataSetInfo),
-                      field.getName());
+      for (var entry: foreignKeyMap.entrySet()) {
+        List<ForeignKey> foreignKeyList = entry.getValue();
 
-          if (field.getMode().equals(Field.Mode.REPEATED.toString())) {
-            tableString =
-                String.format(
-                    "%s_%s", destinationTable.getTableAlias(this.dataSetInfo), field.getName());
-            String fieldAlias = String.format("%s_flattened", field.getName());
-            fieldToJoin =
-                String.format(
-                    "%s.%s", destinationTable.getTableAlias(this.dataSetInfo), fieldAlias);
+        //       TableRelationship otherWay = destinationTable.getRelationships()
+        //               .stream().filter(rel ->
+        // rel.getTableInfo().getTableName().equals(tableInfo.getTableName()))
+        //               .findFirst().orElseThrow();
+        //       List<ForeignKey> targetForeignKeyList = otherWay.getForeignKeys();
 
-            if (this.viewListBuilder.contains(tableString)) {
-              skip = true;
-            } else {
-              added = true;
+        foreignKeyTypeEnum = foreignKeyList.get(0).getType();
 
-              ViewBuilder viewBuilder = this.viewListBuilder.getViewBuilder();
-              TableInfo repeatedTable = this.dataSetInfo.getTableInfoFromField(field.getName());
-              viewBuilder
-                  .setViewName(tableString)
-                  .setTable(destinationTable)
-                  .setIncludeAlias(true)
-                  .setViewType(View.ViewType.WITH)
-                  .addUnnests(
-                      this.fromRelationshipPath(
-                          destinationTable.getPathToTable(repeatedTable),
-                          SqlUtil.JoinType.LEFT,
-                          true));
+        String fieldName = tableRelationship.getField();
 
-              Arrays.stream(destinationTable.getSchemaDefinitions())
-                  .forEach(
-                      definition -> {
-                        if (definition.getName().equals(field.getName())) {
-                          viewBuilder.addSelect(
-                              new SelectBuilder(this.dataSetInfo)
-                                  .of(field.getColumnText(), fieldAlias));
-                        } else {
-                          viewBuilder.addSelect(
-                              new SelectBuilder(this.dataSetInfo)
-                                  .of(
-                                      String.format(
-                                          "%s.%s",
-                                          destinationTable.getTableAlias(this.dataSetInfo),
-                                          definition.getName()),
-                                      ""));
-                        }
-                      });
-              this.viewListBuilder.addView(viewBuilder.build());
+        TableSchema.SchemaDefinition schemaDefinition =
+                this.dataSetInfo.getSchemaDefinitionByFieldName(fieldName);
+
+        if (Objects.isNull(schemaDefinition)) {
+          fieldName =
+                  tableRelationship.isArray()
+                          ? tableInfo.getAdjustedTableName()
+                          : DataSetInfo.getNewNameForDuplicate(
+                          this.dataSetInfo.getKnownAliases(), fieldName, tableInfo.getTableName());
+        }
+
+        QueryField queryField = this.queryFieldBuilder.fromPath(fieldName);
+
+        unnestStream = Stream.concat(unnestStream, this.fromQueryField(queryField, true));
+
+        String originTableJoin =
+                queryField.getMode().equals(Field.Mode.REPEATED.toString())
+                        ? queryField.getColumnText()
+                        : String.format(
+                        "%s.%s", tableInfo.getTableAlias(this.dataSetInfo), queryField.getName());
+
+        for (ForeignKey sourceKey : foreignKeyList) {
+          if (Objects.isNull(sourceKey.getFields())) {
+            joinConditions.add(String.format("%s = %s", originTableJoin, sourceKey.getValue()));
+          } else {
+            for (QueryField field :
+                    Arrays.stream(sourceKey.getFields())
+                            .map(queryFieldBuilder::fromPath)
+                            .collect(Collectors.toList())) {
+
+              String fieldToJoin =
+                      field.getMode().equals(Field.Mode.REPEATED.toString())
+                              ? field.getColumnText()
+                              : String.format(
+                              "%s.%s",
+                              tableRelationship.getDestinationTableInfo().getTableAlias(this.dataSetInfo),
+                              field.getName());
+
+              if (field.getMode().equals(Field.Mode.REPEATED.toString())) {
+                tableString =
+                        String.format(
+                                "%s_%s", destinationTable.getTableAlias(this.dataSetInfo), field.getName());
+                String fieldAlias = String.format("%s_flattened", field.getName());
+                fieldToJoin =
+                        String.format(
+                                "%s.%s", destinationTable.getTableAlias(this.dataSetInfo), fieldAlias);
+
+                if (this.viewListBuilder.contains(tableString)) {
+                  skip = true;
+                } else {
+                  added = true;
+
+                  ViewBuilder viewBuilder = this.viewListBuilder.getViewBuilder();
+                  TableInfo repeatedTable = this.dataSetInfo.getTableInfoFromField(field.getName());
+                  viewBuilder
+                          .setViewName(tableString)
+                          .setTable(destinationTable)
+                          .setIncludeAlias(true)
+                          .setViewType(View.ViewType.WITH)
+                          .addUnnests(
+                                  this.fromRelationshipPath(
+                                          destinationTable.getPathToTable(repeatedTable),
+                                          SqlUtil.JoinType.LEFT,
+                                          true));
+
+                  Arrays.stream(destinationTable.getSchemaDefinitions())
+                          .forEach(
+                                  definition -> {
+                                    if (definition.getName().equals(field.getName())) {
+                                      viewBuilder.addSelect(
+                                              new SelectBuilder(this.dataSetInfo)
+                                                      .of(field.getColumnText(), fieldAlias));
+                                    } else {
+                                      viewBuilder.addSelect(
+                                              new SelectBuilder(this.dataSetInfo)
+                                                      .of(
+                                                              String.format(
+                                                                      "%s.%s",
+                                                                      destinationTable.getTableAlias(this.dataSetInfo),
+                                                                      definition.getName()),
+                                                              ""));
+                                    }
+                                  });
+                  this.viewListBuilder.addView(viewBuilder.build());
+                }
+              }
+
+              joinConditions.add(String.format("%s = %s", originTableJoin, fieldToJoin));
             }
           }
-
-          joinConditions.add(String.format("%s = %s", originTableJoin, fieldToJoin));
         }
       }
 

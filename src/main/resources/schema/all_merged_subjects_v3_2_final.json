@@ -23,14 +23,6 @@
             "foreignKeys": [
                 {
                     "fields": [
-                        "case_barcode"
-                    ],
-                    "type": "SINGLE",
-                    "tableName": "somatic_mutation_hg38_gdc_r10_v3_2_final",
-                    "tableAlias": "mutations"
-                },
-                {
-                    "fields": [
                         "Subjects"
                     ],
                     "type": "SINGLE",
@@ -62,13 +54,31 @@
                     "description": "The name of the data object in the originating namespace from which the identifier was loaded.",
                     "mode": "NULLABLE",
                     "type": "STRING",
-                    "name": "field_name"
+                    "name": "field_name",
+                    "foreignKeys": [
+                        {
+                            "type": "COMPOSITE_AND",
+                            "tableName": "somatic_mutation_hg38_gdc_r10_v3_2_final",
+                            "tableAlias": "mutations",
+                            "value": "case.submitter_id"
+                        }
+                    ]
                 },
                 {
                     "description": "The value of the identifier, as defined by the system.",
                     "mode": "NULLABLE",
                     "type": "STRING",
-                    "name": "value"
+                    "name": "value",
+                    "foreignKeys": [
+                        {
+                            "fields": [
+                                "case_barcode"
+                            ],
+                            "type": "COMPOSITE_AND",
+                            "tableName": "somatic_mutation_hg38_gdc_r10_v3_2_final",
+                            "tableAlias": "mutations"
+                        }
+                    ]
                 }
             ]
         },

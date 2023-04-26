@@ -47,7 +47,7 @@ public class TableInfo {
     this.adjustedTableName = adjustedTableName;
   }
 
-  public void addRelationship(TableRelationship tableRelationship) {
+  public void addRelationship(String fieldName, TableRelationship tableRelationship) {
     Optional<TableRelationship> optRelationship =
         relationships.stream()
             .filter(
@@ -61,7 +61,7 @@ public class TableInfo {
     if (optRelationship.isPresent()) {
       var relationship = optRelationship.get();
       for (ForeignKey foreignKey : tableRelationship.getForeignKeys()) {
-        relationship.addForeignKey(foreignKey);
+        relationship.addForeignKey(fieldName, foreignKey);
       }
     } else {
       this.relationships.add(tableRelationship);
@@ -189,9 +189,8 @@ public class TableInfo {
       Tuple<TableRelationship[], TableRelationship> tuple = queue.pop();
       TableRelationship[] currentPath = tuple.x();
       TableRelationship tableRelationship = tuple.y();
-      var foreignKey = tableRelationship.getForeignKeys();
-      if (foreignKey.stream()
-          .anyMatch(fk -> Objects.nonNull(fk.getLocation()) && fk.getLocation().length() > 0)) {
+      var foreignKey = tableRelationship.getForeignKeyMap().entrySet().stream().flatMap(entry -> entry.getValue().stream());
+      if (foreignKey.anyMatch(fk -> Objects.nonNull(fk.getLocation()) && fk.getLocation().length() > 0)) {
         continue;
       }
 

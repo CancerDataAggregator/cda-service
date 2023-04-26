@@ -22,11 +22,12 @@
             "foreignKeys": [
                 {
                     "fields": [
-                        "subject_id"
+                        "subject_identifier_value"
                     ],
-                    "type": "SINGLE",
+                    "type": "COMPOSITE_AND",
                     "tableName": "all_merged_subjects_v3_2_final",
-                    "tableAlias": "subjects"
+                    "tableAlias": "subjects",
+                    "location": "identifier"
                 }
             ]
         },
