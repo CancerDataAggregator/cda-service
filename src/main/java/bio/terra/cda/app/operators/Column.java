@@ -23,4 +23,9 @@ public class Column extends BasicOperator {
         ? String.format("IFNULL(UPPER(%s), '')", columnText)
         : columnText;
   }
+
+  @Override
+  public String getSQLType(BasicOperator caller, QueryContext ctx) {
+    return ctx.getQueryFieldBuilder().fromPath(getValue()).getType();
+  }
 }

@@ -147,7 +147,7 @@ task buildPythonSdk(type: GenerateTask){
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
 	configOptions = [
-			 packageVersion : "12.12.2022"
+			 packageVersion : "4.17.2023"
 	]
 	println("running update pyproject.toml")
 
@@ -167,6 +167,7 @@ task integrationTest(type: Test) {
 
     mustRunAfter test
 }
+
 
 jib {
 	from {
