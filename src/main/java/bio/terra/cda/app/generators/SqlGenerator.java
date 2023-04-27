@@ -42,7 +42,6 @@ public class SqlGenerator {
   final boolean filesQuery;
   List<String> filteredFields;
   boolean modularEntity;
-  UnnestBuilder unnestBuilder;
   SelectBuilder selectBuilder;
   QueryFieldBuilder queryFieldBuilder;
   PartitionBuilder partitionBuilder;
@@ -111,13 +110,6 @@ public class SqlGenerator {
     this.queryFieldBuilder = new QueryFieldBuilder(this.dataSetInfo, filesQuery);
     this.selectBuilder = new SelectBuilder(this.dataSetInfo);
     this.viewListBuilder = new ViewListBuilder<>(ViewBuilder.class, this.dataSetInfo, this.project);
-    this.unnestBuilder =
-        new UnnestBuilder(
-            this.queryFieldBuilder,
-            this.viewListBuilder,
-            this.dataSetInfo,
-            this.entityTable,
-            project);
     this.partitionBuilder = new PartitionBuilder(this.dataSetInfo);
     this.parameterBuilder = new ParameterBuilder();
     this.orderByBuilder = new OrderByBuilder();
@@ -131,7 +123,12 @@ public class SqlGenerator {
         .setIncludeSelect(!subQuery)
         .setQueryFieldBuilder(queryFieldBuilder)
         .setSelectBuilder(selectBuilder)
-        .setUnnestBuilder(unnestBuilder)
+        .setUnnestBuilder(new UnnestBuilder(
+                this.queryFieldBuilder,
+                this.viewListBuilder,
+                this.dataSetInfo,
+                entityTable,
+                project))
         .setPartitionBuilder(partitionBuilder)
         .setParameterBuilder(parameterBuilder)
         .setOrderByBuilder(orderByBuilder)
@@ -154,7 +151,15 @@ public class SqlGenerator {
       boolean hasSubClause,
       boolean ignoreWith)
       throws IllegalArgumentException {
-    QueryContext ctx = buildQueryContext(this.entityTable, filesQuery, subQuery);
+    TableInfo currentTable;
+
+
+    if (subQuery){
+        currentTable = this.entityTable.getSuperTableInfo();
+    }else{
+      currentTable = this.entityTable;
+    }
+    QueryContext ctx = buildQueryContext(currentTable, filesQuery, subQuery);
 
     String queryResult = resultsQuery(query, tableOrSubClause, subQuery, ctx, hasSubClause);
     String results = subQuery ? queryResult : SqlTemplate.resultsWrapper(queryResult);
@@ -181,7 +186,7 @@ public class SqlGenerator {
 
     TableInfo startTable =
         Objects.isNull(entityPath) || entityPath.length == 0
-            ? this.entityTable
+            ? tableInfo
             : entityPath[0].getFromTableInfo();
 
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
@@ -189,6 +194,7 @@ public class SqlGenerator {
       // SQL version of
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
+
       return resultsQuery(
           query.getL(),
           String.format(
@@ -196,17 +202,17 @@ public class SqlGenerator {
               sql(tableOrSubClause, query.getR(), true, hasSubClause, true),
               startTable.getTableAlias(this.dataSetInfo)),
           subQuery,
-          buildQueryContext(ctx.getTableInfo(), filesQuery, subQuery),
+          buildQueryContext(ctx.getTableInfo(), filesQuery, subQuery), // added  supertable to get parent
           true);
     }
-
+    UnnestBuilder newUnnestBuilder =  ctx.getUnnestBuilder();
     ctx.addUnnests(
-        this.unnestBuilder.fromRelationshipPath(entityPath, SqlUtil.JoinType.INNER, false));
+          newUnnestBuilder.fromRelationshipPath(entityPath, SqlUtil.JoinType.INNER, false));
 
     if (filesQuery) {
       ctx.addUnnests(
-          this.unnestBuilder.fromRelationshipPath(pathToFile, SqlUtil.JoinType.INNER, false));
-    }
+          newUnnestBuilder.fromRelationshipPath(pathToFile, SqlUtil.JoinType.INNER, false));
+      }
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
     String selectFields =

@@ -106,7 +106,7 @@ public class FileSqlGenerator extends SqlGenerator {
         .forEach(
             schemaDefinition -> {
               List<Unnest> unnestList =
-                  this.unnestBuilder
+                      ctx.getUnnestBuilder()
                       .fromRelationshipPath(
                           this.entityTable.getPathToTable(
                               this.dataSetInfo.getTableInfoFromField(schemaDefinition.getName())),
@@ -119,7 +119,7 @@ public class FileSqlGenerator extends SqlGenerator {
                         String location = foreignKey.getLocation();
                         if (location.length() > 0) {
                           String[] locationSplit = location.split("\\.");
-                          this.unnestBuilder.addAdditionalJoinPath(
+                            ctx.getUnnestBuilder().addAdditionalJoinPath(
                               locationSplit[locationSplit.length - 1],
                               this.dataSetInfo
                                   .getTableInfo(schemaDefinition.getName())
@@ -285,7 +285,7 @@ public class FileSqlGenerator extends SqlGenerator {
               TableInfo destinationTable = this.dataSetInfo.getTableInfo(tableAlias);
               TableRelationship[] path = tableInfo.getPathToTable(destinationTable, false);
               ctx.addUnnests(
-                  this.unnestBuilder.fromRelationshipPath(path, SqlUtil.JoinType.LEFT, false));
+                      ctx.getUnnestBuilder().fromRelationshipPath(path, SqlUtil.JoinType.LEFT, false));
               ctx.addPartitions(
                   Stream.of(
                       this.partitionBuilder.of(

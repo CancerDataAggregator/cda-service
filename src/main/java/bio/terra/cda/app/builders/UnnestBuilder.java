@@ -10,13 +10,8 @@ import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Queue;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,7 +22,7 @@ public class UnnestBuilder {
   private final QueryFieldBuilder queryFieldBuilder;
   private final ViewListBuilder<View, ViewBuilder> viewListBuilder;
   private final HashMap<String, String> additionalJoinPaths;
-
+  private final HashMap<String,String> ViewJoinMap = new HashMap<>();
   public UnnestBuilder(
       QueryFieldBuilder queryFieldBuilder,
       ViewListBuilder<View, ViewBuilder> viewListBuilder,
@@ -39,7 +34,18 @@ public class UnnestBuilder {
     this.dataSetInfo = dataSetInfo;
     this.entityTable = entityTable;
     this.project = project;
-
+    // TODO:  need to move this values into a config file like application.properies
+    if (Objects.nonNull(this.project)) {
+      ViewJoinMap.put(
+          "file.specimens",
+          String.format("%s.%s", this.project, "all_specimen_files_view_v3_2_final"));
+      ViewJoinMap.put(
+          "file.researchsubjects",
+          String.format("%s.%s", this.project, "all_researchsubject_files_view_v3_2_final"));
+      ViewJoinMap.put(
+          "file.subjects",
+          String.format("%s.%s", this.project, "all_subject_files_view_v3_2_final"));
+    }
     additionalJoinPaths = new HashMap<>();
   }
 
@@ -166,7 +172,7 @@ public class UnnestBuilder {
 
       boolean skip = false;
       boolean added = false;
-
+      boolean hasMaterializeView = false;
       for (ForeignKey sourceKey : foreignKeyList) {
         for (QueryField field :
             Arrays.stream(sourceKey.getFields())
@@ -182,15 +188,22 @@ public class UnnestBuilder {
                       field.getName());
 
           if (field.getMode().equals(Field.Mode.REPEATED.toString())) {
-            tableString =
-                String.format(
-                    "%s_%s", destinationTable.getTableAlias(this.dataSetInfo), field.getName());
+            // this map will check for a view in the database in the files table
+            String viewTable = ViewJoinMap.get(String.format("%s.%s", destinationTable.getTableAlias(this.dataSetInfo), field.getName()).toLowerCase(Locale.ROOT));
+            if (Objects.nonNull(viewTable)){
+              tableString = viewTable;
+              hasMaterializeView = true;
+            } else {
+              tableString =
+                  String.format(
+                      "%s_%s", destinationTable.getTableAlias(this.dataSetInfo), field.getName());
+            }
             String fieldAlias = String.format("%s_flattened", field.getName());
             fieldToJoin =
                 String.format(
                     "%s.%s", destinationTable.getTableAlias(this.dataSetInfo), fieldAlias);
-
-            if (this.viewListBuilder.contains(tableString)) {
+            // this if statement  check if you need to skip build the view if it is predefined
+            if (this.viewListBuilder.contains(tableString) || hasMaterializeView) {
               skip = true;
             } else {
               added = true;
@@ -230,13 +243,18 @@ public class UnnestBuilder {
             }
           }
 
-          joinConditions.add(String.format("%s = %s", originTableJoin, fieldToJoin));
+
+
+          // adds additonal to joinConditions
+
+            joinConditions.add(String.format("%s = %s", originTableJoin, fieldToJoin));
+
         }
       }
 
       return Stream.concat(
           unnestStream,
-          !skip || added
+          !skip || added || hasMaterializeView
               ? Stream.of(
                   new Unnest(
                       joinType,
