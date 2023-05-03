@@ -4,11 +4,7 @@ import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
-import bio.terra.cda.app.util.EndpointUtil;
-import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.app.util.SqlTemplate;
-import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
+import bio.terra.cda.app.util.*;
 import bio.terra.cda.generated.model.Query;
 import com.google.cloud.bigquery.Field;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -128,10 +124,11 @@ public class FileSqlGenerator extends SqlGenerator {
                       });
               ctx.addUnnests(unnestList.stream());
             });
-
     String results =
         SqlTemplate.resultsWrapper(
-            resultsQuery(query, tableOrSubClause, subQuery, ctx, hasSubClause));
+            resultsQuery(QueryUtil.removeLimitOROffest(query,ctx), tableOrSubClause, subQuery, ctx, hasSubClause),
+                this.getLimitOffsetString(ctx)
+        );
 
     String withStatement = "";
     if (this.viewListBuilder.hasAny() && !ignoreWith) {
@@ -150,12 +147,13 @@ public class FileSqlGenerator extends SqlGenerator {
     StringBuilder sb = new StringBuilder();
     AtomicReference<String> previousAlias = new AtomicReference<>("");
     List<String> tables = new ArrayList<>();
-
+    QueryContext ctx = buildQueryContext(this.entityTable,true,false);
+    var currentQuery = QueryUtil.removeLimitOROffest(query,ctx);
     tableInfoList.forEach(
         tableInfo -> {
           var resultsQuery =
               resultsQuery(
-                  query,
+                      currentQuery,
                   tableOrSubClause,
                   subQuery,
                   buildQueryContext(tableInfo, true, subQuery),
@@ -181,7 +179,10 @@ public class FileSqlGenerator extends SqlGenerator {
                   String.format("%s", resultsAlias),
                   String.format(
                       "%s%s",
-                      SqlTemplate.resultsWrapper(resultsQuery),
+                      SqlTemplate.resultsWrapper(
+                              resultsQuery,
+                             ""
+                      ),
                       previousAlias.get().equals("")
                           ? ""
                           : String.format(
@@ -207,7 +208,9 @@ public class FileSqlGenerator extends SqlGenerator {
                 .map(alias -> String.format("SELECT %1$s.* FROM %1$s", alias))
                 .collect(Collectors.joining(" UNION ALL "))));
 
-    sb.append("SELECT unioned_result.* FROM unioned_result");
+    sb.append(
+            String.format("SELECT unioned_result.* FROM unioned_result%s",this.getLimitOffsetString(ctx))
+    );
 
     StringBuilder newSb = new StringBuilder();
     String withStatement = "WITH ";
