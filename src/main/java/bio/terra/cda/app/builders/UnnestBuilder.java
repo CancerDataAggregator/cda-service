@@ -10,7 +10,6 @@ import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.app.util.TableSchema;
 import com.google.cloud.bigquery.Field;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,7 +21,8 @@ public class UnnestBuilder {
   private final QueryFieldBuilder queryFieldBuilder;
   private final ViewListBuilder<View, ViewBuilder> viewListBuilder;
   private final HashMap<String, String> additionalJoinPaths;
-  private final HashMap<String,String> ViewJoinMap = new HashMap<>();
+  private final HashMap<String, String> ViewJoinMap = new HashMap<>();
+
   public UnnestBuilder(
       QueryFieldBuilder queryFieldBuilder,
       ViewListBuilder<View, ViewBuilder> viewListBuilder,
@@ -189,8 +189,13 @@ public class UnnestBuilder {
 
           if (field.getMode().equals(Field.Mode.REPEATED.toString())) {
             // this map will check for a view in the database in the files table
-            String viewTable = ViewJoinMap.get(String.format("%s.%s", destinationTable.getTableAlias(this.dataSetInfo), field.getName()).toLowerCase(Locale.ROOT));
-            if (Objects.nonNull(viewTable)){
+            String viewTable =
+                ViewJoinMap.get(
+                    String.format(
+                            "%s.%s",
+                            destinationTable.getTableAlias(this.dataSetInfo), field.getName())
+                        .toLowerCase(Locale.ROOT));
+            if (Objects.nonNull(viewTable)) {
               tableString = viewTable;
               hasMaterializeView = true;
             } else {
@@ -243,12 +248,9 @@ public class UnnestBuilder {
             }
           }
 
-
-
           // adds additonal to joinConditions
 
-            joinConditions.add(String.format("%s = %s", originTableJoin, fieldToJoin));
-
+          joinConditions.add(String.format("%s = %s", originTableJoin, fieldToJoin));
         }
       }
 

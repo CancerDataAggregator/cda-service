@@ -102,7 +102,7 @@ public class FileSqlGenerator extends SqlGenerator {
         .forEach(
             schemaDefinition -> {
               List<Unnest> unnestList =
-                      ctx.getUnnestBuilder()
+                  ctx.getUnnestBuilder()
                       .fromRelationshipPath(
                           this.entityTable.getPathToTable(
                               this.dataSetInfo.getTableInfoFromField(schemaDefinition.getName())),
@@ -115,20 +115,25 @@ public class FileSqlGenerator extends SqlGenerator {
                         String location = foreignKey.getLocation();
                         if (location.length() > 0) {
                           String[] locationSplit = location.split("\\.");
-                            ctx.getUnnestBuilder().addAdditionalJoinPath(
-                              locationSplit[locationSplit.length - 1],
-                              this.dataSetInfo
-                                  .getTableInfo(schemaDefinition.getName())
-                                  .getPartitionKeyAlias(this.dataSetInfo));
+                          ctx.getUnnestBuilder()
+                              .addAdditionalJoinPath(
+                                  locationSplit[locationSplit.length - 1],
+                                  this.dataSetInfo
+                                      .getTableInfo(schemaDefinition.getName())
+                                      .getPartitionKeyAlias(this.dataSetInfo));
                         }
                       });
               ctx.addUnnests(unnestList.stream());
             });
     String results =
         SqlTemplate.resultsWrapper(
-            resultsQuery(QueryUtil.removeLimitOROffest(query,ctx), tableOrSubClause, subQuery, ctx, hasSubClause),
-                this.getLimitOffsetString(ctx)
-        );
+            resultsQuery(
+                QueryUtil.removeLimitOROffest(query, ctx),
+                tableOrSubClause,
+                subQuery,
+                ctx,
+                hasSubClause),
+            this.getLimitOffsetString(ctx));
 
     String withStatement = "";
     if (this.viewListBuilder.hasAny() && !ignoreWith) {
@@ -147,13 +152,13 @@ public class FileSqlGenerator extends SqlGenerator {
     StringBuilder sb = new StringBuilder();
     AtomicReference<String> previousAlias = new AtomicReference<>("");
     List<String> tables = new ArrayList<>();
-    QueryContext ctx = buildQueryContext(this.entityTable,true,false);
-    var currentQuery = QueryUtil.removeLimitOROffest(query,ctx);
+    QueryContext ctx = buildQueryContext(this.entityTable, true, false);
+    var currentQuery = QueryUtil.removeLimitOROffest(query, ctx);
     tableInfoList.forEach(
         tableInfo -> {
           var resultsQuery =
               resultsQuery(
-                      currentQuery,
+                  currentQuery,
                   tableOrSubClause,
                   subQuery,
                   buildQueryContext(tableInfo, true, subQuery),
@@ -179,10 +184,7 @@ public class FileSqlGenerator extends SqlGenerator {
                   String.format("%s", resultsAlias),
                   String.format(
                       "%s%s",
-                      SqlTemplate.resultsWrapper(
-                              resultsQuery,
-                             ""
-                      ),
+                      SqlTemplate.resultsWrapper(resultsQuery, ""),
                       previousAlias.get().equals("")
                           ? ""
                           : String.format(
@@ -209,8 +211,8 @@ public class FileSqlGenerator extends SqlGenerator {
                 .collect(Collectors.joining(" UNION ALL "))));
 
     sb.append(
-            String.format("SELECT unioned_result.* FROM unioned_result%s",this.getLimitOffsetString(ctx))
-    );
+        String.format(
+            "SELECT unioned_result.* FROM unioned_result%s", this.getLimitOffsetString(ctx)));
 
     StringBuilder newSb = new StringBuilder();
     String withStatement = "WITH ";
@@ -288,7 +290,7 @@ public class FileSqlGenerator extends SqlGenerator {
               TableInfo destinationTable = this.dataSetInfo.getTableInfo(tableAlias);
               TableRelationship[] path = tableInfo.getPathToTable(destinationTable, false);
               ctx.addUnnests(
-                      ctx.getUnnestBuilder().fromRelationshipPath(path, SqlUtil.JoinType.LEFT, false));
+                  ctx.getUnnestBuilder().fromRelationshipPath(path, SqlUtil.JoinType.LEFT, false));
               ctx.addPartitions(
                   Stream.of(
                       this.partitionBuilder.of(

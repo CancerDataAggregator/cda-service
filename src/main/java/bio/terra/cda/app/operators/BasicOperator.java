@@ -18,7 +18,7 @@ public class BasicOperator extends Query {
   public String getSQLType(BasicOperator caller, QueryContext ctx) {
     BasicOperator left = (BasicOperator) this.getL();
     BasicOperator right = (BasicOperator) this.getR();
-    BasicOperator parent =  this.getParent();
+    BasicOperator parent = this.getParent();
     if (Objects.nonNull(left) && !left.equals(caller)) {
       String leftSql = left.getSQLType(this, ctx);
       if (Objects.nonNull(leftSql)) {
@@ -50,7 +50,6 @@ public class BasicOperator extends Query {
   }
 
   protected void addUnnests(QueryContext ctx) {
-
 
     ctx.addUnnests(
         ctx.getUnnestBuilder()
