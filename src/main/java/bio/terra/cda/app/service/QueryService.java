@@ -178,6 +178,8 @@ public class QueryService {
       // Get the results.
       TableResult result =
           queryJob.getQueryResults(options.toArray(new BigQuery.QueryResultsOption[0]));
+
+      queryJob.getConfiguration();
       FieldList fields = result.getSchema().getFields();
 
       List<JsonNode> jsonData = new ArrayList<>();
@@ -329,6 +331,7 @@ public class QueryService {
     if (!dryRun) {
       Job queryJob =
           bigQuery.create(JobInfo.newBuilder(queryJobConfiguration).setJobId(jobId).build());
+
       response.setQueryId(queryJob.getJobId().getJob());
     }
 

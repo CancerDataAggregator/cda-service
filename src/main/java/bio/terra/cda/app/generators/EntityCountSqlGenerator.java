@@ -151,8 +151,11 @@ public class EntityCountSqlGenerator extends SqlGenerator {
                   this.dataSetInfo.getSchemaDefinitionByFieldName(fieldToUse);
 
               ctx.addUnnests(
-                  this.unnestBuilder.fromRelationshipPath(
-                      this.entityTable.getPathToTable(tableToUse), SqlUtil.JoinType.LEFT, true));
+                  ctx.getUnnestBuilder()
+                      .fromRelationshipPath(
+                          this.entityTable.getPathToTable(tableToUse),
+                          SqlUtil.JoinType.LEFT,
+                          true));
 
               ctx.addPartitions(
                   this.partitionBuilder.fromRelationshipPath(

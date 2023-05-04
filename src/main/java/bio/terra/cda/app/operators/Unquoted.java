@@ -14,7 +14,6 @@ public class Unquoted extends BasicOperator {
     }
 
     var parameterBuilder = ctx.getParameterBuilder();
-    return parameterBuilder.addParameterValue(
-        ctx.getQueryFieldBuilder().fromPath(this.getParent().getL().getValue()), value);
+    return parameterBuilder.addParameterValue(this.getSQLType(this, ctx), value);
   }
 }

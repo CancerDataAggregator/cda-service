@@ -47,7 +47,7 @@ class QueryApiControllerTest {
   }
 
   // TODO add test for unique terms with count
-  
+
   @Test
   void uniqueValuesTest() throws Exception {
     String version = "all_Subjects_v3_0_final";

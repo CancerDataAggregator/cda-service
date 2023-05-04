@@ -17,23 +17,19 @@ import bio.terra.cda.app.models.TableRelationship;
 import bio.terra.cda.app.models.Unnest;
 import bio.terra.cda.app.models.View;
 import bio.terra.cda.app.operators.BasicOperator;
-import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.app.util.SqlTemplate;
-import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
+import bio.terra.cda.app.util.*;
 import bio.terra.cda.generated.model.Query;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SqlGenerator {
   final String qualifiedTable;
-  final Query rootQuery;
+  Query rootQuery;
   final String version;
   final String table;
   final String fileTable;
@@ -43,7 +39,6 @@ public class SqlGenerator {
   final boolean filesQuery;
   List<String> filteredFields;
   boolean modularEntity;
-  UnnestBuilder unnestBuilder;
   SelectBuilder selectBuilder;
   QueryFieldBuilder queryFieldBuilder;
   PartitionBuilder partitionBuilder;
@@ -68,7 +63,6 @@ public class SqlGenerator {
     this.tableDefinition = TableSchema.getSchema(version);
     this.dataSetInfo =
         new DataSetInfo.DataSetInfoBuilder().addTableSchema(version, this.tableDefinition).build();
-
     preInit();
     initializeEntityFields();
     initializeBuilders();
@@ -83,7 +77,6 @@ public class SqlGenerator {
       ViewListBuilder<View, ViewBuilder> viewListBuilder)
       throws IOException {
     this(qualifiedTable, rootQuery, version, filesQuery);
-
     this.parameterBuilder = parameterBuilder;
     this.viewListBuilder = viewListBuilder;
   }
@@ -113,13 +106,6 @@ public class SqlGenerator {
     this.queryFieldBuilder = new QueryFieldBuilder(this.dataSetInfo, filesQuery);
     this.selectBuilder = new SelectBuilder(this.dataSetInfo);
     this.viewListBuilder = new ViewListBuilder<>(ViewBuilder.class, this.dataSetInfo, this.project);
-    this.unnestBuilder =
-        new UnnestBuilder(
-            this.queryFieldBuilder,
-            this.viewListBuilder,
-            this.dataSetInfo,
-            this.entityTable,
-            project);
     this.partitionBuilder = new PartitionBuilder(this.dataSetInfo);
     this.parameterBuilder = new ParameterBuilder();
     this.orderByBuilder = new OrderByBuilder();
@@ -133,18 +119,25 @@ public class SqlGenerator {
         .setIncludeSelect(!subQuery)
         .setQueryFieldBuilder(queryFieldBuilder)
         .setSelectBuilder(selectBuilder)
-        .setUnnestBuilder(unnestBuilder)
+        .setUnnestBuilder(
+            new UnnestBuilder(
+                this.queryFieldBuilder,
+                this.viewListBuilder,
+                this.dataSetInfo,
+                entityTable,
+                project))
         .setPartitionBuilder(partitionBuilder)
         .setParameterBuilder(parameterBuilder)
         .setOrderByBuilder(orderByBuilder)
         .setViewListBuilder(viewListBuilder);
   }
 
-  public QueryJobConfiguration.Builder generate() throws IllegalArgumentException {
+  public QueryJobConfiguration.Builder generate()
+      throws IllegalArgumentException, JsonProcessingException {
+
     String querySql = sql(qualifiedTable, rootQuery, false, false, false);
     QueryJobConfiguration.Builder queryJobConfigBuilder =
         QueryJobConfiguration.newBuilder(querySql);
-
     this.parameterBuilder.getParameterValueMap().forEach(queryJobConfigBuilder::addNamedParameter);
     return queryJobConfigBuilder;
   }
@@ -156,10 +149,22 @@ public class SqlGenerator {
       boolean hasSubClause,
       boolean ignoreWith)
       throws IllegalArgumentException {
-    QueryContext ctx = buildQueryContext(this.entityTable, filesQuery, subQuery);
+    TableInfo currentTable;
 
-    String queryResult = resultsQuery(query, tableOrSubClause, subQuery, ctx, hasSubClause);
-    String results = subQuery ? queryResult : SqlTemplate.resultsWrapper(queryResult);
+    if (subQuery) {
+      currentTable = this.entityTable.getSuperTableInfo();
+    } else {
+      currentTable = this.entityTable;
+    }
+
+    QueryContext ctx = buildQueryContext(currentTable, filesQuery, subQuery);
+    Query currentQuery = subQuery ? query : QueryUtil.removeLimitOROffest(query, ctx);
+
+    String queryResult = resultsQuery(currentQuery, tableOrSubClause, subQuery, ctx, hasSubClause);
+    String offsetandLimitString = this.getLimitOffsetString(ctx);
+
+    String results =
+        subQuery ? queryResult : SqlTemplate.resultsWrapper(queryResult, offsetandLimitString);
 
     String withStatement = "";
     if (this.viewListBuilder.hasAny() && !ignoreWith) {
@@ -183,7 +188,7 @@ public class SqlGenerator {
 
     TableInfo startTable =
         Objects.isNull(entityPath) || entityPath.length == 0
-            ? this.entityTable
+            ? tableInfo
             : entityPath[0].getFromTableInfo();
 
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
@@ -191,6 +196,7 @@ public class SqlGenerator {
       // SQL version of
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
+
       return resultsQuery(
           query.getL(),
           String.format(
@@ -198,20 +204,22 @@ public class SqlGenerator {
               sql(tableOrSubClause, query.getR(), true, hasSubClause, true),
               startTable.getTableAlias(this.dataSetInfo)),
           subQuery,
-          buildQueryContext(ctx.getTableInfo(), filesQuery, subQuery),
+          buildQueryContext(
+              ctx.getTableInfo(), filesQuery, subQuery), // added  supertable to get parent
           true);
     }
-
+    UnnestBuilder newUnnestBuilder = ctx.getUnnestBuilder();
     ctx.addUnnests(
-        this.unnestBuilder.fromRelationshipPath(entityPath, SqlUtil.JoinType.INNER, false));
+        newUnnestBuilder.fromRelationshipPath(entityPath, SqlUtil.JoinType.INNER, false));
 
     if (filesQuery) {
       ctx.addUnnests(
-          this.unnestBuilder.fromRelationshipPath(pathToFile, SqlUtil.JoinType.INNER, false));
+          newUnnestBuilder.fromRelationshipPath(pathToFile, SqlUtil.JoinType.INNER, false));
     }
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
-    String selectFields = subQuery
+    String selectFields =
+        subQuery
             ? ""
             : getSelect(ctx, tableInfo.getTableAlias(this.dataSetInfo), !this.modularEntity)
                 .collect(Collectors.joining(", "));
@@ -232,10 +240,10 @@ public class SqlGenerator {
 
     if (subQuery) {
       return SqlTemplate.regularQuery(
-              String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
-              fromString,
-              condition,
-              ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+          String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
+          fromString,
+          condition,
+          ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
     }
 
     return SqlTemplate.resultsQuery(
@@ -374,5 +382,25 @@ public class SqlGenerator {
         this.viewListBuilder.build().stream()
             .map(View::toString)
             .collect(Collectors.joining(", ")));
+  }
+
+  /**
+   * This code checks if the "limit" or "offset" values are set in the "ctx" object. If they are, it
+   * appends the values to a string and returns it.
+   *
+   * @param ctx
+   * @return
+   */
+  protected String getLimitOffsetString(QueryContext ctx) {
+
+    String offsetAndlimitString = "";
+    if (ctx.getLimit().isPresent()) {
+      offsetAndlimitString += String.format(" LIMIT %s ", ctx.getLimit().get());
+    }
+    if (ctx.getOffset().isPresent()) {
+      offsetAndlimitString += String.format(" OFFSET %s ", ctx.getOffset().get());
+    }
+
+    return offsetAndlimitString;
   }
 }

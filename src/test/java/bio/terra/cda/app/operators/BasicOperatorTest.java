@@ -40,7 +40,7 @@ public class BasicOperatorTest {
 
     assertEquals(0, ctx.getUnnests().size());
     assertEquals(0, ctx.getPartitions().size());
-    assertEquals("(IFNULL(UPPER(Subject.id), '') = UPPER(@subject_id_1))", whereClause);
+    assertEquals("(IFNULL(UPPER(Subject.id), '') = UPPER(@parameter_1))", whereClause);
   }
 
   @Test
@@ -56,7 +56,7 @@ public class BasicOperatorTest {
     assertEquals(2, ctx.getUnnests().size());
     assertEquals(0, ctx.getPartitions().size());
     assertEquals(
-        "(((IFNULL(UPPER(_Diagnosis.stage), '') = UPPER(@stage_1)) OR (IFNULL(UPPER(_Diagnosis.stage), '') = UPPER(@stage_2))) AND (IFNULL(UPPER(_ResearchSubject.primary_diagnosis_site), '') = UPPER(@primary_diagnosis_site_1)))",
+        "(((IFNULL(UPPER(_Diagnosis.stage), '') = UPPER(@parameter_1)) OR (IFNULL(UPPER(_Diagnosis.stage), '') = UPPER(@parameter_2))) AND (IFNULL(UPPER(_ResearchSubject.primary_diagnosis_site), '') = UPPER(@parameter_3)))",
         whereClause);
 
     QueryContext ResearchSubjectContext =

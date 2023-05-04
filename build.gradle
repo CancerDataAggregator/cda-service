@@ -26,6 +26,7 @@ plugins {
   	id "org.sonarqube" version "3.3"
 	id 'jacoco'
 	id 'com.srcclr.gradle' version '3.1.12'
+
 }
 
 ext['log4j2.version'] = '2.17.1'
@@ -76,6 +77,7 @@ dependencies {
 	implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
 	implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
 	implementation 'org.hamcrest:hamcrest-library:2.2'
+
 	// -- --
 
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
@@ -135,15 +137,24 @@ task GetSubjectViewSchema(type: Exec){
 	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.all_v3_0_subjects_meta > all_v3_0_subjects_meta.json"
 }
 
+
+// adds custom plugin BuildPythonToml to the tasks
+tasks.register("update_pyproject_toml",BuildPythonToml)
 task buildPythonSdk(type: GenerateTask){
+	println("Building Python Sdk")
 	generatorName = "python"
 	packageName = "cda_client"
 	inputSpec = "${openapiSourceFile}".toString()
 	outputDir = "${openapiClientTargetDir}".toString()
 	configOptions = [
-			 packageVersion : "12.12.2022"
+			 packageVersion : "4.17.2023"
 	]
+	println("running update pyproject.toml")
+
+	finalizedBy "update_pyproject_toml"
 }
+
+
 
 task integrationTest(type: Test) {
     description = 'Integration tests.'
@@ -156,6 +167,7 @@ task integrationTest(type: Test) {
 
     mustRunAfter test
 }
+
 
 jib {
 	from {
@@ -254,5 +266,38 @@ sonarqube {
 	property "sonar.exclusions", "build/generated/**"
   }
 }
+
+/**
+ * This is a class made for building pyproject.toml
+ */
+class BuildPythonToml extends DefaultTask{
+	@TaskAction
+	def build(){
+		// the spacing for the string is important for writing to the pyproject.toml
+		String pyprojectTomlTemplate = """
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools", "wheel"]  # PEP 508 specifications.
+[tool.poetry.dependencies]
+"""
+
+		ArrayList<String> dependencyList =  ['wheel ="0.38.4"']
+
+		for(line in dependencyList ){
+			pyprojectTomlTemplate += line + "\n"
+		}
+
+		for( line  in new File("./build/generated-client/requirements.txt")){
+					String[] parts = line.split("[><=]")
+					String op = "="
+			pyprojectTomlTemplate += "${parts[0].trim()} ${op} \"${parts[parts.length - 1].trim()}\" \n"
+		}
+
+		new File("./build/generated-client/pyproject.toml").write(pyprojectTomlTemplate)
+		println pyprojectTomlTemplate
+	}
+}
+
+
 
 

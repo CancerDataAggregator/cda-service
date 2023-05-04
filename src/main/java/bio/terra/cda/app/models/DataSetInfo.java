@@ -21,16 +21,16 @@ import java.util.Queue;
 import java.util.stream.Collectors;
 
 /*
-* DataSetInfo
-*
-* This class contains information about the various schemas that exist in the CDA database. There are two maps that are
-* of great importance for fieldMap and tableInfoMap. The fieldMap contains a mapping between field names and the data
-* around those fields, aka what table they belong to, their data type and mode. The tableInfoMap is used to contain a
-* mapping between table names and their corresponding TableInfo objects. The TableInfo class, in turn, contains schema
-* information for the table as well as relationships to other TableInfo objects, building a relationship graph that can
-* be traversed to allow for the query generators to apply the correct unnests and joins while writing out a query.
-*
-* */
+ * DataSetInfo
+ *
+ * This class contains information about the various schemas that exist in the CDA database. There are two maps that are
+ * of great importance for fieldMap and tableInfoMap. The fieldMap contains a mapping between field names and the data
+ * around those fields, aka what table they belong to, their data type and mode. The tableInfoMap is used to contain a
+ * mapping between table names and their corresponding TableInfo objects. The TableInfo class, in turn, contains schema
+ * information for the table as well as relationships to other TableInfo objects, building a relationship graph that can
+ * be traversed to allow for the query generators to apply the correct unnests and joins while writing out a query.
+ *
+ * */
 public class DataSetInfo {
   private final Map<String, TableInfo> tableInfoMap;
   private final Map<String, FieldData> fieldMap;

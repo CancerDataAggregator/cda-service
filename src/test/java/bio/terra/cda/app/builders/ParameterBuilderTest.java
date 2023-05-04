@@ -27,7 +27,7 @@ public class ParameterBuilderTest {
 
     builder.addParameterValue(queryField, "test");
     builder.addParameterValue(queryField, "test2");
-    assert builder.getParameterValueMap().containsKey("id_1");
-    assert builder.getParameterValueMap().containsKey("id_2");
+    assert builder.getParameterValueMap().containsKey("parameter_1");
+    assert builder.getParameterValueMap().containsKey("parameter_2");
   }
 }
