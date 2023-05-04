@@ -23,10 +23,10 @@
             "foreignKeys": [
                 {
                     "fields": [
-                        "case_barcode"
+                        "cda_subject_id"
                     ],
                     "type": "SINGLE",
-                    "tableName": "somatic_mutation_hg38_gdc_r10_v3_2_final",
+                    "tableName": "somatic_mutation_hg38_gdc_r35_v3_2_final",
                     "tableAlias": "mutations"
                 },
                 {
@@ -181,7 +181,7 @@
                                 "case_id"
                             ],
                             "type": "SINGLE",
-                            "tableName": "somatic_mutation_hg38_gdc_r10_v3_2_final",
+                            "tableName": "somatic_mutation_hg38_gdc_r35_v3_2_final",
                             "tableAlias": "mutations"
                         },
                         {
@@ -521,7 +521,7 @@
                                         "Matched_Norm_Sample_UUID"
                                     ],
                                     "type": "COMPOSITE_OR",
-                                    "tableName": "somatic_mutation_hg38_gdc_r10_v3_2_final",
+                                    "tableName": "somatic_mutation_hg38_gdc_r35_v3_2_final",
                                     "tableAlias": "mutations"
                                 },
                                 {
