@@ -40,7 +40,7 @@ public class BasicOperatorTest {
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false, false));
 
-    assertEquals("(COALESCE(UPPER(id), '') = UPPER(:subject_id_1))", whereClause);
+    assertEquals("(COALESCE(UPPER(id), '') = UPPER(:parameter_1))", whereClause);
   }
 
   @Test
@@ -52,7 +52,7 @@ public class BasicOperatorTest {
     String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false, false));
 
     assertEquals(
-        "(((COALESCE(UPPER(stage), '') = UPPER(:stage_1)) OR (COALESCE(UPPER(stage), '') = UPPER(:stage_2))) AND (COALESCE(UPPER(primary_diagnosis_site), '') = UPPER(:primary_diagnosis_site_1)))",
+        "(((COALESCE(UPPER(stage), '') = UPPER(:parameter_1)) OR (COALESCE(UPPER(stage), '') = UPPER(:parameter_2))) AND (COALESCE(UPPER(primary_diagnosis_site), '') = UPPER(:parameter_3)))",
         whereClause);
 
 //    QueryContext ResearchSubjectContext = new QueryContext("researchsubject");

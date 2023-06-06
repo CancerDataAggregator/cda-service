@@ -52,7 +52,7 @@ class QueryApiControllerTest {
 //  }
 
   // TODO add test for unique terms with count
-  
+
   @Test
   void uniqueValuesTest() throws Exception {
     String system = "GDC";

@@ -161,6 +161,7 @@ public class SqlGenerator {
       // SQL version of
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
+
       return resultsQuery(
           query.getL(),
           String.format(
@@ -168,12 +169,14 @@ public class SqlGenerator {
               sql(tableOrSubClause, query.getR(), true, hasSubClause, true),
               startTable.getTableAlias(this.dataSetInfo)),
           subQuery,
-          buildQueryContext(ctx.getTableInfo(), filesQuery, subQuery),
+          buildQueryContext(
+              ctx.getTableInfo(), filesQuery, subQuery), // added  supertable to get parent
           true);
     }
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
-    String selectFields = subQuery
+    String selectFields =
+        subQuery
             ? ""
             : getSelect(ctx)
                 .collect(Collectors.joining(", "));

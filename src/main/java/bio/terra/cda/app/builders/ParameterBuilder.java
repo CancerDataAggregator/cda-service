@@ -15,33 +15,27 @@ import java.util.stream.Collectors;
 
 public class ParameterBuilder {
   private final MapSqlParameterSource parameterValueMap;
+  private int index;
 
   public ParameterBuilder() {
     this.parameterValueMap = new MapSqlParameterSource();
+    this.index = 0;
   }
 
   public MapSqlParameterSource getParameterValueMap() {
     return parameterValueMap;
   }
 
-  public String addParameterValue(QueryField queryField, Object value) {
-    String parameterName = String.format("%s_1", queryField.getAlias());
-
-    while (this.parameterValueMap.hasValue(parameterName)) {
-      String number = parameterName.substring(parameterName.length() - 1);
-      int index = Integer.parseInt(number);
-      parameterName =
-          String.format("%s%s", parameterName.substring(0, parameterName.length() - 1), ++index);
-    }
-
+  public String addParameterValue(String type, Object value) {
+    String parameterName = String.format("parameter_%s", ++index);
     if (value.getClass().isArray()) {
       this.parameterValueMap.addValue(parameterName, value, Types.ARRAY);
     } else
-    if (queryField.getType().equals("text")) {
+    if (type.equals("text")) {
       this.parameterValueMap.addValue(parameterName, value);
-    } else if (queryField.getType().equals("integer")){
+    } else if (type.equals("integer")){
       this.parameterValueMap.addValue(parameterName, value, Types.INTEGER);
-    } else if (queryField.getType().equals("float")) {
+    } else if (type.equals("float")) {
       this.parameterValueMap.addValue(parameterName, value, Types.FLOAT);
     }
     return String.format(":%s", parameterName);
@@ -65,5 +59,9 @@ public class ParameterBuilder {
       }
     }
     return result;
+  }
+
+  public String addParameterValue(QueryField queryField, Object value) {
+    return this.addParameterValue(queryField.getType(), value);
   }
 }

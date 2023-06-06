@@ -15,16 +15,16 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 /*
-* OperatorDeserializer
-*
-* This class is meant to specify how to deserialize the json related to query objects
-* into a structure that makes sense for performing different operations based off of
-* node type.
-*
-* This deserializer will use the QueryOperator annotation to find the correct class
-* based off of node_type and instantiate that class as part of the query tree.
-*
-*/
+ * OperatorDeserializer
+ *
+ * This class is meant to specify how to deserialize the json related to query objects
+ * into a structure that makes sense for performing different operations based off of
+ * node type.
+ *
+ * This deserializer will use the QueryOperator annotation to find the correct class
+ * based off of node_type and instantiate that class as part of the query tree.
+ *
+ */
 public class OperatorDeserializer extends JsonDeserializer<Query> {
   @Override
   public Query deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
