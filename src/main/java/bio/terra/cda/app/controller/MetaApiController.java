@@ -46,7 +46,7 @@ public class MetaApiController implements MetaApi {
   }
 
   // For now, the dataset description is hardcoded. In the future, it will probably be read from a
-  // table in bigquery.
+  // table
   private DatasetDescription createDescription() {
     var dateOfRelease =
         OffsetDateTime.of(LocalDate.of(2022, 6, 28), LocalTime.MIN, ZoneOffset.UTC).toString();

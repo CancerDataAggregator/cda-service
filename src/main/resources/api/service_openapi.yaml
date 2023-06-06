@@ -862,16 +862,6 @@ components:
           type: object
           properties: {}
 
-    #    JobStatusData:
-    #      type: object
-    #      properties:
-    #        queryId:
-    #          type: string
-    #        status:
-    #          type: string
-    #        runningTime:
-    #          type: string
-
     Query:
       type: object
       description: |
@@ -924,8 +914,6 @@ components:
               "NOT LIKE",
               ORDERBY,
               ORDERBYVALUES,
-              LIMIT,
-              OFFSET,
               "+",
               "-",
               "/",
