@@ -10,5 +10,6 @@ import java.lang.annotation.Target;
 public @interface CountQueryGenerator {
   public String entity();
 
-  public String[] fieldsToCount();
+  public String[] totalFieldsToCount();
+  public String[] groupedFieldsToCount();
 }

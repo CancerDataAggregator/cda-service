@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -17,43 +18,41 @@ class SqlGeneratorTest {
 
   static final Path TEST_FILES = Paths.get("src/test/resources/query");
 
-  public static final String TABLE = "all_Subjects_v3_0_final";
-  public static final String QUALIFIED_TABLE = "GROUP." + TABLE;
-
+  public static final String TABLE = "subject";
   private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new QueryModule());
 
   private static Stream<Arguments> queryData() {
     return Stream.of(
         Arguments.of(
             "query1.json",
-            QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY Subject.id) as rn, Subject.id AS subject_id, Subject.identifier AS subject_identifier, Subject.species AS species, Subject.sex AS sex, Subject.race AS race, Subject.ethnicity AS ethnicity, Subject.days_to_birth AS days_to_birth, Subject.subject_associated_project AS subject_associated_project, Subject.vital_status AS vital_status, Subject.days_to_death AS days_to_death, Subject.cause_of_death AS cause_of_death, Subject.Files AS subject_Files, Subject.ResearchSubject AS ResearchSubject FROM GROUP.all_Subjects_v3_0_final AS Subject WHERE (IFNULL(UPPER(Subject.id), '') = UPPER(@subject_id_1))) as results WHERE rn = 1"),
+            TABLE,
+            "SELECT subject.id AS subject_id, subject.species AS species, subject.sex AS sex, subject.race AS race, subject.ethnicity AS ethnicity, subject.days_to_birth AS days_to_birth, subject.vital_status AS vital_status, subject.days_to_death AS days_to_death, subject.cause_of_death AS cause_of_death FROM subject AS subject WHERE (COALESCE(UPPER(id), '') = UPPER('value')) GROUP BY subject.id,subject.species,subject.sex,subject.race,subject.ethnicity,subject.days_to_birth,subject.vital_status,subject.days_to_death,subject.cause_of_death"),
         Arguments.of(
             "query2.json",
-            QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY Subject.id) as rn, Subject.id AS subject_id, Subject.identifier AS subject_identifier, Subject.species AS species, Subject.sex AS sex, Subject.race AS race, Subject.ethnicity AS ethnicity, Subject.days_to_birth AS days_to_birth, Subject.subject_associated_project AS subject_associated_project, Subject.vital_status AS vital_status, Subject.days_to_death AS days_to_death, Subject.cause_of_death AS cause_of_death, Subject.Files AS subject_Files, Subject.ResearchSubject AS ResearchSubject FROM GROUP.all_Subjects_v3_0_final AS Subject LEFT JOIN UNNEST(Subject.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.Specimen) AS _Specimen WHERE (((IFNULL(UPPER(_ResearchSubject.member_of_research_project), '') >= UPPER(@member_of_research_project_1)) AND (IFNULL(UPPER(_Specimen.specimen_type), '') = UPPER(@specimen_type_1))) AND (IFNULL(UPPER(_ResearchSubject.primary_diagnosis_condition), '') = UPPER(@primary_diagnosis_condition_1)))) as results WHERE rn = 1"),
+            TABLE,
+            "SELECT subject.id AS subject_id, subject.species AS species, subject.sex AS sex, subject.race AS race, subject.ethnicity AS ethnicity, subject.days_to_birth AS days_to_birth, subject.vital_status AS vital_status, subject.days_to_death AS days_to_death, subject.cause_of_death AS cause_of_death FROM subject AS subject  LEFT JOIN subject_researchsubject AS subject_researchsubject ON subject.id = subject_researchsubject.subject_id  LEFT JOIN researchsubject AS researchsubject ON subject_researchsubject.researchsubject_id = researchsubject.id  LEFT JOIN researchsubject_specimen AS researchsubject_specimen ON researchsubject.id = researchsubject_specimen.researchsubject_id  LEFT JOIN specimen AS specimen ON researchsubject_specimen.specimen_id = specimen.id WHERE (((COALESCE(UPPER(member_of_research_project), '') >= UPPER('value')) AND (COALESCE(UPPER(specimen_type), '') = UPPER('value'))) AND (COALESCE(UPPER(primary_diagnosis_condition), '') = UPPER('value'))) GROUP BY subject.id,subject.species,subject.sex,subject.race,subject.ethnicity,subject.days_to_birth,subject.vital_status,subject.days_to_death,subject.cause_of_death"),
         Arguments.of(
             "query3.json",
-            QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY Subject.id) as rn, Subject.id AS subject_id, Subject.identifier AS subject_identifier, Subject.species AS species, Subject.sex AS sex, Subject.race AS race, Subject.ethnicity AS ethnicity, Subject.days_to_birth AS days_to_birth, Subject.subject_associated_project AS subject_associated_project, Subject.vital_status AS vital_status, Subject.days_to_death AS days_to_death, Subject.cause_of_death AS cause_of_death, Subject.Files AS subject_Files, Subject.ResearchSubject AS ResearchSubject FROM GROUP.all_Subjects_v3_0_final AS Subject LEFT JOIN UNNEST(Subject.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.Specimen) AS _Specimen WHERE (_Specimen.days_to_collection = @days_to_collection_1)) as results WHERE rn = 1"),
+            TABLE,
+            "SELECT subject.id AS subject_id, subject.species AS species, subject.sex AS sex, subject.race AS race, subject.ethnicity AS ethnicity, subject.days_to_birth AS days_to_birth, subject.vital_status AS vital_status, subject.days_to_death AS days_to_death, subject.cause_of_death AS cause_of_death FROM subject AS subject  LEFT JOIN subject_researchsubject AS subject_researchsubject ON subject.id = subject_researchsubject.subject_id  LEFT JOIN researchsubject AS researchsubject ON subject_researchsubject.researchsubject_id = researchsubject.id  LEFT JOIN researchsubject_specimen AS researchsubject_specimen ON researchsubject.id = researchsubject_specimen.researchsubject_id  LEFT JOIN specimen AS specimen ON researchsubject_specimen.specimen_id = specimen.id WHERE (days_to_collection = 50) GROUP BY subject.id,subject.species,subject.sex,subject.race,subject.ethnicity,subject.days_to_birth,subject.vital_status,subject.days_to_death,subject.cause_of_death"),
         Arguments.of(
             "query-subquery.json",
-            QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY Subject.id) as rn, Subject.id AS subject_id, Subject.identifier AS subject_identifier, Subject.species AS species, Subject.sex AS sex, Subject.race AS race, Subject.ethnicity AS ethnicity, Subject.days_to_birth AS days_to_birth, Subject.subject_associated_project AS subject_associated_project, Subject.vital_status AS vital_status, Subject.days_to_death AS days_to_death, Subject.cause_of_death AS cause_of_death, Subject.Files AS subject_Files, Subject.ResearchSubject AS ResearchSubject FROM (SELECT Subject.* FROM GROUP.all_Subjects_v3_0_final AS Subject LEFT JOIN UNNEST(Subject.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.identifier) AS _researchsubject_identifier WHERE (IFNULL(UPPER(_researchsubject_identifier.system), '') = UPPER(@researchsubject_identifier_system_1))) as Subject LEFT JOIN UNNEST(Subject.ResearchSubject) AS _ResearchSubject LEFT JOIN UNNEST(_ResearchSubject.identifier) AS _researchsubject_identifier WHERE (IFNULL(UPPER(_researchsubject_identifier.system), '') = UPPER(@researchsubject_identifier_system_2))) as results WHERE rn = 1"),
+            TABLE,
+            "SELECT subject.id AS subject_id, subject.species AS species, subject.sex AS sex, subject.race AS race, subject.ethnicity AS ethnicity, subject.days_to_birth AS days_to_birth, subject.vital_status AS vital_status, subject.days_to_death AS days_to_death, subject.cause_of_death AS cause_of_death FROM (SELECT subject.* FROM subject AS subject  LEFT JOIN subject_researchsubject AS subject_researchsubject ON subject.id = subject_researchsubject.subject_id  LEFT JOIN researchsubject AS researchsubject ON subject_researchsubject.researchsubject_id = researchsubject.id  LEFT JOIN researchsubject_identifier AS researchsubject_identifier ON researchsubject.id = researchsubject_identifier.researchsubject_id WHERE (COALESCE(UPPER(system), '') = UPPER('PDC'))) as subject  LEFT JOIN subject_researchsubject AS subject_researchsubject ON subject.id = subject_researchsubject.subject_id  LEFT JOIN researchsubject AS researchsubject ON subject_researchsubject.researchsubject_id = researchsubject.id  LEFT JOIN researchsubject_identifier AS researchsubject_identifier ON researchsubject.id = researchsubject_identifier.researchsubject_id WHERE (COALESCE(UPPER(system), '') = UPPER('GDC')) GROUP BY subject.id,subject.species,subject.sex,subject.race,subject.ethnicity,subject.days_to_birth,subject.vital_status,subject.days_to_death,subject.cause_of_death"),
         Arguments.of(
             "query-not.json",
-            QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY Subject.id) as rn, Subject.id AS subject_id, Subject.identifier AS subject_identifier, Subject.species AS species, Subject.sex AS sex, Subject.race AS race, Subject.ethnicity AS ethnicity, Subject.days_to_birth AS days_to_birth, Subject.subject_associated_project AS subject_associated_project, Subject.vital_status AS vital_status, Subject.days_to_death AS days_to_death, Subject.cause_of_death AS cause_of_death, Subject.Files AS subject_Files, Subject.ResearchSubject AS ResearchSubject FROM GROUP.all_Subjects_v3_0_final AS Subject LEFT JOIN UNNEST(Subject.ResearchSubject) AS _ResearchSubject WHERE NOT ((IFNULL(UPPER(_ResearchSubject.primary_diagnosis_condition), '') = UPPER(@primary_diagnosis_condition_1)))) as results WHERE rn = 1"),
+            TABLE,
+            "SELECT subject.id AS subject_id, subject.species AS species, subject.sex AS sex, subject.race AS race, subject.ethnicity AS ethnicity, subject.days_to_birth AS days_to_birth, subject.vital_status AS vital_status, subject.days_to_death AS days_to_death, subject.cause_of_death AS cause_of_death FROM subject AS subject  LEFT JOIN subject_researchsubject AS subject_researchsubject ON subject.id = subject_researchsubject.subject_id  LEFT JOIN researchsubject AS researchsubject ON subject_researchsubject.researchsubject_id = researchsubject.id WHERE NOT ((COALESCE(UPPER(primary_diagnosis_condition), '') = UPPER('cancer'))) GROUP BY subject.id,subject.species,subject.sex,subject.race,subject.ethnicity,subject.days_to_birth,subject.vital_status,subject.days_to_death,subject.cause_of_death"),
         Arguments.of(
             "query-ambiguous.json",
-            QUALIFIED_TABLE,
             TABLE,
-            "SELECT results.* EXCEPT(rn) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY Subject.id) as rn, Subject.id AS subject_id, Subject.identifier AS subject_identifier, Subject.species AS species, Subject.sex AS sex, Subject.race AS race, Subject.ethnicity AS ethnicity, Subject.days_to_birth AS days_to_birth, Subject.subject_associated_project AS subject_associated_project, Subject.vital_status AS vital_status, Subject.days_to_death AS days_to_death, Subject.cause_of_death AS cause_of_death, Subject.Files AS subject_Files, Subject.ResearchSubject AS ResearchSubject FROM (SELECT Subject.* FROM GROUP.all_Subjects_v3_0_final AS Subject WHERE (IFNULL(UPPER(Subject.species), '') = UPPER(@species_1))) as Subject WHERE (IFNULL(UPPER(Subject.species), '') = UPPER(@species_2))) as results WHERE rn = 1"));
+            TABLE,
+            "SELECT subject.id AS subject_id, subject.species AS species, subject.sex AS sex, subject.race AS race, subject.ethnicity AS ethnicity, subject.days_to_birth AS days_to_birth, subject.vital_status AS vital_status, subject.days_to_death AS days_to_death, subject.cause_of_death AS cause_of_death FROM (SELECT subject.* FROM subject AS subject WHERE (COALESCE(UPPER(species), '') = UPPER('dog'))) as subject WHERE (COALESCE(UPPER(species), '') = UPPER('human')) GROUP BY subject.id,subject.species,subject.sex,subject.race,subject.ethnicity,subject.days_to_birth,subject.vital_status,subject.days_to_death,subject.cause_of_death"));
   }
 
   @ParameterizedTest
@@ -66,7 +65,7 @@ class SqlGeneratorTest {
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
     String translatedQuery =
-        new SqlGenerator(qualifiedTable, query, table, false).generate().build().getQuery();
+        new SqlGenerator(query, false).getReadableQuerySql();
 
     assertEquals(expectedSql, translatedQuery);
   }

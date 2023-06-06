@@ -1,13 +1,17 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.generated.model.Query;
-import java.io.IOException;
 
-@QueryGenerator(entity = "Subject", hasFiles = true)
+@QueryGenerator(
+    entity = "subject",
+    hasFiles = true,
+    defaultOrderBy = "subject_id",
+    aggregatedFields = {"subject_identifier_system", "subject_associated_project_associated_project"},
+    aggregatedFieldsSelectString = {
+        "json_agg(distinct (subject_identifier.system, subject_identifier.field_name, subject_identifier.value)::system_data) as subjet_identifier",
+        "json_agg(distinct subject_associated_project.associated_project) AS subject_associated_project"})
 public class SubjectSqlGenerator extends SqlGenerator {
-  public SubjectSqlGenerator(
-      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
-      throws IOException {
-    super(qualifiedTable, rootQuery, version, filesQuery);
+  public SubjectSqlGenerator(Query rootQuery, boolean filesQuery) {
+    super(rootQuery, filesQuery);
   }
 }

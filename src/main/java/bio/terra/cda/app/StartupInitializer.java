@@ -1,6 +1,7 @@
 package bio.terra.cda.app;
 
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
+import bio.terra.cda.app.models.RdbmsSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -15,6 +16,8 @@ public final class StartupInitializer {
   public static void initialize(ApplicationContext applicationContext) {
     ApplicationConfiguration appConfig =
         (ApplicationConfiguration) applicationContext.getBean("applicationConfiguration");
+
+    RdbmsSchema.createDataSetInfo();
 
     // TODO: TEMPLATE: Fill in this method with any other initialization that needs to happen
     //  between the point of having the entire application initialized and

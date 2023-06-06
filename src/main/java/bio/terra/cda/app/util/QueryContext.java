@@ -1,51 +1,41 @@
 package bio.terra.cda.app.util;
 
-import bio.terra.cda.app.builders.OrderByBuilder;
-import bio.terra.cda.app.builders.ParameterBuilder;
-import bio.terra.cda.app.builders.PartitionBuilder;
-import bio.terra.cda.app.builders.QueryFieldBuilder;
-import bio.terra.cda.app.builders.SelectBuilder;
-import bio.terra.cda.app.builders.UnnestBuilder;
-import bio.terra.cda.app.builders.ViewBuilder;
-import bio.terra.cda.app.builders.ViewListBuilder;
-import bio.terra.cda.app.models.OrderBy;
-import bio.terra.cda.app.models.Partition;
-import bio.terra.cda.app.models.Select;
-import bio.terra.cda.app.models.TableInfo;
-import bio.terra.cda.app.models.Unnest;
-import bio.terra.cda.app.models.View;
+import bio.terra.cda.app.builders.*;
+import bio.terra.cda.app.models.*;
+
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class QueryContext {
   private final String table;
-  private final String project;
-  private List<Unnest> unnests;
   private List<Select> select;
   private List<Partition> partitions;
   private List<OrderBy> orderBys;
+  private List<ColumnDefinition> groupBys;
   private Boolean includeSelect;
   private Boolean filesQuery;
   private QueryFieldBuilder queryFieldBuilder;
   private SelectBuilder selectBuilder;
-  private UnnestBuilder unnestBuilder;
-  private PartitionBuilder partitionBuilder;
+  private JoinBuilder joinBuilder;
   private ParameterBuilder parameterBuilder;
   private OrderByBuilder orderByBuilder;
   private ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder;
   private TableInfo tableInfo;
 
-  public QueryContext(String table, String project) {
-    this.table = table;
-    this.project = project;
+  private List<List<Join>> joins;
 
-    this.unnests = new ArrayList<>();
+  public QueryContext(String table) {
+    this.table = table;
+
     this.select = new ArrayList<>();
     this.partitions = new ArrayList<>();
+    this.groupBys = new ArrayList<>();
     this.orderBys = new ArrayList<>();
+    this.joins = new ArrayList<>();
   }
 
   public QueryContext setFilesQuery(boolean value) {
@@ -57,9 +47,6 @@ public class QueryContext {
     return filesQuery;
   }
 
-  public String getProject() {
-    return this.project;
-  }
 
   public QueryContext setTableInfo(TableInfo tableInfo) {
     this.tableInfo = tableInfo;
@@ -79,123 +66,10 @@ public class QueryContext {
     return this.includeSelect;
   }
 
-  public QueryFieldBuilder getQueryFieldBuilder() {
-    return this.queryFieldBuilder;
-  }
-
-  public QueryContext setQueryFieldBuilder(QueryFieldBuilder builder) {
-    this.queryFieldBuilder = builder;
+  public QueryContext addJoins(List<Join> joinPath) {
+    this.joins.add(joinPath);
     return this;
-  }
 
-  public SelectBuilder getSelectBuilder() {
-    return this.selectBuilder;
-  }
-
-  public QueryContext setSelectBuilder(SelectBuilder builder) {
-    this.selectBuilder = builder;
-    return this;
-  }
-
-  public UnnestBuilder getUnnestBuilder() {
-    return this.unnestBuilder;
-  }
-
-  public QueryContext setUnnestBuilder(UnnestBuilder builder) {
-    this.unnestBuilder = builder;
-    return this;
-  }
-
-  public PartitionBuilder getPartitionBuilder() {
-    return this.partitionBuilder;
-  }
-
-  public QueryContext setPartitionBuilder(PartitionBuilder builder) {
-    this.partitionBuilder = builder;
-    return this;
-  }
-
-  public ParameterBuilder getParameterBuilder() {
-    return this.parameterBuilder;
-  }
-
-  public QueryContext setParameterBuilder(ParameterBuilder builder) {
-    this.parameterBuilder = builder;
-    return this;
-  }
-
-  public OrderByBuilder getOrderByBuilder() {
-    return this.orderByBuilder;
-  }
-
-  public QueryContext setOrderByBuilder(OrderByBuilder builder) {
-    this.orderByBuilder = builder;
-    return this;
-  }
-
-  public ViewListBuilder<? extends View, ? extends ViewBuilder> getViewListBuilder() {
-    return this.viewListBuilder;
-  }
-
-  public QueryContext setViewListBuilder(
-      ViewListBuilder<? extends View, ? extends ViewBuilder> builder) {
-    this.viewListBuilder = builder;
-    return this;
-  }
-
-  public QueryContext addUnnests(Stream<Unnest> newUnnests) {
-    var aliasIndexes = new HashMap<String, Integer>();
-
-    newUnnests.forEach(
-        unnest -> {
-          Integer index = 0;
-          boolean add = true;
-
-          if (aliasIndexes.containsKey(unnest.getAlias())) {
-            index = aliasIndexes.get(unnest.getAlias());
-
-            // inner joins take precedence over all other join types
-            this.unnests.set(
-                index,
-                this.unnests.get(index).getJoinType().equals(SqlUtil.JoinType.INNER)
-                    ? this.unnests.get(index)
-                    : unnest);
-          } else {
-            for (var current : this.unnests) {
-              aliasIndexes.put(current.getAlias(), index);
-
-              if (current.getAlias().equals(unnest.getAlias())) {
-                if (current.getJoinType().equals(SqlUtil.JoinType.INNER)) {
-                  add = false;
-                }
-
-                break;
-              }
-
-              index++;
-            }
-
-            if (add) {
-              if (index.equals(this.unnests.size())) {
-                this.unnests.add(unnest);
-              } else {
-                this.unnests.set(index, unnest);
-              }
-            }
-          }
-        });
-
-    return this;
-  }
-
-  public QueryContext addPartitions(Stream<Partition> newPartitions) {
-    List<Partition> newPartitionsList = newPartitions.collect(Collectors.toList());
-    if (newPartitionsList.isEmpty()) {
-      return this;
-    }
-
-    this.partitions.addAll(newPartitionsList);
-    return this;
   }
 
   public QueryContext addSelects(Stream<Select> selects) {
@@ -205,6 +79,11 @@ public class QueryContext {
     }
 
     this.select.addAll(newSelectsList);
+    return this;
+  }
+
+  public QueryContext addGroupBy(ColumnDefinition col) {
+    groupBys.add(col);
     return this;
   }
 
@@ -218,6 +97,10 @@ public class QueryContext {
     return this;
   }
 
+  public List<List<Join>> getJoins() {
+    return this.joins;
+  }
+
   public String getTable() {
     return this.table;
   }
@@ -226,15 +109,64 @@ public class QueryContext {
     return this.select;
   }
 
-  public List<Unnest> getUnnests() {
-    return this.unnests;
-  }
-
-  public List<Partition> getPartitions() {
-    return partitions;
-  }
-
   public List<OrderBy> getOrderBys() {
     return orderBys;
+  }
+
+  public List<ColumnDefinition> getGroupBys() {
+    return groupBys;
+  }
+  public QueryFieldBuilder getQueryFieldBuilder() {
+    return queryFieldBuilder;
+  }
+
+  public QueryContext setQueryFieldBuilder(QueryFieldBuilder queryFieldBuilder) {
+    this.queryFieldBuilder = queryFieldBuilder;
+    return this;
+  }
+
+  public SelectBuilder getSelectBuilder() {
+    return selectBuilder;
+  }
+
+  public QueryContext setSelectBuilder(SelectBuilder selectBuilder) {
+    this.selectBuilder = selectBuilder;
+    return this;
+  }
+
+  public JoinBuilder getJoinBuilder() {
+    return joinBuilder;
+  }
+
+  public QueryContext setJoinBuilder(JoinBuilder joinBuilder) {
+    this.joinBuilder = joinBuilder;
+    return this;
+  }
+
+  public ParameterBuilder getParameterBuilder() {
+    return parameterBuilder;
+  }
+
+  public QueryContext setParameterBuilder(ParameterBuilder parameterBuilder) {
+    this.parameterBuilder = parameterBuilder;
+    return this;
+  }
+
+  public OrderByBuilder getOrderByBuilder() {
+    return orderByBuilder;
+  }
+
+  public QueryContext setOrderByBuilder(OrderByBuilder orderByBuilder) {
+    this.orderByBuilder = orderByBuilder;
+    return this;
+  }
+
+  public ViewListBuilder<? extends View, ? extends ViewBuilder> getViewListBuilder() {
+    return viewListBuilder;
+  }
+
+  public QueryContext setViewListBuilder(ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder) {
+    this.viewListBuilder = viewListBuilder;
+    return this;
   }
 }

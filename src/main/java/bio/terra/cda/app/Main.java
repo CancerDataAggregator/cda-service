@@ -4,7 +4,6 @@ import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ApplicationContext;
@@ -12,7 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+
+@SpringBootApplication()
 @ComponentScan(basePackages = "bio.terra.cda")
 @EnableConfigurationProperties(ApplicationConfiguration.class)
 @EnableScheduling

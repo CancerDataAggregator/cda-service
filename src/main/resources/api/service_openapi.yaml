@@ -34,6 +34,18 @@ paths:
         500:
           $ref: "#/components/responses/StatusResponse"
 
+  /api/v1/columns:
+    get:
+      summary: Returns all column names and definitions for schema
+      description: Return columnNames for schema along with their descriptions
+      operationId: columns
+      tags:
+        - query
+
+      responses:
+        200:
+          $ref: "#/components/responses/ColumnsResponse"
+
   /api/v1/dataset-description/latest:
     get:
       summary: Description of latest dataset
@@ -66,7 +78,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/DatasetDescription"
 
-  /api/v1/bulk-data/{version}:
+  /api/v1/bulk-data:
     get:
       summary: Return all data in CDA
       description: Return all data in CDA
@@ -74,14 +86,16 @@ paths:
       tags:
         - query
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
         - $ref: "#/components/parameters/Table"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
 
-  /api/v1/boolean-query/{version}:
+  /api/v1/boolean-query:
     post:
       summary: Execute boolean query
       description: |
@@ -92,14 +106,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
 
       requestBody:
@@ -112,9 +122,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/subjects/{version}:
+  /api/v1/subjects:
     post:
       summary: Execute Subject query
       description: |
@@ -125,15 +135,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The subject query
@@ -145,9 +150,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/subjects/files/{version}:
+  /api/v1/subjects/files:
     post:
       summary: Execute Subject Files query
       description: |
@@ -158,15 +163,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The subject query
@@ -178,9 +178,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/subjects/counts/{version}:
+  /api/v1/subjects/counts:
     post:
       summary: Execute Subjects Counts query
       description: |
@@ -191,15 +191,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: The subjects query
@@ -211,9 +203,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
-  /api/v1/subjects/files/counts/{version}:
+  /api/v1/subjects/files/counts:
     post:
       summary: Execute Subjects File Counts query
       description: |
@@ -224,15 +216,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: The subjects query
@@ -244,9 +228,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
-  /api/v1/researchsubjects/{version}:
+  /api/v1/researchsubjects:
     post:
       summary: Execute Research Subject query
       description: |
@@ -257,15 +241,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The Research Subject query
@@ -277,9 +256,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/researchsubjects/files/{version}:
+  /api/v1/researchsubjects/files:
     post:
       summary: Execute ResearchSubject Files query
       description: |
@@ -290,15 +269,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The research subject query
@@ -310,9 +284,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/researchsubjects/counts/{version}:
+  /api/v1/researchsubjects/counts:
     post:
       summary: Execute ResearchSubjects Counts query
       description: |
@@ -323,15 +297,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: The research subjects query
@@ -343,9 +309,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
-  /api/v1/researchsubjects/files/counts/{version}:
+  /api/v1/researchsubjects/files/counts:
     post:
       summary: Execute ResearchSubjects File Counts query
       description: |
@@ -356,15 +322,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: The research subjects query
@@ -376,9 +334,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
-  /api/v1/specimens/{version}:
+  /api/v1/specimens:
     post:
       summary: Execute Specimens query
       description: |
@@ -389,15 +347,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The specimen query
@@ -409,9 +362,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/specimen/files/{version}:
+  /api/v1/specimen/files:
     post:
       summary: Execute Specimen Files query
       description: |
@@ -422,15 +375,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The specimen query
@@ -442,9 +390,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/specimen/counts/{version}:
+  /api/v1/specimen/counts:
     post:
       summary: Execute Specimen Counts query
       description: |
@@ -455,15 +403,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: The specimen query
@@ -475,9 +415,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
-  /api/v1/specimen/files/counts/{version}:
+  /api/v1/specimen/files/counts:
     post:
       summary: Execute Specimen File Counts query
       description: |
@@ -488,15 +428,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: The specimen query
@@ -508,9 +440,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
-  /api/v1/diagnosis/{version}:
+  /api/v1/diagnosis:
     post:
       summary: Execute Diagnosis query
       description: |
@@ -521,15 +453,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The diagnosis query
@@ -541,9 +468,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/diagnosis/counts/{version}:
+  /api/v1/diagnosis/counts:
     post:
       summary: Execute Diagnosis Counts query
       description: |
@@ -554,15 +481,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: The diagnosis query
@@ -574,9 +493,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
-  /api/v1/mutations/{version}:
+  /api/v1/mutations:
     post:
       summary: Execute Mutation query
       description: |
@@ -587,48 +506,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
-
-      requestBody:
-        description: The diagnosis query
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Query"
-
-      responses:
-        200:
-          $ref: "#/components/responses/QueryCreated"
-
-  /api/v1/mutations/counts/{version}:
-    post:
-      summary: Execute Mutation Counts query
-      description: |
-        Execute a Mutation Counts query composed of conditions on columns combined with boolean operators. The
-        generated SQL query is returned in the response.
-      operationId: mutationCountsQuery
-      tags:
-        - query
-
-      parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The mutation query
@@ -640,9 +521,34 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/treatments/{version}:
+  /api/v1/mutations/counts:
+    post:
+      summary: Execute Mutation Counts query
+      description: |
+        Execute a Mutation Counts query composed of conditions on columns combined with boolean operators. The
+        generated SQL query is returned in the response.
+      operationId: mutationCountsQuery
+      tags:
+        - query
+
+      parameters:
+        - $ref: "#/components/parameters/DryRun"
+
+      requestBody:
+        description: The mutation query
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+
+      responses:
+        200:
+          $ref: "#/components/responses/QueryResponse"
+
+  /api/v1/treatments:
     post:
       summary: Execute Treatments query
       description: |
@@ -653,15 +559,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The treatments query
@@ -673,9 +574,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/treatments/counts/{version}:
+  /api/v1/treatments/counts:
     post:
       summary: Execute Treatments Counts query
       description: |
@@ -686,15 +587,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: The treatment query
@@ -706,47 +599,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
-
-  /api/v1/query/{id}:
-    get:
-      summary: Given a query ID, return the a page of data from the query result.
-      description: |
-        Use this API to get the data back from a query. If there is more data present,
-        next_url will contain the link to use to get the rest of the data. If the current page of data
-        is not yet ready, the result will be empty, but next_url will be set.
-      operationId: query
-      tags:
-        - query
-
-      parameters:
-        - $ref: "#/components/parameters/QueryId"
-        - $ref: "#/components/parameters/ResultOffset"
-        - $ref: "#/components/parameters/ResultLimit"
-
-      responses:
-        200:
           $ref: "#/components/responses/QueryResponse"
 
-  /api/v1/job-status/{id}:
-    get:
-      summary: Return the running status of long running queries.
-      description: |
-        For long running queries we may need to determine if the query is
-        PENDING RUNNING, DONE or FAILURE.
-        Pass the Job ID to this endpoint and get the running status back.
-      operationId: jobStatus
-      tags:
-        - query
-
-      parameters:
-        - $ref: "#/components/parameters/QueryId"
-
-      responses:
-        200:
-          $ref: "#/components/responses/JobStatusResponse"
-
-  /api/v1/unique-values/{version}:
+  /api/v1/unique-values:
     post:
       summary: Returns all unique values
       description: Return unique values given a qualified columnName
@@ -755,13 +610,14 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
         - $ref: "#/components/parameters/SystemValue"
-        - $ref: "#/components/parameters/Table"
         - $ref: "#/components/parameters/Count"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
-        description: column_name of table value being requested
+        description: column_name being requested
         required: true
         content:
           text/plain:
@@ -770,25 +626,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/columns/{version}:
-    get:
-      summary: Returns all column names and definitions for schema
-      description: Return columnNames for schema along with their descriptions
-      operationId: columns
-      tags:
-        - query
-
-      parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - $ref: "#/components/parameters/Table"
-
-      responses:
-        200:
-          $ref: "#/components/responses/ColumnsResponse"
-
-  /api/v1/global-counts/{version}:
+  /api/v1/global-counts:
     post:
       summary: Returns counts of the DCS
       description: Return GlobalCounts for schema
@@ -797,14 +637,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/FileDatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: counts
@@ -815,9 +648,9 @@ paths:
               $ref: "#/components/schemas/Query"
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
-  /api/v1/files/{version}:
+  /api/v1/files:
     post:
       summary: Returns a list of files given a boolean query
       description: Return list of files for given query
@@ -826,14 +659,10 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/FileDatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
+        - $ref: "#/components/parameters/DryRun"
+        - $ref: "#/components/parameters/IncludeResultsCount"
+        - $ref: "#/components/parameters/ResultOffset"
+        - $ref: "#/components/parameters/ResultLimit"
 
       requestBody:
         description: The boolean query
@@ -845,9 +674,9 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/PagedResponse"
 
-  /api/v1/files/counts/{version}:
+  /api/v1/files/counts:
     post:
       summary: Execute File Counts query
       description: |
@@ -858,15 +687,7 @@ paths:
         - query
 
       parameters:
-        - $ref: "#/components/parameters/DatasetVersion"
-        - in: query
-          description: If true, don't run the query, only generate and return it.
-          name: dryRun
-          schema:
-            type: boolean
-            default: false
-        - $ref: "#/components/parameters/Table"
-
+        - $ref: "#/components/parameters/DryRun"
 
       requestBody:
         description: The files query
@@ -878,24 +699,10 @@ paths:
 
       responses:
         200:
-          $ref: "#/components/responses/QueryCreated"
+          $ref: "#/components/responses/QueryResponse"
 
 components:
   parameters:
-    DatasetVersion:
-      in: path
-      name: version
-      required: true
-      schema:
-        type: string
-      description: Dataset version
-    FileDatasetVersion:
-      in: path
-      name: version
-      required: true
-      schema:
-        type: string
-      description: Dataset version
     SystemValue:
       in: query
       name: system
@@ -903,17 +710,18 @@ components:
         type: string
       description: Filter on system for results
     Count:
-        in: query
-        name: count
-        schema:
-          type: boolean
-        description: Filter on system for results
-    AddTable:
       in: query
-      name: table name
+      name: count
       schema:
-        type: string
-      description: Filter on system for results
+        type: boolean
+      description: Show the number of occurances for each value
+    IncludeResultsCount:
+      in: query
+      name: includeCount
+      schema:
+        type: boolean
+        default: false
+      description: Show the number of results available for the query
     ResultOffset:
       in: query
       name: offset
@@ -928,19 +736,20 @@ components:
         type: integer
         default: 100
       description: The numbers of entries to return per page of data
-    QueryId:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: string
-      description: Query ID
     Table:
       in: query
       name: table
       schema:
         type: string
       description: tablename
+    DryRun:
+      in: query
+      name: dryRun
+      schema:
+        type: boolean
+        default: false
+      description: If true, don't run the query, only generate and return it
+
 
   schemas:
     ErrorReport:
@@ -973,15 +782,26 @@ components:
                 items:
                   type: string
 
-    QueryCreatedData:
+
+    PagedResponseData:
       type: object
       properties:
-        query_id:
-          type: string
-          description: the created query ID
+        result:
+          type: array
+          items:
+            type: object
         query_sql:
           type: string
-          description: the generated BigQuery SQL
+          description: the generated postgres SQL
+        total_row_count:
+          type: integer
+          format: int64
+          nullable: true
+          description: the total number of rows in the query. can be null if the query is not complete
+        next_url:
+          type: string
+          nullable: true
+          description: a URL to use to fetch the next page of data in the query. can be null if the query is not complete
 
     QueryResponseData:
       type: object
@@ -992,16 +812,7 @@ components:
             type: object
         query_sql:
           type: string
-          description: the generated BigQuery SQL
-        total_row_count:
-          type: integer
-          format: int64
-          nullable: true
-          description: the total number of rows in the query. can be null if the query is not complete
-        next_url:
-          type: string
-          nullable: true
-          description: a URL to use to fetch the next page of data in the query. can be null if the query is not complete
+          description: the generated postgres SQL
 
     ColumnsResponseData:
       type: object
@@ -1051,15 +862,15 @@ components:
           type: object
           properties: {}
 
-    JobStatusData:
-      type: object
-      properties:
-        queryId:
-          type: string
-        status:
-          type: string
-        runningTime:
-          type: string
+    #    JobStatusData:
+    #      type: object
+    #      properties:
+    #        queryId:
+    #          type: string
+    #        status:
+    #          type: string
+    #        runningTime:
+    #          type: string
 
     Query:
       type: object
@@ -1137,15 +948,15 @@ components:
           schema:
             $ref: "#/components/schemas/SystemStatus"
 
-    QueryCreated:
-      description: query created response
+    PagedResponse:
+      description: query data response
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/QueryCreatedData"
+            $ref: "#/components/schemas/PagedResponseData"
 
     QueryResponse:
-      description: query data response
+      description: counts data response
       content:
         application/json:
           schema:
@@ -1158,9 +969,3 @@ components:
           schema:
             $ref: "#/components/schemas/ColumnsResponseData"
 
-    JobStatusResponse:
-      description: Get's Bigquery job id status
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/JobStatusData"

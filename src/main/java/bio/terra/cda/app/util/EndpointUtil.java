@@ -29,15 +29,4 @@ public class EndpointUtil {
         .filter(Objects::nonNull);
   }
 
-  public static Stream<? extends Class<?>> getFileClasses(DataSetInfo dataSetInfo) {
-    return getQueryGeneratorClasses()
-        .filter(
-            cls -> {
-              QueryGenerator generator = cls.getAnnotation(QueryGenerator.class);
-              TableInfo tableInfo = dataSetInfo.getTableInfo(generator.entity());
-              TableInfo fileTableInfo = dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX);
-              return Objects.nonNull(tableInfo.getPathToTable(fileTableInfo, true))
-                  && generator.hasFiles();
-            });
-  }
 }

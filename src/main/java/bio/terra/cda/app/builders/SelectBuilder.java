@@ -1,16 +1,17 @@
 package bio.terra.cda.app.builders;
 
-import bio.terra.cda.app.models.DataSetInfo;
-import bio.terra.cda.app.models.QueryField;
-import bio.terra.cda.app.models.Select;
-import bio.terra.cda.app.models.TableInfo;
+import bio.terra.cda.app.models.*;
 import bio.terra.cda.app.util.SqlUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class SelectBuilder {
+  @Autowired
+  RdbmsSchema rdbmsSchema;
+
   private final DataSetInfo dataSetInfo;
 
-  public SelectBuilder(DataSetInfo dataSetInfo) {
-    this.dataSetInfo = dataSetInfo;
+  public SelectBuilder() {
+    this.dataSetInfo = rdbmsSchema.getDataSetInfo();
   }
 
   public Select fromQueryField(QueryField queryField) {

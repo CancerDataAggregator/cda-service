@@ -1,23 +1,19 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.models.DataSetInfo;
+import bio.terra.cda.app.models.RdbmsSchema;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.operators.Select;
 import bio.terra.cda.app.operators.SelectValues;
 import bio.terra.cda.app.util.EndpointUtil;
 import bio.terra.cda.app.util.QueryUtil;
 import bio.terra.cda.generated.model.Query;
-import com.google.common.util.concurrent.UncheckedExecutionException;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CountsSqlGenerator extends SqlGenerator {
-  public CountsSqlGenerator(String qualifiedTable, Query rootQuery, String version)
-      throws IOException {
-    super(qualifiedTable, rootQuery, version, false);
+  public CountsSqlGenerator(Query rootQuery) {
+    super(rootQuery, false);
+    this.entityTable = RdbmsSchema.getDataSetInfo().getEntityTableInfo("subject");
   }
 
   @Override
@@ -26,17 +22,22 @@ public class CountsSqlGenerator extends SqlGenerator {
       Query query,
       boolean subQuery,
       boolean hasSubClause,
-      boolean ignoreWith)
-      throws UncheckedExecutionException, IllegalArgumentException {
-    Map<String, TableInfo> tableInfoMap = new HashMap<>();
+      boolean ignoreWith) {
+    List<String> primaryKeyFields = new ArrayList<>();
 
     EndpointUtil.getQueryGeneratorClasses()
         .forEach(
             clazz -> {
               var annotation = clazz.getAnnotation(QueryGenerator.class);
               TableInfo tableInfo = this.dataSetInfo.getTableInfo(annotation.entity());
+              if (this.entityTable == null) {
+                this.entityTable = tableInfo;
+              }
 
-              tableInfoMap.put(annotation.entity(), tableInfo);
+              // this can be removed when we have the mutations table in postgres
+              if (tableInfo != null) {
+                primaryKeyFields.addAll(tableInfo.getPrimaryKeysAlias());
+              }
             });
 
     // Add a select node to completely flatten out the result set
@@ -46,58 +47,31 @@ public class CountsSqlGenerator extends SqlGenerator {
             .l(
                 new SelectValues()
                     .nodeType(Query.NodeTypeEnum.SELECTVALUES)
-                    .value(
-                        tableInfoMap.keySet().stream()
-                            .map(
-                                key ->
-                                    tableInfoMap.get(key).getPartitionKeyFullName(this.dataSetInfo))
-                            .collect(Collectors.joining(","))))
+                    .value(String.join(",", primaryKeyFields)))
             .r(QueryUtil.deSelectifyQuery(query));
 
-    try {
-      String resultsAlias = "flattened_results";
-      String flattenedWith =
-          String.format(
-              "%s as (%s)",
-              resultsAlias,
-              new SqlGenerator(
-                      this.qualifiedTable,
-                      newQuery,
-                      this.version,
-                      false,
-                      this.parameterBuilder,
-                      this.viewListBuilder)
-                  .sql(this.qualifiedTable, newQuery, false, false, true));
-      String withStatement = String.format("WITH %s", flattenedWith);
+    String resultsAlias = "flattened_results";
+    String flattenedWith =
+        String.format(
+            "%s as (%s)",
+            resultsAlias,
+            new SqlGenerator(newQuery, false, this.parameterBuilder, this.viewListBuilder)
+                .sql(this.entityTable.getTableName(), newQuery, false, false, true));
+    String withStatement = String.format("WITH %s", flattenedWith);
 
-      if (this.viewListBuilder.hasAny() && !ignoreWith) {
-        withStatement = String.format("%s, %s", getWithStatement(), flattenedWith);
-      }
-      return String.format(
-          "%s SELECT %s FROM %s",
-          withStatement,
-          tableInfoMap.keySet().stream()
-              .map(
-                  key -> {
-                    TableInfo tableInfo = tableInfoMap.get(key);
-                    String entityPartitionKey = tableInfo.getPartitionKey();
-                    if (Objects.isNull(
-                        this.dataSetInfo.getSchemaDefinitionByFieldName(entityPartitionKey))) {
-                      entityPartitionKey =
-                          DataSetInfo.getNewNameForDuplicate(
-                              this.dataSetInfo.getKnownAliases(),
-                              entityPartitionKey,
-                              tableInfo.getTableName());
-                    }
-
-                    return String.format(
-                        "COUNT(DISTINCT %s) AS %s",
-                        entityPartitionKey, String.format("%s_count", key.toLowerCase()));
-                  })
-              .collect(Collectors.joining(", ")),
-          resultsAlias);
-    } catch (IOException e) {
-      throw new UncheckedExecutionException(e);
+    if (this.viewListBuilder.hasAny() && !ignoreWith) {
+      withStatement = String.format("%s, %s", getWithStatement(), flattenedWith);
     }
+    return String.format(
+        "%s SELECT %s FROM %s",
+        withStatement,
+        primaryKeyFields.stream()
+            .map(
+                field ->
+                    String.format(
+                        "COUNT(DISTINCT %s) AS %s",
+                        field, String.format("%s_count", field.toLowerCase())))
+            .collect(Collectors.joining(", ")),
+        resultsAlias);
   }
 }

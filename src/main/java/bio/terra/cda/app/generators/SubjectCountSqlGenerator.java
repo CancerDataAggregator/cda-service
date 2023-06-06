@@ -1,28 +1,26 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.model.Query;
-import java.io.IOException;
 
 @CountQueryGenerator(
-    entity = "Subject",
-    fieldsToCount = {
-      TableSchema.FILES_COLUMN,
-      "subject_identifier_system",
+    entity = "subject",
+    totalFieldsToCount = {
+        "id",
+        "file_subject.file_id",
+    },
+    groupedFieldsToCount = {
+      "subject_identifier.system",
       "sex",
       "race",
       "ethnicity",
       "cause_of_death"
     })
 public class SubjectCountSqlGenerator extends EntityCountSqlGenerator {
-  public SubjectCountSqlGenerator(String qualifiedTable, Query rootQuery, String version)
-      throws IOException {
-    super(qualifiedTable, rootQuery, version, false);
+  public SubjectCountSqlGenerator(Query rootQuery) {
+    super(rootQuery, false);
   }
 
-  public SubjectCountSqlGenerator(
-      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
-      throws IOException {
-    super(qualifiedTable, rootQuery, version, filesQuery);
+  public SubjectCountSqlGenerator(Query rootQuery, boolean filesQuery) {
+    super(rootQuery, filesQuery);
   }
 }

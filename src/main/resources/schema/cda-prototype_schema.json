@@ -1,0 +1,1743 @@
+[
+ {
+  "name": "statement_timeout",
+  "value": "0"
+ },
+ {
+  "name": "lock_timeout",
+  "value": "0"
+ },
+ {
+  "name": "idle_in_transaction_session_timeout",
+  "value": "0"
+ },
+ {
+  "name": "client_encoding",
+  "value": "'UTF8'"
+ },
+ {
+  "name": "standard_conforming_strings",
+  "value": "on"
+ },
+ {
+  "name": "check_function_bodies",
+  "value": "false"
+ },
+ {
+  "name": "xmloption",
+  "value": "content"
+ },
+ {
+  "name": "client_min_messages",
+  "value": "warning"
+ },
+ {
+  "name": "row_security",
+  "value": "off"
+ },
+ {
+  "schema": "public",
+  "type_name": "count_results",
+  "properties": {
+   "name": "text",
+   "count": "integer"
+  },
+  "base_type": null
+ },
+ {
+  "name": "default_table_access_method",
+  "value": "heap"
+ },
+ {
+  "columns": [
+   {
+    "name": "id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "primary_diagnosis",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "age_at_diagnosis",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "morphology",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "stage",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "grade",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "method_of_diagnosis",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "diagnosis_pkey",
+     "columns": [
+      "id"
+     ]
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "diagnosis"
+ },
+ {
+  "columns": [
+   {
+    "name": "diagnosis_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "system",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "field_name",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "value",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "diagnosis_identifier_pkey",
+     "columns": [
+      "diagnosis_id",
+      "system",
+      "field_name",
+      "value"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "diagnosis_id",
+     "constraint_name": "diagnosis_identifier_diagnosis_id_fkey",
+     "references": {
+      "table": "diagnosis",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "diagnosis_identifier"
+ },
+ {
+  "columns": [
+   {
+    "name": "diagnosis_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "diagnosis_treatment_pkey",
+     "columns": [
+      "diagnosis_id",
+      "treatment_id"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "diagnosis_id",
+     "constraint_name": "diagnosis_treatment_diagnosis_id_fkey",
+     "references": {
+      "table": "diagnosis",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    },
+    {
+     "name": "treatment_id",
+     "constraint_name": "diagnosis_treatment_treatment_id_fkey",
+     "references": {
+      "table": "treatment",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "diagnosis_treatment"
+ },
+ {
+  "columns": [
+   {
+    "name": "id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "label",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "data_category",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "data_type",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_format",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "drs_uri",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "byte_size",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "checksum",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "data_modality",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "imaging_modality",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "dbgap_accession_number",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "imaging_series",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "file_pkey",
+     "columns": [
+      "id"
+     ]
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "file"
+ },
+ {
+  "columns": [
+   {
+    "name": "file_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "associated_project",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "file_associated_project_pkey",
+     "columns": [
+      "file_id",
+      "associated_project"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "file_id",
+     "constraint_name": "file_id_fkey",
+     "references": {
+      "table": "file",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "file_associated_project"
+ },
+ {
+  "columns": [
+   {
+    "name": "file_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "system",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "field_name",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "value",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "file_identifier_pkey",
+     "columns": [
+      "file_id",
+      "system",
+      "field_name",
+      "value"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "file_id",
+     "constraint_name": "file_identifier_file_id_fkey",
+     "references": {
+      "table": "file",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "file_identifier"
+ },
+ {
+  "columns": [
+   {
+    "name": "file_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "file_specimen_pkey",
+     "columns": [
+      "file_id",
+      "specimen_id"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "file_id",
+     "constraint_name": "file_specimen_file_id_fkey",
+     "references": {
+      "table": "file",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    },
+    {
+     "name": "specimen_id",
+     "constraint_name": "file_specimen_specimen_id_fkey",
+     "references": {
+      "table": "specimen",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "file_specimen"
+ },
+ {
+  "columns": [
+   {
+    "name": "file_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "file_subject_pkey",
+     "columns": [
+      "file_id",
+      "subject_id"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "file_id",
+     "constraint_name": "file_subject_file_id_fkey",
+     "references": {
+      "table": "file",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    },
+    {
+     "name": "subject_id",
+     "constraint_name": "file_subject_subject_id_fkey",
+     "references": {
+      "table": "subject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "file_subject"
+ },
+ {
+  "columns": [
+   {
+    "name": "id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "member_of_research_project",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "primary_diagnosis_condition",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "primary_diagnosis_site",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "researchsubject_pkey",
+     "columns": [
+      "id"
+     ]
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "researchsubject"
+ },
+ {
+  "columns": [
+   {
+    "name": "researchsubject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "researchsubject_diagnosis_pkey",
+     "columns": [
+      "researchsubject_id",
+      "diagnosis_id"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "diagnosis_id",
+     "constraint_name": "researchsubject_diagnosis_diagnosis_id_fkey",
+     "references": {
+      "table": "diagnosis",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    },
+    {
+     "name": "researchsubject_id",
+     "constraint_name": "researchsubject_diagnosis_researchsubject_id_fkey",
+     "references": {
+      "table": "researchsubject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "researchsubject_diagnosis"
+ },
+ {
+  "columns": [
+   {
+    "name": "researchsubject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "system",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "field_name",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "value",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "researchsubject_identifier_pkey",
+     "columns": [
+      "researchsubject_id",
+      "system",
+      "field_name",
+      "value"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "researchsubject_id",
+     "constraint_name": "researchsubject_identifier_researchsubject_id_fkey",
+     "references": {
+      "table": "researchsubject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "researchsubject_identifier"
+ },
+ {
+  "columns": [
+   {
+    "name": "researchsubject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "researchsubject_specimen_pkey",
+     "columns": [
+      "researchsubject_id",
+      "specimen_id"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "researchsubject_id",
+     "constraint_name": "researchsubject_specimen_researchsubject_id_fkey",
+     "references": {
+      "table": "researchsubject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    },
+    {
+     "name": "specimen_id",
+     "constraint_name": "researchsubject_specimen_specimen_id_fkey",
+     "references": {
+      "table": "specimen",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "researchsubject_specimen"
+ },
+ {
+  "columns": [
+   {
+    "name": "researchsubject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "researchsubject_treatment_pkey",
+     "columns": [
+      "researchsubject_id",
+      "treatment_id"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "researchsubject_id",
+     "constraint_name": "researchsubject_treatment_researchsubject_id_fkey",
+     "references": {
+      "table": "researchsubject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    },
+    {
+     "name": "treatment_id",
+     "constraint_name": "researchsubject_treatment_treatment_id_fkey",
+     "references": {
+      "table": "treatment",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "researchsubject_treatment"
+ },
+ {
+  "columns": [
+   {
+    "name": "id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "associated_project",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "days_to_collection",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "primary_disease_type",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "anatomical_site",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "source_material_type",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_type",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "derived_from_specimen",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "derived_from_subject",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "specimen_pkey",
+     "columns": [
+      "id"
+     ]
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "specimen"
+ },
+ {
+  "columns": [
+   {
+    "name": "specimen_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "system",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "field_name",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "value",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "specimen_identifier_pkey",
+     "columns": [
+      "specimen_id",
+      "system",
+      "field_name",
+      "value"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "specimen_id",
+     "constraint_name": "specimen_identifier_specimen_id_fkey",
+     "references": {
+      "table": "specimen",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "specimen_identifier"
+ },
+ {
+  "columns": [
+   {
+    "name": "id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "species",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "sex",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "race",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "ethnicity",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "days_to_birth",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "vital_status",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "days_to_death",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "cause_of_death",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "subject_pkey",
+     "columns": [
+      "id"
+     ]
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "subject"
+ },
+ {
+  "columns": [
+   {
+    "name": "subject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "associated_project",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "subject_associated_project_pkey",
+     "columns": [
+      "subject_id",
+      "associated_project"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "subject_id",
+     "constraint_name": "subject_associated_project_subject_id_fkey",
+     "references": {
+      "table": "subject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "subject_associated_project"
+ },
+ {
+  "columns": [
+   {
+    "name": "subject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "system",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "field_name",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "value",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "subject_identifier_pkey",
+     "columns": [
+      "subject_id",
+      "system",
+      "field_name",
+      "value"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "subject_id",
+     "constraint_name": "subject_identifier_subject_id_fkey",
+     "references": {
+      "table": "subject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "subject_identifier"
+ },
+ {
+  "columns": [
+   {
+    "name": "subject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "researchsubject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "subject_researchsubject_pkey",
+     "columns": [
+      "subject_id",
+      "researchsubject_id"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "researchsubject_id",
+     "constraint_name": "subject_researchsubject_researchsubject_id_fkey",
+     "references": {
+      "table": "researchsubject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    },
+    {
+     "name": "subject_id",
+     "constraint_name": "subject_researchsubject_subject_id_fkey",
+     "references": {
+      "table": "subject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "subject_researchsubject"
+ },
+ {
+  "columns": [
+   {
+    "name": "id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_type",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_outcome",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "days_to_treatment_start",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "days_to_treatment_end",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "therapeutic_agent",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_anatomic_site",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_effect",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_end_reason",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "number_of_cycles",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "treatment_pkey",
+     "columns": [
+      "id"
+     ]
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "treatment"
+ },
+ {
+  "columns": [
+   {
+    "name": "treatment_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "system",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "field_name",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "value",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "treatment_identifier_pkey",
+     "columns": [
+      "treatment_id",
+      "system",
+      "field_name",
+      "value"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "treatment_id",
+     "constraint_name": "treatment_identifier_treatment_id_fkey",
+     "references": {
+      "table": "treatment",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "treatment_identifier"
+ }
+]

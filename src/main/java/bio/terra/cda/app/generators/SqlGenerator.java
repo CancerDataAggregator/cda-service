@@ -1,88 +1,59 @@
 package bio.terra.cda.app.generators;
 
-import bio.terra.cda.app.builders.OrderByBuilder;
-import bio.terra.cda.app.builders.ParameterBuilder;
-import bio.terra.cda.app.builders.PartitionBuilder;
-import bio.terra.cda.app.builders.QueryFieldBuilder;
-import bio.terra.cda.app.builders.SelectBuilder;
-import bio.terra.cda.app.builders.UnnestBuilder;
-import bio.terra.cda.app.builders.ViewBuilder;
-import bio.terra.cda.app.builders.ViewListBuilder;
-import bio.terra.cda.app.models.DataSetInfo;
-import bio.terra.cda.app.models.OrderBy;
-import bio.terra.cda.app.models.Partition;
-import bio.terra.cda.app.models.Select;
-import bio.terra.cda.app.models.TableInfo;
-import bio.terra.cda.app.models.TableRelationship;
-import bio.terra.cda.app.models.Unnest;
-import bio.terra.cda.app.models.View;
+import bio.terra.cda.app.builders.*;
+import bio.terra.cda.app.models.*;
 import bio.terra.cda.app.operators.BasicOperator;
-import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.app.util.SqlTemplate;
-import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
+import bio.terra.cda.app.util.*;
 import bio.terra.cda.generated.model.Query;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import com.google.common.base.Strings;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+
 public class SqlGenerator {
-  final String qualifiedTable;
+
   final Query rootQuery;
-  final String version;
-  final String table;
-  final String fileTable;
-  final String project;
-  final TableSchema.TableDefinition tableDefinition;
   final DataSetInfo dataSetInfo;
   final boolean filesQuery;
-  List<String> filteredFields;
+
+  Map<ColumnDefinition, String> aggregatedFieldsAndSelectString = new LinkedHashMap<>();
   boolean modularEntity;
-  UnnestBuilder unnestBuilder;
-  SelectBuilder selectBuilder;
-  QueryFieldBuilder queryFieldBuilder;
-  PartitionBuilder partitionBuilder;
-  ParameterBuilder parameterBuilder;
-  ViewListBuilder<View, ViewBuilder> viewListBuilder;
-  OrderByBuilder orderByBuilder;
+  SelectBuilder selectBuilder = new SelectBuilder();
+  QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(false);
+
+  QueryFieldBuilder filesQueryFieldBuilder = new  QueryFieldBuilder(true);
+  ParameterBuilder parameterBuilder = new ParameterBuilder();
+
+  JoinBuilder joinBuilder = new JoinBuilder();
+  ViewListBuilder<View, ViewBuilder> viewListBuilder = new ViewListBuilder<>(ViewBuilder.class);
+  OrderByBuilder orderByBuilder = new OrderByBuilder();
+
+  OrderBy defaultOrderBy;
   TableInfo entityTable;
 
-  public SqlGenerator(String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
-      throws IOException {
-    this.qualifiedTable = qualifiedTable;
+  String querySql;
+
+
+  public SqlGenerator(Query rootQuery, boolean filesQuery) {
     this.rootQuery = rootQuery;
-    this.version = version;
     this.filesQuery = filesQuery;
-    int dotPos = qualifiedTable.lastIndexOf('.');
-    this.project = dotPos == -1 ? "" : qualifiedTable.substring(0, dotPos);
-    this.table = dotPos == -1 ? qualifiedTable : qualifiedTable.substring(dotPos + 1);
-    this.fileTable =
-        dotPos == -1
-            ? qualifiedTable.replace("Subjects", TableSchema.FILES_COLUMN)
-            : qualifiedTable.substring(dotPos + 1).replace("Subjects", TableSchema.FILES_COLUMN);
-    this.tableDefinition = TableSchema.getSchema(version);
-    this.dataSetInfo =
-        new DataSetInfo.DataSetInfoBuilder().addTableSchema(version, this.tableDefinition).build();
+    this.dataSetInfo = RdbmsSchema.getDataSetInfo();
+
 
     preInit();
     initializeEntityFields();
-    initializeBuilders();
   }
 
   public SqlGenerator(
-      String qualifiedTable,
       Query rootQuery,
-      String version,
       boolean filesQuery,
       ParameterBuilder parameterBuilder,
-      ViewListBuilder<View, ViewBuilder> viewListBuilder)
-      throws IOException {
-    this(qualifiedTable, rootQuery, version, filesQuery);
+      ViewListBuilder<View, ViewBuilder>  viewListBuilder) {
+    this(rootQuery, filesQuery);
 
     this.parameterBuilder = parameterBuilder;
     this.viewListBuilder = viewListBuilder;
@@ -95,58 +66,50 @@ public class SqlGenerator {
 
   protected void initializeEntityFields() {
     QueryGenerator queryGenerator = this.getClass().getAnnotation(QueryGenerator.class);
-    this.modularEntity = queryGenerator != null;
+//    this.modularEntity = queryGenerator != null;
 
-    this.entityTable =
-        queryGenerator != null
-            ? this.dataSetInfo.getTableInfo(queryGenerator.entity())
-            : this.dataSetInfo.getTableInfo(version);
+    if (queryGenerator != null) {
+      this.entityTable = this.dataSetInfo.getTableInfo(queryGenerator.entity());
 
-    this.filteredFields =
-        Arrays.stream(this.entityTable.getSchemaDefinitions())
-            .filter(TableSchema.SchemaDefinition::isExcludeFromSelect)
-            .map(TableSchema.SchemaDefinition::getName)
+      String defaultOrderByField = queryGenerator.defaultOrderBy();
+      if (!Strings.isNullOrEmpty(defaultOrderByField)) {
+        defaultOrderBy = orderByBuilder.fromQueryField(queryFieldBuilder.fromPath(defaultOrderByField));
+      }
+      List<ColumnDefinition> colList = Arrays.stream(queryGenerator.aggregatedFields())
+            .map(field -> dataSetInfo.getColumnDefinitionByFieldName(field))
             .collect(Collectors.toList());
+      List<String> selectList = Arrays.asList(queryGenerator.aggregatedFieldsSelectString());
+      this.aggregatedFieldsAndSelectString = IntStream.range(0, colList.size())
+          .boxed()
+          .collect(Collectors.toMap(colList::get, selectList::get));
+    } else {
+      this.entityTable = this.dataSetInfo.getEntityTableInfo("subject");
+    }
   }
 
-  protected void initializeBuilders() {
-    this.queryFieldBuilder = new QueryFieldBuilder(this.dataSetInfo, filesQuery);
-    this.selectBuilder = new SelectBuilder(this.dataSetInfo);
-    this.viewListBuilder = new ViewListBuilder<>(ViewBuilder.class, this.dataSetInfo, this.project);
-    this.unnestBuilder =
-        new UnnestBuilder(
-            this.queryFieldBuilder,
-            this.viewListBuilder,
-            this.dataSetInfo,
-            this.entityTable,
-            project);
-    this.partitionBuilder = new PartitionBuilder(this.dataSetInfo);
-    this.parameterBuilder = new ParameterBuilder();
-    this.orderByBuilder = new OrderByBuilder();
-  }
-
-  protected QueryContext buildQueryContext(
+  public QueryContext buildQueryContext(
       TableInfo entityTable, boolean filesQuery, boolean subQuery) {
-    return new QueryContext(table, project)
+    return new QueryContext(entityTable.getTableName())
         .setFilesQuery(filesQuery)
         .setTableInfo(entityTable)
         .setIncludeSelect(!subQuery)
         .setQueryFieldBuilder(queryFieldBuilder)
         .setSelectBuilder(selectBuilder)
-        .setUnnestBuilder(unnestBuilder)
-        .setPartitionBuilder(partitionBuilder)
+        .setJoinBuilder(joinBuilder)
         .setParameterBuilder(parameterBuilder)
         .setOrderByBuilder(orderByBuilder)
         .setViewListBuilder(viewListBuilder);
   }
 
-  public QueryJobConfiguration.Builder generate() throws IllegalArgumentException {
-    String querySql = sql(qualifiedTable, rootQuery, false, false, false);
-    QueryJobConfiguration.Builder queryJobConfigBuilder =
-        QueryJobConfiguration.newBuilder(querySql);
+  protected String generate() throws IllegalArgumentException {
+      return sql(entityTable.getTableName(), rootQuery, false, false, false);
+  }
 
-    this.parameterBuilder.getParameterValueMap().forEach(queryJobConfigBuilder::addNamedParameter);
-    return queryJobConfigBuilder;
+  public String getSqlString() {
+    if (Strings.isNullOrEmpty(this.querySql)) {
+      this.querySql = generate();
+    }
+    return this.querySql;
   }
 
   protected String sql(
@@ -158,8 +121,7 @@ public class SqlGenerator {
       throws IllegalArgumentException {
     QueryContext ctx = buildQueryContext(this.entityTable, filesQuery, subQuery);
 
-    String queryResult = resultsQuery(query, tableOrSubClause, subQuery, ctx, hasSubClause);
-    String results = subQuery ? queryResult : SqlTemplate.resultsWrapper(queryResult);
+    String results = resultsQuery(query, tableOrSubClause, subQuery, ctx, hasSubClause);
 
     String withStatement = "";
     if (this.viewListBuilder.hasAny() && !ignoreWith) {
@@ -169,6 +131,22 @@ public class SqlGenerator {
     return String.format("%s%s", withStatement, results);
   }
 
+  public String getReadableQuerySql() {
+    // TODO should we be adding the offset and limit to the readable sql query?
+    return this.parameterBuilder.substituteForReadableString(getSqlString());
+  }
+
+  public String getReadableQuerySql(Integer offset, Integer limit) {
+    // TODO should we be adding the offset and limit to the readable sql query?
+
+    return SqlTemplate.addPagingFields(getReadableQuerySql(), offset, limit);
+  }
+
+
+  public MapSqlParameterSource getNamedParameterMap() {
+    return this.parameterBuilder.getParameterValueMap();
+  }
+
   protected String resultsQuery(
       Query query,
       String tableOrSubClause,
@@ -176,15 +154,7 @@ public class SqlGenerator {
       QueryContext ctx,
       boolean hasSubClause) {
     TableInfo tableInfo = ctx.getTableInfo();
-
-    TableRelationship[] pathToFile =
-        tableInfo.getPathToTable(this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX));
-    TableRelationship[] entityPath = tableInfo.getTablePath();
-
-    TableInfo startTable =
-        Objects.isNull(entityPath) || entityPath.length == 0
-            ? this.entityTable
-            : entityPath[0].getFromTableInfo();
+    TableInfo startTable = this.entityTable;
 
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
@@ -202,18 +172,10 @@ public class SqlGenerator {
           true);
     }
 
-    ctx.addUnnests(
-        this.unnestBuilder.fromRelationshipPath(entityPath, SqlUtil.JoinType.INNER, false));
-
-    if (filesQuery) {
-      ctx.addUnnests(
-          this.unnestBuilder.fromRelationshipPath(pathToFile, SqlUtil.JoinType.INNER, false));
-    }
-
     String condition = ((BasicOperator) query).buildQuery(ctx);
     String selectFields = subQuery
             ? ""
-            : getSelect(ctx, tableInfo.getTableAlias(this.dataSetInfo), !this.modularEntity)
+            : getSelect(ctx)
                 .collect(Collectors.joining(", "));
 
     var fromClause =
@@ -222,151 +184,109 @@ public class SqlGenerator {
                 ? Stream.of(tableOrSubClause)
                 : Stream.of(
                     String.format(
-                        "%s.%s AS %s",
-                        project,
+                        "%s AS %s",
                         startTable.getTableName(),
                         startTable.getTableAlias(this.dataSetInfo))),
-            ctx.getUnnests().stream().map(Unnest::toString));
+            ctx.getJoins().stream().flatMap(joins -> joins.stream().map(join -> SqlTemplate.join(join))));
 
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
 
+    String orderBys = ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", "));
+    if (Strings.isNullOrEmpty(orderBys) && !Objects.isNull(defaultOrderBy)) {
+      orderBys = defaultOrderBy.toString();
+    }
     if (subQuery) {
       return SqlTemplate.regularQuery(
               String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
               fromString,
               condition,
-              ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+              orderBys);
     }
 
     return SqlTemplate.resultsQuery(
-        getPartitionByFields(ctx).collect(Collectors.joining(", ")),
         selectFields,
         fromString,
         condition,
-        ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", ")));
+        ctx.getGroupBys(),
+        orderBys);
   }
 
-  protected Stream<String> getPartitionByFields(QueryContext ctx) {
-    return Stream.concat(
-            Stream.of(
-                ctx.getFilesQuery()
-                    ? this.dataSetInfo
-                        .getTableInfo(TableSchema.FILE_PREFIX)
-                        .getPartitionKeyAlias(this.dataSetInfo)
-                    : ctx.getTableInfo().getPartitionKeyAlias(this.dataSetInfo)),
-            ctx.getPartitions().stream().map(Partition::toString))
-        .distinct();
-  }
-
-  protected Stream<String> getSelect(QueryContext ctx, String table, boolean skipExcludes) {
+  protected Stream<String> getSelect(QueryContext ctx) {
     if (!ctx.getSelect().isEmpty()) {
       return ctx.getSelect().stream().map(Select::toString);
     } else {
       return getSelectsFromEntity(
           ctx,
-          ctx.getFilesQuery()
-              ? this.dataSetInfo
-                  .getTableInfo(TableSchema.FILE_PREFIX)
-                  .getTableAlias(this.dataSetInfo)
-              : table,
-          skipExcludes);
+          this.filesQuery ? FileSqlGenerator.getExternalFieldsAndSqlString() :
+          getAggregatedFieldsAndSelectString());
     }
+  }
+
+  protected Map<ColumnDefinition, String> getAggregatedFieldsAndSelectString() {
+    return aggregatedFieldsAndSelectString;
   }
 
   protected Stream<String> getSelectsFromEntity(
-      QueryContext ctx, String prefix, boolean skipExcludes) {
-    Stream<String> idSelects = Stream.of();
+      QueryContext ctx, Map<ColumnDefinition, String> aggregateFields) {
 
-    if (this.entityTable.getType().equals(TableInfo.TableInfoTypeEnum.NESTED)
-        || ctx.getFilesQuery()) {
-      var path = this.entityTable.getTablePath();
-
-      String entityPartitionKey = this.entityTable.getPartitionKey();
-      if (Objects.isNull(this.dataSetInfo.getSchemaDefinitionByFieldName(entityPartitionKey))) {
-        entityPartitionKey =
-            DataSetInfo.getNewNameForDuplicate(
-                this.dataSetInfo.getKnownAliases(),
-                entityPartitionKey,
-                this.entityTable.getTableName());
+    aggregateFields.keySet().forEach(col -> {
+      if (!this.entityTable.getTableName().equals(col.getTableName())) {
+        List<Join> path =
+            ctx.getJoinBuilder()
+                .getPath(
+                    this.entityTable.getTableName(), col.getTableName(), col.getName());
+        ctx.addJoins(path);
       }
+    });
 
-      idSelects =
-          Stream.concat(
-              Stream.of(
-                  String.format(
-                      "%s AS %s",
-                      this.entityTable.getPartitionKeyAlias(this.dataSetInfo), entityPartitionKey)),
-              Arrays.stream(path)
-                  .map(
-                      tableRelationship -> {
-                        TableInfo fromTableInfo = tableRelationship.getFromTableInfo();
+    Set<ColumnDefinition> columns = new LinkedHashSet<>();
 
-                        String partitionKey = fromTableInfo.getPartitionKey();
-                        if (Objects.isNull(
-                            this.dataSetInfo.getSchemaDefinitionByFieldName(partitionKey))) {
-                          partitionKey =
-                              DataSetInfo.getNewNameForDuplicate(
-                                  this.dataSetInfo.getKnownAliases(),
-                                  partitionKey,
-                                  fromTableInfo.getTableName());
-                        }
+    if (filesQuery) {
+      columns.addAll(this.entityTable.getPrimaryKeys());
+      columns.addAll(Arrays.asList(dataSetInfo.getTableInfo("file").getColumnDefinitions()));
+    } else {
+      columns.addAll(Arrays.asList(this.entityTable.getColumnDefinitions()));
 
-                        return String.format(
-                            "%s AS %s",
-                            fromTableInfo.getPartitionKeyAlias(this.dataSetInfo), partitionKey);
-                      }));
-
-      if (path.length > 0) {
-        ctx.addPartitions(this.partitionBuilder.fromRelationshipPath(path));
-      } else {
-        ctx.addPartitions(
-            Stream.of(
-                this.partitionBuilder.of(
-                    this.entityTable.getPartitionKey(),
-                    this.entityTable.getPartitionKeyAlias(this.dataSetInfo))));
-      }
     }
-    return combinedSelects(ctx, prefix, skipExcludes, idSelects);
-  }
-
-  protected Stream<String> combinedSelects(
-      QueryContext ctx, String prefix, boolean skipExcludes, Stream<String> idSelects) {
-    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(TableSchema.FILE_PREFIX);
-    List<String> fileFilteredFields =
-        Arrays.stream(fileTableInfo.getSchemaDefinitions())
-            .filter(TableSchema.SchemaDefinition::isExcludeFromSelect)
-            .map(TableSchema.SchemaDefinition::getName)
-            .collect(Collectors.toList());
-
     return Stream.concat(
-            Arrays.stream(
-                    ctx.getFilesQuery()
-                        ? this.dataSetInfo
-                            .getTableInfo(TableSchema.FILE_PREFIX)
-                            .getSchemaDefinitions()
-                        : this.entityTable.getSchemaDefinitions())
-                .filter(
-                    definition ->
-                        !(ctx.getFilesQuery() && fileFilteredFields.contains(definition.getName()))
-                            && (skipExcludes || !filteredFields.contains(definition.getName())))
-                .map(
-                    definition -> {
-                      String fieldSelect = String.format("%s.%s", prefix, definition.getName());
-
-                      if (definition.getMode().equals(Field.Mode.REPEATED.toString())
-                          && ctx.getOrderBys().stream()
-                              .anyMatch(ob -> ob.getFieldName().equals(definition.getName()))) {
-                        fieldSelect =
-                            this.dataSetInfo
-                                .getTableInfo(definition.getName())
-                                .getTableAlias(this.dataSetInfo);
-                      }
-
-                      return String.format("%1$s AS %2$s", fieldSelect, definition.getAlias());
-                    }),
-            idSelects)
-        .distinct();
+        columns.stream()
+            .map(
+                col -> {
+                    ctx.addGroupBy(col);
+                  return String.format(
+                      "%1$s.%2$s AS %3$s", col.getTableName(), col.getName(), col.getAlias());
+                }),
+        aggregateFields.values().stream());
   }
+
+//  protected Stream<String> combinedSelects(
+//      QueryContext ctx, String prefix, Stream<String> idSelects) {
+//    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(RdbmsSchema.FILE_TABLE);
+////    List<String> fileFilteredFields =
+////        Arrays.stream(fileTableInfo.getColumnDefinitions())
+////            .filter(ColumnDefinition::isExcludeFromSelect)
+////            .map(ColumnDefinition::getName)
+////            .collect(Collectors.toList());
+//
+//    return Stream.concat(
+//            Arrays.stream(
+//                    ctx.getFilesQuery()
+//                        ? this.dataSetInfo
+//                            .getTableInfo(RdbmsSchema.FILE_TABLE)
+//                            .getColumnDefinitions()
+//                        : this.entityTable.getColumnDefinitions())
+////                .filter(
+////                    definition ->
+////                        !(ctx.getFilesQuery() && fileFilteredFields.contains(definition.getName()))
+////                            && (skipExcludes || !filteredFields.contains(definition.getName())))
+//                .map(
+//                    definition -> {
+//                      String fieldSelect = String.format("%s.%s", prefix, definition.getName());
+//                      return String.format("%1$s AS %2$s", fieldSelect, definition.getName());
+//                    }),
+//            idSelects)
+//        .distinct();
+//  }
 
   protected String getWithStatement() {
     return String.format(

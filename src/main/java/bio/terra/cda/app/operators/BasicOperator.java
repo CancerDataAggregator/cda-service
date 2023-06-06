@@ -23,9 +23,9 @@ public class BasicOperator extends Query {
     return parent;
   }
 
-  protected void addUnnests(QueryContext ctx) {
-    ctx.addUnnests(
-        ctx.getUnnestBuilder()
-            .fromQueryField(ctx.getQueryFieldBuilder().fromPath(getValue()), true));
+  protected void addJoins(QueryContext ctx) {
+    ctx.addJoins(
+        ctx.getJoinBuilder()
+            .getJoinsFromQueryField(ctx.getTable(), ctx.getQueryFieldBuilder().fromPath(getValue())));
   }
 }

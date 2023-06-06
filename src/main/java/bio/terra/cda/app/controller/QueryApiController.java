@@ -1,50 +1,25 @@
 package bio.terra.cda.app.controller;
 
 import bio.terra.cda.app.aop.TrackExecutionTime;
-import bio.terra.cda.app.builders.ColumnsReturnBuilder;
+import bio.terra.cda.app.builders.JoinBuilder;
 import bio.terra.cda.app.builders.QueryFieldBuilder;
-import bio.terra.cda.app.builders.UnnestBuilder;
-import bio.terra.cda.app.builders.ViewBuilder;
-import bio.terra.cda.app.builders.ViewListBuilder;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
-import bio.terra.cda.app.generators.CountsSqlGenerator;
-import bio.terra.cda.app.generators.DiagnosisCountSqlGenerator;
-import bio.terra.cda.app.generators.DiagnosisSqlGenerator;
-import bio.terra.cda.app.generators.FileSqlGenerator;
-import bio.terra.cda.app.generators.MutationCountSqlGenerator;
-import bio.terra.cda.app.generators.MutationSqlGenerator;
-import bio.terra.cda.app.generators.ResearchSubjectCountSqlGenerator;
-import bio.terra.cda.app.generators.ResearchSubjectSqlGenerator;
-import bio.terra.cda.app.generators.SpecimenCountSqlGenerator;
-import bio.terra.cda.app.generators.SpecimenSqlGenerator;
-import bio.terra.cda.app.generators.SubjectCountSqlGenerator;
-import bio.terra.cda.app.generators.SubjectSqlGenerator;
-import bio.terra.cda.app.generators.TreatmentCountSqlGenerator;
-import bio.terra.cda.app.generators.TreatmentSqlGenerator;
-import bio.terra.cda.app.models.DataSetInfo;
-import bio.terra.cda.app.models.QueryField;
-import bio.terra.cda.app.models.TableInfo;
-import bio.terra.cda.app.models.TableRelationship;
-import bio.terra.cda.app.models.Unnest;
-import bio.terra.cda.app.models.View;
+import bio.terra.cda.app.generators.*;
+import bio.terra.cda.app.models.*;
 import bio.terra.cda.app.service.QueryService;
-import bio.terra.cda.app.service.exception.BadQueryException;
+import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
-import bio.terra.cda.app.util.TableSchema;
 import bio.terra.cda.generated.controller.QueryApi;
 import bio.terra.cda.generated.model.ColumnsResponseData;
-import bio.terra.cda.generated.model.JobStatusData;
+import bio.terra.cda.generated.model.PagedResponseData;
 import bio.terra.cda.generated.model.Query;
-import bio.terra.cda.generated.model.QueryCreatedData;
 import bio.terra.cda.generated.model.QueryResponseData;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.cloud.bigquery.BigQueryException;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import java.io.IOException;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -52,6 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,575 +44,424 @@ public class QueryApiController implements QueryApi {
   private final ApplicationConfiguration applicationConfiguration;
   private final HttpServletRequest webRequest;
 
+  private final RdbmsSchema rdbmsSchema;
+
   @Autowired
   public QueryApiController(
       QueryService queryService,
       ApplicationConfiguration applicationConfiguration,
-      HttpServletRequest webRequest) {
+      HttpServletRequest webRequest,
+      RdbmsSchema rdbmsSchema) {
     this.queryService = queryService;
     this.applicationConfiguration = applicationConfiguration;
     this.webRequest = webRequest;
+    this.rdbmsSchema = rdbmsSchema;
   }
 
-  // region Query Endpoints/Helpers
-  private String createNextUrl(String jobId, int offset, int limit) {
-    var path = String.format("/api/v1/query/%s?offset=%s&limit=%s", jobId, offset, limit);
+  protected PagedResponseData handleRequest(
+      boolean dryRun, SqlGenerator sqlGenerator, Boolean includeCount, Integer offset, Integer limit) {
+    return dryRun ? dryRun(sqlGenerator, offset, limit) : runPagedQueryAndReturn(sqlGenerator, includeCount, offset, limit);
+  }
 
-    try {
-      URL baseUrl = new URL(webRequest.getHeader("referer"));
-      return new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPort(), path).toString();
-    } catch (MalformedURLException e) {
-      // Not sure what a good fallback would be here.
-      return path;
+  protected QueryResponseData handleRequest(
+      boolean dryRun, SqlGenerator sqlGenerator) {
+    return dryRun ? dryRun(sqlGenerator) : runAndReturn(sqlGenerator);
+  }
+
+  private PagedResponseData checkAndSetNextUrl(PagedResponseData response, String endpoint, int offset, int limit) {
+    List<Object> result = response.getResult();
+    if (result != null && result.size() == limit) {
+      var path = String.format("/api/v1/%s?offset=%s&limit=%s", endpoint, offset+limit, limit);
+
+      try {
+        URL baseUrl = new URL(webRequest.getHeader("referer"));
+        response.setNextUrl(new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPort(), path).toString());
+      } catch (MalformedURLException e) {
+        // Not sure what a good fallback would be here.
+        logger.error("Error creating next url", e);
+      }
     }
+    return response;
+
   }
 
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryResponseData> query(String id, Integer offset, Integer limit) {
-    var result = queryService.getQueryResults(id, offset, limit);
-    var response =
+
+  protected QueryResponseData runAndReturn(
+      SqlGenerator sqlGenerator) {
+    long start = System.currentTimeMillis();
+    List<JsonNode> result = queryService.generateAndRunQuery(sqlGenerator);
+    String readableSql = sqlGenerator.getReadableQuerySql();
+    queryService.logQuery(System.currentTimeMillis()-start, readableSql, result, Optional.empty());
+    return new QueryResponseData()
+            .querySql(readableSql)
+            .result(Collections.unmodifiableList(result));
+  }
+
+  protected PagedResponseData runPagedQueryAndReturn(SqlGenerator sqlGenerator, Boolean includeCount, Integer offset, Integer limit) {
+    long start = System.currentTimeMillis();
+    PagedResponseData response = new PagedResponseData();
+    Optional<Float> countDuration = Optional.empty();
+    if (includeCount) {
+      // TODO Use a future for concurrent execution
+      response.totalRowCount(queryService.getTotalRowCount(sqlGenerator));
+      countDuration = Optional.of((System.currentTimeMillis() - start)/1000.0F);
+      start = System.currentTimeMillis();
+    }
+    List<JsonNode> result = queryService.generateAndRunPagedQuery(sqlGenerator, offset, limit);
+
+    String readableSql = sqlGenerator.getReadableQuerySql(offset, limit);
+    queryService.logQuery(System.currentTimeMillis()-start, readableSql, result, countDuration);
+    return //new ResponseEntity<>(
+        response
+            .querySql(readableSql)
+            .result(Collections.unmodifiableList(result));
+//        HttpStatus.OK);
+
+  }
+
+  protected QueryResponseData dryRun(
+      SqlGenerator sqlGenerator
+  ) {
+    return //new ResponseEntity<>(
         new QueryResponseData()
-            .result(Collections.unmodifiableList(result.items))
-            .totalRowCount(result.totalRowCount)
-            .querySql(result.querySql);
-    int nextPage = result.items.size() + limit;
-    if (result.totalRowCount == null || nextPage <= result.totalRowCount) {
-      response.nextUrl(createNextUrl(id, nextPage, limit));
-    }
+            .querySql(sqlGenerator.getReadableQuerySql());
+//        HttpStatus.OK);
 
-    return ResponseEntity.ok(response);
   }
 
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<JobStatusData> jobStatus(String id) {
-    var response = queryService.getQueryStatusFromJob(id);
-    logger.info("JobStatusController: {}", response);
-    return ResponseEntity.ok(response);
+  protected PagedResponseData dryRun(
+      SqlGenerator sqlGenerator, Integer offset, Integer limit
+  ) {
+    return
+//    return new ResponseEntity<>(
+        new PagedResponseData()
+            .querySql(sqlGenerator.getReadableQuerySql(offset, limit));
+//        HttpStatus.OK);
+
   }
-
-  private ResponseEntity<QueryCreatedData> sendQuery(
-      QueryJobConfiguration.Builder configBuilder, boolean dryRun) {
-    var response = new QueryCreatedData();
-
-    try {
-      response = queryService.startQuery(configBuilder, dryRun);
-    } catch (BigQueryException e) {
-      throw new BadQueryException("Could not create job");
-    }
-
-    return new ResponseEntity<>(response, HttpStatus.OK);
-  }
-  // endregion
 
   // region Global Queries
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> bulkData(String version, String table) {
-    String querySql = "SELECT * FROM " + table + "." + version;
-    QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
-    return sendQuery(queryJobBuilder, false);
+  public ResponseEntity<PagedResponseData> bulkData(
+      @Valid String table, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    logger.info("executing bulkData query");
+    assert(RdbmsSchema.getDataSetInfo().getTableInfo(table) != null);
+    String querySql = "SELECT * FROM " + table;
+    List<JsonNode> result = queryService.runPagedQuery(querySql, offset, limit);
+    return new ResponseEntity<>(
+        new PagedResponseData()
+            .querySql(querySql)
+            .result(Collections.unmodifiableList(result)),
+        HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> booleanQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<PagedResponseData> booleanQuery(
+      @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response = handleRequest(dryRun, new SubjectSqlGenerator(body, false), includeCount, offset, limit);
+    checkAndSetNextUrl(response, "boolean-query", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> uniqueValues(
-      String version, String body, String system, String table, Boolean count) {
-    String tableName;
-    DataSetInfo dataSetInfo;
+  public ResponseEntity<PagedResponseData> uniqueValues(
+      @Valid String body,  @Valid String system,  @Valid Boolean count, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    DataSetInfo dataSetInfo = RdbmsSchema.getDataSetInfo();
 
-    try {
-      dataSetInfo =
-          new DataSetInfo.DataSetInfoBuilder()
-              .addTableSchema(version, TableSchema.getSchema(version))
-              .build();
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-
-    QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(dataSetInfo, false);
+    QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(false);
     QueryField queryField = queryFieldBuilder.fromPath(body);
 
-    TableSchema.SchemaDefinition schemaDefinition =
-        dataSetInfo.getSchemaDefinitionByFieldName(body);
     TableInfo tableInfo = dataSetInfo.getTableInfoFromField(body);
-    TableRelationship[] tablePath = tableInfo.getTablePath();
-
-    String project = table == null ? applicationConfiguration.getBqTable() : table;
-    ViewListBuilder<View, ViewBuilder> viewListBuilder =
-        new ViewListBuilder<>(ViewBuilder.class, dataSetInfo, project);
-    UnnestBuilder unnestBuilder =
-        new UnnestBuilder(queryFieldBuilder, viewListBuilder, dataSetInfo, tableInfo, project);
-
-    tableName =
-        String.format(
-            "%s.%s AS %s ",
-            project,
-            tableInfo.getSuperTableInfo().getTableName(),
-            tableInfo.getSuperTableInfo().getTableAlias(dataSetInfo));
-
+    String tableName = tableInfo.getTableName();
     List<String> whereClauses = new ArrayList<>();
-
-    Stream<Unnest> unnestStream = Stream.empty();
-    unnestStream =
-        Stream.concat(
-            unnestStream,
-            unnestBuilder.fromRelationshipPath(tablePath, SqlUtil.JoinType.INNER, true));
+    JoinBuilder jb = new JoinBuilder();
+    List<Join> pathToSystem = Collections.emptyList();
 
     if (system != null && system.length() > 0) {
-      TableInfo newTableInfo = tableInfo.getType().equals(TableInfo.TableInfoTypeEnum.ARRAY)
-              ? tableInfo
-                .getRelationships()
-                .stream()
-                .filter(TableRelationship::isParent)
-                .findFirst()
-                .orElseThrow()
-                .getDestinationTableInfo()
-              : tableInfo;
-      String tbl = dataSetInfo
-              .getKnownAliases()
-              .getOrDefault(
-                      newTableInfo.getAdjustedTableName(), newTableInfo.getAdjustedTableName())
-              .toLowerCase(Locale.ROOT);
-      TableInfo identifierTable =
-              dataSetInfo.getTableInfo(
-                      tbl
-                              + (tbl.contains("_identifier") ? "" : "_identifier"));
-
-      if (Objects.isNull(identifierTable)) {
-        identifierTable = dataSetInfo.getTableInfo("subject_identifier");
-      }
-      TableRelationship[] pathToIdentifier = newTableInfo.getPathToTable(identifierTable);
-
-      unnestStream =
-          Stream.concat(
-              unnestStream,
-              unnestBuilder.fromRelationshipPath(pathToIdentifier, SqlUtil.JoinType.INNER, true));
+      String toTable = tableName + "_identifier";
+      pathToSystem = jb.getPath(tableName, toTable, "system", SqlUtil.JoinType.LEFT);
 
       QueryField systemField =
-          queryFieldBuilder.fromPath(identifierTable.getAdjustedTableName() + "_system");
-      whereClauses.add(systemField.getColumnText() + " = '" + system + "'");
+          queryFieldBuilder.fromPath( toTable + "_system");
+      whereClauses.add(systemField.getName() + " = '" + system + "'");
     }
 
-    String unnestConcat = unnestStream.map(Unnest::toString).collect(Collectors.joining(" "));
-    var querySql = "";
-
+    String querySql;
     String whereStr = "";
     if (!whereClauses.isEmpty()) {
       whereStr = " WHERE " + String.join(" AND ", whereClauses);
     }
 
+    String joins = pathToSystem.stream().map(join -> SqlTemplate.join(join)).distinct().collect(Collectors.joining(" "));
 
     if (Boolean.TRUE.equals(count)) {
       querySql =
           "SELECT"
               + " "
-              + queryField.getColumnText()
+              + queryField.getName()
               + ","
               + "COUNT(*"
               + ") AS Count "
               + "FROM "
               + tableName
-              + unnestConcat
+              + joins
               + whereStr
               + " GROUP BY "
-              + queryField.getColumnText()
+              + queryField.getName()
               + " "
               + "ORDER BY "
-              + queryField.getColumnText();
+              + queryField.getName();
     } else {
       querySql =
           "SELECT DISTINCT "
-              + queryField.getColumnText()
+              + queryField.getName()
               + " FROM "
               + tableName
-              + unnestConcat
+              + joins
               + whereStr
               + " ORDER BY "
-              + queryField.getColumnText();
+              + queryField.getName();
     }
     logger.debug("uniqueValues: {}", querySql);
-
-    QueryJobConfiguration.Builder queryJobBuilder = QueryJobConfiguration.newBuilder(querySql);
-
-    return sendQuery(queryJobBuilder, false);
+    List<JsonNode> result = queryService.runPagedQuery(querySql, offset, limit);
+    PagedResponseData responseData = new PagedResponseData();
+    checkAndSetNextUrl(responseData, "unique-values", offset, limit);
+    responseData.result(Collections.unmodifiableList(result));
+    responseData.querySql(querySql);
+    return new ResponseEntity<>(responseData, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<ColumnsResponseData> columns(String version, String table) {
-    try {
-      DataSetInfo dataSetInfo =
-          new DataSetInfo.DataSetInfoBuilder()
-              .addTableSchema(version, TableSchema.getSchema(version))
-              .build();
+  public ResponseEntity<ColumnsResponseData> columns() {
+    DataSetInfo dataSetInfo = RdbmsSchema.getDataSetInfo();
 
-      List<JsonNode> results =
-          dataSetInfo.getColumnsData(new ColumnsReturnBuilder()).stream()
-              .map(
-                  columnsReturn -> {
-                    ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-                    objectNode.set("fieldName", TextNode.valueOf(columnsReturn.getFieldName()));
-                    objectNode.set("endpoint", TextNode.valueOf(columnsReturn.getEndpoint()));
-                    objectNode.set("description", TextNode.valueOf(columnsReturn.getDescription()));
-                    objectNode.set("type", TextNode.valueOf(columnsReturn.getType()));
-                    objectNode.set("mode", TextNode.valueOf(columnsReturn.getMode()));
+    List<ColumnsReturn> columns = dataSetInfo.getColumnsData();
+    List<JsonNode> results =
+        columns.stream()
+            .map(
+                columnsReturn -> {
+                  ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+                  objectNode.set("fieldName", TextNode.valueOf(columnsReturn.getFieldName()));
+                  objectNode.set("endpoint", TextNode.valueOf(columnsReturn.getEndpoint()));
+                  objectNode.set("description", TextNode.valueOf(columnsReturn.getDescription()));
+                  objectNode.set("type", TextNode.valueOf(columnsReturn.getType()));
+                  objectNode.set("isNullable", BooleanNode.valueOf(columnsReturn.isNullable()));
 
-                    return objectNode;
-                  })
-              .collect(Collectors.toList());
+                  return objectNode;
+                })
+            .collect(Collectors.toList());
 
-      ColumnsResponseData queryResponseData = new ColumnsResponseData();
-      queryResponseData.result(Collections.unmodifiableList(results));
+    ColumnsResponseData queryResponseData = new ColumnsResponseData();
+    queryResponseData.result(Collections.unmodifiableList(results));
 
-      return new ResponseEntity<>(queryResponseData, HttpStatus.OK);
-    } catch (IOException e) {
-      throw new IllegalArgumentException("Version specified does not exist");
-    }
-  }
-
-  @Override
-  public ResponseEntity<QueryCreatedData> globalCounts(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new CountsSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+    return new ResponseEntity<>(queryResponseData, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> files(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    QueryJobConfiguration.Builder configBuilder;
-    try {
-      configBuilder = new FileSqlGenerator(table + "." + version, body, version).generate();
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
+  public ResponseEntity<QueryResponseData> globalCounts(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return new ResponseEntity<>(
+        handleRequest(dryRun, new CountsSqlGenerator(body)),
+        HttpStatus.OK);
+  }
+
+  // region Files Queries
+    @TrackExecutionTime
+    @Override
+    public ResponseEntity<PagedResponseData> files(
+        @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response = handleRequest(dryRun, new FileSqlGenerator(body), includeCount, offset, limit);
+    checkAndSetNextUrl(response,"files", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
     }
-    return sendQuery(configBuilder, dryRun);
+
+    @TrackExecutionTime
+    @Override
+    public ResponseEntity<QueryResponseData> fileCountsQuery(
+        @Valid Query body, @Valid Boolean dryRun) {
+      return new ResponseEntity<>(
+          handleRequest(dryRun, new SubjectCountSqlGenerator(body, true)),
+          HttpStatus.OK);
+    }
+    // endregion
+
+    // region Subject Queries
+    @TrackExecutionTime
+    @Override
+    public ResponseEntity<PagedResponseData> subjectQuery(
+        @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+      PagedResponseData response = handleRequest(dryRun, new SubjectSqlGenerator(body, false), includeCount, offset, limit);
+      checkAndSetNextUrl(response,"subjects", offset, limit);
+      return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @TrackExecutionTime
+    @Override
+    public ResponseEntity<PagedResponseData> subjectFilesQuery(
+        @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response =
+        handleRequest(dryRun, new SubjectSqlGenerator(body, true), includeCount, offset, limit);
+        checkAndSetNextUrl(response,"subjects/files", offset, limit);
+      return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+  @TrackExecutionTime
+  @Override
+  public ResponseEntity<QueryResponseData> subjectCountsQuery(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return new ResponseEntity<>(
+        handleRequest(dryRun, new SubjectCountSqlGenerator(body, false)),
+        HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> fileCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    QueryJobConfiguration.Builder configBuilder;
-    try {
-      configBuilder =
-          new SubjectCountSqlGenerator(table + "." + version, body, version, true).generate();
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-    return sendQuery(configBuilder, dryRun);
+  public ResponseEntity<QueryResponseData> subjectFileCountsQuery(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return new ResponseEntity<>(
+        handleRequest(dryRun, new SubjectCountSqlGenerator(body, true)), HttpStatus.OK);
   }
   // endregion
 
-  // region Subject Queries
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> subjectQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new SubjectSqlGenerator(table + "." + version, body, version, false).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
 
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> subjectFilesQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new SubjectSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> subjectCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new SubjectCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<QueryCreatedData> subjectFileCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new SubjectCountSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-  // endregion
 
   // region ResearchSubject Queries
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> researchSubjectQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new ResearchSubjectSqlGenerator(table + "." + version, body, version, false).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<PagedResponseData> researchSubjectQuery(
+      @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response = handleRequest(dryRun, new ResearchSubjectSqlGenerator(body, false), includeCount, offset, limit);
+    checkAndSetNextUrl(response,"researchsubjects", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> researchSubjectFilesQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new ResearchSubjectSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<PagedResponseData> researchSubjectFilesQuery(
+      @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response = handleRequest(dryRun, new ResearchSubjectSqlGenerator(body, true), includeCount, offset, limit);
+    checkAndSetNextUrl(response,"researchsubjects/files", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> researchSubjectCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new ResearchSubjectCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<QueryResponseData> researchSubjectCountsQuery(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return new ResponseEntity<>(
+        handleRequest(dryRun, new ResearchSubjectCountSqlGenerator(body)),
+        HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> researchSubjectFileCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new ResearchSubjectCountSqlGenerator(table + "." + version, body, version, true)
-              .generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<QueryResponseData> researchSubjectFileCountsQuery(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return new ResponseEntity<>(
+        handleRequest(dryRun, new ResearchSubjectCountSqlGenerator(body, true)), HttpStatus.OK);
   }
   // endregion
 
   // region Specimen Queries
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> specimenQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new SpecimenSqlGenerator(table + "." + version, body, version, false).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<PagedResponseData> specimenQuery(
+      @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response = handleRequest(dryRun, new SpecimenSqlGenerator(body, false), includeCount, offset, limit);
+    checkAndSetNextUrl(response,"specimen", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> specimenFilesQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new SpecimenSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<PagedResponseData> specimenFilesQuery(
+      @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response = handleRequest(dryRun, new SpecimenSqlGenerator(body, true), includeCount, offset, limit);
+    checkAndSetNextUrl(response,"specimen/files", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> specimenCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new SpecimenCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<QueryResponseData> specimenCountsQuery(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return new ResponseEntity<>(
+        handleRequest(dryRun, new SpecimenCountSqlGenerator(body)),
+        HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> specimenFileCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new SpecimenCountSqlGenerator(table + "." + version, body, version, true).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<QueryResponseData> specimenFileCountsQuery(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return new ResponseEntity<>(
+        handleRequest(dryRun, new SpecimenCountSqlGenerator(body, true)),
+        HttpStatus.OK);
   }
   // endregion
 
   // region Diagnosis Queries
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> diagnosisQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new DiagnosisSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<PagedResponseData> diagnosisQuery(
+      @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response = handleRequest(dryRun, new DiagnosisSqlGenerator(body), includeCount, offset, limit);
+    checkAndSetNextUrl(response,"diagnosis", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> diagnosisCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new DiagnosisCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<QueryResponseData> diagnosisCountsQuery(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return  new ResponseEntity<>(
+        handleRequest(dryRun, new DiagnosisCountSqlGenerator(body)),
+        HttpStatus.OK);
   }
   // endregion
 
   // region Treatment Queries
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> treatmentsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new TreatmentSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<PagedResponseData> treatmentsQuery(
+      @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response = handleRequest(dryRun, new TreatmentSqlGenerator(body), includeCount, offset, limit);
+    checkAndSetNextUrl(response,"treatments", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> treatmentCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new TreatmentCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<QueryResponseData> treatmentCountsQuery(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return new ResponseEntity<>(
+        handleRequest(dryRun, new TreatmentCountSqlGenerator(body)),
+        HttpStatus.OK);
   }
   // endregion
 
   // region Mutation Queries
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> mutationQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new MutationSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<PagedResponseData> mutationQuery(
+      @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    PagedResponseData response = handleRequest(dryRun, new MutationSqlGenerator(body), includeCount, offset, limit);
+    checkAndSetNextUrl(response,"treatments", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime
   @Override
-  public ResponseEntity<QueryCreatedData> mutationCountsQuery(
-      String version, @Valid Query body, @Valid Boolean dryRun, @Valid String table) {
-    try {
-      QueryJobConfiguration.Builder configBuilder =
-          new MutationCountSqlGenerator(table + "." + version, body, version).generate();
-      return sendQuery(configBuilder, dryRun);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(INVALID_DATABASE);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(e.getMessage());
-    }
+  public ResponseEntity<QueryResponseData> mutationCountsQuery(
+      @Valid Query body, @Valid Boolean dryRun) {
+    return new ResponseEntity<>(
+        handleRequest(dryRun, new MutationCountSqlGenerator(body)),
+        HttpStatus.OK);
   }
   // endregion
 

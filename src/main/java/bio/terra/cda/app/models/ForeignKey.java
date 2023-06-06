@@ -1,70 +1,43 @@
 package bio.terra.cda.app.models;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-
 public class ForeignKey {
-  private String tableName;
+  private String fromTableName;
+  private String fromField;
+  private String destinationTableName;
   private String[] fields;
-  private String tableAlias;
-  private String location;
 
-  public enum ForeignKeyTypeEnum {
-    SINGLE("SINGLE"),
-    COMPOSITE_OR("COMPOSITE_OR"),
-    COMPOSITE_AND("COMPOSITE_AND");
 
-    private String value;
-
-    ForeignKeyTypeEnum(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static ForeignKeyTypeEnum fromValue(String value) {
-      for (ForeignKeyTypeEnum b : ForeignKeyTypeEnum.values()) {
-        if (b.value.equals(value)) {
-          return b;
-        }
-      }
-      throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
+  public static ForeignKey ofSingle(String fromTablename, String fromField, String destinationTableName, String foreignField) {
+    ForeignKey fk = new ForeignKey();
+    fk.setFromTableName(fromTablename);
+    fk.setFromField(fromField);
+    fk.setDestinationTableName(destinationTableName);
+    fk.setFields(new String[]{foreignField});
+    return fk;
   }
 
-  private ForeignKeyTypeEnum type;
-
-  public ForeignKeyTypeEnum getType() {
-    return type;
+  public String getFromTableName() {
+    return fromTableName;
   }
 
-  public void setType(ForeignKeyTypeEnum type) {
-    this.type = type;
+  public void setFromTableName(java.lang.String fromTableName) {
+    this.fromTableName = fromTableName;
   }
 
-  public String getTableName() {
-    return tableName;
+  public String getDestinationTableName() {
+    return destinationTableName;
   }
 
-  public void setTableName(String tableName) {
-    this.tableName = tableName;
+  public void setDestinationTableName(String tableName) {
+    this.destinationTableName = tableName;
   }
 
-  public String getTableAlias() {
-    return tableAlias;
+  public String getFromField() {
+    return fromField;
   }
 
-  public void setTableAlias(String tableAlias) {
-    this.tableAlias = tableAlias;
+  public void setFromField(String fromField) {
+    this.fromField = fromField;
   }
 
   public String[] getFields() {
@@ -75,11 +48,4 @@ public class ForeignKey {
     this.fields = fields;
   }
 
-  public String getLocation() {
-    return location;
-  }
-
-  public void setLocation(String location) {
-    this.location = location;
-  }
 }

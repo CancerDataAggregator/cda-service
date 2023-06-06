@@ -10,7 +10,7 @@
         },
         "r": {
           "node_type": "quoted",
-          "value": "Stage I"
+          "value": "IIA"
         }
       },
       "r": {
@@ -21,7 +21,7 @@
         },
         "r": {
           "node_type": "quoted",
-          "value": "Stage II"
+          "value": "IIB"
         }
       }
     },
@@ -33,7 +33,7 @@
       },
       "r": {
         "node_type": "quoted",
-        "value": "Kidney"
+        "value": "Lung"
       }
     }
   }

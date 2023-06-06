@@ -8,7 +8,7 @@ public class ColumnsReturnBuilder {
   private String fieldName;
   private String description;
   private String type;
-  private String mode;
+  private Boolean isNullable;
 
   public ColumnsReturnBuilder() {}
 
@@ -32,22 +32,23 @@ public class ColumnsReturnBuilder {
     return this;
   }
 
-  public ColumnsReturnBuilder setMode(String mode) {
-    this.mode = mode;
+  public ColumnsReturnBuilder setNullable(Boolean nullable) {
+    this.isNullable = nullable;
     return this;
   }
 
-  public ColumnsReturn of(
-      String endpoint, String fieldName, String description, String type, String mode) {
-    this.setEndpoint(endpoint);
-    this.setFieldName(fieldName);
-    this.setDescription(description);
-    this.setType(type);
-    this.setMode(mode);
-    return build();
+  public static ColumnsReturn of(
+      String endpoint, String fieldName, String description, String type, Boolean nullable) {
+    ColumnsReturnBuilder builder = new ColumnsReturnBuilder();
+    builder.setEndpoint(endpoint);
+    builder.setFieldName(fieldName);
+    builder.setDescription(description);
+    builder.setType(type);
+    builder.setNullable(nullable);
+    return builder.build();
   }
 
   public ColumnsReturn build() {
-    return new ColumnsReturn(endpoint, fieldName, description, type, mode);
+    return new ColumnsReturn(endpoint, fieldName, description, type, isNullable);
   }
 }

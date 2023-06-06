@@ -5,6 +5,7 @@ import bio.terra.cda.generated.model.Query;
 
 @QueryOperator(nodeType = {Query.NodeTypeEnum.QUOTED})
 public class Quoted extends BasicOperator {
+
   @Override
   public String buildQuery(QueryContext ctx) {
     var parameterBuilder = ctx.getParameterBuilder();

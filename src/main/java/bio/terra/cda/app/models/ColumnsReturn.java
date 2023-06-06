@@ -5,15 +5,15 @@ public class ColumnsReturn {
   private final String fieldName;
   private final String description;
   private final String type;
-  private final String mode;
+  private final Boolean isNullable;
 
   public ColumnsReturn(
-      String endpoint, String fieldName, String description, String type, String mode) {
+      String endpoint, String fieldName, String description, String type, Boolean nullable) {
     this.endpoint = endpoint;
     this.fieldName = fieldName;
     this.description = description;
     this.type = type;
-    this.mode = mode;
+    this.isNullable = nullable;
   }
 
   public String getEndpoint() {
@@ -32,7 +32,7 @@ public class ColumnsReturn {
     return type;
   }
 
-  public String getMode() {
-    return mode;
+  public Boolean isNullable() {
+    return isNullable;
   }
 }

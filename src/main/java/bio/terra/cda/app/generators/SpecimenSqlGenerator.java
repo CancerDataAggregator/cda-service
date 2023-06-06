@@ -1,13 +1,13 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.generated.model.Query;
-import java.io.IOException;
 
-@QueryGenerator(entity = "Specimen", hasFiles = true)
+@QueryGenerator(entity = "specimen", hasFiles = true, defaultOrderBy = "specimen_id",
+    aggregatedFields = {"specimen_identifier_system"},
+    aggregatedFieldsSelectString = {
+        "json_agg(distinct (specimen_identifier.system, specimen_identifier.field_name, specimen_identifier.value)::system_data) as specimen_identifier"})
 public class SpecimenSqlGenerator extends SqlGenerator {
-  public SpecimenSqlGenerator(
-      String qualifiedTable, Query rootQuery, String version, boolean filesQuery)
-      throws IOException {
-    super(qualifiedTable, rootQuery, version, filesQuery);
+  public SpecimenSqlGenerator(Query rootQuery, boolean filesQuery) {
+    super(rootQuery, filesQuery);
   }
 }

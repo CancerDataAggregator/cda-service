@@ -3,9 +3,11 @@ package bio.terra.cda.app.operators;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.helpers.QueryFileReader;
-import bio.terra.cda.app.helpers.QueryHelper;
 import bio.terra.cda.app.models.OrderBy;
+import bio.terra.cda.app.models.RdbmsSchema;
+import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.util.QueryContext;
 import java.io.IOException;
 import java.util.List;
@@ -17,9 +19,9 @@ public class OrderByTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-invalid-select-column.json");
 
-    QueryContext ctx =
-        QueryHelper.getNewQueryContext(
-            "all_Subjects_v3_0_final", "all_Files_v3_0_final", "Subject", "project", true);
+    SqlGenerator sqlgen = new SqlGenerator(query, false);
+    TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
+    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
 
     IllegalArgumentException exception =
         assertThrows(
@@ -32,11 +34,10 @@ public class OrderByTest {
   void testOrderByMultipleColumnsSameNestedObj() throws IOException {
     BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-orderby.json");
 
-    QueryContext ctx =
-        QueryHelper.getNewQueryContext(
-            "all_Subjects_v3_0_final", "all_Files_v3_0_final", "Subject", "project", true);
-
-    String whereClause = query.buildQuery(ctx);
+    SqlGenerator sqlgen = new SqlGenerator(query, false);
+    TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
+    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
+    String sqlStr = query.buildQuery(ctx);
 
     assertEquals(3, ctx.getOrderBys().size());
 

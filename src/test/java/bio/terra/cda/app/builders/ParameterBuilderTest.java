@@ -1,33 +1,31 @@
 package bio.terra.cda.app.builders;
 
-import bio.terra.cda.app.helpers.Schemas;
+import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
-import java.io.IOException;
+
+import bio.terra.cda.app.models.RdbmsSchema;
 import org.junit.jupiter.api.Test;
 
 public class ParameterBuilderTest {
 
   @Test
-  void testAddParameterDuplicates() throws IOException {
-    Schemas schemas =
-        new Schemas.SchemaBuilder("all_Subjects_v3_0_final", "all_Files_v3_0_final").build();
+  void testAddParameterDuplicates() {
+    DataSetInfo dataSetInfo = RdbmsSchema.getDataSetInfo();
     ParameterBuilder builder = new ParameterBuilder();
     QueryField queryField =
         new QueryField(
             "id",
             "id",
-            new String[] {"id"},
-            "id",
             "id",
             "table",
             "",
-            schemas.getSchema().getDefinitions()[0],
+            dataSetInfo.getColumnDefinitionByFieldName("subject_id"),
             false,
             false);
 
     builder.addParameterValue(queryField, "test");
     builder.addParameterValue(queryField, "test2");
-    assert builder.getParameterValueMap().containsKey("id_1");
-    assert builder.getParameterValueMap().containsKey("id_2");
+    assert builder.getParameterValueMap().hasValue("id_1");
+    assert builder.getParameterValueMap().hasValue("id_2");
   }
 }

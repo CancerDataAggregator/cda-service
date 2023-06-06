@@ -1,23 +1,27 @@
 package bio.terra.cda.app.builders;
 
 import bio.terra.cda.app.models.DataSetInfo;
+import bio.terra.cda.app.models.RdbmsSchema;
 import bio.terra.cda.app.models.View;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ViewListBuilder<V extends View, T extends ViewBuilder> {
+  @Autowired
+  RdbmsSchema rdbmsSchema;
+
   private final List<V> viewList;
   private final DataSetInfo dataSetInfo;
-  private final String project;
   private final Class<? extends ViewBuilder> viewBuilderClass;
 
   public ViewListBuilder(
-      Class<? extends ViewBuilder> viewBuilderClass, DataSetInfo dataSetInfo, String project) {
+      Class<? extends ViewBuilder> viewBuilderClass) {
     this.viewBuilderClass = viewBuilderClass;
-    this.dataSetInfo = dataSetInfo;
-    this.project = project;
+    this.dataSetInfo = rdbmsSchema.getDataSetInfo();
 
     this.viewList = new ArrayList<>();
   }
@@ -36,8 +40,8 @@ public class ViewListBuilder<V extends View, T extends ViewBuilder> {
     Constructor<? extends ViewBuilder> constructor = null;
 
     try {
-      constructor = viewBuilderClass.getConstructor(DataSetInfo.class, String.class);
-      return constructor.newInstance(this.dataSetInfo, this.project);
+      constructor = viewBuilderClass.getConstructor();
+      return constructor.newInstance();
     } catch (NoSuchMethodException
         | InvocationTargetException
         | InstantiationException
