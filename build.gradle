@@ -26,7 +26,6 @@ plugins {
   	id "org.sonarqube" version "3.3"
 	id 'jacoco'
 	id 'com.srcclr.gradle' version '3.1.12'
-
 }
 
 ext['log4j2.version'] = '2.17.1'
@@ -55,11 +54,13 @@ dependencies {
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jdbc'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-sql-postgresql', version: '1.2.8.RELEASE'
 	implementation group: 'javax.validation', name: 'validation-api'
 	implementation group: 'org.webjars', name: 'swagger-ui', version: '4.14.0'
 	implementation group: 'org.aspectj', name: 'aspectjweaver', version: '1.8.8'
-	implementation group: 'com.google.cloud', name: 'google-cloud-bigquery', version: '2.16.1'
-
+//	implementation group: 'com.google.cloud', name: 'google-api-services-sqladmin', version: '1.32.1'
+	implementation group: 'com.google.cloud.sql', name: 'postgres-socket-factory', version: '1.11.0'
+//	implementation group: 'org.postgresql', name: 'postgresql', version: '6.0'
 
 	// These dependencies are required to load the logback config file.
 	implementation group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
@@ -77,7 +78,6 @@ dependencies {
 	implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
 	implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
 	implementation 'org.hamcrest:hamcrest-library:2.2'
-
 	// -- --
 
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
