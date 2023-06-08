@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 public class QueryContext {
   private final String table;
   private List<Select> select;
-  private List<Partition> partitions;
   private List<OrderBy> orderBys;
   private List<ColumnDefinition> groupBys;
   private Boolean includeSelect;
@@ -20,21 +19,18 @@ public class QueryContext {
   private JoinBuilder joinBuilder;
   private ParameterBuilder parameterBuilder;
   private OrderByBuilder orderByBuilder;
-  private Optional<Integer> limit = Optional.empty();
-  private Optional<Integer> offset = Optional.empty();
   private ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder;
   private TableInfo tableInfo;
 
-  private List<List<Join>> joins;
+  private LinkedHashMap<String, Join> joins;
 
   public QueryContext(String table) {
     this.table = table;
 
     this.select = new ArrayList<>();
-    this.partitions = new ArrayList<>();
     this.groupBys = new ArrayList<>();
     this.orderBys = new ArrayList<>();
-    this.joins = new ArrayList<>();
+    this.joins = new LinkedHashMap<>();
   }
 
   public QueryContext setFilesQuery(boolean value) {
@@ -65,57 +61,24 @@ public class QueryContext {
     return this.includeSelect;
   }
 
+
   public QueryContext addJoins(List<Join> joinPath) {
-    this.joins.add(joinPath);
+    joinPath.forEach(
+        join -> {
+          String key = String.format("%s.%s", join.getKey().getFromTableName(), join.getKey().getDestinationTableName());
+          Join matchingJoin = joins.get(key);
+          if (matchingJoin != null) {
+            // if we are already joining on these 2 tables either replace with an INNER join or leave as is
+            if (join.getJoinType() == SqlUtil.JoinType.INNER && matchingJoin.getJoinType() != SqlUtil.JoinType.INNER) {
+              matchingJoin.setJoinType(SqlUtil.JoinType.INNER);
+            }
+          } else {
+            // otherwise add join
+            joins.put(key, join);
+          }
+          });
     return this;
-
   }
-
-  // TODO incorporate this logic
-//  public QueryContext addUnnests(Stream<Unnest> newUnnests) {
-//    var aliasIndexes = new HashMap<String, Integer>();
-//
-//    newUnnests.forEach(
-//        unnest -> {
-//          Integer index = 0;
-//          boolean add = true;
-//
-//          if (aliasIndexes.containsKey(unnest.getAlias())) {
-//            index = aliasIndexes.get(unnest.getAlias());
-//
-//            // inner joins take precedence over all other join types
-//            this.unnests.set(
-//                index,
-//                this.unnests.get(index).getJoinType().equals(SqlUtil.JoinType.INNER)
-//                    ? this.unnests.get(index)
-//                    : unnest);
-//          } else {
-//            for (var current : this.unnests) {
-//              aliasIndexes.put(current.getAlias(), index);
-//
-//              if (current.getAlias().equals(unnest.getAlias())) {
-//                if (current.getJoinType().equals(SqlUtil.JoinType.INNER)) {
-//                  add = false;
-//                }
-//
-//                break;
-//              }
-//
-//              index++;
-//            }
-//
-//            if (add) {
-//              if (index.equals(this.unnests.size())) {
-//                this.unnests.add(unnest);
-//              } else {
-//                this.unnests.set(index, unnest);
-//              }
-//            }
-//          }
-//        });
-//
-//    return this;
-//  }
 
   public QueryContext addSelects(Stream<Select> selects) {
     List<Select> newSelectsList = selects.collect(Collectors.toList());
@@ -142,8 +105,8 @@ public class QueryContext {
     return this;
   }
 
-  public List<List<Join>> getJoins() {
-    return this.joins;
+  public List<Join> getJoins() {
+    return this.joins.values().stream().collect(Collectors.toList());
   }
 
   public String getTable() {
