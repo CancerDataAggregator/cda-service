@@ -5,7 +5,9 @@ name: cda-service-build-tag-publish
 on:
   pull_request:
     paths-ignore: ['**.md']
-
+env:
+  SERVICE_NAME: cancerdata
+  GOOGLE_PROJECT: broad-dsp-gcr-public
 jobs:
   tag-build-push:
     runs-on: ubuntu-latest
