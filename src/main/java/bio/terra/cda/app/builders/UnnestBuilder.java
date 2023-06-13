@@ -38,13 +38,13 @@ public class UnnestBuilder {
     if (Objects.nonNull(this.project)) {
       ViewJoinMap.put(
           "file.specimens",
-          String.format("%s.%s", this.project, "all_specimen_files_view_v3_2_final"));
+          String.format("%s.%s", this.project, "all_specimen_files_view_v3_3_final"));
       ViewJoinMap.put(
           "file.researchsubjects",
-          String.format("%s.%s", this.project, "all_researchsubject_files_view_v3_2_final"));
+          String.format("%s.%s", this.project, "all_researchsubject_files_view_v3_3_final"));
       ViewJoinMap.put(
           "file.subjects",
-          String.format("%s.%s", this.project, "all_subject_files_view_v3_2_final"));
+          String.format("%s.%s", this.project, "all_subject_files_view_v3_3_final"));
     }
     additionalJoinPaths = new HashMap<>();
   }
