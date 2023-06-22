@@ -32,7 +32,7 @@ public class In extends BasicOperator {
 //      right = right.substring(1, right.length() - 1);
 //    if (queryField.getType().equals("text")) {right.split("[\"|'](\\s)*,(\\s)*[\"|']"));
 
-      List<String> values = Arrays.stream(right.split("(\\s)*,(\\s)*")).map(value -> value.substring(1, value.length() - 1)).collect(Collectors.toList());
+      List<String> values = Arrays.stream(right.split(",")).map(value -> value.substring(1, value.length() - 1)).collect(Collectors.toList());
       paramNames = values.stream().map(value ->
           parameterBuilder.addParameterValue(type, value)).map(name -> String.format("UPPER( %s )", name)).collect(Collectors.toList());
     } else {
