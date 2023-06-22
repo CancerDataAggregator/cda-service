@@ -190,7 +190,7 @@ public class SqlGenerator {
                         "%s AS %s",
                         startTable.getTableName(),
                         startTable.getTableAlias(this.dataSetInfo))),
-            ctx.getJoins().stream().flatMap(joins -> joins.stream().map(join -> SqlTemplate.join(join))));
+            ctx.getJoins().stream().map(join -> SqlTemplate.join(join)));
 
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
 
