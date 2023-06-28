@@ -54,13 +54,11 @@ dependencies {
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jdbc'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
-	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-sql-postgresql', version: '1.2.8.RELEASE'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jdbc'
 	implementation group: 'javax.validation', name: 'validation-api'
 	implementation group: 'org.webjars', name: 'swagger-ui', version: '4.14.0'
 	implementation group: 'org.aspectj', name: 'aspectjweaver', version: '1.8.8'
-//	implementation group: 'com.google.cloud', name: 'google-api-services-sqladmin', version: '1.32.1'
-	implementation group: 'com.google.cloud.sql', name: 'postgres-socket-factory', version: '1.11.0'
-//	implementation group: 'org.postgresql', name: 'postgresql', version: '6.0'
+	implementation group: 'org.postgresql', name: 'postgresql'
 
 	// These dependencies are required to load the logback config file.
 	implementation group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
