@@ -862,10 +862,29 @@ components:
           type: object
           properties: {}
 
+    OperatorArray:
+      type: array
+      items:
+        anyOf:
+          - type: string
+          - $ref: "#/components/schemas/Operator"
+
     Query:
       type: object
+      properties:
+        select:
+          $ref: "#/components/schemas/OperatorArray"
+        where:
+          $ref: "#/components/schemas/Operator"
+        orderBy:
+          $ref: "#/components/schemas/OperatorArray"
+        groupBy:
+          $ref: "#/components/schemas/OperatorArray"
+
+    Operator:
+      type: object
       description: |
-        A Query consists of a node type, a value and l and r Query objects. A Query must
+        An Operator consists of a node type, a value and l and r Operator objects. An Operator must
         have a node type, but other fields are optional depending on the node type. See
         the description of `node_type`for more information.
 
@@ -927,12 +946,16 @@ components:
              * `>=`, `<=`, `<`, `>`, `=`, `!=`, `AND`, `OR` - `l` and `r` are used to create the expression `l` op `r`
              * `SUBQUERY` - `l` is run as a query on the results of query `r`
              * `NOT` - `l` is used to create the expression `NOT l`
-        value:
+        content:
+          $ref: "#/components/schemas/OperatorArray"
+        modifier:
           type: string
         l:
-          $ref: "#/components/schemas/Query"
+          $ref: "#/components/schemas/Operator"
         r:
-          $ref: "#/components/schemas/Query"
+          $ref: "#/components/schemas/Operator"
+        defaultValue:
+          type: string
 
   responses:
     StatusResponse:

@@ -1,9 +1,9 @@
 package bio.terra.cda.app.operators;
 
 import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.generated.model.Query;
+import bio.terra.cda.generated.model.Operator;
 
-@QueryOperator(nodeType = {Query.NodeTypeEnum.QUOTED})
+@QueryOperator(nodeType = Operator.NodeTypeEnum.QUOTED)
 public class Quoted extends BasicOperator {
 
   @Override

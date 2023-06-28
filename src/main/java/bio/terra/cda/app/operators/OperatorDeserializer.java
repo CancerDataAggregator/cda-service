@@ -1,5 +1,6 @@
 package bio.terra.cda.app.operators;
 
+import bio.terra.cda.generated.model.Operator;
 import bio.terra.cda.generated.model.Query;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.ObjectCodec;
@@ -9,7 +10,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -25,9 +28,9 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
  * based off of node_type and instantiate that class as part of the query tree.
  *
  */
-public class OperatorDeserializer extends JsonDeserializer<Query> {
+public class OperatorDeserializer extends JsonDeserializer<Operator> {
   @Override
-  public Query deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+  public Operator deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
     // Get reference to ObjectCodec
     ObjectCodec codec = p.getCodec();
 
@@ -40,7 +43,7 @@ public class OperatorDeserializer extends JsonDeserializer<Query> {
 
     var nodeType = node.get("node_type");
 
-    Query.NodeTypeEnum type = Query.NodeTypeEnum.fromValue(nodeType.textValue());
+    Operator.NodeTypeEnum type = Operator.NodeTypeEnum.fromValue(nodeType.textValue());
 
     ClassPathScanningCandidateComponentProvider scanner =
         new ClassPathScanningCandidateComponentProvider(false);
@@ -65,7 +68,7 @@ public class OperatorDeserializer extends JsonDeserializer<Query> {
                 })
             .findFirst();
 
-    Query query;
+    BasicOperator operator;
 
     if (clazz.isPresent()) {
       Constructor<?> ctor = null;
@@ -75,31 +78,66 @@ public class OperatorDeserializer extends JsonDeserializer<Query> {
         return null;
       }
       try {
-        query = (Query) ctor.newInstance();
+        operator = (BasicOperator) ctor.newInstance();
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
         return null;
       }
     } else {
-      query = new BasicOperator();
+      operator = new BasicOperator();
     }
 
-    query.setNodeType(type);
-    query.setL(codec.treeToValue(node.get("l"), Query.class));
+    operator.setNodeType(type);
+    operator.setL(codec.treeToValue(node.get("l"), Operator.class));
 
-    Query left = query.getL();
+    Operator left = operator.getL();
     if (Objects.nonNull(left)) {
-      ((BasicOperator) left).setParent((BasicOperator) query);
+      ((BasicOperator) left).setParent(operator);
     }
 
-    query.setR(codec.treeToValue(node.get("r"), Query.class));
+    operator.setR(codec.treeToValue(node.get("r"), Operator.class));
 
-    Query right = query.getR();
+    Operator right = operator.getR();
     if (Objects.nonNull(right)) {
-      ((BasicOperator) right).setParent((BasicOperator) query);
+      ((BasicOperator) right).setParent(operator);
     }
 
-    query.setValue(node.hasNonNull("value") ? node.get("value").textValue() : null);
+    if (node.hasNonNull("defaultValue")) {
+      operator.setDefaultValue(node.get("defaultValue").textValue());
+    }
 
-    return query;
+    if (node.hasNonNull("content")) {
+      List<BasicOperator> content = new ArrayList<>();
+      var contentObjs = node.get("content");
+
+      switch (type) {
+        case COLUMN:
+        case QUOTED:
+        case UNQUOTED:
+          if (contentObjs.isArray()) {
+            try {
+              operator.setValue(contentObjs.get(0).textValue());
+            } catch (ArrayIndexOutOfBoundsException exception) {
+              throw new IllegalArgumentException("Content cannot be empty.");
+            }
+          } else {
+            operator.setValue(contentObjs.textValue());
+          }
+          break;
+        default:
+          for (JsonNode arrNode : contentObjs) {
+            if (arrNode.hasNonNull("node_type")) {
+              content.add((BasicOperator) codec.treeToValue(arrNode, Operator.class));
+            } else {
+              BasicOperator column =
+                      new Column().setValue(arrNode.textValue());
+              content.add(column);
+            }
+          }
+          operator.setOperators(content);
+          break;
+      }
+    }
+
+    return operator;
   }
 }

@@ -2,6 +2,7 @@ package bio.terra.cda.app.operators;
 
 import bio.terra.cda.app.builders.ParameterBuilder;
 import bio.terra.cda.app.util.QueryContext;
+import bio.terra.cda.generated.model.Operator;
 import bio.terra.cda.generated.model.Query;
 import org.apache.logging.log4j.util.Strings;
 
@@ -10,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@QueryOperator(nodeType = {Query.NodeTypeEnum.IN, Query.NodeTypeEnum.NOT_IN})
+@QueryOperator(nodeType = Operator.NodeTypeEnum.IN)
 public class In extends BasicOperator {
 
   @Override

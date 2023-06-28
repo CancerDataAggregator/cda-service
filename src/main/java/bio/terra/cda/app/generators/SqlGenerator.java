@@ -3,7 +3,9 @@ package bio.terra.cda.app.generators;
 import bio.terra.cda.app.builders.*;
 import bio.terra.cda.app.models.*;
 import bio.terra.cda.app.operators.BasicOperator;
+import bio.terra.cda.app.operators.ListOperator;
 import bio.terra.cda.app.util.*;
+import bio.terra.cda.generated.model.Operator;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.base.Strings;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -156,17 +158,23 @@ public class SqlGenerator {
     TableInfo tableInfo = ctx.getTableInfo();
     TableInfo startTable = this.entityTable;
 
-    if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
+    if (query.getWhere().getNodeType() == Operator.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
       // SQL version of
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
 
+      Query left = new Query();
+      Query right = new Query();
+
+      left.setWhere(query.getWhere().getL());
+      right.setWhere(query.getWhere().getR());
+
       return resultsQuery(
-          query.getL(),
+          left,
           String.format(
               "(%s) as %s",
-              sql(tableOrSubClause, query.getR(), true, hasSubClause, true),
+              sql(tableOrSubClause, right, true, hasSubClause, true),
               startTable.getTableAlias(this.dataSetInfo)),
           subQuery,
           buildQueryContext(
@@ -174,12 +182,16 @@ public class SqlGenerator {
           true);
     }
 
-    String condition = ((BasicOperator) query).buildQuery(ctx);
+    String condition = ((BasicOperator) query.getWhere()).buildQuery(ctx);
     String selectFields =
         subQuery
             ? ""
             : getSelect(ctx)
                 .collect(Collectors.joining(", "));
+
+    String orderByFields = query.getOrderBy()
+            .stream().map(ob ->((ListOperator) ob).buildQuery(ctx))
+            .collect(Collectors.joining(", "));
 
     var fromClause =
         Stream.concat(
