@@ -123,18 +123,6 @@ openApiGenerate {
 	]
 }
 
-task GetSchema(type: Exec){
-	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:integration.all_v2_1 > schema.json"
-}
-
-task GetFilesSchema(type: Exec){
-	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.all_v3_0_Files > all_v3_0_Files.json"
-}
-
-task GetSubjectViewSchema(type: Exec){
-	commandLine "bq show --schema --format=prettyjson gdc-bq-sample:dev.all_v3_0_subjects_meta > all_v3_0_subjects_meta.json"
-}
-
 
 // adds custom plugin BuildPythonToml to the tasks
 tasks.register("update_pyproject_toml",BuildPythonToml)
