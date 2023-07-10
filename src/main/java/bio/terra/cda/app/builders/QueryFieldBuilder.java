@@ -2,16 +2,14 @@ package bio.terra.cda.app.builders;
 
 import bio.terra.cda.app.models.*;
 import bio.terra.cda.app.util.SqlUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class QueryFieldBuilder {
 
-  @Autowired
-  RdbmsSchema rdbmsSchema;
+  @Autowired RdbmsSchema rdbmsSchema;
 
   private final boolean filesQuery;
   private final DataSetInfo dataSetInfo;
@@ -25,8 +23,7 @@ public class QueryFieldBuilder {
     String[] modSplit = path.split(" ");
     String modPath = modSplit[0];
     String[] parts = SqlUtil.getParts(modPath);
-    ColumnDefinition columnDefinition =
-        dataSetInfo.getColumnDefinitionByFieldName(modPath);
+    ColumnDefinition columnDefinition = dataSetInfo.getColumnDefinitionByFieldName(modPath);
     TableInfo tableInfo = dataSetInfo.getTableInfoFromField(modPath);
 
     if (Objects.isNull(columnDefinition)) {

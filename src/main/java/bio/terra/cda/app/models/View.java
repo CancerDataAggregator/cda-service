@@ -2,8 +2,6 @@ package bio.terra.cda.app.models;
 
 import com.google.common.base.Strings;
 
-import java.util.Objects;
-
 public class View {
   public enum ViewType {
     WITH,

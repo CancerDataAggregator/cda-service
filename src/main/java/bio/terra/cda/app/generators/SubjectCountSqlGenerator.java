@@ -5,8 +5,8 @@ import bio.terra.cda.generated.model.Query;
 @CountQueryGenerator(
     entity = "subject",
     totalFieldsToCount = {
-        "id",
-        "file_subject.file_id",
+      "id",
+      "file_subject.file_id",
     },
     groupedFieldsToCount = {
       "subject_identifier.system",

@@ -2,7 +2,6 @@ package bio.terra.cda.app.util;
 
 import bio.terra.cda.app.builders.*;
 import bio.terra.cda.app.models.*;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,7 +45,6 @@ public class QueryContext {
     return filesQuery;
   }
 
-
   public QueryContext setTableInfo(TableInfo tableInfo) {
     this.tableInfo = tableInfo;
     return this;
@@ -68,54 +66,53 @@ public class QueryContext {
   public QueryContext addJoins(List<Join> joinPath) {
     this.joins.add(joinPath);
     return this;
-
   }
 
   // TODO incorporate this logic
-//  public QueryContext addUnnests(Stream<Unnest> newUnnests) {
-//    var aliasIndexes = new HashMap<String, Integer>();
-//
-//    newUnnests.forEach(
-//        unnest -> {
-//          Integer index = 0;
-//          boolean add = true;
-//
-//          if (aliasIndexes.containsKey(unnest.getAlias())) {
-//            index = aliasIndexes.get(unnest.getAlias());
-//
-//            // inner joins take precedence over all other join types
-//            this.unnests.set(
-//                index,
-//                this.unnests.get(index).getJoinType().equals(SqlUtil.JoinType.INNER)
-//                    ? this.unnests.get(index)
-//                    : unnest);
-//          } else {
-//            for (var current : this.unnests) {
-//              aliasIndexes.put(current.getAlias(), index);
-//
-//              if (current.getAlias().equals(unnest.getAlias())) {
-//                if (current.getJoinType().equals(SqlUtil.JoinType.INNER)) {
-//                  add = false;
-//                }
-//
-//                break;
-//              }
-//
-//              index++;
-//            }
-//
-//            if (add) {
-//              if (index.equals(this.unnests.size())) {
-//                this.unnests.add(unnest);
-//              } else {
-//                this.unnests.set(index, unnest);
-//              }
-//            }
-//          }
-//        });
-//
-//    return this;
-//  }
+  //  public QueryContext addUnnests(Stream<Unnest> newUnnests) {
+  //    var aliasIndexes = new HashMap<String, Integer>();
+  //
+  //    newUnnests.forEach(
+  //        unnest -> {
+  //          Integer index = 0;
+  //          boolean add = true;
+  //
+  //          if (aliasIndexes.containsKey(unnest.getAlias())) {
+  //            index = aliasIndexes.get(unnest.getAlias());
+  //
+  //            // inner joins take precedence over all other join types
+  //            this.unnests.set(
+  //                index,
+  //                this.unnests.get(index).getJoinType().equals(SqlUtil.JoinType.INNER)
+  //                    ? this.unnests.get(index)
+  //                    : unnest);
+  //          } else {
+  //            for (var current : this.unnests) {
+  //              aliasIndexes.put(current.getAlias(), index);
+  //
+  //              if (current.getAlias().equals(unnest.getAlias())) {
+  //                if (current.getJoinType().equals(SqlUtil.JoinType.INNER)) {
+  //                  add = false;
+  //                }
+  //
+  //                break;
+  //              }
+  //
+  //              index++;
+  //            }
+  //
+  //            if (add) {
+  //              if (index.equals(this.unnests.size())) {
+  //                this.unnests.add(unnest);
+  //              } else {
+  //                this.unnests.set(index, unnest);
+  //              }
+  //            }
+  //          }
+  //        });
+  //
+  //    return this;
+  //  }
 
   public QueryContext addSelects(Stream<Select> selects) {
     List<Select> newSelectsList = selects.collect(Collectors.toList());
@@ -161,6 +158,7 @@ public class QueryContext {
   public List<ColumnDefinition> getGroupBys() {
     return groupBys;
   }
+
   public QueryFieldBuilder getQueryFieldBuilder() {
     return queryFieldBuilder;
   }
@@ -210,7 +208,8 @@ public class QueryContext {
     return viewListBuilder;
   }
 
-  public QueryContext setViewListBuilder(ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder) {
+  public QueryContext setViewListBuilder(
+      ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder) {
     this.viewListBuilder = viewListBuilder;
     return this;
   }

@@ -11,5 +11,6 @@ public @interface CountQueryGenerator {
   public String entity();
 
   public String[] totalFieldsToCount();
+
   public String[] groupedFieldsToCount();
 }

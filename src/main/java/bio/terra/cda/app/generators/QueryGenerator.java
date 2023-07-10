@@ -11,6 +11,7 @@ public @interface QueryGenerator {
   public String entity();
 
   public String[] aggregatedFields();
+
   public String[] aggregatedFieldsSelectString();
 
   public boolean hasFiles();

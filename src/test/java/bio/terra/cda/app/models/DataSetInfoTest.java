@@ -3,18 +3,14 @@ package bio.terra.cda.app.models;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import bio.terra.cda.app.models.DataSetInfo;
-import bio.terra.cda.app.models.RdbmsSchema;
-
 
 public class DataSetInfoTest {
   @Autowired RdbmsSchema rdbmsSchema;
 
-//  public DataSetInfoTest() throws IOException {}
+  //  public DataSetInfoTest() throws IOException {}
 
   @Test
   void testAllTablesLoaded() {

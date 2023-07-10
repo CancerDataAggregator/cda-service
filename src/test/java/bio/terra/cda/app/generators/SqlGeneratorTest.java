@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -37,7 +36,7 @@ class SqlGeneratorTest {
             "query3.json",
             TABLE,
             TABLE,
-            "SELECT subject.id AS subject_id, subject.species AS species, subject.sex AS sex, subject.race AS race, subject.ethnicity AS ethnicity, subject.days_to_birth AS days_to_birth, subject.vital_status AS vital_status, subject.days_to_death AS days_to_death, subject.cause_of_death AS cause_of_death FROM subject AS subject  LEFT JOIN subject_researchsubject AS subject_researchsubject ON subject.id = subject_researchsubject.subject_id  LEFT JOIN researchsubject AS researchsubject ON subject_researchsubject.researchsubject_id = researchsubject.id  LEFT JOIN researchsubject_specimen AS researchsubject_specimen ON researchsubject.id = researchsubject_specimen.researchsubject_id  LEFT JOIN specimen AS specimen ON researchsubject_specimen.specimen_id = specimen.id WHERE (days_to_collection = 50) GROUP BY subject.id,subject.species,subject.sex,subject.race,subject.ethnicity,subject.days_to_birth,subject.vital_status,subject.days_to_death,subject.cause_of_death"),
+            "SELECT subject.id AS subject_id, subject.species AS species, subject.sex AS sex, subject.race AS race, subject.ethnicity AS ethnicity, subject.days_to_birth AS days_to_birth, subject.vital_status AS vital_status, subject.days_to_death AS days_to_death, subject.cause_of_death AS cause_of_death FROM subject AS subject  LEFT JOIN subject_researchsubject AS subject_researchsubject ON subject.id = subject_researchsubject.subject_id  LEFT JOIN researchsubject AS researchsubject ON subject_researchsubject.researchsubject_id = researchsubject.id  LEFT JOIN researchsubject_specimen AS researchsubject_specimen ON researchsubject.id = researchsubject_specimen.researchsubject_id  LEFT JOIN specimen AS specimen ON researchsubject_specimen.specimen_id = specimen.id WHERE (COALESCE(days_to_collection, :parameter_1) = 50) GROUP BY subject.id,subject.species,subject.sex,subject.race,subject.ethnicity,subject.days_to_birth,subject.vital_status,subject.days_to_death,subject.cause_of_death"),
         Arguments.of(
             "query-subquery.json",
             TABLE,
@@ -64,8 +63,7 @@ class SqlGeneratorTest {
     String expectedSql = String.format(expectedQueryFormat, qualifiedTable, table);
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
-    String translatedQuery =
-        new SqlGenerator(query, false).getReadableQuerySql();
+    String translatedQuery = new SqlGenerator(query, false).getReadableQuerySql();
 
     assertEquals(expectedSql, translatedQuery);
   }

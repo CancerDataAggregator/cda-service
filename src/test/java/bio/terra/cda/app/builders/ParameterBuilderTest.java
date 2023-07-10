@@ -2,7 +2,6 @@ package bio.terra.cda.app.builders;
 
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.QueryField;
-
 import bio.terra.cda.app.models.RdbmsSchema;
 import org.junit.jupiter.api.Test;
 

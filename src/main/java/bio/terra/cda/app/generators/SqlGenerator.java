@@ -3,18 +3,15 @@ package bio.terra.cda.app.generators;
 import bio.terra.cda.app.builders.*;
 import bio.terra.cda.app.models.*;
 import bio.terra.cda.app.operators.BasicOperator;
-import bio.terra.cda.app.operators.ListOperator;
 import bio.terra.cda.app.util.*;
 import bio.terra.cda.generated.model.Operator;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.base.Strings;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
 public class SqlGenerator {
 
@@ -27,7 +24,7 @@ public class SqlGenerator {
   SelectBuilder selectBuilder = new SelectBuilder();
   QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(false);
 
-  QueryFieldBuilder filesQueryFieldBuilder = new  QueryFieldBuilder(true);
+  QueryFieldBuilder filesQueryFieldBuilder = new QueryFieldBuilder(true);
   ParameterBuilder parameterBuilder = new ParameterBuilder();
 
   JoinBuilder joinBuilder = new JoinBuilder();
@@ -39,12 +36,10 @@ public class SqlGenerator {
 
   String querySql;
 
-
   public SqlGenerator(Query rootQuery, boolean filesQuery) {
     this.rootQuery = rootQuery;
     this.filesQuery = filesQuery;
     this.dataSetInfo = RdbmsSchema.getDataSetInfo();
-
 
     preInit();
     initializeEntityFields();
@@ -54,7 +49,7 @@ public class SqlGenerator {
       Query rootQuery,
       boolean filesQuery,
       ParameterBuilder parameterBuilder,
-      ViewListBuilder<View, ViewBuilder>  viewListBuilder) {
+      ViewListBuilder<View, ViewBuilder> viewListBuilder) {
     this(rootQuery, filesQuery);
 
     this.parameterBuilder = parameterBuilder;
@@ -68,22 +63,25 @@ public class SqlGenerator {
 
   protected void initializeEntityFields() {
     QueryGenerator queryGenerator = this.getClass().getAnnotation(QueryGenerator.class);
-//    this.modularEntity = queryGenerator != null;
+    //    this.modularEntity = queryGenerator != null;
 
     if (queryGenerator != null) {
       this.entityTable = this.dataSetInfo.getTableInfo(queryGenerator.entity());
 
       String defaultOrderByField = queryGenerator.defaultOrderBy();
       if (!Strings.isNullOrEmpty(defaultOrderByField)) {
-        defaultOrderBy = orderByBuilder.fromQueryField(queryFieldBuilder.fromPath(defaultOrderByField));
+        defaultOrderBy =
+            orderByBuilder.fromQueryField(queryFieldBuilder.fromPath(defaultOrderByField));
       }
-      List<ColumnDefinition> colList = Arrays.stream(queryGenerator.aggregatedFields())
-            .map(field -> dataSetInfo.getColumnDefinitionByFieldName(field))
-            .collect(Collectors.toList());
+      List<ColumnDefinition> colList =
+          Arrays.stream(queryGenerator.aggregatedFields())
+              .map(field -> dataSetInfo.getColumnDefinitionByFieldName(field))
+              .collect(Collectors.toList());
       List<String> selectList = Arrays.asList(queryGenerator.aggregatedFieldsSelectString());
-      this.aggregatedFieldsAndSelectString = IntStream.range(0, colList.size())
-          .boxed()
-          .collect(Collectors.toMap(colList::get, selectList::get));
+      this.aggregatedFieldsAndSelectString =
+          IntStream.range(0, colList.size())
+              .boxed()
+              .collect(Collectors.toMap(colList::get, selectList::get));
     } else {
       this.entityTable = this.dataSetInfo.getEntityTableInfo("subject");
     }
@@ -104,7 +102,7 @@ public class SqlGenerator {
   }
 
   protected String generate() throws IllegalArgumentException {
-      return sql(entityTable.getTableName(), rootQuery, false, false, false);
+    return sql(entityTable.getTableName(), rootQuery, false, false, false);
   }
 
   public String getSqlString() {
@@ -144,7 +142,6 @@ public class SqlGenerator {
     return SqlTemplate.addPagingFields(getReadableQuerySql(), offset, limit);
   }
 
-
   public MapSqlParameterSource getNamedParameterMap() {
     return this.parameterBuilder.getParameterValueMap();
   }
@@ -158,7 +155,8 @@ public class SqlGenerator {
     TableInfo tableInfo = ctx.getTableInfo();
     TableInfo startTable = this.entityTable;
 
-    if (query.getWhere().getNodeType() == Operator.NodeTypeEnum.SUBQUERY) {
+    if (query.getWhere() != null
+        && query.getWhere().getNodeType() == Operator.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
       // SQL version of
       // the right subtree, instead of using table. The left subtree is now the top
@@ -183,15 +181,7 @@ public class SqlGenerator {
     }
 
     String condition = ((BasicOperator) query.getWhere()).buildQuery(ctx);
-    String selectFields =
-        subQuery
-            ? ""
-            : getSelect(ctx)
-                .collect(Collectors.joining(", "));
-
-    String orderByFields = query.getOrderBy()
-            .stream().map(ob ->((ListOperator) ob).buildQuery(ctx))
-            .collect(Collectors.joining(", "));
+    String selectFields = subQuery ? "" : getSelect(ctx).collect(Collectors.joining(", "));
 
     var fromClause =
         Stream.concat(
@@ -200,30 +190,27 @@ public class SqlGenerator {
                 : Stream.of(
                     String.format(
                         "%s AS %s",
-                        startTable.getTableName(),
-                        startTable.getTableAlias(this.dataSetInfo))),
-            ctx.getJoins().stream().flatMap(joins -> joins.stream().map(join -> SqlTemplate.join(join))));
+                        startTable.getTableName(), startTable.getTableAlias(this.dataSetInfo))),
+            ctx.getJoins().stream()
+                .flatMap(joins -> joins.stream().map(join -> SqlTemplate.join(join))));
 
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
 
-    String orderBys = ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", "));
+    String orderBys =
+        ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", "));
     if (Strings.isNullOrEmpty(orderBys) && !Objects.isNull(defaultOrderBy)) {
       orderBys = defaultOrderBy.toString();
     }
     if (subQuery) {
       return SqlTemplate.regularQuery(
-              String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
-              fromString,
-              condition,
-              orderBys);
+          String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
+          fromString,
+          condition,
+          orderBys);
     }
 
     return SqlTemplate.resultsQuery(
-        selectFields,
-        fromString,
-        condition,
-        ctx.getGroupBys(),
-        orderBys);
+        selectFields, fromString, condition, ctx.getGroupBys(), orderBys);
   }
 
   protected Stream<String> getSelect(QueryContext ctx) {
@@ -232,8 +219,9 @@ public class SqlGenerator {
     } else {
       return getSelectsFromEntity(
           ctx,
-          this.filesQuery ? FileSqlGenerator.getExternalFieldsAndSqlString() :
-          getAggregatedFieldsAndSelectString());
+          this.filesQuery
+              ? FileSqlGenerator.getExternalFieldsAndSqlString()
+              : getAggregatedFieldsAndSelectString());
     }
   }
 
@@ -244,15 +232,18 @@ public class SqlGenerator {
   protected Stream<String> getSelectsFromEntity(
       QueryContext ctx, Map<ColumnDefinition, String> aggregateFields) {
 
-    aggregateFields.keySet().forEach(col -> {
-      if (!this.entityTable.getTableName().equals(col.getTableName())) {
-        List<Join> path =
-            ctx.getJoinBuilder()
-                .getPath(
-                    this.entityTable.getTableName(), col.getTableName(), col.getName());
-        ctx.addJoins(path);
-      }
-    });
+    aggregateFields
+        .keySet()
+        .forEach(
+            col -> {
+              if (!this.entityTable.getTableName().equals(col.getTableName())) {
+                List<Join> path =
+                    ctx.getJoinBuilder()
+                        .getPath(
+                            this.entityTable.getTableName(), col.getTableName(), col.getName());
+                ctx.addJoins(path);
+              }
+            });
 
     Set<ColumnDefinition> columns = new LinkedHashSet<>();
 
@@ -261,47 +252,48 @@ public class SqlGenerator {
       columns.addAll(Arrays.asList(dataSetInfo.getTableInfo("file").getColumnDefinitions()));
     } else {
       columns.addAll(Arrays.asList(this.entityTable.getColumnDefinitions()));
-
     }
     return Stream.concat(
         columns.stream()
             .map(
                 col -> {
-                    ctx.addGroupBy(col);
+                  ctx.addGroupBy(col);
                   return String.format(
                       "%1$s.%2$s AS %3$s", col.getTableName(), col.getName(), col.getAlias());
                 }),
         aggregateFields.values().stream());
   }
 
-//  protected Stream<String> combinedSelects(
-//      QueryContext ctx, String prefix, Stream<String> idSelects) {
-//    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(RdbmsSchema.FILE_TABLE);
-////    List<String> fileFilteredFields =
-////        Arrays.stream(fileTableInfo.getColumnDefinitions())
-////            .filter(ColumnDefinition::isExcludeFromSelect)
-////            .map(ColumnDefinition::getName)
-////            .collect(Collectors.toList());
-//
-//    return Stream.concat(
-//            Arrays.stream(
-//                    ctx.getFilesQuery()
-//                        ? this.dataSetInfo
-//                            .getTableInfo(RdbmsSchema.FILE_TABLE)
-//                            .getColumnDefinitions()
-//                        : this.entityTable.getColumnDefinitions())
-////                .filter(
-////                    definition ->
-////                        !(ctx.getFilesQuery() && fileFilteredFields.contains(definition.getName()))
-////                            && (skipExcludes || !filteredFields.contains(definition.getName())))
-//                .map(
-//                    definition -> {
-//                      String fieldSelect = String.format("%s.%s", prefix, definition.getName());
-//                      return String.format("%1$s AS %2$s", fieldSelect, definition.getName());
-//                    }),
-//            idSelects)
-//        .distinct();
-//  }
+  //  protected Stream<String> combinedSelects(
+  //      QueryContext ctx, String prefix, Stream<String> idSelects) {
+  //    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(RdbmsSchema.FILE_TABLE);
+  ////    List<String> fileFilteredFields =
+  ////        Arrays.stream(fileTableInfo.getColumnDefinitions())
+  ////            .filter(ColumnDefinition::isExcludeFromSelect)
+  ////            .map(ColumnDefinition::getName)
+  ////            .collect(Collectors.toList());
+  //
+  //    return Stream.concat(
+  //            Arrays.stream(
+  //                    ctx.getFilesQuery()
+  //                        ? this.dataSetInfo
+  //                            .getTableInfo(RdbmsSchema.FILE_TABLE)
+  //                            .getColumnDefinitions()
+  //                        : this.entityTable.getColumnDefinitions())
+  ////                .filter(
+  ////                    definition ->
+  ////                        !(ctx.getFilesQuery() &&
+  // fileFilteredFields.contains(definition.getName()))
+  ////                            && (skipExcludes ||
+  // !filteredFields.contains(definition.getName())))
+  //                .map(
+  //                    definition -> {
+  //                      String fieldSelect = String.format("%s.%s", prefix, definition.getName());
+  //                      return String.format("%1$s AS %2$s", fieldSelect, definition.getName());
+  //                    }),
+  //            idSelects)
+  //        .distinct();
+  //  }
 
   protected String getWithStatement() {
     return String.format(

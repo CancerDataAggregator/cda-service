@@ -3,8 +3,6 @@ package bio.terra.cda.app.operators;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.generated.model.Operator;
-import bio.terra.cda.generated.model.Query;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -26,7 +24,7 @@ public class Column extends BasicOperator {
     BasicOperator parent = getParent();
 
     if (Objects.nonNull(parent)
-            && List.of(NodeTypeEnum.IS, NodeTypeEnum.IS_NOT).contains(parent.getNodeType())) {
+        && List.of(NodeTypeEnum.IS, NodeTypeEnum.IS_NOT).contains(parent.getNodeType())) {
       return columnText;
     }
 
@@ -34,21 +32,18 @@ public class Column extends BasicOperator {
 
     boolean isTextField = queryField.getType().equalsIgnoreCase("text");
 
-    String result = isTextField
-            ? String.format("UPPER(%s)", columnText)
-            : columnText;
+    String result = isTextField ? String.format("UPPER(%s)", columnText) : columnText;
 
     if (!this.ignoreDefault) {
       var parameterBuilder = ctx.getParameterBuilder();
 
       if (isTextField && Objects.isNull(defaultValue)) {
-        result = String.format("COALESCE(%s, '')",
-                result);
+        result = String.format("COALESCE(%s, '')", result);
       } else {
-        result = String.format(
+        result =
+            String.format(
                 "COALESCE(%s, %s)",
-                result,
-                parameterBuilder.addParameterValue(queryField, defaultValue));
+                result, parameterBuilder.addParameterValue(queryField, defaultValue));
       }
     }
 

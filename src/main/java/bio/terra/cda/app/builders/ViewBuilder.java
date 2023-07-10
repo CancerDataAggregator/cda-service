@@ -2,16 +2,14 @@ package bio.terra.cda.app.builders;
 
 import bio.terra.cda.app.models.*;
 import com.google.api.client.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ViewBuilder {
-  @Autowired
-  RdbmsSchema rdbmsSchema;
+  @Autowired RdbmsSchema rdbmsSchema;
 
   private final DataSetInfo dataSetInfo;
   private String whereClause;
@@ -76,21 +74,28 @@ public class ViewBuilder {
   }
 
   public View build() {
-    String formattedFromClause = Strings.isNullOrEmpty(fromClause) ?
-              Stream.of(
-                  String.format(
-                      "%s AS %s",
-                      table.getTableName(),
-                      table.getTableAlias(this.dataSetInfo)))
-          .collect(Collectors.joining(" "))
-        : fromClause;
+    String formattedFromClause =
+        Strings.isNullOrEmpty(fromClause)
+            ? Stream.of(
+                    String.format(
+                        "%s AS %s", table.getTableName(), table.getTableAlias(this.dataSetInfo)))
+                .collect(Collectors.joining(" "))
+            : fromClause;
 
     String select =
         !selectList.isEmpty()
             ? selectList.stream().map(Select::toString).collect(Collectors.joining(", "))
-            : String.format("%s.*", Strings.isNullOrEmpty(fromAlias) ? table.getTableAlias(dataSetInfo) : fromAlias);
+            : String.format(
+                "%s.*",
+                Strings.isNullOrEmpty(fromAlias) ? table.getTableAlias(dataSetInfo) : fromAlias);
 
     return new View(
-        this.viewName, this.viewType, select, formattedFromClause, this.whereClause, this.groupBy, this.includeAlias);
+        this.viewName,
+        this.viewType,
+        select,
+        formattedFromClause,
+        this.whereClause,
+        this.groupBy,
+        this.includeAlias);
   }
 }

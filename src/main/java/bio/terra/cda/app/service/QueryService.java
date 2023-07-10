@@ -7,11 +7,8 @@ import bio.terra.cda.generated.model.SystemStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-import com.google.api.client.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +27,9 @@ public class QueryService {
 
   private final ObjectMapper objectMapper;
 
-  @Autowired
-  private JdbcTemplate jdbcTemplate;
+  @Autowired private JdbcTemplate jdbcTemplate;
 
-  @Autowired
-  private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+  @Autowired private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
   @Autowired
   public QueryService(ObjectMapper objectMapper) {
@@ -47,8 +42,6 @@ public class QueryService {
   }
 
   SystemStatus systemStatus = new SystemStatus();
-
-
 
   // For now, hardcode the known list of systems. In the future, we will get this
   // from the
@@ -85,24 +78,24 @@ public class QueryService {
   public Long getTotalRowCount(SqlGenerator generator) {
     return namedParameterJdbcTemplate.queryForObject(
         SqlTemplate.countWrapper(generator.getSqlString()),
-        generator.getNamedParameterMap(), Long.class);
+        generator.getNamedParameterMap(),
+        Long.class);
   }
 
   public List<JsonNode> generateAndRunQuery(SqlGenerator generator) {
     return namedParameterJdbcTemplate.query(
         SqlTemplate.jsonWrapper(generator.getSqlString()),
         generator.getNamedParameterMap(),
-        new JsonNodeRowMapper(objectMapper)
-    );
+        new JsonNodeRowMapper(objectMapper));
   }
 
-  public List<JsonNode> generateAndRunPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
+  public List<JsonNode> generateAndRunPagedQuery(
+      SqlGenerator generator, Integer offset, Integer limit) {
     return namedParameterJdbcTemplate.query(
         SqlTemplate.jsonWrapper(
             SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit)),
         generator.getNamedParameterMap(),
-        new JsonNodeRowMapper(objectMapper)
-    );
+        new JsonNodeRowMapper(objectMapper));
   }
 
   public List<JsonNode> runPagedQuery(String sqlStr, Integer offset, Integer limit) {
@@ -110,9 +103,12 @@ public class QueryService {
   }
 
   public List<JsonNode> runQuery(String sqlQuery) {
-    return jdbcTemplate.query(SqlTemplate.jsonWrapper(sqlQuery), new JsonNodeRowMapper(objectMapper));
+    return jdbcTemplate.query(
+        SqlTemplate.jsonWrapper(sqlQuery), new JsonNodeRowMapper(objectMapper));
   }
-  public void logQuery(long duration, String sql, List<JsonNode> jsonData, Optional<Float> countDuration) {
+
+  public void logQuery(
+      long duration, String sql, List<JsonNode> jsonData, Optional<Float> countDuration) {
     // Log usage data for this response.
     final Map<Source, Integer> resultsCount = generateUsageData(jsonData);
     float elapsed = duration / 1000.0F;
@@ -132,7 +128,11 @@ public class QueryService {
 
     public final Optional<Float> optionalQueryDuration;
 
-    QueryData(String query, float duration, Map<Source, Integer> systemUsage,Optional<Float> optionalQueryDuration) {
+    QueryData(
+        String query,
+        float duration,
+        Map<Source, Integer> systemUsage,
+        Optional<Float> optionalQueryDuration) {
       this.timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
       this.query = query;
       this.duration = duration;
@@ -140,5 +140,4 @@ public class QueryService {
       this.optionalQueryDuration = optionalQueryDuration;
     }
   }
-
 }

@@ -1,22 +1,15 @@
 package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.models.ColumnDefinition;
-import bio.terra.cda.app.models.RdbmsSchema;
 import bio.terra.cda.generated.model.Query;
-
 import java.util.Optional;
 
 @CountQueryGenerator(
     entity = "file",
     totalFieldsToCount = {
-        "id",
+      "id",
     },
-    groupedFieldsToCount = {
-        "data_category",
-        "data_type",
-        "file_identifier_system",
-        "file_format"
-    })
+    groupedFieldsToCount = {"data_category", "data_type", "file_identifier_system", "file_format"})
 public class FileCountSqlGenerator extends EntityCountSqlGenerator {
   protected Optional<String> secondaryTable = Optional.empty();
 
@@ -32,7 +25,7 @@ public class FileCountSqlGenerator extends EntityCountSqlGenerator {
   @Override
   protected ColumnDefinition getSecondaryEntity() {
     if (secondaryTable.isPresent()) {
-      return dataSetInfo.getColumnDefinitionByFieldName( "id", secondaryTable.get());
+      return dataSetInfo.getColumnDefinitionByFieldName("id", secondaryTable.get());
     }
     return null;
   }

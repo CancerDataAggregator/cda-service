@@ -5,8 +5,7 @@ import bio.terra.cda.app.util.SqlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class SelectBuilder {
-  @Autowired
-  RdbmsSchema rdbmsSchema;
+  @Autowired RdbmsSchema rdbmsSchema;
 
   private final DataSetInfo dataSetInfo;
 

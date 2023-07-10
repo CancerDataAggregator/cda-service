@@ -1,11 +1,13 @@
 {
-  "node_type": "=",
-  "l": {
-    "node_type": "column",
-    "value": "data_modality"
-  },
-  "r": {
-    "node_type": "quoted",
-    "value": "Genomic"
+  "where": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "content": "data_modality"
+    },
+    "r": {
+      "node_type": "quoted",
+      "content": "Genomic"
+    }
   }
 }

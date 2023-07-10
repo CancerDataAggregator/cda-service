@@ -20,11 +20,11 @@ public class OperatorDeserializerTest {
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
 
-    assertEquals(BasicOperator.class.getName(), query.getClass().getName());
+    assertEquals(Query.class.getName(), query.getClass().getName());
     assertEquals(
-        Column.class.getName(), ((BasicOperator) query).getL().getL().getL().getClass().getName());
+        Column.class.getName(), query.getWhere().getL().getL().getL().getClass().getName());
     assertEquals(
-        Quoted.class.getName(), ((BasicOperator) query).getL().getL().getR().getClass().getName());
+        Quoted.class.getName(), query.getWhere().getL().getL().getR().getClass().getName());
   }
 
   @Test
@@ -33,7 +33,7 @@ public class OperatorDeserializerTest {
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
 
-    assertEquals(Not.class.getName(), query.getClass().getName());
+    assertEquals(Not.class.getName(), query.getWhere().getClass().getName());
   }
 
   @Test
@@ -42,12 +42,12 @@ public class OperatorDeserializerTest {
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
 
-    assertEquals(In.class.getName(), query.getClass().getName());
+    assertEquals(In.class.getName(), query.getWhere().getClass().getName());
 
     String notInQuery = Files.readString(TEST_FILES.resolve("query-notin.json"));
 
     Query notIn = objectMapper.readValue(notInQuery, Query.class);
 
-    assertEquals(In.class.getName(), query.getClass().getName());
+    assertEquals(In.class.getName(), query.getWhere().getClass().getName());
   }
 }

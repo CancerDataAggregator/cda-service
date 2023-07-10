@@ -32,7 +32,7 @@ public class DataSetInfo {
   private DataSetInfo(
       Map<String, TableInfo> entityTableInfoMap,
       Map<String, TableInfo> mappingTableInfoMap,
-      Map<String, ColumnDefinition> fieldMap,  //don't add FKs
+      Map<String, ColumnDefinition> fieldMap, // don't add FKs
       Set<String> replacedFieldnames,
       Map<String, String> knownAliases) {
     this.entityTableInfoMap = entityTableInfoMap;
@@ -71,7 +71,7 @@ public class DataSetInfo {
                 ColumnsReturnBuilder.of(
                     entry.getValue().getTableName(),
                     entry.getKey(),
-                    "", //entry.getValue().getDescription(),
+                    "", // entry.getValue().getDescription(),
                     entry.getValue().getType(),
                     entry.getValue().isNullable()))
         .collect(Collectors.toList());
@@ -90,12 +90,14 @@ public class DataSetInfo {
       // it's a mapping field
       String[] parsed = fieldName.split("\\.", 2);
       TableInfo mappingTable = mappingTableInfoMap.get(parsed[0]);
-      return Arrays.stream(mappingTable.getColumnDefinitions()).filter(col -> col.getName().equals(parsed[1])).findFirst().orElse(null);
+      return Arrays.stream(mappingTable.getColumnDefinitions())
+          .filter(col -> col.getName().equals(parsed[1]))
+          .findFirst()
+          .orElse(null);
     }
     return replacedFieldnames.contains(fieldName)
         ? getColumnDefinitionByFieldName(getNewFieldNameForDuplicate(fieldName, tablename))
         : getColumnDefinitionByFieldName(fieldName);
-
   }
 
   public TableInfo getTableInfoFromField(String fieldName) {
@@ -105,7 +107,6 @@ public class DataSetInfo {
     }
     return this.getTableInfo(col.getTableName());
   }
-
 
   /*
    * DataSetInfoBuilder
@@ -161,8 +162,9 @@ public class DataSetInfo {
 
     public DataSetInfo build() {
       connectForeignKeys();
-//      entityTableInfoMap.putAll(mappingTableInfoMap);
-      // get rid of the synchronized field map because after this point it should be read only. so also make it unmodifyable
+      //      entityTableInfoMap.putAll(mappingTableInfoMap);
+      // get rid of the synchronized field map because after this point it should be read only. so
+      // also make it unmodifyable
       return new DataSetInfo(
           entityTableInfoMap,
           mappingTableInfoMap,
@@ -172,11 +174,17 @@ public class DataSetInfo {
     }
 
     private void connectForeignKeys() {
-      mappingTableInfoMap.values().forEach(tableInfo -> {
-        tableInfo.getRelationships().forEach(rel -> {
-          addTableRelationships(rel);
-        });
-      });
+      mappingTableInfoMap
+          .values()
+          .forEach(
+              tableInfo -> {
+                tableInfo
+                    .getRelationships()
+                    .forEach(
+                        rel -> {
+                          addTableRelationships(rel);
+                        });
+              });
     }
 
     private TableInfo getTableInfo(String key) {
@@ -187,20 +195,31 @@ public class DataSetInfo {
 
     private void addTableRelationships(TableRelationship rel) {
       TableInfo fromTable = this.getTableInfo(rel.getFromTablename());
-      fromTable.addForeignKey(ForeignKey.ofSingle(fromTable.getTableName(), rel.getFromField(), rel.getDestinationTablename(), rel.getDestinationField()));
+      fromTable.addForeignKey(
+          ForeignKey.ofSingle(
+              fromTable.getTableName(),
+              rel.getFromField(),
+              rel.getDestinationTablename(),
+              rel.getDestinationField()));
 
       TableInfo destTable = this.getTableInfo(rel.getDestinationTablename());
-      destTable.addForeignKey((ForeignKey.ofSingle(destTable.getTableName(), rel.getDestinationField(), rel.getFromTablename(), rel.getFromField())));
+      destTable.addForeignKey(
+          (ForeignKey.ofSingle(
+              destTable.getTableName(),
+              rel.getDestinationField(),
+              rel.getFromTablename(),
+              rel.getFromField())));
     }
 
-//    private void addForeignKey(TableRelationship rel) {
-//      // Find from col Definition and add a FK based on the relationship
-//      String fromField = rel.getFromField();
-//      String fqFieldName = usedFields.contains(fromField) ? getNewFieldNameForDuplicate(fromField, rel.getFromTablename()) : fromField;
-//      ColumnDefinition colDef = fieldMap.get(fqFieldName);
-//      colDef.addForeignKey(ForeignKey.ofSingle(rel.getDestinationTablename(), rel.getDestinationField()));
-//    }
-
+    //    private void addForeignKey(TableRelationship rel) {
+    //      // Find from col Definition and add a FK based on the relationship
+    //      String fromField = rel.getFromField();
+    //      String fqFieldName = usedFields.contains(fromField) ?
+    // getNewFieldNameForDuplicate(fromField, rel.getFromTablename()) : fromField;
+    //      ColumnDefinition colDef = fieldMap.get(fqFieldName);
+    //      colDef.addForeignKey(ForeignKey.ofSingle(rel.getDestinationTablename(),
+    // rel.getDestinationField()));
+    //    }
 
     private void addTableFromJson(String tableName, JsonNode tableNode) {
       boolean isMappingTable = false;
@@ -228,24 +247,34 @@ public class DataSetInfo {
     private void addFieldsFromTable(TableInfo table) {
       String tableName = table.getTableName();
       ColumnDefinition[] cols = table.getColumnDefinitions();
-      List<String>  fromFields = table.getRelationships().stream().map(TableRelationship::getFromField).collect(Collectors.toList());
+      List<String> fromFields =
+          table.getRelationships().stream()
+              .map(TableRelationship::getFromField)
+              .collect(Collectors.toList());
       // divide fields into those that are only foreign keys to entity tables and then the rest
       Arrays.stream(cols)
           // skip fields that are just foreign keys to entity tables
-          .filter(field -> !(table.getRelationships().stream().map(rel -> rel.getFromField()).collect(Collectors.toList())).contains(field.getName()))
-          .forEach( col -> addFieldMapEntry(col, tableName));
+          .filter(
+              field ->
+                  !(table.getRelationships().stream()
+                          .map(rel -> rel.getFromField())
+                          .collect(Collectors.toList()))
+                      .contains(field.getName()))
+          .forEach(col -> addFieldMapEntry(col, tableName));
 
-//          Map<Boolean, List<ColumnDefinition>> areMappingFields = Arrays.stream(cols)
-//          .collect(Collectors.partitioningBy(col -> fromFields.contains(col.getName())));
-//      areMappingFields.get(Boolean.TRUE).forEach( col -> addFieldMapEntry(col, tableName,  internalFieldsMap));
-//      areMappingFields.get(Boolean.FALSE).forEach( col -> addFieldMapEntry(col, tableName,  fieldMap));
+      //          Map<Boolean, List<ColumnDefinition>> areMappingFields = Arrays.stream(cols)
+      //          .collect(Collectors.partitioningBy(col -> fromFields.contains(col.getName())));
+      //      areMappingFields.get(Boolean.TRUE).forEach( col -> addFieldMapEntry(col, tableName,
+      // internalFieldsMap));
+      //      areMappingFields.get(Boolean.FALSE).forEach( col -> addFieldMapEntry(col, tableName,
+      // fieldMap));
     }
 
     private void addFieldMapEntry(ColumnDefinition colDef, String tableName) {
       String fieldName = colDef.getName();
       if (fieldMap.containsKey(fieldName) || usedFields.contains(fieldName)) {
-          String alias = getNewFieldNameForDuplicate(fieldName, tableName);
-          resolveFieldNameConflict(fieldName);
+        String alias = getNewFieldNameForDuplicate(fieldName, tableName);
+        resolveFieldNameConflict(fieldName);
         colDef.setAlias(alias);
         fieldName = alias;
       }
@@ -263,34 +292,35 @@ public class DataSetInfo {
       }
     }
 
-    private List<TableRelationship> getRelationshipsFromJson(String fromTable, JsonNode fkNodeList) {
+    private List<TableRelationship> getRelationshipsFromJson(
+        String fromTable, JsonNode fkNodeList) {
       return StreamSupport.stream(fkNodeList.spliterator(), false)
-              .map(fkNode -> TableRelationship.of(
-                  fkNode.get("constraint_name").asText(),
+          .map(
+              fkNode ->
+                  TableRelationship.of(
+                      fkNode.get("constraint_name").asText(),
                       fromTable,
                       fkNode.get("name").asText(),
                       fkNode.get("references").get("table").asText(),
                       fkNode.get("references").get("column").asText()))
-              .collect(Collectors.toList());
+          .collect(Collectors.toList());
     }
-
 
     private List<String> getPrimaryKeysFromJson(JsonNode pkNodeList) {
       return StreamSupport.stream(pkNodeList.get(0).get("columns").spliterator(), false)
-              .map(JsonNode::textValue)
-              .collect(Collectors.toList());
+          .map(JsonNode::textValue)
+          .collect(Collectors.toList());
     }
-
 
     private List<ColumnDefinition> createColumnDefinitions(JsonNode columnsNode, String tableName) {
       return StreamSupport.stream(columnsNode.spliterator(), false)
-              .map(colNode -> createColumnDefinition(colNode, tableName))
-              .collect(Collectors.toList());
-
-      }
+          .map(colNode -> createColumnDefinition(colNode, tableName))
+          .collect(Collectors.toList());
+    }
 
     private ColumnDefinition createColumnDefinition(JsonNode colNode, String tableName) {
-      ColumnDefinition col = new ColumnDefinition(
+      ColumnDefinition col =
+          new ColumnDefinition(
               colNode.get("name").asText(),
               tableName,
               colNode.get("type").asText(),
@@ -298,7 +328,6 @@ public class DataSetInfo {
               colNode.get("nullable").asBoolean());
       return col;
     }
-
 
     private void setCountByTableInfo(ColumnDefinition definition, TableInfo tableInfo) {
       CountByField[] countByFields = definition.getCountByFields();

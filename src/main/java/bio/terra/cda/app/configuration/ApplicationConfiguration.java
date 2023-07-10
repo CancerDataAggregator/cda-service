@@ -1,24 +1,19 @@
 package bio.terra.cda.app.configuration;
 
-import bio.terra.cda.app.operators.QueryModule;
 import bio.terra.cda.app.models.RdbmsSchema;
-import bio.terra.cda.app.service.TablePrecedenceComparator;
+import bio.terra.cda.app.operators.QueryModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import java.util.Arrays;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.gcp.autoconfigure.sql.GcpCloudSqlAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
 
 @Component
 @Configuration
@@ -41,10 +36,10 @@ public class ApplicationConfiguration {
     return Arrays.asList(tablePrecedence);
   }
 
-//  @Bean
-//  public CacheManager cacheManager() {
-//    return new ConcurrentMapCacheManager("system-status");
-//  }
+  //  @Bean
+  //  public CacheManager cacheManager() {
+  //    return new ConcurrentMapCacheManager("system-status");
+  //  }
 
   @Bean("objectMapper")
   public ObjectMapper objectMapper() {
@@ -55,7 +50,8 @@ public class ApplicationConfiguration {
         .registerModule(new QueryModule());
   }
 
-
   @Bean()
-  public RdbmsSchema rdbmsSchema() { return new RdbmsSchema();}
+  public RdbmsSchema rdbmsSchema() {
+    return new RdbmsSchema();
+  }
 }

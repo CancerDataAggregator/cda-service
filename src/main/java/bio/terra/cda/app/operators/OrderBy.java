@@ -2,8 +2,6 @@ package bio.terra.cda.app.operators;
 
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.generated.model.Operator;
-import bio.terra.cda.generated.model.Query;
-
 import java.util.Objects;
 
 @QueryOperator(nodeType = Operator.NodeTypeEnum.ORDERBY)

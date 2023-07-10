@@ -1,14 +1,16 @@
 {
-  "node_type": "NOT",
-  "l": {
-    "node_type": "=",
+  "where": {
+    "node_type": "NOT",
     "l": {
-      "node_type": "column",
-      "value": "primary_diagnosis_condition"
-    },
-    "r": {
-      "node_type": "quoted",
-      "value": "cancer"
+      "node_type": "=",
+      "l": {
+        "node_type": "column",
+        "content": "primary_diagnosis_condition"
+      },
+      "r": {
+        "node_type": "quoted",
+        "content": "cancer"
+      }
     }
   }
 }

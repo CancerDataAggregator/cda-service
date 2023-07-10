@@ -2,10 +2,8 @@ package bio.terra.cda.app.generators;
 
 import bio.terra.cda.app.models.RdbmsSchema;
 import bio.terra.cda.app.models.TableInfo;
-import bio.terra.cda.app.operators.Select;
-import bio.terra.cda.app.operators.SelectValues;
 import bio.terra.cda.app.util.EndpointUtil;
-import bio.terra.cda.app.util.QueryUtil;
+import bio.terra.cda.generated.model.OperatorArrayInner;
 import bio.terra.cda.generated.model.Query;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,15 +39,14 @@ public class CountsSqlGenerator extends SqlGenerator {
             });
 
     // Add a select node to completely flatten out the result set
-    Query newQuery =
-        new Select()
-            .nodeType(Query.NodeTypeEnum.SELECT)
-            .l(
-                new SelectValues()
-                    .nodeType(Query.NodeTypeEnum.SELECTVALUES)
-                    .value(String.join(",", primaryKeyFields)))
-            .r(QueryUtil.deSelectifyQuery(query));
-
+    Query newQuery = new Query();
+    List<OperatorArrayInner> operatorArrayInnerList = new ArrayList<>();
+    OperatorArrayInner oAI = new OperatorArrayInner();
+    oAI.setNodeType(OperatorArrayInner.NodeTypeEnum.SELECTVALUES);
+    oAI.defaultValue(String.join(",", primaryKeyFields));
+    operatorArrayInnerList.add(oAI);
+    newQuery.setSelect(operatorArrayInnerList);
+    newQuery.setWhere(query.getWhere());
     String resultsAlias = "flattened_results";
     String flattenedWith =
         String.format(

@@ -1,11 +1,7 @@
 package bio.terra.cda.app.util;
 
-import static java.lang.Integer.parseInt;
-
 import bio.terra.cda.generated.model.Query;
-
 import java.util.List;
-import java.util.Objects;
 
 public class QueryUtil {
 

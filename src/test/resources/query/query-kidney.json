@@ -1,4 +1,5 @@
 {
+  "where": {
     "node_type": "AND",
     "l": {
       "node_type": "OR",
@@ -6,22 +7,22 @@
         "node_type": "=",
         "l": {
           "node_type": "column",
-          "value": "stage"
+          "content": "stage"
         },
         "r": {
           "node_type": "quoted",
-          "value": "IIA"
+          "content": "Stage I"
         }
       },
       "r": {
         "node_type": "=",
         "l": {
           "node_type": "column",
-          "value": "stage"
+          "content": "stage"
         },
         "r": {
           "node_type": "quoted",
-          "value": "IIB"
+          "content": "Stage II"
         }
       }
     },
@@ -29,11 +30,12 @@
       "node_type": "=",
       "l": {
         "node_type": "column",
-        "value": "primary_diagnosis_site"
+        "content": "primary_diagnosis_site"
       },
       "r": {
         "node_type": "quoted",
-        "value": "Lung"
+        "content": "Kidney"
       }
     }
   }
+}

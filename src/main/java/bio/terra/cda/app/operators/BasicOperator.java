@@ -2,7 +2,6 @@ package bio.terra.cda.app.operators;
 
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.generated.model.Operator;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -11,12 +10,13 @@ public class BasicOperator extends Operator {
   private String value;
   private List<BasicOperator> operators;
 
-  public BasicOperator(){
+  public BasicOperator() {
     QueryOperator operator = this.getClass().getAnnotation(QueryOperator.class);
-    if (Objects.nonNull(operator)){
+    if (Objects.nonNull(operator)) {
       this.setNodeType(operator.nodeType());
     }
   }
+
   public BasicOperator(Operator.NodeTypeEnum nodeType) {
     this.setNodeType(nodeType);
   }
@@ -66,7 +66,8 @@ public class BasicOperator extends Operator {
   protected void addJoins(QueryContext ctx) {
     ctx.addJoins(
         ctx.getJoinBuilder()
-            .getJoinsFromQueryField(ctx.getTable(), ctx.getQueryFieldBuilder().fromPath(getValue())));
+            .getJoinsFromQueryField(
+                ctx.getTable(), ctx.getQueryFieldBuilder().fromPath(getValue())));
   }
 
   public BasicOperator setOperators(List<BasicOperator> operators) {
@@ -86,6 +87,7 @@ public class BasicOperator extends Operator {
   public String getValue() {
     return this.value;
   }
+
   private String toIndentedString(Object o) {
     if (o == null) {
       return "null";
@@ -97,7 +99,7 @@ public class BasicOperator extends Operator {
   public String toString() {
     StringBuilder sb = new StringBuilder();
 
-    sb.append(String.format("class %s {\n",this.getClass().getCanonicalName()));
+    sb.append(String.format("class %s {\n", this.getClass().getCanonicalName()));
     sb.append("    nodeType: ").append(toIndentedString(this.getNodeType())).append("\n");
     sb.append("    operators: ").append(toIndentedString(this.getOperators())).append("\n");
     sb.append("    value: ").append(toIndentedString(this.getValue())).append("\n");

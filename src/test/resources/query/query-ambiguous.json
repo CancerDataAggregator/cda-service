@@ -1,25 +1,27 @@
 {
-  "node_type": "SUBQUERY",
-  "l": {
-    "node_type": "=",
+  "where": {
+    "node_type": "SUBQUERY",
     "l": {
-      "node_type": "column",
-      "value": "species"
+      "node_type": "=",
+      "l": {
+        "node_type": "column",
+        "content": "species"
+      },
+      "r": {
+        "node_type": "quoted",
+        "content": "human"
+      }
     },
     "r": {
-      "node_type": "quoted",
-      "value": "human"
-    }
-  },
-  "r": {
-    "node_type": "=",
-    "l": {
-      "node_type": "column",
-      "value": "species"
-    },
-    "r": {
-      "node_type": "quoted",
-      "value": "dog"
+      "node_type": "=",
+      "l": {
+        "node_type": "column",
+        "content": "species"
+      },
+      "r": {
+        "node_type": "quoted",
+        "content": "dog"
+      }
     }
   }
 }

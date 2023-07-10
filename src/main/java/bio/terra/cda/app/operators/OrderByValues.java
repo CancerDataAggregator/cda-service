@@ -1,11 +1,10 @@
 package bio.terra.cda.app.operators;
 
 import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.generated.model.Query;
-
+import bio.terra.cda.generated.model.Operator;
 import java.util.Arrays;
 
-@QueryOperator(nodeType = Query.NodeTypeEnum.ORDERBYVALUES)
+@QueryOperator(nodeType = Operator.NodeTypeEnum.ORDERBYVALUES)
 public class OrderByValues extends BasicOperator {
 
   @Override
@@ -21,5 +20,4 @@ public class OrderByValues extends BasicOperator {
             .map(ctx.getQueryFieldBuilder()::fromPath)
             .map(ctx.getOrderByBuilder()::fromQueryField));
   }
-
 }

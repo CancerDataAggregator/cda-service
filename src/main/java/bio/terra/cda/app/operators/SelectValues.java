@@ -1,11 +1,10 @@
 package bio.terra.cda.app.operators;
 
 import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.generated.model.Query;
-
+import bio.terra.cda.generated.model.Operator;
 import java.util.Arrays;
 
-@QueryOperator(nodeType = {Query.NodeTypeEnum.SELECTVALUES})
+@QueryOperator(nodeType = Operator.NodeTypeEnum.SELECTVALUES)
 public class SelectValues extends BasicOperator {
 
   @Override
@@ -24,9 +23,9 @@ public class SelectValues extends BasicOperator {
         .map(String::trim)
         .map(ctx.getQueryFieldBuilder()::fromPath)
         .filter(field -> !field.getTableName().equals(entityTable))
-        .forEach(field -> ctx.addJoins(ctx.getJoinBuilder().getJoinsFromQueryField(entityTable, field)));
+        .forEach(
+            field -> ctx.addJoins(ctx.getJoinBuilder().getJoinsFromQueryField(entityTable, field)));
   }
-
 
   private void addSelects(QueryContext ctx) {
     ctx.addSelects(
@@ -35,5 +34,4 @@ public class SelectValues extends BasicOperator {
             .map(ctx.getQueryFieldBuilder()::fromPath)
             .map(ctx.getSelectBuilder()::fromQueryField));
   }
-
 }

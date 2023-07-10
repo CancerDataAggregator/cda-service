@@ -1,18 +1,14 @@
 {
-  "node_type": "SELECT",
-  "l": {
-    "node_type": "SELECTVALUES",
-    "value": "subject_id, primary_diagnosis_site, primary_diagnosis_condition"
-  },
-  "r": {
-    "node_type": "=",
-    "l": {
-      "node_type": "column",
-      "value": "subject_id"
+  "select" : ["one","two","three"],
+  "where" : {
+    "node_type" : "=",
+    "l" : {
+      "value" : "subject_id",
+      "node_type" : "column"
     },
-    "r": {
-      "node_type": "quoted",
-      "value": "test"
+    "r" : {
+      "value" : "test",
+      "node_type" : "quoted"
     }
   }
 }

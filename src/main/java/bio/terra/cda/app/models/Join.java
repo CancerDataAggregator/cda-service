@@ -1,6 +1,5 @@
 package bio.terra.cda.app.models;
 
-import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.app.util.SqlUtil;
 
 public class Join {

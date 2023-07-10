@@ -1,8 +1,5 @@
 package bio.terra.cda.app.models;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ColumnDefinition {
   private Boolean isNullable;
   private String name;
@@ -10,12 +7,13 @@ public class ColumnDefinition {
   private String tableName;
   private String type;
   private String description;
-//  private List<ForeignKey> foreignKeys = new ArrayList<>();
+  //  private List<ForeignKey> foreignKeys = new ArrayList<>();
   private String alias;
   private CountByField[] countByFields;
   private boolean excludeFromSelect;
 
-  public ColumnDefinition(String name, String tableName, String type, String description, Boolean isNullable) {
+  public ColumnDefinition(
+      String name, String tableName, String type, String description, Boolean isNullable) {
     setName(name);
     setTableName(tableName);
     setType(type);
@@ -55,7 +53,6 @@ public class ColumnDefinition {
     this.type = type;
   }
 
-
   public void setDescription(String description) {
     this.description = description;
   }
@@ -63,7 +60,6 @@ public class ColumnDefinition {
   public String getDescription() {
     return this.description;
   }
-
 
   public String getAlias() {
     if (alias == null) {

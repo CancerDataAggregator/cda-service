@@ -1,7 +1,6 @@
 package bio.terra.cda.app.operators;
 
 import bio.terra.cda.generated.model.Operator;
-import bio.terra.cda.generated.model.Query;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -128,8 +127,7 @@ public class OperatorDeserializer extends JsonDeserializer<Operator> {
             if (arrNode.hasNonNull("node_type")) {
               content.add((BasicOperator) codec.treeToValue(arrNode, Operator.class));
             } else {
-              BasicOperator column =
-                      new Column().setValue(arrNode.textValue());
+              BasicOperator column = new Column().setValue(arrNode.textValue());
               content.add(column);
             }
           }

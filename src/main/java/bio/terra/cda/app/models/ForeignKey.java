@@ -6,13 +6,13 @@ public class ForeignKey {
   private String destinationTableName;
   private String[] fields;
 
-
-  public static ForeignKey ofSingle(String fromTablename, String fromField, String destinationTableName, String foreignField) {
+  public static ForeignKey ofSingle(
+      String fromTablename, String fromField, String destinationTableName, String foreignField) {
     ForeignKey fk = new ForeignKey();
     fk.setFromTableName(fromTablename);
     fk.setFromField(fromField);
     fk.setDestinationTableName(destinationTableName);
-    fk.setFields(new String[]{foreignField});
+    fk.setFields(new String[] {foreignField});
     return fk;
   }
 
@@ -47,5 +47,4 @@ public class ForeignKey {
   public void setFields(String[] fields) {
     this.fields = fields;
   }
-
 }

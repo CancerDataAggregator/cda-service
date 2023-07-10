@@ -5,7 +5,7 @@ public class QueryField {
   private final String name;
   private final String path;
   private final String alias;
-//  private final String columnText;
+  //  private final String columnText;
   private final ColumnDefinition columnDefinition;
   private final boolean filesQuery;
   private final String tableName;
