@@ -263,13 +263,35 @@
             "description": "Unique GDC identifier for tumor aliquot (10189 unique)",
             "mode": "NULLABLE",
             "type": "STRING",
-            "name": "Tumor_Aliquot_UUID"
+            "name": "Tumor_Aliquot_UUID",
+            "foreignKeys": [
+                {
+                    "fields": [
+                        "specimen_id"
+                    ],
+                    "type": "COMPOSITE_OR",
+                    "tableName": "all_merged_subjects_v3_3_final",
+                    "tableAlias": "specimen",
+                    "location": "ResearchSubject.Specimen"
+                }
+            ]
         },
         {
             "description": "Unique GDC identifier for normal aliquot (10189 unique)",
             "mode": "NULLABLE",
             "type": "STRING",
-            "name": "Matched_Norm_Aliquot_UUID"
+            "name": "Matched_Norm_Aliquot_UUID",
+            "foreignKeys": [
+                {
+                    "fields": [
+                        "specimen_id"
+                    ],
+                    "type": "COMPOSITE_OR",
+                    "tableName": "all_merged_subjects_v3_3_final",
+                    "tableAlias": "specimen",
+                    "location": "ResearchSubject.Specimen"
+                }
+            ]
         },
         {
             "description": "The coding sequence of the variant in HGVS recommended format",
