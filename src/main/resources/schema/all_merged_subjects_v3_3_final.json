@@ -517,8 +517,8 @@
                             "foreignKeys": [
                                 {
                                     "fields": [
-                                        "Tumor_Sample_UUID",
-                                        "Matched_Norm_Sample_UUID"
+                                        "Tumor_Aliquot_UUID",
+                                        "Matched_Norm_Aliquot_UUID"
                                     ],
                                     "type": "COMPOSITE_OR",
                                     "tableName": "somatic_mutation_hg38_gdc_r36_v3_3_final",
