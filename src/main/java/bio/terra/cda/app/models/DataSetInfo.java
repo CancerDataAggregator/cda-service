@@ -204,14 +204,19 @@ public class DataSetInfo {
 
     private void addTableFromJson(String tableName, JsonNode tableNode) {
       boolean isMappingTable = false;
+      List<String> primaryKeys = Collections.emptyList();
+      if (tableNode.get("alter").has("primary_keys")) {
+        primaryKeys = getPrimaryKeysFromJson(tableNode.get("alter").get("primary_keys"));
+      }
       TableInfo.TableInfoBuilder builder =
           new TableInfo.TableInfoBuilder()
               .setTableName(tableName)
               .setColumnDefinitions(createColumnDefinitions(tableNode.get("columns"), tableName))
-              .setPrimaryKeys(getPrimaryKeysFromJson(tableNode.get("alter").get("primary_keys")));
+              .setPrimaryKeys(primaryKeys);
       if (tableNode.get("alter").has("columns")) {
-        isMappingTable = true;
-        builder.setIsMappingTable(true);
+        // somatic_mutations is the only table that has column constraints but isn't actually a  mapping table
+        isMappingTable = !tableName.equals("somatic_mutations");
+        builder.setIsMappingTable(isMappingTable);
         builder.setTableRelationships(
             getRelationshipsFromJson(tableName, tableNode.get("alter").get("columns")));
       }

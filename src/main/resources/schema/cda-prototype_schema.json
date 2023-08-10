@@ -36,11 +36,15 @@
   "value": "off"
  },
  {
+  "schema_name": "public"
+ },
+ {
   "schema": "public",
-  "type_name": "count_results",
+  "type_name": "system_data",
   "properties": {
-   "name": "text",
-   "count": "integer"
+   "system": "text",
+   "field_name": "text",
+   "value": "text"
   },
   "base_type": null
  },
@@ -463,7 +467,7 @@
    "columns": [
     {
      "name": "file_id",
-     "constraint_name": "file_id_fkey",
+     "constraint_name": "file_associated_project_file_id_fkey",
      "references": {
       "table": "file",
       "schema": "public",
@@ -1038,6 +1042,1653 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "researchsubject_treatment"
+ },
+ {
+  "columns": [
+   {
+    "name": "project_short_name",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "case_barcode",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "cda_subject_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "primary_site",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "hugo_symbol",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "entrez_gene_id",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "center",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "ncbi_build",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "chromosome",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "start_position",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "end_position",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "strand",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "variant_classification",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "variant_type",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "reference_allele",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "tumor_seq_allele1",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "tumor_seq_allele2",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "dbsnp_rs",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "dbsnp_val_status",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "tumor_aliquot_barcode",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "matched_norm_aliquot_barcode",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "match_norm_seq_allele1",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "match_norm_seq_allele2",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "tumor_validation_allele1",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "tumor_validation_allele2",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "match_norm_validation_allele1",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "match_norm_validation_allele2",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "verification_status",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "validation_status",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "mutation_status",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "sequencing_phase",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "sequence_source",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "validation_method",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "score",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "bam_file",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "sequencer",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "tumor_aliquot_uuid",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "matched_norm_aliquot_uuid",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "hgvsc",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "hgvsp",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "hgvsp_short",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "transcript_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "exon_number",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "t_depth",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "t_ref_count",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "t_alt_count",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "n_depth",
+    "type": "integer",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "n_ref_count",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "n_alt_count",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "all_effects",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "allele",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gene",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "feature",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "feature_type",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "one_consequence",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "consequence",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "cdna_position",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "cds_position",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "protein_position",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "amino_acids",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "codons",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "existing_variation",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "distance",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "transcript_strand",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "symbol",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "symbol_source",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "hgnc_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "biotype",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "canonical",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "ccds",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "ensp",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "swissprot",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "trembl",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "uniparc",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "uniprot_isoform",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "refseq",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "mane",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "appris",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "flags",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "sift",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "polyphen",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "exon",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "intron",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "domains",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "thousg_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "thousg_afr_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "thousg_amr_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "thousg_eas_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "thousg_eur_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "thousg_sas_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "esp_aa_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "esp_ea_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_afr_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_amr_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_asj_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_eas_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_fin_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_nfe_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_oth_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_sas_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "max_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "max_af_pops",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_afr_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_ami_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_amr_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_asj_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_eas_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_fin_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_mid_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_nfe_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_oth_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_sas_af",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_max_af_adj",
+    "type": "numeric",
+    "size": [
+     25,
+     20
+    ],
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gnomad_non_cancer_max_af_pops_adj",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "clin_sig",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "somatic",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "pubmed",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "transcription_factors",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "motif_name",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "motif_pos",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "high_inf_pos",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "motif_score_change",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "mirna",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "impact",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "pick",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "variant_class",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "tsl",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "hgvs_offset",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "pheno",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gene_pheno",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "context",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "tumor_submitter_uuid",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "normal_submitter_uuid",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "case_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "gdc_filter",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "cosmic",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "hotspot",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "rna_support",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "rna_depth",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "rna_ref_count",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "rna_alt_count",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "callers",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_gdc_id",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "muse",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "mutect2",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "pindel",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "varscan2",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "sample_barcode_tumor",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "sample_barcode_normal",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "aliquot_barcode_tumor",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "aliquot_barcode_normal",
+    "type": "text",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": true,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "columns": [
+    {
+     "name": "cda_subject_id",
+     "constraint_name": "somatic_mutation_cda_subject_id_fkey",
+     "references": {
+      "table": "subject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "id"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "somatic_mutation"
  },
  {
   "columns": [
