@@ -34,6 +34,11 @@ public class SelectValues extends BasicOperator {
             .map(String::trim)
             .map(ctx.getQueryFieldBuilder()::fromPath)
             .map(ctx.getSelectBuilder()::fromQueryField));
+
+    Arrays.stream(getValue().split(","))
+        .map(String::trim)
+        .map(ctx.getQueryFieldBuilder()::fromPath)
+        .forEach(queryField -> ctx.addGroupBy(queryField.getColumn()));
   }
 
 }

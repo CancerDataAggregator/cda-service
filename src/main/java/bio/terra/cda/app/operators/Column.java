@@ -18,7 +18,7 @@ public class Column extends BasicOperator {
       ctx.addJoins(ctx.getJoinBuilder().getJoinsFromQueryField(ctx.getTable(), queryField));
     }
 
-    var columnText = queryField.getName();
+    var columnText = String.format("%s.%s", queryField.getTableName(), queryField.getName());
 
     BasicOperator parent = getParent();
     NodeTypeEnum nodeType = parent.getNodeType();

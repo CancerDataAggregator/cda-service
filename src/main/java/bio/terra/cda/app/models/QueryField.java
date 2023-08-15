@@ -47,6 +47,10 @@ public class QueryField {
     return this.alias;
   }
 
+  public ColumnDefinition getColumn() {
+    return columnDefinition;
+  }
+
   public String getType() {
     return this.columnDefinition.getType();
   }

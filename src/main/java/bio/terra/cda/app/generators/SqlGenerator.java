@@ -262,34 +262,6 @@ public class SqlGenerator {
         aggregateFields.values().stream());
   }
 
-//  protected Stream<String> combinedSelects(
-//      QueryContext ctx, String prefix, Stream<String> idSelects) {
-//    TableInfo fileTableInfo = this.dataSetInfo.getTableInfo(RdbmsSchema.FILE_TABLE);
-////    List<String> fileFilteredFields =
-////        Arrays.stream(fileTableInfo.getColumnDefinitions())
-////            .filter(ColumnDefinition::isExcludeFromSelect)
-////            .map(ColumnDefinition::getName)
-////            .collect(Collectors.toList());
-//
-//    return Stream.concat(
-//            Arrays.stream(
-//                    ctx.getFilesQuery()
-//                        ? this.dataSetInfo
-//                            .getTableInfo(RdbmsSchema.FILE_TABLE)
-//                            .getColumnDefinitions()
-//                        : this.entityTable.getColumnDefinitions())
-////                .filter(
-////                    definition ->
-////                        !(ctx.getFilesQuery() && fileFilteredFields.contains(definition.getName()))
-////                            && (skipExcludes || !filteredFields.contains(definition.getName())))
-//                .map(
-//                    definition -> {
-//                      String fieldSelect = String.format("%s.%s", prefix, definition.getName());
-//                      return String.format("%1$s AS %2$s", fieldSelect, definition.getName());
-//                    }),
-//            idSelects)
-//        .distinct();
-//  }
 
   protected String getWithStatement() {
     return String.format(

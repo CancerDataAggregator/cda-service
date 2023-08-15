@@ -71,18 +71,12 @@ public class QueryApiController implements QueryApi {
   private PagedResponseData checkAndSetNextUrl(PagedResponseData response, String endpoint, int offset, int limit) {
     List<Object> result = response.getResult();
     if (result != null && result.size() == limit) {
-      var path = String.format("/api/v1/%s?offset=%s&limit=%s", endpoint, offset+limit, limit);
-
-      try {
-        URL baseUrl = new URL(webRequest.getHeader("referer"));
-        response.setNextUrl(new URL(baseUrl.getProtocol(), baseUrl.getHost(), baseUrl.getPort(), path).toString());
-      } catch (MalformedURLException e) {
-        // Not sure what a good fallback would be here.
-        logger.error("Error creating next url", e);
-      }
+      StringBuffer url = webRequest.getRequestURL();
+      System.out.println(url.toString());
+      url.append(String.format("?offset=%s&limit=%s", offset+limit, limit));
+      response.setNextUrl(url.toString());
     }
     return response;
-
   }
 
 
