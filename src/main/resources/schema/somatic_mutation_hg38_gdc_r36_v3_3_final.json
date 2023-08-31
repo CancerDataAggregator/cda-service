@@ -885,18 +885,7 @@
             "description": "Unique GDC identifier for the underlying case",
             "mode": "NULLABLE",
             "type": "STRING",
-            "name": "case_id",
-            "foreignKeys": [
-                {
-                    "fields": [
-                        "researchsubject_id"
-                    ],
-                    "type": "SINGLE",
-                    "tableName": "all_merged_subjects_v3_3_final",
-                    "tableAlias": "researchsubjects",
-                    "location": "ResearchSubject"
-                }
-            ]
+            "name": "case_id"
         },
         {
             "description": "GDC filters applied universally across all MAFs",
