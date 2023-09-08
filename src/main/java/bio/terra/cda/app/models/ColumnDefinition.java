@@ -16,7 +16,8 @@ public class ColumnDefinition {
   private boolean excludeFromSelect;
 
   public ColumnDefinition(String name, String tableName, String type, String description, Boolean isNullable) {
-    setName(name);
+    // TODO add the toLowerCase for sql compatibility with all uppercase column names in the BQ mutations table.
+    setName(name.toLowerCase());
     setTableName(tableName);
     setType(type);
     setDescription(description);

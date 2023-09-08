@@ -5,6 +5,8 @@ public class OrderBy {
   private final String path;
   private final OrderByModifier modifier;
 
+  private String collation = "COLLATE \"POSIX\"";
+
   public enum OrderByModifier {
     ASC("asc"),
     DESC("desc");
@@ -36,6 +38,6 @@ public class OrderBy {
 
   @Override
   public String toString() {
-    return String.format("%s %s", path, modifier.value);
+    return String.format("%s %s %s", path, collation, modifier.value);
   }
 }
