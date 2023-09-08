@@ -2,7 +2,7 @@
   "node_type": "=",
   "l": {
     "node_type": "column",
-    "value": "subject_id"
+    "value": "SUBJECT_ID"
   },
   "r": {
     "node_type": "quoted",

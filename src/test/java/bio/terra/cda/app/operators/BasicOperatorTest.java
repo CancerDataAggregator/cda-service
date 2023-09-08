@@ -45,7 +45,7 @@ public class BasicOperatorTest {
 
   @Test
   void testAndOr() throws IOException {
-    BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-kidney.json");
+    BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-lung.json");
     SqlGenerator sqlgen = new SqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
 

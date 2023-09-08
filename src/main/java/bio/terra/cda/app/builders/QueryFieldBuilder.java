@@ -24,10 +24,9 @@ public class QueryFieldBuilder {
   public QueryField fromPath(String path) {
     String[] modSplit = path.split(" ");
     String modPath = modSplit[0];
-    String[] parts = SqlUtil.getParts(modPath);
     ColumnDefinition columnDefinition =
-        dataSetInfo.getColumnDefinitionByFieldName(modPath);
-    TableInfo tableInfo = dataSetInfo.getTableInfoFromField(modPath);
+        dataSetInfo.getColumnDefinitionByFieldName(modPath.toLowerCase());
+    TableInfo tableInfo = dataSetInfo.getTableInfoFromField(modPath.toLowerCase());
 
     if (Objects.isNull(columnDefinition)) {
       throw new IllegalArgumentException(String.format("Column %s does not exist", path));

@@ -16,7 +16,7 @@ public class OperatorDeserializerTest {
 
   @Test
   void testKidney() throws Exception {
-    String jsonQuery = Files.readString(TEST_FILES.resolve("query-kidney.json"));
+    String jsonQuery = Files.readString(TEST_FILES.resolve("query-lung.json"));
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
 
