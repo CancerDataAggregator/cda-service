@@ -10,7 +10,7 @@ public class OrderByBuilder {
   public OrderBy fromQueryField(QueryField queryField) {
     return new OrderBy(
         queryField.getName(),
-        queryField.getAlias(),
+        String.format("%s.%s", queryField.getTableName(), queryField.getName()),
         OrderBy.OrderByModifier.valueOf(queryField.getModifier()));
   }
 }
