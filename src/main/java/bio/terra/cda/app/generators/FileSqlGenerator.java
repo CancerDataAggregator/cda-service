@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @QueryGenerator(entity = "file", hasFiles = true, defaultOrderBy = "file_id",
+    additionalFields = {},
     aggregatedFields = {"file_identifier_system", "file_associated_project_associated_project"},
     aggregatedFieldsSelectString = {
         "json_agg(distinct (file_identifier.system, file_identifier.field_name, file_identifier.value)::system_data) as file_identifier",

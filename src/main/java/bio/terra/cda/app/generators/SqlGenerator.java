@@ -20,6 +20,7 @@ public class SqlGenerator {
   final DataSetInfo dataSetInfo;
   final boolean filesQuery;
 
+  List<ColumnDefinition> additionalColumns = Collections.emptyList();
   Map<ColumnDefinition, String> aggregatedFieldsAndSelectString = new LinkedHashMap<>();
   boolean modularEntity;
   SelectBuilder selectBuilder = new SelectBuilder();
@@ -75,6 +76,10 @@ public class SqlGenerator {
       if (!Strings.isNullOrEmpty(defaultOrderByField)) {
         defaultOrderBy = orderByBuilder.fromQueryField(queryFieldBuilder.fromPath(defaultOrderByField));
       }
+
+      additionalColumns = Arrays.stream(queryGenerator.additionalFields())
+          .map(field-> dataSetInfo.getColumnDefinitionByFieldName(field)).collect(Collectors.toList());
+
       List<ColumnDefinition> colList = Arrays.stream(queryGenerator.aggregatedFields())
             .map(field -> dataSetInfo.getColumnDefinitionByFieldName(field))
             .collect(Collectors.toList());
@@ -93,7 +98,7 @@ public class SqlGenerator {
         .setFilesQuery(filesQuery)
         .setTableInfo(entityTable)
         .setIncludeSelect(!subQuery)
-        .setQueryFieldBuilder(queryFieldBuilder)
+        .setQueryFieldBuilder(filesQuery ? filesQueryFieldBuilder : queryFieldBuilder)
         .setSelectBuilder(selectBuilder)
         .setJoinBuilder(joinBuilder)
         .setParameterBuilder(parameterBuilder)
@@ -220,6 +225,7 @@ public class SqlGenerator {
     } else {
       return getSelectsFromEntity(
           ctx,
+          additionalColumns,
           this.filesQuery ? FileSqlGenerator.getExternalFieldsAndSqlString() :
           getAggregatedFieldsAndSelectString());
     }
@@ -230,9 +236,15 @@ public class SqlGenerator {
   }
 
   protected Stream<String> getSelectsFromEntity(
-      QueryContext ctx, Map<ColumnDefinition, String> aggregateFields) {
+      QueryContext ctx, List<ColumnDefinition> additionalColumns, Map<ColumnDefinition, String> aggregateFields) {
 
-    aggregateFields.keySet().forEach(col -> {
+    Set<ColumnDefinition> totalExternalColumns = new HashSet<>();
+    totalExternalColumns.addAll(aggregateFields.keySet());
+    System.out.println("additionalColumns is null: " + additionalColumns == null);
+    System.out.println("additionalColumns is not empty: " + additionalColumns.size());
+    System.out.println("The column: " + additionalColumns.get(0));
+    totalExternalColumns.addAll(additionalColumns);
+    totalExternalColumns.forEach(col -> {
       if (!this.entityTable.getTableName().equals(col.getTableName())) {
         List<Join> path =
             ctx.getJoinBuilder()
@@ -249,6 +261,7 @@ public class SqlGenerator {
       columns.addAll(Arrays.asList(dataSetInfo.getTableInfo("file").getColumnDefinitions()));
     } else {
       columns.addAll(Arrays.asList(this.entityTable.getColumnDefinitions()));
+      columns.addAll(additionalColumns);
 
     }
     return Stream.concat(

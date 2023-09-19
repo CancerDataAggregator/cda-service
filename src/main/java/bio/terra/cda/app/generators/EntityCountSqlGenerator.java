@@ -132,7 +132,7 @@ public class EntityCountSqlGenerator extends SqlGenerator {
 
   @Override
   protected Stream<String> getSelectsFromEntity(
-      QueryContext ctx, Map<ColumnDefinition, String> aggregateFieldsAndSql) {
+      QueryContext ctx, List<ColumnDefinition> additionalColumns, Map<ColumnDefinition, String> aggregateFieldsAndSql) {
 
     List<ColumnDefinition> totalFields = totalCountFields;
     if (filesQuery) {
