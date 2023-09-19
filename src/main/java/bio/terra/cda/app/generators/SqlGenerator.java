@@ -240,9 +240,6 @@ public class SqlGenerator {
 
     Set<ColumnDefinition> totalExternalColumns = new HashSet<>();
     totalExternalColumns.addAll(aggregateFields.keySet());
-    System.out.println("additionalColumns is null: " + additionalColumns == null);
-    System.out.println("additionalColumns is not empty: " + additionalColumns.size());
-    System.out.println("The column: " + additionalColumns.get(0));
     totalExternalColumns.addAll(additionalColumns);
     totalExternalColumns.forEach(col -> {
       if (!this.entityTable.getTableName().equals(col.getTableName())) {
