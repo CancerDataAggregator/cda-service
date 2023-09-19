@@ -9,7 +9,7 @@
             "partitionBy": true,
             "countByFields": [
                 {
-                    "table": "all_merged_files_v3_3_final",
+                    "table": "all_merged_files_v3_4_final",
                     "field": "id",
                     "alias": "files",
                     "type": "TOTAL"
@@ -26,7 +26,7 @@
                         "cda_subject_id"
                     ],
                     "type": "SINGLE",
-                    "tableName": "somatic_mutation_hg38_gdc_r36_v3_3_final",
+                    "tableName": "somatic_mutation_hg38_gdc_r36_v3_4_final",
                     "tableAlias": "mutations"
                 },
                 {
@@ -34,7 +34,7 @@
                         "Subjects"
                     ],
                     "type": "SINGLE",
-                    "tableName": "all_merged_files_v3_3_final",
+                    "tableName": "all_merged_files_v3_4_final",
                     "tableAlias": "files"
                 }
             ]
@@ -164,7 +164,7 @@
                     "partitionBy": true,
                     "countByFields": [
                         {
-                            "table": "all_merged_files_v3_3_final",
+                            "table": "all_merged_files_v3_4_final",
                             "field": "id",
                             "alias": "files",
                             "type": "TOTAL"
@@ -485,7 +485,7 @@
                             "partitionBy": true,
                             "countByFields": [
                                 {
-                                    "table": "all_merged_files_v3_3_final",
+                                    "table": "all_merged_files_v3_4_final",
                                     "field": "id",
                                     "alias": "files",
                                     "type": "TOTAL"
@@ -502,7 +502,7 @@
                                         "Specimens"
                                     ],
                                     "type": "SINGLE",
-                                    "tableName": "all_merged_files_v3_3_final",
+                                    "tableName": "all_merged_files_v3_4_final",
                                     "tableAlias": "files"
                                 }
                             ]

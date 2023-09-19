@@ -38,7 +38,7 @@
                         "subject_id"
                     ],
                     "type": "SINGLE",
-                    "tableName": "all_merged_subjects_v3_3_final",
+                    "tableName": "all_merged_subjects_v3_4_final",
                     "tableAlias": "subjects"
                 }
             ]
@@ -263,35 +263,13 @@
             "description": "Unique GDC identifier for tumor aliquot (10189 unique)",
             "mode": "NULLABLE",
             "type": "STRING",
-            "name": "Tumor_Aliquot_UUID",
-            "foreignKeys": [
-                {
-                    "fields": [
-                        "specimen_id"
-                    ],
-                    "type": "COMPOSITE_OR",
-                    "tableName": "all_merged_subjects_v3_3_final",
-                    "tableAlias": "specimen",
-                    "location": "ResearchSubject.Specimen"
-                }
-            ]
+            "name": "Tumor_Aliquot_UUID"
         },
         {
             "description": "Unique GDC identifier for normal aliquot (10189 unique)",
             "mode": "NULLABLE",
             "type": "STRING",
-            "name": "Matched_Norm_Aliquot_UUID",
-            "foreignKeys": [
-                {
-                    "fields": [
-                        "specimen_id"
-                    ],
-                    "type": "COMPOSITE_OR",
-                    "tableName": "all_merged_subjects_v3_3_final",
-                    "tableAlias": "specimen",
-                    "location": "ResearchSubject.Specimen"
-                }
-            ]
+            "name": "Matched_Norm_Aliquot_UUID"
         },
         {
             "description": "The coding sequence of the variant in HGVS recommended format",
