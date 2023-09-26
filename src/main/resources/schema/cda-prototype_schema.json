@@ -63,7 +63,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The logical identifier of the entity in the repository, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system.;"
+    "comment": "The logical identifier of the entity in the repository, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system."
    },
    {
     "name": "primary_diagnosis",
@@ -74,7 +74,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The diagnosis instance that qualified a subject for inclusion on a ResearchProject.;"
+    "comment": "The diagnosis instance that qualified a subject for inclusion on a ResearchProject."
    },
    {
     "name": "age_at_diagnosis",
@@ -85,7 +85,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The age in days of the individual at the time of diagnosis.;"
+    "comment": "The age in days of the individual at the time of diagnosis."
    },
    {
     "name": "morphology",
@@ -96,7 +96,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Code that represents the histology of the disease using the third edition of the International Classification of Diseases for Oncology, published in 2000, used principally in tumor and cancer registries for coding the site (topography) and the histology (morphology) of neoplasms.;"
+    "comment": "Code that represents the histology of the disease using the third edition of the International Classification of Diseases for Oncology, published in 2000, used principally in tumor and cancer registries for coding the site (topography) and the histology (morphology) of neoplasms."
    },
    {
     "name": "stage",
@@ -107,7 +107,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The extent of a cancer in the body. Staging is usually based on the size of the tumor, whether lymph nodes contain cancer, and whether the cancer has spread from the original site to other parts of the body.;"
+    "comment": "The extent of a cancer in the body. Staging is usually based on the size of the tumor, whether lymph nodes contain cancer, and whether the cancer has spread from the original site to other parts of the body."
    },
    {
     "name": "grade",
@@ -118,7 +118,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The degree of abnormality of cancer cells, a measure of differentiation, the extent to which cancer cells are similar in appearance and function to healthy cells of the same tissue type. The degree of differentiation often relates to the clinical behavior of the particular tumor. Based on the microscopic findings, tumor grade is commonly described by one of four degrees of severity. Histopathologic grade of a tumor may be used to plan treatment and estimate the future course, outcome, and overall prognosis of disease. Certain types of cancers, such as soft tissue sarcoma, primary brain tumors, lymphomas, and breast have special grading systems.;"
+    "comment": "The degree of abnormality of cancer cells, a measure of differentiation, the extent to which cancer cells are similar in appearance and function to healthy cells of the same tissue type. The degree of differentiation often relates to the clinical behavior of the particular tumor. Based on the microscopic findings, tumor grade is commonly described by one of four degrees of severity. Histopathologic grade of a tumor may be used to plan treatment and estimate the future course, outcome, and overall prognosis of disease. Certain types of cancers, such as soft tissue sarcoma, primary brain tumors, lymphomas, and breast have special grading systems."
    },
    {
     "name": "method_of_diagnosis",
@@ -129,7 +129,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The method used to confirm the subjects malignant diagnosis.;"
+    "comment": "The method used to confirm the subjects malignant diagnosis."
    }
   ],
   "primary_key": [],
@@ -149,7 +149,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "diagnosis",
-  "comment": "A collection of characteristics that describe an abnormal condition of the body as assessed at a point in time. May be used to capture information about neoplastic and non-neoplastic conditions.;"
+  "comment": "A collection of characteristics that describe an abnormal condition of the body as assessed at a point in time. May be used to capture information about neoplastic and non-neoplastic conditions."
  },
  {
   "columns": [
@@ -172,7 +172,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The system or namespace that defines the identifier.;"
+    "comment": "The system or namespace that defines the identifier."
    },
    {
     "name": "field_name",
@@ -193,7 +193,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The value of the identifier, as defined by the system.;"
+    "comment": "The value of the identifier, as defined by the system."
    }
   ],
   "primary_key": [],
@@ -230,7 +230,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "diagnosis_identifier",
-  "comment": "A business identifier or accession number for a Diagnosis, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier).;"
+  "comment": "A business identifier or accession number for a Diagnosis, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier)."
  },
  {
   "columns": [
@@ -311,7 +311,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The logical identifier of the entity in the repository, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system.;"
+    "comment": "The logical identifier of the entity in the repository, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system."
    },
    {
     "name": "label",
@@ -322,7 +322,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Short name or abbreviation for dataset. Maps to rdfs:label.;"
+    "comment": "Short name or abbreviation for dataset. Maps to rdfs:label."
    },
    {
     "name": "data_category",
@@ -333,7 +333,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Broad categorization of the contents of the data file.;"
+    "comment": "Broad categorization of the contents of the data file."
    },
    {
     "name": "data_type",
@@ -344,7 +344,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Specific content type of the data file.;"
+    "comment": "Specific content type of the data file."
    },
    {
     "name": "file_format",
@@ -355,7 +355,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Format of the data files.;"
+    "comment": "Format of the data files."
    },
    {
     "name": "drs_uri",
@@ -366,7 +366,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "A string of characters used to identify a resource on the Data Repo Service(DRS).;"
+    "comment": "A string of characters used to identify a resource on the Data Repo Service(DRS)."
    },
    {
     "name": "byte_size",
@@ -377,7 +377,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Size of the file in bytes. Maps to dcat:byteSize.;"
+    "comment": "Size of the file in bytes. Maps to dcat:byteSize."
    },
    {
     "name": "checksum",
@@ -388,7 +388,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "A digit representing the sum of the correct digits in a piece of stored or transmitted digital data, against which later comparisons can be made to detect errors in the data.;"
+    "comment": "A digit representing the sum of the correct digits in a piece of stored or transmitted digital data, against which later comparisons can be made to detect errors in the data."
    },
    {
     "name": "data_modality",
@@ -399,7 +399,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Data modality describes the biological nature of the information gathered as the result of an Activity, independent of the technology or methods used to produce the information.;"
+    "comment": "Data modality describes the biological nature of the information gathered as the result of an Activity, independent of the technology or methods used to produce the information."
    },
    {
     "name": "imaging_modality",
@@ -410,7 +410,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "An imaging modality describes the imaging equipment and/or method used to acquire certain structural or functional information about the body. These include but are not limited to computed tomography (CT) and magnetic resonance imaging (MRI). Taken from the DICOM standard.;"
+    "comment": "An imaging modality describes the imaging equipment and/or method used to acquire certain structural or functional information about the body. These include but are not limited to computed tomography (CT) and magnetic resonance imaging (MRI). Taken from the DICOM standard."
    },
    {
     "name": "dbgap_accession_number",
@@ -421,7 +421,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The dbgap accession number for the project.;"
+    "comment": "The dbgap accession number for the project."
    },
    {
     "name": "imaging_series",
@@ -432,7 +432,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The logical identifier of the series or grouping of imaging files in the system of record which the file is a part of.;"
+    "comment": "The logical identifier of the series or grouping of imaging files in the system of record which the file is a part of."
    }
   ],
   "primary_key": [],
@@ -452,7 +452,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "file",
-  "comment": "The core collection of File records.;"
+  "comment": "The core collection of File records."
  },
  {
   "columns": [
@@ -509,7 +509,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "file_associated_project",
-  "comment": "A reference to the Project(s) of which this File is a member. The associated_project may be embedded using the $ref definition or may be a reference to the id for the Project - or a URI expressed as a string to an existing entity.;"
+  "comment": "A reference to the Project(s) of which this File is a member. The associated_project may be embedded using the $ref definition or may be a reference to the id for the Project - or a URI expressed as a string to an existing entity."
  },
  {
   "columns": [
@@ -532,7 +532,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The system or namespace that defines the identifier.;"
+    "comment": "The system or namespace that defines the identifier."
    },
    {
     "name": "field_name",
@@ -553,7 +553,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The value of the identifier, as defined by the system.;"
+    "comment": "The value of the identifier, as defined by the system."
    }
   ],
   "primary_key": [],
@@ -590,7 +590,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "file_identifier",
-  "comment": "A business identifier or accession number for a File, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier).;"
+  "comment": "A business identifier or accession number for a File, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier)."
  },
  {
   "columns": [
@@ -739,7 +739,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The logical identifier of the entity in the system of record, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system. For CDA, this is case_id.;"
+    "comment": "The logical identifier of the entity in the system of record, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system. For CDA, this is case_id."
    },
    {
     "name": "member_of_research_project",
@@ -750,7 +750,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "A reference to the Study(s) of which this ResearchSubject is a member.;"
+    "comment": "A reference to the Study(s) of which this ResearchSubject is a member."
    },
    {
     "name": "primary_diagnosis_condition",
@@ -761,7 +761,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The text term used to describe the type of malignant disease, as categorized by the World Health Organizations (WHO) International Classification of Diseases for Oncology (ICD-O). This attribute represents the disease that qualified the subject for inclusion on the ResearchProject.;"
+    "comment": "The text term used to describe the type of malignant disease, as categorized by the World Health Organizations (WHO) International Classification of Diseases for Oncology (ICD-O). This attribute represents the disease that qualified the subject for inclusion on the ResearchProject."
    },
    {
     "name": "primary_diagnosis_site",
@@ -772,7 +772,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The text term used to describe the primary site of disease, as categorized by the World Health Organizations (WHO) International Classification of Diseases for Oncology (ICD-O). This categorization groups cases into general categories. This attribute represents the primary site of disease that qualified the subject for inclusion on the ResearchProject.;"
+    "comment": "The text term used to describe the primary site of disease, as categorized by the World Health Organizations (WHO) International Classification of Diseases for Oncology (ICD-O). This categorization groups cases into general categories. This attribute represents the primary site of disease that qualified the subject for inclusion on the ResearchProject."
    }
   ],
   "primary_key": [],
@@ -792,7 +792,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "researchsubject",
-  "comment": "A research subject is the entity of interest in a specific research study or project, typically a human being or an animal, but can also be a device, group of humans or animals, or a tissue sample. Human research subjects are usually not traceable to a particular person to protect the subjects privacy. This entity plays the role of the case_id in existing data.;"
+  "comment": "A research subject is the entity of interest in a specific research study or project, typically a human being or an animal, but can also be a device, group of humans or animals, or a tissue sample. Human research subjects are usually not traceable to a particular person to protect the subjects privacy. This entity plays the role of the case_id in existing data."
  },
  {
   "columns": [
@@ -883,7 +883,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The system or namespace that defines the identifier.;"
+    "comment": "The system or namespace that defines the identifier."
    },
    {
     "name": "field_name",
@@ -904,7 +904,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The value of the identifier, as defined by the system.;"
+    "comment": "The value of the identifier, as defined by the system."
    }
   ],
   "primary_key": [],
@@ -941,7 +941,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "researchsubject_identifier",
-  "comment": "A business identifier or accession number for a ResearchSubject, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier).;"
+  "comment": "A business identifier or accession number for a ResearchSubject, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier)."
  },
  {
   "columns": [
@@ -1090,7 +1090,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Project name abbreviation; the program name appended with a project name abbreviation; eg. TCGA-OV, etc.;"
+    "comment": "Project name abbreviation; the program name appended with a project name abbreviation; eg. TCGA-OV, etc."
    },
    {
     "name": "case_barcode",
@@ -1101,7 +1101,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Original case barcode, eg TCGA-DX-A8BN;"
+    "comment": "Original case barcode, eg TCGA-DX-A8BN"
    },
    {
     "name": "cda_subject_id",
@@ -1112,7 +1112,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "CDA subject ID corresponding to value in case_barcode;"
+    "comment": "CDA subject ID corresponding to value in case_barcode"
    },
    {
     "name": "primary_site",
@@ -1123,7 +1123,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Anatomical site of the cancer under investigation or review;"
+    "comment": "Anatomical site of the cancer under investigation or review"
    },
    {
     "name": "hugo_symbol",
@@ -1134,7 +1134,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "HUGO symbol for the gene (HUGO symbols are always in all caps). Unknown is used for regions that do not correspond to a gene;"
+    "comment": "HUGO symbol for the gene (HUGO symbols are always in all caps). Unknown is used for regions that do not correspond to a gene"
    },
    {
     "name": "entrez_gene_id",
@@ -1145,7 +1145,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Entrez gene ID (an integer). 0 is used for regions that do not correspond to a gene region or Ensembl ID;"
+    "comment": "Entrez gene ID (an integer). 0 is used for regions that do not correspond to a gene region or Ensembl ID"
    },
    {
     "name": "center",
@@ -1156,7 +1156,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "One or more genome sequencing center reporting the variant;"
+    "comment": "One or more genome sequencing center reporting the variant"
    },
    {
     "name": "ncbi_build",
@@ -1167,7 +1167,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The reference genome used for the alignment (GRCh38);"
+    "comment": "The reference genome used for the alignment (GRCh38)"
    },
    {
     "name": "chromosome",
@@ -1178,7 +1178,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Chromosome, possible values: chr1-22, and chrX;"
+    "comment": "Chromosome, possible values: chr1-22, and chrX"
    },
    {
     "name": "start_position",
@@ -1189,7 +1189,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Lowest numeric position of the reported variant on the genomic reference sequence. Mutation start coordinate;"
+    "comment": "Lowest numeric position of the reported variant on the genomic reference sequence. Mutation start coordinate"
    },
    {
     "name": "end_position",
@@ -1200,7 +1200,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Highest numeric genomic position of the reported variant on the genomic reference sequence. Mutation end coordinate;"
+    "comment": "Highest numeric genomic position of the reported variant on the genomic reference sequence. Mutation end coordinate"
    },
    {
     "name": "strand",
@@ -1211,7 +1211,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Either + or - to denote whether read mapped to the sense (+) or anti-sense (-) strand;"
+    "comment": "Either + or - to denote whether read mapped to the sense (+) or anti-sense (-) strand"
    },
    {
     "name": "variant_classification",
@@ -1222,7 +1222,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Translational effect of variant allele;"
+    "comment": "Translational effect of variant allele"
    },
    {
     "name": "variant_type",
@@ -1233,7 +1233,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Type of mutation. TNP (tri-nucleotide polymorphism) is analogous to DNP (di-nucleotide polymorphism) but for three consecutive nucleotides. ONP (oligo-nucleotide polymorphism) is analogous to TNP but for consecutive runs of four or more (SNP, DNP, TNP, ONP, INS, DEL, or Consolidated);"
+    "comment": "Type of mutation. TNP (tri-nucleotide polymorphism) is analogous to DNP (di-nucleotide polymorphism) but for three consecutive nucleotides. ONP (oligo-nucleotide polymorphism) is analogous to TNP but for consecutive runs of four or more (SNP, DNP, TNP, ONP, INS, DEL, or Consolidated)"
    },
    {
     "name": "reference_allele",
@@ -1244,7 +1244,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The plus strand reference allele at this position. Includes the deleted sequence for a deletion or - for an insertion;"
+    "comment": "The plus strand reference allele at this position. Includes the deleted sequence for a deletion or - for an insertion"
    },
    {
     "name": "tumor_seq_allele1",
@@ -1255,7 +1255,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Primary data genotype for tumor sequencing (discovery) allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases;"
+    "comment": "Primary data genotype for tumor sequencing (discovery) allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases"
    },
    {
     "name": "tumor_seq_allele2",
@@ -1266,7 +1266,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Primary data genotype for tumor sequencing (discovery) allele 2. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases;"
+    "comment": "Primary data genotype for tumor sequencing (discovery) allele 2. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases"
    },
    {
     "name": "dbsnp_rs",
@@ -1277,7 +1277,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The rs-IDs from the dbSNP database, novel if not found in any database used, or null if there is no dbSNP record, but it is found in other databases;"
+    "comment": "The rs-IDs from the dbSNP database, novel if not found in any database used, or null if there is no dbSNP record, but it is found in other databases"
    },
    {
     "name": "dbsnp_val_status",
@@ -1288,7 +1288,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The dbSNP validation status is reported as a semicolon-separated list of statuses. The union of all rs-IDs is taken when there are multiple;"
+    "comment": "The dbSNP validation status is reported as a semicolon-separated list of statuses. The union of all rs-IDs is taken when there are multiple"
    },
    {
     "name": "tumor_aliquot_barcode",
@@ -1299,7 +1299,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Aliquot barcode for the tumor sample;"
+    "comment": "Aliquot barcode for the tumor sample"
    },
    {
     "name": "matched_norm_aliquot_barcode",
@@ -1310,7 +1310,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Aliquot barcode for the matched normal sample;"
+    "comment": "Aliquot barcode for the matched normal sample"
    },
    {
     "name": "match_norm_seq_allele1",
@@ -1321,7 +1321,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Primary data genotype. Matched normal sequencing allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases (cleared in somatic MAF);"
+    "comment": "Primary data genotype. Matched normal sequencing allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases (cleared in somatic MAF)"
    },
    {
     "name": "match_norm_seq_allele2",
@@ -1332,7 +1332,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Matched normal sequencing allele 2;"
+    "comment": "Matched normal sequencing allele 2"
    },
    {
     "name": "tumor_validation_allele1",
@@ -1343,7 +1343,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Secondary data from orthogonal technology. Tumor genotyping (validation) for allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases;"
+    "comment": "Secondary data from orthogonal technology. Tumor genotyping (validation) for allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases"
    },
    {
     "name": "tumor_validation_allele2",
@@ -1354,7 +1354,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Secondary data from orthogonal technology. Tumor genotyping (validation) for allele 2;"
+    "comment": "Secondary data from orthogonal technology. Tumor genotyping (validation) for allele 2"
    },
    {
     "name": "match_norm_validation_allele1",
@@ -1365,7 +1365,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Secondary data from orthogonal technology. Matched normal genotyping (validation) for allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases (cleared in somatic MAF);"
+    "comment": "Secondary data from orthogonal technology. Matched normal genotyping (validation) for allele 1. A - symbol for a deletion represents a variant. A - symbol for an insertion represents wild-type allele. Novel inserted sequence for insertion does not include flanking reference bases (cleared in somatic MAF)"
    },
    {
     "name": "match_norm_validation_allele2",
@@ -1376,7 +1376,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Secondary data from orthogonal technology. Matched normal genotyping (validation) for allele 2 (cleared in somatic MAF);"
+    "comment": "Secondary data from orthogonal technology. Matched normal genotyping (validation) for allele 2 (cleared in somatic MAF)"
    },
    {
     "name": "verification_status",
@@ -1387,7 +1387,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Second pass results from independent attempt using same methods as primary data source. Generally reserved for 3730 Sanger Sequencing;"
+    "comment": "Second pass results from independent attempt using same methods as primary data source. Generally reserved for 3730 Sanger Sequencing"
    },
    {
     "name": "validation_status",
@@ -1398,7 +1398,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Second pass results from orthogonal technology;"
+    "comment": "Second pass results from orthogonal technology"
    },
    {
     "name": "mutation_status",
@@ -1409,7 +1409,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "An assessment of the mutation as somatic, germline, LOH, post transcriptional modification, unknown, or none. The values allowed in this field are constrained by the value in the Validation_Status field;"
+    "comment": "An assessment of the mutation as somatic, germline, LOH, post transcriptional modification, unknown, or none. The values allowed in this field are constrained by the value in the Validation_Status field"
    },
    {
     "name": "sequencing_phase",
@@ -1420,7 +1420,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "TCGA sequencing phase (if applicable). Phase should change under any circumstance that the targets under consideration change;"
+    "comment": "TCGA sequencing phase (if applicable). Phase should change under any circumstance that the targets under consideration change"
    },
    {
     "name": "sequence_source",
@@ -1431,7 +1431,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Molecular assay type used to produce the analytes used for sequencing. Allowed values are a subset of the SRA 1.5 library_strategy field values. This subset matches those used at CGHub;"
+    "comment": "Molecular assay type used to produce the analytes used for sequencing. Allowed values are a subset of the SRA 1.5 library_strategy field values. This subset matches those used at CGHub"
    },
    {
     "name": "validation_method",
@@ -1442,7 +1442,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The assay platforms used for the validation call;"
+    "comment": "The assay platforms used for the validation call"
    },
    {
     "name": "score",
@@ -1453,7 +1453,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Not in use;"
+    "comment": "Not in use"
    },
    {
     "name": "bam_file",
@@ -1464,7 +1464,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Not in use;"
+    "comment": "Not in use"
    },
    {
     "name": "sequencer",
@@ -1475,7 +1475,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Instrument used to produce primary sequence data;"
+    "comment": "Instrument used to produce primary sequence data"
    },
    {
     "name": "tumor_aliquot_uuid",
@@ -1486,7 +1486,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Unique GDC identifier for tumor aliquot (10189 unique);"
+    "comment": "Unique GDC identifier for tumor aliquot (10189 unique)"
    },
    {
     "name": "matched_norm_aliquot_uuid",
@@ -1497,7 +1497,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Unique GDC identifier for normal aliquot (10189 unique);"
+    "comment": "Unique GDC identifier for normal aliquot (10189 unique)"
    },
    {
     "name": "hgvsc",
@@ -1508,7 +1508,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The coding sequence of the variant in HGVS recommended format;"
+    "comment": "The coding sequence of the variant in HGVS recommended format"
    },
    {
     "name": "hgvsp",
@@ -1519,7 +1519,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The protein sequence of the variant in HGVS recommended format. p.= signifies no change in the protein;"
+    "comment": "The protein sequence of the variant in HGVS recommended format. p.= signifies no change in the protein"
    },
    {
     "name": "hgvsp_short",
@@ -1530,7 +1530,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Same as the HGVSp column, but using 1-letter amino-acid codes;"
+    "comment": "Same as the HGVSp column, but using 1-letter amino-acid codes"
    },
    {
     "name": "transcript_id",
@@ -1541,7 +1541,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Ensembl ID of the transcript affected by the variant;"
+    "comment": "Ensembl ID of the transcript affected by the variant"
    },
    {
     "name": "exon_number",
@@ -1552,7 +1552,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The exon number (out of total number);"
+    "comment": "The exon number (out of total number)"
    },
    {
     "name": "t_depth",
@@ -1563,7 +1563,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Read depth across this locus in tumor BAM;"
+    "comment": "Read depth across this locus in tumor BAM"
    },
    {
     "name": "t_ref_count",
@@ -1574,7 +1574,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Read depth supporting the reference allele in tumor BAM;"
+    "comment": "Read depth supporting the reference allele in tumor BAM"
    },
    {
     "name": "t_alt_count",
@@ -1585,7 +1585,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Read depth supporting the variant allele in tumor BAM;"
+    "comment": "Read depth supporting the variant allele in tumor BAM"
    },
    {
     "name": "n_depth",
@@ -1596,7 +1596,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Read depth across this locus in normal BAM;"
+    "comment": "Read depth across this locus in normal BAM"
    },
    {
     "name": "n_ref_count",
@@ -1607,7 +1607,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Read depth supporting the reference allele in normal BAM (cleared in somatic MAF);"
+    "comment": "Read depth supporting the reference allele in normal BAM (cleared in somatic MAF)"
    },
    {
     "name": "n_alt_count",
@@ -1618,7 +1618,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Read depth supporting the variant allele in normal BAM (cleared in somatic MAF);"
+    "comment": "Read depth supporting the variant allele in normal BAM (cleared in somatic MAF)"
    },
    {
     "name": "all_effects",
@@ -1629,7 +1629,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "A semicolon delimited list of all possible variant effects, sorted by priority ([Symbol,Consequence,HGVSp_Short,Transcript_ID,RefSeq,HGVSc,Impact,Canonical,Sift,PolyPhen,Strand]);"
+    "comment": "A semicolon delimited list of all possible variant effects, sorted by priority ([Symbol,Consequence,HGVSp_Short,Transcript_ID,RefSeq,HGVSc,Impact,Canonical,Sift,PolyPhen,Strand])"
    },
    {
     "name": "allele",
@@ -1640,7 +1640,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The variant allele used to calculate the consequence;"
+    "comment": "The variant allele used to calculate the consequence"
    },
    {
     "name": "gene",
@@ -1651,7 +1651,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The gene symbol. In this table, gene symbol is gene name e.g. ACADVL;"
+    "comment": "The gene symbol. In this table, gene symbol is gene name e.g. ACADVL"
    },
    {
     "name": "feature",
@@ -1662,7 +1662,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Stable Ensembl ID of feature (transcript, regulatory, motif);"
+    "comment": "Stable Ensembl ID of feature (transcript, regulatory, motif)"
    },
    {
     "name": "feature_type",
@@ -1673,7 +1673,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Type of feature. Currently one of Transcript, RegulatoryFeature, MotifFeature (or blank);"
+    "comment": "Type of feature. Currently one of Transcript, RegulatoryFeature, MotifFeature (or blank)"
    },
    {
     "name": "one_consequence",
@@ -1684,7 +1684,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The single consequence of the canonical transcript in sequence ontology terms, eg missense_variant;"
+    "comment": "The single consequence of the canonical transcript in sequence ontology terms, eg missense_variant"
    },
    {
     "name": "consequence",
@@ -1695,7 +1695,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Consequence type of this variant; sequence ontology terms;"
+    "comment": "Consequence type of this variant; sequence ontology terms"
    },
    {
     "name": "cdna_position",
@@ -1706,7 +1706,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Relative position of base pair in the cDNA sequence as a fraction. A - symbol is displayed as the numerator if the variant does not appear in cDNA;"
+    "comment": "Relative position of base pair in the cDNA sequence as a fraction. A - symbol is displayed as the numerator if the variant does not appear in cDNA"
    },
    {
     "name": "cds_position",
@@ -1717,7 +1717,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Relative position of base pair in coding sequence. A - symbol is displayed as the numerator if the variant does not appear in coding sequence;"
+    "comment": "Relative position of base pair in coding sequence. A - symbol is displayed as the numerator if the variant does not appear in coding sequence"
    },
    {
     "name": "protein_position",
@@ -1728,7 +1728,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Relative position of affected amino acid in protein. A - symbol is displayed as the numerator if the variant does not appear in coding sequence;"
+    "comment": "Relative position of affected amino acid in protein. A - symbol is displayed as the numerator if the variant does not appear in coding sequence"
    },
    {
     "name": "amino_acids",
@@ -1739,7 +1739,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Amino acid substitution caused by the mutation. Only given if the variation affects the protein-coding sequence;"
+    "comment": "Amino acid substitution caused by the mutation. Only given if the variation affects the protein-coding sequence"
    },
    {
     "name": "codons",
@@ -1750,7 +1750,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The alternative codons with the variant base in upper case;"
+    "comment": "The alternative codons with the variant base in upper case"
    },
    {
     "name": "existing_variation",
@@ -1761,7 +1761,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Known identifier of existing variation;"
+    "comment": "Known identifier of existing variation"
    },
    {
     "name": "distance",
@@ -1772,7 +1772,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Shortest distance from the variant to transcript;"
+    "comment": "Shortest distance from the variant to transcript"
    },
    {
     "name": "transcript_strand",
@@ -1783,7 +1783,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The DNA strand (1 or -1) on which the transcript/feature lies;"
+    "comment": "The DNA strand (1 or -1) on which the transcript/feature lies"
    },
    {
     "name": "symbol",
@@ -1794,7 +1794,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Eg TP53, LRP1B, etc (same as Hugo_Symbol field except blank instead of Unknown;"
+    "comment": "Eg TP53, LRP1B, etc (same as Hugo_Symbol field except blank instead of Unknown"
    },
    {
     "name": "symbol_source",
@@ -1805,7 +1805,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The source of the gene symbol, usually HGNC, rarely blank, other sources include Uniprot_gn, EntrezGene, etc;"
+    "comment": "The source of the gene symbol, usually HGNC, rarely blank, other sources include Uniprot_gn, EntrezGene, etc"
    },
    {
     "name": "hgnc_id",
@@ -1816,7 +1816,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Gene identifier from the HUGO Gene Nomenclature Committee if applicable;"
+    "comment": "Gene identifier from the HUGO Gene Nomenclature Committee if applicable"
    },
    {
     "name": "biotype",
@@ -1827,7 +1827,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Biotype of transcript;"
+    "comment": "Biotype of transcript"
    },
    {
     "name": "canonical",
@@ -1838,7 +1838,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "A flag (YES) indicating that the VEP-based canonical transcript, the longest translation, was used for this gene. If not, the value is null;"
+    "comment": "A flag (YES) indicating that the VEP-based canonical transcript, the longest translation, was used for this gene. If not, the value is null"
    },
    {
     "name": "ccds",
@@ -1849,7 +1849,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The CCDS identifier for this transcript, where applicable;"
+    "comment": "The CCDS identifier for this transcript, where applicable"
    },
    {
     "name": "ensp",
@@ -1860,7 +1860,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The Ensembl protein identifier of the affected transcript;"
+    "comment": "The Ensembl protein identifier of the affected transcript"
    },
    {
     "name": "swissprot",
@@ -1871,7 +1871,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "UniProtKB/Swiss-Prot accession;"
+    "comment": "UniProtKB/Swiss-Prot accession"
    },
    {
     "name": "trembl",
@@ -1882,7 +1882,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "UniProtKB/TrEMBL identifier of protein product;"
+    "comment": "UniProtKB/TrEMBL identifier of protein product"
    },
    {
     "name": "uniparc",
@@ -1893,7 +1893,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "UniParc identifier of protein product;"
+    "comment": "UniParc identifier of protein product"
    },
    {
     "name": "uniprot_isoform",
@@ -1904,7 +1904,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Direct mappings to UniProtKB isoforms;"
+    "comment": "Direct mappings to UniProtKB isoforms"
    },
    {
     "name": "refseq",
@@ -1915,7 +1915,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "RefSeq identifier for this transcript;"
+    "comment": "RefSeq identifier for this transcript"
    },
    {
     "name": "mane",
@@ -1926,7 +1926,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "MANE (Matched Annotation by NCBI and EMBL-EBI) Transcript;"
+    "comment": "MANE (Matched Annotation by NCBI and EMBL-EBI) Transcript"
    },
    {
     "name": "appris",
@@ -1937,7 +1937,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Annotates alternatively spliced transcripts as primary or alternate based on a range of computational methods;"
+    "comment": "Annotates alternatively spliced transcripts as primary or alternate based on a range of computational methods"
    },
    {
     "name": "flags",
@@ -1948,7 +1948,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Transcript quality flags;"
+    "comment": "Transcript quality flags"
    },
    {
     "name": "sift",
@@ -1959,7 +1959,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The SIFT prediction and/or score, with both given as prediction (score);"
+    "comment": "The SIFT prediction and/or score, with both given as prediction (score)"
    },
    {
     "name": "polyphen",
@@ -1970,7 +1970,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The PolyPhen prediction and/or score;"
+    "comment": "The PolyPhen prediction and/or score"
    },
    {
     "name": "exon",
@@ -1981,7 +1981,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The exon number (out of total number);"
+    "comment": "The exon number (out of total number)"
    },
    {
     "name": "intron",
@@ -1992,7 +1992,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The intron number (out of total number);"
+    "comment": "The intron number (out of total number)"
    },
    {
     "name": "domains",
@@ -2003,7 +2003,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The source and identifier of any overlapping protein domains;"
+    "comment": "The source and identifier of any overlapping protein domains"
    },
    {
     "name": "thousg_af",
@@ -2017,7 +2017,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes;"
+    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes"
    },
    {
     "name": "thousg_afr_af",
@@ -2031,7 +2031,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined African population;"
+    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined African population"
    },
    {
     "name": "thousg_amr_af",
@@ -2045,7 +2045,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined American population;"
+    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined American population"
    },
    {
     "name": "thousg_eas_af",
@@ -2059,7 +2059,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined East Asian population;"
+    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined East Asian population"
    },
    {
     "name": "thousg_eur_af",
@@ -2073,7 +2073,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined European population;"
+    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined European population"
    },
    {
     "name": "thousg_sas_af",
@@ -2087,7 +2087,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined South Asian population;"
+    "comment": "Non-reference allele and frequency of existing variant in 1000 Genomes combined South Asian population"
    },
    {
     "name": "esp_aa_af",
@@ -2101,7 +2101,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Non-reference allele and frequency of existing variant in NHLBI-ESP African American population;"
+    "comment": "Non-reference allele and frequency of existing variant in NHLBI-ESP African American population"
    },
    {
     "name": "esp_ea_af",
@@ -2115,7 +2115,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Non-reference allele and frequency of existing variant in NHLBI-ESP European American population;"
+    "comment": "Non-reference allele and frequency of existing variant in NHLBI-ESP European American population"
    },
    {
     "name": "gnomad_af",
@@ -2129,7 +2129,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of existing variant in gnomAD exomes combined population;"
+    "comment": "Frequency of existing variant in gnomAD exomes combined population"
    },
    {
     "name": "gnomad_afr_af",
@@ -2143,7 +2143,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of existing variant in gnomAD exomes African/American population;"
+    "comment": "Frequency of existing variant in gnomAD exomes African/American population"
    },
    {
     "name": "gnomad_amr_af",
@@ -2157,7 +2157,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of existing variant in gnomAD exomes American population;"
+    "comment": "Frequency of existing variant in gnomAD exomes American population"
    },
    {
     "name": "gnomad_asj_af",
@@ -2171,7 +2171,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of existing variant in gnomAD exomes Ashkenazi Jewish population;"
+    "comment": "Frequency of existing variant in gnomAD exomes Ashkenazi Jewish population"
    },
    {
     "name": "gnomad_eas_af",
@@ -2185,7 +2185,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of existing variant in gnomAD exomes East Asian population;"
+    "comment": "Frequency of existing variant in gnomAD exomes East Asian population"
    },
    {
     "name": "gnomad_fin_af",
@@ -2199,7 +2199,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of existing variant in gnomAD exomes Finnish population;"
+    "comment": "Frequency of existing variant in gnomAD exomes Finnish population"
    },
    {
     "name": "gnomad_nfe_af",
@@ -2213,7 +2213,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "tFrequency of existing variant in gnomAD exomes Non-Finnish European population;"
+    "comment": "tFrequency of existing variant in gnomAD exomes Non-Finnish European population"
    },
    {
     "name": "gnomad_oth_af",
@@ -2227,7 +2227,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of existing variant in gnomAD exomes other combined population;"
+    "comment": "Frequency of existing variant in gnomAD exomes other combined population"
    },
    {
     "name": "gnomad_sas_af",
@@ -2241,7 +2241,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of existing variant in gnomAD exomes South Asian population;"
+    "comment": "Frequency of existing variant in gnomAD exomes South Asian population"
    },
    {
     "name": "max_af",
@@ -2255,7 +2255,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Maximum observed allele frequency in 1000 Genomes, ESP and ExAC/gnomAD;"
+    "comment": "Maximum observed allele frequency in 1000 Genomes, ESP and ExAC/gnomAD"
    },
    {
     "name": "max_af_pops",
@@ -2266,7 +2266,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Populations in which maximum allele frequency was observed;"
+    "comment": "Populations in which maximum allele frequency was observed"
    },
    {
     "name": "gnomad_non_cancer_af",
@@ -2280,7 +2280,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes combined non-cancer population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes combined non-cancer population"
    },
    {
     "name": "gnomad_non_cancer_afr_af",
@@ -2294,7 +2294,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer African/American population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer African/American population"
    },
    {
     "name": "gnomad_non_cancer_ami_af",
@@ -2308,7 +2308,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Amish population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Amish population"
    },
    {
     "name": "gnomad_non_cancer_amr_af",
@@ -2322,7 +2322,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Latino population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Latino population"
    },
    {
     "name": "gnomad_non_cancer_asj_af",
@@ -2336,7 +2336,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Ashkenazi Jewish population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Ashkenazi Jewish population"
    },
    {
     "name": "gnomad_non_cancer_eas_af",
@@ -2350,7 +2350,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer East Asian population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer East Asian population"
    },
    {
     "name": "gnomad_non_cancer_fin_af",
@@ -2364,7 +2364,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Finnish population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Finnish population"
    },
    {
     "name": "gnomad_non_cancer_mid_af",
@@ -2378,7 +2378,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Middle Eastern population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Middle Eastern population"
    },
    {
     "name": "gnomad_non_cancer_nfe_af",
@@ -2392,7 +2392,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Non-Finnish European population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Non-Finnish European population"
    },
    {
     "name": "gnomad_non_cancer_oth_af",
@@ -2406,7 +2406,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Other population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer Other population"
    },
    {
     "name": "gnomad_non_cancer_sas_af",
@@ -2420,7 +2420,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer South Asian population;"
+    "comment": "Frequency of exisiting variant in gnomAD genomes non-cancer South Asian population"
    },
    {
     "name": "gnomad_non_cancer_max_af_adj",
@@ -2434,7 +2434,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Maximum observed allele frequency in non-cancer gnomAD genomes populations after removing subpopulations with less than 2 allele counts;"
+    "comment": "Maximum observed allele frequency in non-cancer gnomAD genomes populations after removing subpopulations with less than 2 allele counts"
    },
    {
     "name": "gnomad_non_cancer_max_af_pops_adj",
@@ -2445,7 +2445,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Non-cancer gnomAD genomes populations in which the maximum allele frequency was observed after removing those with less than 2 allele counts;"
+    "comment": "Non-cancer gnomAD genomes populations in which the maximum allele frequency was observed after removing those with less than 2 allele counts"
    },
    {
     "name": "clin_sig",
@@ -2456,7 +2456,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Clinical significance of variant from dbSNP;"
+    "comment": "Clinical significance of variant from dbSNP"
    },
    {
     "name": "somatic",
@@ -2467,7 +2467,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Somatic status of each ID reported under Existing_variation (0, 1, or null);"
+    "comment": "Somatic status of each ID reported under Existing_variation (0, 1, or null)"
    },
    {
     "name": "pubmed",
@@ -2478,7 +2478,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Pubmed ID(s) of publications that cite existing variant;"
+    "comment": "Pubmed ID(s) of publications that cite existing variant"
    },
    {
     "name": "transcription_factors",
@@ -2489,7 +2489,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "List of transcription factors which bind to the transcription factor binding profile;"
+    "comment": "List of transcription factors which bind to the transcription factor binding profile"
    },
    {
     "name": "motif_name",
@@ -2500,7 +2500,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The source and identifier of a transcription factor binding profile aligned at this position;"
+    "comment": "The source and identifier of a transcription factor binding profile aligned at this position"
    },
    {
     "name": "motif_pos",
@@ -2511,7 +2511,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The relative position of the variation in the aligned TFBP;"
+    "comment": "The relative position of the variation in the aligned TFBP"
    },
    {
     "name": "high_inf_pos",
@@ -2522,7 +2522,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "A flag indicating if the variant falls in a high information position of a transcription factor binding profile (TFBP) (Y, N, or null);"
+    "comment": "A flag indicating if the variant falls in a high information position of a transcription factor binding profile (TFBP) (Y, N, or null)"
    },
    {
     "name": "motif_score_change",
@@ -2533,7 +2533,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The difference in motif score of the reference and variant sequences for the TFBP;"
+    "comment": "The difference in motif score of the reference and variant sequences for the TFBP"
    },
    {
     "name": "mirna",
@@ -2544,7 +2544,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "SO terms of overlapped miRNA secondary structure feature(s);"
+    "comment": "SO terms of overlapped miRNA secondary structure feature(s)"
    },
    {
     "name": "impact",
@@ -2555,7 +2555,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The impact modifier for the consequence type;"
+    "comment": "The impact modifier for the consequence type"
    },
    {
     "name": "pick",
@@ -2566,7 +2566,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Indicates if this block of consequence data was picked by VEPs pick feature (1 or null);"
+    "comment": "Indicates if this block of consequence data was picked by VEPs pick feature (1 or null)"
    },
    {
     "name": "variant_class",
@@ -2577,7 +2577,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Sequence Ontology variant class;"
+    "comment": "Sequence Ontology variant class"
    },
    {
     "name": "tsl",
@@ -2588,7 +2588,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Transcript support level, which is based on independent RNA analyses;"
+    "comment": "Transcript support level, which is based on independent RNA analyses"
    },
    {
     "name": "hgvs_offset",
@@ -2599,7 +2599,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Indicates by how many bases the HGVS notations for this variant have been shifted;"
+    "comment": "Indicates by how many bases the HGVS notations for this variant have been shifted"
    },
    {
     "name": "pheno",
@@ -2610,7 +2610,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Indicates if existing variant is associated with a phenotype, disease or trait (0, 1, or null);"
+    "comment": "Indicates if existing variant is associated with a phenotype, disease or trait (0, 1, or null)"
    },
    {
     "name": "gene_pheno",
@@ -2621,7 +2621,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Indicates if gene that the variant maps to is associated with a phenotype, disease or trait (0, 1, or null);"
+    "comment": "Indicates if gene that the variant maps to is associated with a phenotype, disease or trait (0, 1, or null)"
    },
    {
     "name": "context",
@@ -2632,7 +2632,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The reference allele per VCF specs, and its five flanking base pairs;"
+    "comment": "The reference allele per VCF specs, and its five flanking base pairs"
    },
    {
     "name": "tumor_submitter_uuid",
@@ -2643,7 +2643,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Unique GDC identifier for the tumor file submitter;"
+    "comment": "Unique GDC identifier for the tumor file submitter"
    },
    {
     "name": "normal_submitter_uuid",
@@ -2654,7 +2654,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Unique GDC identifier for the normal file submitter;"
+    "comment": "Unique GDC identifier for the normal file submitter"
    },
    {
     "name": "case_id",
@@ -2665,7 +2665,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Unique GDC identifier for the underlying case;"
+    "comment": "Unique GDC identifier for the underlying case"
    },
    {
     "name": "gdc_filter",
@@ -2676,7 +2676,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "GDC filters applied universally across all MAFs;"
+    "comment": "GDC filters applied universally across all MAFs"
    },
    {
     "name": "cosmic",
@@ -2687,7 +2687,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Overlapping COSMIC variants;"
+    "comment": "Overlapping COSMIC variants"
    },
    {
     "name": "hotspot",
@@ -2698,7 +2698,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "A flag indicating if the variant is a known hotspot (Y, N, or null);"
+    "comment": "A flag indicating if the variant is a known hotspot (Y, N, or null)"
    },
    {
     "name": "rna_support",
@@ -2709,7 +2709,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Indicates if the variant is found and alleles (Match), simply (Overlap), or is not supported (No) by tumor RNA-Seq. If it has not been checked against RNA-Seq data, the value will be Unknown.;"
+    "comment": "Indicates if the variant is found and alleles (Match), simply (Overlap), or is not supported (No) by tumor RNA-Seq. If it has not been checked against RNA-Seq data, the value will be Unknown."
    },
    {
     "name": "rna_depth",
@@ -2720,7 +2720,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Read depth at this locus if the variant is supported by tumor RNA-seq data.;"
+    "comment": "Read depth at this locus if the variant is supported by tumor RNA-seq data."
    },
    {
     "name": "rna_ref_count",
@@ -2731,7 +2731,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Read depth supporting the reference allele at this locus if the variant is supported by tumor RNA-seq data.;"
+    "comment": "Read depth supporting the reference allele at this locus if the variant is supported by tumor RNA-seq data."
    },
    {
     "name": "rna_alt_count",
@@ -2742,7 +2742,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Read depth supporting the variant allele at this locus if the variant is supported by tumor RNA-seq data.;"
+    "comment": "Read depth supporting the variant allele at this locus if the variant is supported by tumor RNA-seq data."
    },
    {
     "name": "callers",
@@ -2753,7 +2753,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "|-delimited list of mutation caller(s) that agreed on this particular call, always in alphabetical order: muse, mutect, somaticsniper, varscan;"
+    "comment": "|-delimited list of mutation caller(s) that agreed on this particular call, always in alphabetical order: muse, mutect, somaticsniper, varscan"
    },
    {
     "name": "file_gdc_id",
@@ -2764,7 +2764,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "|-delimited list of unique GDC identifiers for underlying MAF file;"
+    "comment": "|-delimited list of unique GDC identifiers for underlying MAF file"
    },
    {
     "name": "muse",
@@ -2775,7 +2775,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Muse caller identified the variant at this position;"
+    "comment": "Muse caller identified the variant at this position"
    },
    {
     "name": "mutect2",
@@ -2786,7 +2786,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Mutect2 caller identified the variant at this position;"
+    "comment": "Mutect2 caller identified the variant at this position"
    },
    {
     "name": "pindel",
@@ -2797,7 +2797,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "pindel caller identified the variant at this position;"
+    "comment": "pindel caller identified the variant at this position"
    },
    {
     "name": "varscan2",
@@ -2808,7 +2808,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Varscan2 caller identified the variant at this position;"
+    "comment": "Varscan2 caller identified the variant at this position"
    },
    {
     "name": "sample_barcode_tumor",
@@ -2819,7 +2819,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "TCGA sample barcode for the tumor, eg TCGA-12-1089-01A. One sample may have multiple sets of CN segmentations corresponding to multiple aliquots; use GROUP BY appropriately in queries;"
+    "comment": "TCGA sample barcode for the tumor, eg TCGA-12-1089-01A. One sample may have multiple sets of CN segmentations corresponding to multiple aliquots; use GROUP BY appropriately in queries"
    },
    {
     "name": "sample_barcode_normal",
@@ -2830,7 +2830,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "TCGA sample barcode for the normal control, eg TCGA-12-1089-01A. One sample may have multiple sets of CN segmentations corresponding to multiple aliquots; use GROUP BY appropriately in queries;"
+    "comment": "TCGA sample barcode for the normal control, eg TCGA-12-1089-01A. One sample may have multiple sets of CN segmentations corresponding to multiple aliquots; use GROUP BY appropriately in queries"
    },
    {
     "name": "aliquot_barcode_tumor",
@@ -2841,7 +2841,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "TCGA aliquot barcode for the tumor, eg TCGA-12-1089-01A-01D-0517-01;"
+    "comment": "TCGA aliquot barcode for the tumor, eg TCGA-12-1089-01A-01D-0517-01"
    },
    {
     "name": "aliquot_barcode_normal",
@@ -2852,7 +2852,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "TCGA aliquot barcode for the normal control, eg TCGA-12-1089-01A-01D-0517-01];"
+    "comment": "TCGA aliquot barcode for the normal control, eg TCGA-12-1089-01A-01D-0517-01]"
    }
   ],
   "primary_key": [],
@@ -2890,7 +2890,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The logical identifier of the entity in the system of record, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system.;"
+    "comment": "The logical identifier of the entity in the system of record, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system."
    },
    {
     "name": "associated_project",
@@ -2901,7 +2901,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The Project associated with the specimen.;"
+    "comment": "The Project associated with the specimen."
    },
    {
     "name": "days_to_collection",
@@ -2912,7 +2912,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The number of days from the index date to either the date a sample was collected for a specific study or project, or the date a subject underwent a procedure (e.g. surgical resection) yielding a sample that was eventually used for research.;"
+    "comment": "The number of days from the index date to either the date a sample was collected for a specific study or project, or the date a subject underwent a procedure (e.g. surgical resection) yielding a sample that was eventually used for research."
    },
    {
     "name": "primary_disease_type",
@@ -2923,7 +2923,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The text term used to describe the type of malignant disease, as categorized by the World Health Organizations (WHO) International Classification of Diseases for Oncology (ICD-O). This attribute represents the disease that qualified the subject for inclusion on the ResearchProject.;"
+    "comment": "The text term used to describe the type of malignant disease, as categorized by the World Health Organizations (WHO) International Classification of Diseases for Oncology (ICD-O). This attribute represents the disease that qualified the subject for inclusion on the ResearchProject."
    },
    {
     "name": "anatomical_site",
@@ -2934,7 +2934,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Per GDC Dictionary, the text term that represents the name of the primary disease site of the submitted tumor sample; recommend dropping tumor; biospecimen_anatomic_site.;"
+    "comment": "Per GDC Dictionary, the text term that represents the name of the primary disease site of the submitted tumor sample; recommend dropping tumor; biospecimen_anatomic_site."
    },
    {
     "name": "source_material_type",
@@ -2945,7 +2945,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The general kind of material from which the specimen was derived, indicating the physical nature of the source material.;"
+    "comment": "The general kind of material from which the specimen was derived, indicating the physical nature of the source material."
    },
    {
     "name": "specimen_type",
@@ -2956,7 +2956,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The high-level type of the specimen, based on its how it has been derived from the original extracted sample.;"
+    "comment": "The high-level type of the specimen, based on its how it has been derived from the original extracted sample."
    },
    {
     "name": "derived_from_specimen",
@@ -2967,7 +2967,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "A source/parent specimen from which this one was directly derived.;"
+    "comment": "A source/parent specimen from which this one was directly derived."
    },
    {
     "name": "derived_from_subject",
@@ -2978,7 +2978,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The Patient/ResearchSubject, or Biologically Derived Materal (e.g. a cell line, tissue culture, organoid) from which the specimen was directly or indirectly derived.;"
+    "comment": "The Patient/ResearchSubject, or Biologically Derived Materal (e.g. a cell line, tissue culture, organoid) from which the specimen was directly or indirectly derived."
    }
   ],
   "primary_key": [],
@@ -2998,7 +2998,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "specimen",
-  "comment": "Any material taken as a sample from a biological entity (living or dead), or from a physical object or the environment. Specimens are usually collected as an example of their kind, often for use in some investigation.;"
+  "comment": "Any material taken as a sample from a biological entity (living or dead), or from a physical object or the environment. Specimens are usually collected as an example of their kind, often for use in some investigation."
  },
  {
   "columns": [
@@ -3021,7 +3021,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The system or namespace that defines the identifier.;"
+    "comment": "The system or namespace that defines the identifier."
    },
    {
     "name": "field_name",
@@ -3042,7 +3042,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The value of the identifier, as defined by the system.;"
+    "comment": "The value of the identifier, as defined by the system."
    }
   ],
   "primary_key": [],
@@ -3079,7 +3079,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "specimen_identifier",
-  "comment": "A business identifier or accession number for a Specimen, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier).;"
+  "comment": "A business identifier or accession number for a Specimen, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier)."
  },
  {
   "columns": [
@@ -3092,7 +3092,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The logical identifier of the entity in the system of record, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system.;"
+    "comment": "The logical identifier of the entity in the system of record, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system."
    },
    {
     "name": "species",
@@ -3103,7 +3103,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The taxonomic group (e.g. species) of the patient. For MVP, since taxonomy vocabulary is consistent between GDC and PDC, using text. Ultimately, this will be a term returned by the vocabulary service.;"
+    "comment": "The taxonomic group (e.g. species) of the patient. For MVP, since taxonomy vocabulary is consistent between GDC and PDC, using text. Ultimately, this will be a term returned by the vocabulary service."
    },
    {
     "name": "sex",
@@ -3114,7 +3114,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The biologic character or quality that distinguishes male and female from one another as expressed by analysis of the persons gonadal, morphologic (internal and external), chromosomal, and hormonal characteristics.;"
+    "comment": "The biologic character or quality that distinguishes male and female from one another as expressed by analysis of the persons gonadal, morphologic (internal and external), chromosomal, and hormonal characteristics."
    },
    {
     "name": "race",
@@ -3125,7 +3125,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "An arbitrary classification of a taxonomic group that is a division of a species. It usually arises as a consequence of geographical isolation within a species and is characterized by shared heredity, physical attributes and behavior, and in the case of humans, by common history, nationality, or geographic distribution. The provided values are based on the categories defined by the U.S. Office of Management and Business and used by the U.S. Census Bureau.;"
+    "comment": "An arbitrary classification of a taxonomic group that is a division of a species. It usually arises as a consequence of geographical isolation within a species and is characterized by shared heredity, physical attributes and behavior, and in the case of humans, by common history, nationality, or geographic distribution. The provided values are based on the categories defined by the U.S. Office of Management and Business and used by the U.S. Census Bureau."
    },
    {
     "name": "ethnicity",
@@ -3136,7 +3136,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "An individuals self-described social and cultural grouping, specifically whether an individual describes themselves as Hispanic or Latino. The provided values are based on the categories defined by the U.S. Office of Management and Business and used by the U.S. Census Bureau.;"
+    "comment": "An individuals self-described social and cultural grouping, specifically whether an individual describes themselves as Hispanic or Latino. The provided values are based on the categories defined by the U.S. Office of Management and Business and used by the U.S. Census Bureau."
    },
    {
     "name": "days_to_birth",
@@ -3147,7 +3147,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Number of days between the date used for index and the date from a persons date of birth represented as a calculated negative number of days.;"
+    "comment": "Number of days between the date used for index and the date from a persons date of birth represented as a calculated negative number of days."
    },
    {
     "name": "vital_status",
@@ -3158,7 +3158,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Coded value indicating the state or condition of being living or deceased; also includes the case where the vital status is unknown.;"
+    "comment": "Coded value indicating the state or condition of being living or deceased; also includes the case where the vital status is unknown."
    },
    {
     "name": "days_to_death",
@@ -3169,7 +3169,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Number of days between the date used for index and the date from a persons date of death represented as a calculated number of days.;"
+    "comment": "Number of days between the date used for index and the date from a persons date of death represented as a calculated number of days."
    },
    {
     "name": "cause_of_death",
@@ -3180,7 +3180,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "Coded value indicating the circumstance or condition that results in the death of the subject.;"
+    "comment": "Coded value indicating the circumstance or condition that results in the death of the subject."
    }
   ],
   "primary_key": [],
@@ -3200,7 +3200,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "subject",
-  "comment": "The core collection of Subject records.;"
+  "comment": "The core collection of Subject records."
  },
  {
   "columns": [
@@ -3279,7 +3279,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The system or namespace that defines the identifier.;"
+    "comment": "The system or namespace that defines the identifier."
    },
    {
     "name": "field_name",
@@ -3300,7 +3300,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The value of the identifier, as defined by the system.;"
+    "comment": "The value of the identifier, as defined by the system."
    }
   ],
   "primary_key": [],
@@ -3337,7 +3337,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "subject_identifier",
-  "comment": "A business identifier or accession number for a Subject, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier).;"
+  "comment": "A business identifier or accession number for a Subject, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier)."
  },
  {
   "columns": [
@@ -3418,7 +3418,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The logical identifier of the entity in the repository, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system.;"
+    "comment": "The logical identifier of the entity in the repository, e.g. a UUID. This id is unique within a given system. The identified entity may have a different id in a different system."
    },
    {
     "name": "treatment_type",
@@ -3429,7 +3429,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The treatment type including medication/therapeutics or other procedures.;"
+    "comment": "The treatment type including medication/therapeutics or other procedures."
    },
    {
     "name": "treatment_outcome",
@@ -3440,7 +3440,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The final outcome of the treatment.;"
+    "comment": "The final outcome of the treatment."
    },
    {
     "name": "days_to_treatment_start",
@@ -3451,7 +3451,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The timepoint at which the treatment started.;"
+    "comment": "The timepoint at which the treatment started."
    },
    {
     "name": "days_to_treatment_end",
@@ -3462,7 +3462,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The timepoint at which the treatment ended.;"
+    "comment": "The timepoint at which the treatment ended."
    },
    {
     "name": "therapeutic_agent",
@@ -3473,7 +3473,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "One or more therapeutic agents as part of this treatment.;"
+    "comment": "One or more therapeutic agents as part of this treatment."
    },
    {
     "name": "treatment_anatomic_site",
@@ -3484,7 +3484,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The anatomical site that the treatment targets.;"
+    "comment": "The anatomical site that the treatment targets."
    },
    {
     "name": "treatment_effect",
@@ -3495,7 +3495,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The effect of a treatment on the diagnosis or tumor.;"
+    "comment": "The effect of a treatment on the diagnosis or tumor."
    },
    {
     "name": "treatment_end_reason",
@@ -3506,7 +3506,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The reason the treatment ended.;"
+    "comment": "The reason the treatment ended."
    },
    {
     "name": "number_of_cycles",
@@ -3517,7 +3517,7 @@
     "nullable": true,
     "default": null,
     "check": null,
-    "comment": "The number of treatment cycles the subject received.;"
+    "comment": "The number of treatment cycles the subject received."
    }
   ],
   "primary_key": [],
@@ -3537,7 +3537,7 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "treatment",
-  "comment": "Represent medication administration or other treatment types.;"
+  "comment": "Represent medication administration or other treatment types."
  },
  {
   "columns": [
@@ -3560,7 +3560,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The system or namespace that defines the identifier.;"
+    "comment": "The system or namespace that defines the identifier."
    },
    {
     "name": "field_name",
@@ -3581,7 +3581,7 @@
     "nullable": false,
     "default": null,
     "check": null,
-    "comment": "The value of the identifier, as defined by the system.;"
+    "comment": "The value of the identifier, as defined by the system."
    }
   ],
   "primary_key": [],
@@ -3618,6 +3618,6 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "treatment_identifier",
-  "comment": "A business identifier or accession number for a Treatment, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier).;"
+  "comment": "A business identifier or accession number for a Treatment, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier)."
  }
 ]

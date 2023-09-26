@@ -71,7 +71,7 @@ public class DataSetInfo {
                 ColumnsReturnBuilder.of(
                     entry.getValue().getTableName(),
                     entry.getKey(),
-                    "", //entry.getValue().getDescription(),
+                    entry.getValue().getDescription(),
                     entry.getValue().getType(),
                     entry.getValue().isNullable()))
         .collect(Collectors.toList());
@@ -295,11 +295,15 @@ public class DataSetInfo {
       }
 
     private ColumnDefinition createColumnDefinition(JsonNode colNode, String tableName) {
+      String comment = "";
+      if (colNode.has("comment")) {
+          comment = colNode.get("comment").asText();
+      }
       ColumnDefinition col = new ColumnDefinition(
               colNode.get("name").asText(),
               tableName,
               colNode.get("type").asText(),
-              "", // TODO get comment
+              comment,
               colNode.get("nullable").asBoolean());
       return col;
     }
