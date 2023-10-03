@@ -222,9 +222,9 @@ public class QueryApiController implements QueryApi {
     logger.debug("uniqueValues: {}", querySql);
     List<JsonNode> result = queryService.runPagedQuery(querySql, offset, limit);
     PagedResponseData responseData = new PagedResponseData();
-    checkAndSetNextUrl(responseData, "unique-values", offset, limit);
     responseData.result(Collections.unmodifiableList(result));
     responseData.querySql(querySql);
+    checkAndSetNextUrl(responseData, "unique-values", offset, limit);
     return new ResponseEntity<>(responseData, HttpStatus.OK);
   }
 
