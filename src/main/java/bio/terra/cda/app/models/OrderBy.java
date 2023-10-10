@@ -1,8 +1,8 @@
 package bio.terra.cda.app.models;
 
 public class OrderBy {
-  private final String fieldName;
-  private final String path;
+
+  private final ColumnDefinition col;
   private final OrderByModifier modifier;
 
   private String collation = "COLLATE \"POSIX\"";
@@ -18,18 +18,21 @@ public class OrderBy {
     }
   }
 
-  public OrderBy(String fieldName, String path, OrderByModifier modifier) {
-    this.fieldName = fieldName;
-    this.path = path;
+  public OrderBy(ColumnDefinition column, OrderByModifier modifier) {
+    this.col = column;
     this.modifier = modifier;
   }
 
+  public ColumnDefinition getColumnDefinition() {
+    return col;
+  }
+
   public String getFieldName() {
-    return this.fieldName;
+    return this.col.getName();
   }
 
   public String getPath() {
-    return this.path;
+    return String.format("%s.%s", col.getTableName(), col.getName());
   }
 
   public OrderByModifier getModifier() {
@@ -38,6 +41,6 @@ public class OrderBy {
 
   @Override
   public String toString() {
-    return String.format("%s %s %s", path, collation, modifier.value);
+    return String.format("%s %s %s", getPath(), collation, modifier.value);
   }
 }

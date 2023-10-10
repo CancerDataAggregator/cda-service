@@ -2,6 +2,7 @@ package bio.terra.cda.app.util;
 
 import bio.terra.cda.app.builders.*;
 import bio.terra.cda.app.models.*;
+import bio.terra.cda.generated.model.DatasetInfo;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,6 +25,8 @@ public class QueryContext {
 
   private LinkedHashMap<String, Join> joins;
 
+  final DataSetInfo dataSetInfo;
+
   public QueryContext(String table) {
     this.table = table;
 
@@ -31,6 +34,7 @@ public class QueryContext {
     this.groupBys = new ArrayList<>();
     this.orderBys = new ArrayList<>();
     this.joins = new LinkedHashMap<>();
+    this.dataSetInfo = RdbmsSchema.getDataSetInfo();
   }
 
   public QueryContext setFilesQuery(boolean value) {
@@ -91,8 +95,14 @@ public class QueryContext {
   }
 
   public QueryContext addGroupBy(ColumnDefinition col) {
-    groupBys.add(col);
+    if (!groupBys.contains(col)) {
+      groupBys.add(col);
+    }
     return this;
+  }
+
+  public void addOrderBysToGroupBys() {
+    orderBys.forEach(orderBy -> addGroupBy(orderBy.getColumnDefinition()));
   }
 
   public QueryContext addOrderBys(Stream<OrderBy> orderByStream) {

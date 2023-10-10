@@ -5,10 +5,7 @@ import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.Join;
 import org.apache.logging.log4j.util.Strings;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SqlTemplate {
@@ -39,8 +36,7 @@ public class SqlTemplate {
         where,
         groupBys.size() > 0 ? String.format(
             " GROUP BY %s",
-            String.join(",", groupBys.stream().distinct().map(col -> String.format("%s.%s", col.getTableName(), col.getName())).collect(Collectors.toList())))
-            : "",
+            String.join(",", groupBys.stream().distinct().map(col -> String.format("%s.%s", col.getTableName(), col.getName())).collect(Collectors.toList()))): "",
         !Objects.equals(orderBys, "") ? String.format(" ORDER BY %s", orderBys) : "");
   }
 

@@ -2,6 +2,7 @@ package bio.terra.cda.app.models;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ColumnDefinition {
   private Boolean isNullable;
@@ -21,6 +22,19 @@ public class ColumnDefinition {
     setType(type);
     setDescription(description);
     setNullable(isNullable);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ColumnDefinition that = (ColumnDefinition) o;
+    return name.equals(that.name) && tableName.equals(that.tableName);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, tableName);
   }
 
   public Boolean isNullable() {

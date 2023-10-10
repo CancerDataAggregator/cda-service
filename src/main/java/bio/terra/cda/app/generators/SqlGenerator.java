@@ -203,6 +203,7 @@ public class SqlGenerator {
     if (Strings.isNullOrEmpty(orderBys) && !Objects.isNull(defaultOrderBy)) {
       orderBys = defaultOrderBy.toString();
     }
+    ctx.addOrderBysToGroupBys();
     if (subQuery) {
       return SqlTemplate.regularQuery(
               String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
