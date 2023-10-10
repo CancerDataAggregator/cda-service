@@ -54,7 +54,6 @@ dependencies {
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jdbc'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation'
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jdbc'
 	implementation group: 'javax.validation', name: 'validation-api'
 	implementation group: 'org.webjars', name: 'swagger-ui', version: '4.14.0'
 	implementation group: 'org.aspectj', name: 'aspectjweaver', version: '1.8.8'
