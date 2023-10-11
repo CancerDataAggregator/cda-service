@@ -39,6 +39,6 @@ public class OrderBy {
 
   @Override
   public String toString() {
-    return String.format("%s %s %s", getPath(), modifier.value);
+    return String.format("%s %s", getPath(), modifier.value);
   }
 }
