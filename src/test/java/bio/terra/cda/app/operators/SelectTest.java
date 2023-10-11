@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.models.RdbmsSchema;
 import bio.terra.cda.app.models.TableInfo;
@@ -18,7 +19,7 @@ public class SelectTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-invalid-select-column.json");
 
-    SqlGenerator sqlgen = new SqlGenerator(query, false);
+    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
 
@@ -34,7 +35,7 @@ public class SelectTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-select-easy.json");
 
-    SqlGenerator sqlgen = new SqlGenerator(query, false);
+    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
 

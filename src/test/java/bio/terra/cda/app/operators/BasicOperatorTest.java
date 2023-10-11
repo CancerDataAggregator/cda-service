@@ -3,15 +3,15 @@ package bio.terra.cda.app.operators;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.helpers.QueryFileReader;
 import bio.terra.cda.app.models.RdbmsSchema;
 import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.app.util.QueryContext;
-import bio.terra.cda.app.util.SqlUtil;
+
 import java.io.IOException;
 
-import com.google.common.collect.Table;
 import org.junit.jupiter.api.Test;
 
 public class BasicOperatorTest {
@@ -20,7 +20,7 @@ public class BasicOperatorTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-invalid-column.json");
 
-    SqlGenerator sqlgen = new SqlGenerator(query, false);
+    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
 
@@ -36,7 +36,7 @@ public class BasicOperatorTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-equals-quoted.json");
 
-    SqlGenerator sqlgen = new SqlGenerator(query, false);
+    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false, false));
 
@@ -46,7 +46,7 @@ public class BasicOperatorTest {
   @Test
   void testAndOr() throws IOException {
     BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-lung.json");
-    SqlGenerator sqlgen = new SqlGenerator(query, false);
+    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
 
     String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false, false));

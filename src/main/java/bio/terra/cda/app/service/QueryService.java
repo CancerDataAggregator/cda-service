@@ -1,6 +1,7 @@
 package bio.terra.cda.app.service;
 
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
+import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.generated.model.SystemStatus;
@@ -11,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.google.api.client.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,7 +84,7 @@ public class QueryService {
 
   public Long getTotalRowCount(SqlGenerator generator) {
     return namedParameterJdbcTemplate.queryForObject(
-        SqlTemplate.countWrapper(generator.getSqlString()),
+        SqlTemplate.countWrapper(generator.getSqlStringForMaxRows()),
         generator.getNamedParameterMap(), Long.class);
   }
 

@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface QueryGenerator {
+public @interface EntityGeneratorData {
   public String entity();
 
   public String[] additionalFields();

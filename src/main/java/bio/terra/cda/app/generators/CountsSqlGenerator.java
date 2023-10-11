@@ -10,7 +10,7 @@ import bio.terra.cda.generated.model.Query;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CountsSqlGenerator extends SqlGenerator {
+public class CountsSqlGenerator extends EntitySqlGenerator {
   public CountsSqlGenerator(Query rootQuery) {
     super(rootQuery, false);
     this.entityTable = RdbmsSchema.getDataSetInfo().getEntityTableInfo("subject");
@@ -28,7 +28,7 @@ public class CountsSqlGenerator extends SqlGenerator {
     EndpointUtil.getQueryGeneratorClasses()
         .forEach(
             clazz -> {
-              var annotation = clazz.getAnnotation(QueryGenerator.class);
+              var annotation = clazz.getAnnotation(EntityGeneratorData.class);
               TableInfo tableInfo = this.dataSetInfo.getTableInfo(annotation.entity());
               if (this.entityTable == null) {
                 this.entityTable = tableInfo;
@@ -55,7 +55,7 @@ public class CountsSqlGenerator extends SqlGenerator {
         String.format(
             "%s as (%s)",
             resultsAlias,
-            new SqlGenerator(newQuery, false, this.parameterBuilder, this.viewListBuilder)
+            new EntitySqlGenerator(newQuery, false, this.parameterBuilder, this.viewListBuilder)
                 .sql(this.entityTable.getTableName(), newQuery, false, false, true));
     String withStatement = String.format("WITH %s", flattenedWith);
 

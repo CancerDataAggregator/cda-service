@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -65,7 +64,7 @@ class SqlGeneratorTest {
 
     Query query = objectMapper.readValue(jsonQuery, Query.class);
     String translatedQuery =
-        new SqlGenerator(query, false).getReadableQuerySql();
+        new EntitySqlGenerator(query, false).getReadableQuerySql();
 
     assertEquals(expectedSql, translatedQuery);
   }

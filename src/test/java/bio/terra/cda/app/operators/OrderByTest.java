@@ -3,6 +3,7 @@ package bio.terra.cda.app.operators;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.helpers.QueryFileReader;
 import bio.terra.cda.app.models.OrderBy;
@@ -19,7 +20,7 @@ public class OrderByTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-invalid-select-column.json");
 
-    SqlGenerator sqlgen = new SqlGenerator(query, false);
+    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
 
@@ -34,7 +35,7 @@ public class OrderByTest {
   void testOrderByMultipleColumnsSameNestedObj() throws IOException {
     BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-orderby.json");
 
-    SqlGenerator sqlgen = new SqlGenerator(query, false);
+    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
     String sqlStr = query.buildQuery(ctx);

@@ -2,11 +2,11 @@ package bio.terra.cda.app.generators;
 
 import bio.terra.cda.generated.model.Query;
 
-@QueryGenerator(entity = "mutation", hasFiles = false, defaultOrderBy = "case_barcode",
+@EntityGeneratorData(entity = "mutation", hasFiles = false, defaultOrderBy = "case_barcode",
     additionalFields = {},
     aggregatedFields = {},
     aggregatedFieldsSelectString = {})
-public class MutationSqlGenerator extends SqlGenerator {
+public class MutationSqlGenerator extends EntitySqlGenerator {
   public MutationSqlGenerator(Query rootQuery) {
     super(rootQuery, false);
   }

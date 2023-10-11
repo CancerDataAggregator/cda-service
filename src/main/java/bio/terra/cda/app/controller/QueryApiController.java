@@ -20,11 +20,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -64,7 +61,7 @@ public class QueryApiController implements QueryApi {
   }
 
   protected QueryResponseData handleRequest(
-      boolean dryRun, SqlGenerator sqlGenerator) {
+      boolean dryRun, EntitySqlGenerator sqlGenerator) {
     return dryRun ? dryRun(sqlGenerator) : runAndReturn(sqlGenerator);
   }
 
@@ -72,7 +69,6 @@ public class QueryApiController implements QueryApi {
     List<Object> result = response.getResult();
     if (result != null && result.size() == limit) {
       StringBuffer url = webRequest.getRequestURL();
-      System.out.println(url.toString());
       url.append(String.format("?offset=%s&limit=%s", offset+limit, limit));
       response.setNextUrl(url.toString());
     }
@@ -81,7 +77,7 @@ public class QueryApiController implements QueryApi {
 
 
   protected QueryResponseData runAndReturn(
-      SqlGenerator sqlGenerator) {
+      EntitySqlGenerator sqlGenerator) {
     long start = System.currentTimeMillis();
     List<JsonNode> result = queryService.generateAndRunQuery(sqlGenerator);
     String readableSql = sqlGenerator.getReadableQuerySql();
@@ -105,12 +101,10 @@ public class QueryApiController implements QueryApi {
 
     String readableSql = sqlGenerator.getReadableQuerySql(offset, limit);
     queryService.logQuery(System.currentTimeMillis()-start, readableSql, result, countDuration);
-    return //new ResponseEntity<>(
+    return
         response
             .querySql(readableSql)
             .result(Collections.unmodifiableList(result));
-//        HttpStatus.OK);
-
   }
 
   protected QueryResponseData dryRun(
@@ -163,69 +157,9 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<PagedResponseData> uniqueValues(
       @Valid String body,  @Valid String system,  @Valid Boolean count, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
-    DataSetInfo dataSetInfo = RdbmsSchema.getDataSetInfo();
-
-    QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(false);
-    QueryField queryField = queryFieldBuilder.fromPath(body);
-
-    TableInfo tableInfo = dataSetInfo.getTableInfoFromField(body);
-    String tableName = tableInfo.getTableName();
-    List<String> whereClauses = new ArrayList<>();
-    JoinBuilder jb = new JoinBuilder();
-    List<Join> pathToSystem = Collections.emptyList();
-
-    if (system != null && system.length() > 0) {
-      String toTable = tableName + "_identifier";
-      pathToSystem = jb.getPath(tableName, toTable, "system", SqlUtil.JoinType.LEFT);
-
-      QueryField systemField =
-          queryFieldBuilder.fromPath( toTable + "_system");
-      whereClauses.add(systemField.getName() + " = '" + system + "'");
-    }
-
-    String querySql;
-    String whereStr = "";
-    if (!whereClauses.isEmpty()) {
-      whereStr = " WHERE " + String.join(" AND ", whereClauses);
-    }
-
-    String joins = pathToSystem.stream().map(join -> SqlTemplate.join(join)).distinct().collect(Collectors.joining(" "));
-
-    if (Boolean.TRUE.equals(count)) {
-      querySql =
-          "SELECT"
-              + " "
-              + queryField.getName()
-              + ","
-              + "COUNT(*"
-              + ") AS Count "
-              + "FROM "
-              + tableName
-              + joins
-              + whereStr
-              + " GROUP BY "
-              + queryField.getName()
-              + " "
-              + "ORDER BY "
-              + queryField.getName();
-    } else {
-      querySql =
-          "SELECT DISTINCT "
-              + queryField.getName()
-              + " FROM "
-              + tableName
-              + joins
-              + whereStr
-              + " ORDER BY "
-              + queryField.getName();
-    }
-    logger.debug("uniqueValues: {}", querySql);
-    List<JsonNode> result = queryService.runPagedQuery(querySql, offset, limit);
-    PagedResponseData responseData = new PagedResponseData();
-    responseData.result(Collections.unmodifiableList(result));
-    responseData.querySql(querySql);
-    checkAndSetNextUrl(responseData, "unique-values", offset, limit);
-    return new ResponseEntity<>(responseData, HttpStatus.OK);
+    PagedResponseData response = handleRequest(false, new QuerySqlGenerator(body, system, count), includeCount, offset, limit);
+    checkAndSetNextUrl(response,"unique-values", offset, limit);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @TrackExecutionTime

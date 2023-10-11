@@ -1,8 +1,7 @@
 package bio.terra.cda.app.util;
 
-import bio.terra.cda.app.generators.QueryGenerator;
-import bio.terra.cda.app.models.DataSetInfo;
-import bio.terra.cda.app.models.TableInfo;
+import bio.terra.cda.app.generators.EntityGeneratorData;
+
 import java.util.Objects;
 import java.util.stream.Stream;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -15,7 +14,7 @@ public class EndpointUtil {
     ClassPathScanningCandidateComponentProvider scanner =
         new ClassPathScanningCandidateComponentProvider(false);
 
-    scanner.addIncludeFilter(new AnnotationTypeFilter(QueryGenerator.class));
+    scanner.addIncludeFilter(new AnnotationTypeFilter(EntityGeneratorData.class));
 
     return scanner.findCandidateComponents("bio.terra.cda.app.generators").stream()
         .map(

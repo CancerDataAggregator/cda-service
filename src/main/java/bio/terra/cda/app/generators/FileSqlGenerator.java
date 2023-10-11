@@ -3,21 +3,18 @@ package bio.terra.cda.app.generators;
 import bio.terra.cda.app.models.ColumnDefinition;
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.RdbmsSchema;
-import bio.terra.cda.app.models.TableInfo;
 import bio.terra.cda.generated.model.Query;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
-@QueryGenerator(entity = "file", hasFiles = true, defaultOrderBy = "file_id",
+@EntityGeneratorData(entity = "file", hasFiles = true, defaultOrderBy = "file_id",
     additionalFields = {},
     aggregatedFields = {"file_identifier_system", "file_associated_project_associated_project"},
     aggregatedFieldsSelectString = {
         "json_agg(distinct (file_identifier.system, file_identifier.field_name, file_identifier.value)::system_data) as file_identifier",
         "json_agg(distinct file_associated_project.associated_project) AS file_associated_project"})
-public class FileSqlGenerator extends SqlGenerator {
+public class FileSqlGenerator extends EntitySqlGenerator {
 
 
   public FileSqlGenerator(Query rootQuery) {

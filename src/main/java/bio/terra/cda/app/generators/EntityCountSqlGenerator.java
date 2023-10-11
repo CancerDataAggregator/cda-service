@@ -4,14 +4,13 @@ import bio.terra.cda.app.builders.ViewBuilder;
 import bio.terra.cda.app.models.*;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.app.util.QueryUtil;
-import bio.terra.cda.app.util.SqlUtil;
 import bio.terra.cda.generated.model.Query;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class EntityCountSqlGenerator extends SqlGenerator {
+public class EntityCountSqlGenerator extends EntitySqlGenerator {
   protected List<ColumnDefinition> totalCountFields;
   protected List<ColumnDefinition> groupedCountFields;
 
