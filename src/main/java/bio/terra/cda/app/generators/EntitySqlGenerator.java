@@ -67,7 +67,6 @@ public class EntitySqlGenerator extends SqlGenerator {
 
   protected void initializeEntityFields() {
     EntityGeneratorData entityGeneratorData = this.getClass().getAnnotation(EntityGeneratorData.class);
-//    this.modularEntity = queryGenerator != null;
 
     if (entityGeneratorData != null) {
       this.entityTable = this.dataSetInfo.getTableInfo(entityGeneratorData.entity());
@@ -92,7 +91,6 @@ public class EntitySqlGenerator extends SqlGenerator {
     }
   }
 
-  @Override
   public QueryContext buildQueryContext(
       TableInfo entityTable, boolean filesQuery, boolean subQuery) {
     return new QueryContext(entityTable.getTableName())

@@ -157,6 +157,9 @@ public class QueryApiController implements QueryApi {
   @Override
   public ResponseEntity<PagedResponseData> uniqueValues(
       @Valid String body,  @Valid String system,  @Valid Boolean count, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
+    if (count == null) {
+      count = false;
+    }
     PagedResponseData response = handleRequest(false, new QuerySqlGenerator(body, system, count), includeCount, offset, limit);
     checkAndSetNextUrl(response,"unique-values", offset, limit);
     return new ResponseEntity<>(response, HttpStatus.OK);

@@ -19,7 +19,7 @@ public class SelectTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-invalid-select-column.json");
 
-    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
+    EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
 
@@ -35,7 +35,7 @@ public class SelectTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-select-easy.json");
 
-    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
+    EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
 

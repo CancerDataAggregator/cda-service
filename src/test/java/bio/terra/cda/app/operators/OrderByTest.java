@@ -20,7 +20,7 @@ public class OrderByTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-invalid-select-column.json");
 
-    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
+    EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
 
@@ -35,7 +35,7 @@ public class OrderByTest {
   void testOrderByMultipleColumnsSameNestedObj() throws IOException {
     BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-orderby.json");
 
-    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
+    EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
     String sqlStr = query.buildQuery(ctx);

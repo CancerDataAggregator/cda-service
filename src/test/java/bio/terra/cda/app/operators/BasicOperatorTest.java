@@ -20,7 +20,7 @@ public class BasicOperatorTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-invalid-column.json");
 
-    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
+    EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
 
@@ -36,7 +36,7 @@ public class BasicOperatorTest {
     BasicOperator query =
         (BasicOperator) QueryFileReader.getQueryFromFile("query-equals-quoted.json");
 
-    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
+    EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
     String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false, false));
 
@@ -46,7 +46,7 @@ public class BasicOperatorTest {
   @Test
   void testAndOr() throws IOException {
     BasicOperator query = (BasicOperator) QueryFileReader.getQueryFromFile("query-lung.json");
-    SqlGenerator sqlgen = new EntitySqlGenerator(query, false);
+    EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
 
     String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false, false));

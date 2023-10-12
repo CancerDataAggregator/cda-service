@@ -26,12 +26,6 @@ public class QuerySqlGenerator extends SqlGenerator{
     this.count = count;
   }
 
-  @Override
-  public QueryContext buildQueryContext(TableInfo entityTable, boolean filesQuery, boolean subQuery) {
-    // TODO Log a warning or error? this should never happen
-    return null;
-  }
-
   public String getSqlStringForMaxRows() {
     if (Strings.isNullOrEmpty(this.querySqlForMaxRows)) {
       this.querySqlForMaxRows = generateForMaxRows();

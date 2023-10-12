@@ -12,8 +12,6 @@ public abstract class SqlGenerator {
   protected ParameterBuilder parameterBuilder = new ParameterBuilder();
   protected String querySql;
 
-  public abstract QueryContext buildQueryContext(TableInfo entityTable, boolean filesQuery, boolean subQuery);
-
   public MapSqlParameterSource getNamedParameterMap() {
     return this.parameterBuilder.getParameterValueMap();
   }
