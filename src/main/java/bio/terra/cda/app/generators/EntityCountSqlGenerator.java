@@ -129,9 +129,9 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
         .collect(Collectors.joining(", "));
   }
 
-  @Override
+
   protected Stream<String> getSelectsFromEntity(
-      QueryContext ctx, List<ColumnDefinition> additionalColumns, Map<ColumnDefinition, String> aggregateFieldsAndSql) {
+      QueryContext ctx, Map<ColumnDefinition, String> aggregateFieldsAndSql) {
 
     List<ColumnDefinition> totalFields = totalCountFields;
     if (filesQuery) {

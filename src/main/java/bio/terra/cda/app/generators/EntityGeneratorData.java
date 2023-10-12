@@ -10,7 +10,6 @@ import java.lang.annotation.Target;
 public @interface EntityGeneratorData {
   public String entity();
 
-  public String[] additionalFields();
   public String[] aggregatedFields();
   public String[] aggregatedFieldsSelectString();
 

@@ -19,7 +19,6 @@ public class EntitySqlGenerator extends SqlGenerator {
   final DataSetInfo dataSetInfo;
   final boolean filesQuery;
 
-  List<ColumnDefinition> additionalColumns = Collections.emptyList();
   Map<ColumnDefinition, String> aggregatedFieldsAndSelectString = new LinkedHashMap<>();
   boolean modularEntity;
   SelectBuilder selectBuilder = new SelectBuilder();
@@ -76,11 +75,8 @@ public class EntitySqlGenerator extends SqlGenerator {
         defaultOrderBy = orderByBuilder.fromQueryField(queryFieldBuilder.fromPath(defaultOrderByField));
       }
 
-      additionalColumns = Arrays.stream(entityGeneratorData.additionalFields())
-          .map(field-> dataSetInfo.getColumnDefinitionByFieldName(field)).collect(Collectors.toList());
-
       List<ColumnDefinition> colList = Arrays.stream(entityGeneratorData.aggregatedFields())
-            .map(field -> dataSetInfo.getColumnDefinitionByFieldName(field))
+            .map(dataSetInfo::getColumnDefinitionByFieldName)
             .collect(Collectors.toList());
       List<String> selectList = Arrays.asList(entityGeneratorData.aggregatedFieldsSelectString());
       this.aggregatedFieldsAndSelectString = IntStream.range(0, colList.size())
@@ -137,7 +133,6 @@ public class EntitySqlGenerator extends SqlGenerator {
       boolean subQuery,
       QueryContext ctx,
       boolean hasSubClause) {
-    TableInfo tableInfo = ctx.getTableInfo();
     TableInfo startTable = this.entityTable;
 
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
@@ -174,7 +169,7 @@ public class EntitySqlGenerator extends SqlGenerator {
                         "%s AS %s",
                         startTable.getTableName(),
                         startTable.getTableAlias(this.dataSetInfo))),
-            ctx.getJoins().stream().map(join -> SqlTemplate.join(join)));
+            ctx.getJoins().stream().map(SqlTemplate::join));
 
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
 
@@ -205,7 +200,6 @@ public class EntitySqlGenerator extends SqlGenerator {
     } else {
       return getSelectsFromEntity(
           ctx,
-          additionalColumns,
           this.filesQuery ? FileSqlGenerator.getExternalFieldsAndSqlString() :
           getAggregatedFieldsAndSelectString());
     }
@@ -216,11 +210,9 @@ public class EntitySqlGenerator extends SqlGenerator {
   }
 
   protected Stream<String> getSelectsFromEntity(
-      QueryContext ctx, List<ColumnDefinition> additionalColumns, Map<ColumnDefinition, String> aggregateFields) {
+      QueryContext ctx, Map<ColumnDefinition, String> aggregateFields) {
 
-    Set<ColumnDefinition> totalExternalColumns = new HashSet<>();
-    totalExternalColumns.addAll(aggregateFields.keySet());
-    totalExternalColumns.addAll(additionalColumns);
+    Set<ColumnDefinition> totalExternalColumns = new HashSet<>(aggregateFields.keySet());
     totalExternalColumns.forEach(col -> {
       if (!this.entityTable.getTableName().equals(col.getTableName())) {
         List<Join> path =
@@ -238,7 +230,6 @@ public class EntitySqlGenerator extends SqlGenerator {
       columns.addAll(Arrays.asList(dataSetInfo.getTableInfo("file").getColumnDefinitions()));
     } else {
       columns.addAll(Arrays.asList(this.entityTable.getColumnDefinitions()));
-      columns.addAll(additionalColumns);
 
     }
     return Stream.concat(
