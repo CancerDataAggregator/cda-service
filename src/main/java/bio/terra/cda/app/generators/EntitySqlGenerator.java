@@ -153,12 +153,18 @@ public class EntitySqlGenerator extends SqlGenerator {
           true);
     }
 
-    String condition = ((BasicOperator) query).buildQuery(ctx);
     String selectFields =
         subQuery
             ? ""
             : getSelect(ctx)
                 .collect(Collectors.joining(", "));
+
+    List<String> conditions = new ArrayList<>();
+    conditions.add(((BasicOperator) query).buildQuery(ctx));
+    conditions.addAll(ctx.getJoins().stream().map(SqlTemplate::joinCondition).collect(Collectors.toList()));
+
+    String allConditions = String.join(" AND ", conditions);
+
 
     var fromClause =
         Stream.concat(
@@ -171,7 +177,7 @@ public class EntitySqlGenerator extends SqlGenerator {
                         startTable.getTableAlias(this.dataSetInfo))),
             ctx.getJoins().stream().map(SqlTemplate::join));
 
-    String fromString = fromClause.distinct().collect(Collectors.joining(" "));
+    String fromString = fromClause.distinct().collect(Collectors.joining(","));
 
     String orderBys = ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", "));
     if (Strings.isNullOrEmpty(orderBys) && !Objects.isNull(defaultOrderBy)) {
@@ -182,14 +188,14 @@ public class EntitySqlGenerator extends SqlGenerator {
       return SqlTemplate.regularQuery(
               String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
               fromString,
-              condition,
+              allConditions,
               orderBys);
     }
 
     return SqlTemplate.resultsQuery(
         selectFields,
         fromString,
-        condition,
+        allConditions,
         ctx.getGroupBys(),
         orderBys);
   }

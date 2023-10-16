@@ -13,8 +13,13 @@ public class SqlTemplate {
 
   public static String join(Join join) {
     ForeignKey key = join.getKey();
-    return String.format(" %1$s %4$s AS %4$s ON %2$s.%3$s = %4$s.%5$s",
-        join.getJoinType().value, key.getFromTableName(), key.getFromField(), key.getDestinationTableName(), key.getFields()[0]);
+    return String.format(" %1$s AS %1s ",  key.getDestinationTableName());
+  }
+
+  public static String joinCondition(Join join) {
+    ForeignKey key = join.getKey();
+    return String.format(" %1$s.%2$s = %3$s.%4$s ",
+        key.getFromTableName(), key.getFromField(), key.getDestinationTableName(), key.getFields()[0]);
   }
 
   public static String regularQuery(
