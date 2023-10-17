@@ -66,7 +66,7 @@ public class QuerySqlGenerator extends SqlGenerator{
 
       QueryField systemField =
           queryFieldBuilder.fromPath( toTable + "_system");
-      whereClauses.add(systemField.getName() + " = '" + systemParam + "'");
+      whereClauses.add(systemField.getName() + " = " + systemParam);
     }
 
     whereClauses.addAll(pathToSystem.stream().map(join -> SqlTemplate.joinCondition(join)).distinct().collect(Collectors.toList()));
