@@ -38,10 +38,14 @@ public class QuerySqlGenerator extends SqlGenerator{
     return querySqlForMaxRows;
   }
 
+  /***
+   * This will generate a sql query String for uniqueValues
+   * @return
+   * @throws IllegalArgumentException
+   */
   @Override
   protected String generate() throws IllegalArgumentException {
     DataSetInfo dataSetInfo = RdbmsSchema.getDataSetInfo();
-
     QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(false);
     QueryField queryField = queryFieldBuilder.fromPath(body);
 
@@ -52,12 +56,13 @@ public class QuerySqlGenerator extends SqlGenerator{
     List<Join> pathToSystem = Collections.emptyList();
 
     if (system != null && system.length() > 0) {
+      String systemParam = this.parameterBuilder.addParameterValue("text",system);
       String toTable = tableName + "_identifier";
       pathToSystem = jb.getPath(tableName, toTable, "system", SqlUtil.JoinType.LEFT);
 
       QueryField systemField =
           queryFieldBuilder.fromPath( toTable + "_system");
-      whereClauses.add(systemField.getName() + " = '" + system + "'");
+      whereClauses.add(systemField.getName() + " = '" + systemParam + "'");
     }
 
     whereClauses.addAll(pathToSystem.stream().map(join -> SqlTemplate.joinCondition(join)).distinct().collect(Collectors.toList()));
