@@ -58,7 +58,11 @@ public class QuerySqlGenerator extends SqlGenerator{
     if (system != null && system.length() > 0) {
       String systemParam = this.parameterBuilder.addParameterValue("text",system);
       String toTable = tableName + "_identifier";
+      if (dataSetInfo.getTableInfo(toTable) == null) {
+        toTable = "subject_identifier";
+      }
       pathToSystem = jb.getPath(tableName, toTable, "system", SqlUtil.JoinType.LEFT);
+
 
       QueryField systemField =
           queryFieldBuilder.fromPath( toTable + "_system");
