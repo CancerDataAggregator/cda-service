@@ -25,18 +25,22 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
     if (queryGenerator == null) {
       throw new RuntimeException("No entity table annotation found");
     }
-    this.entityTable = this.dataSetInfo.getTableInfo(queryGenerator.entity());
 
+    String entity = filesQuery ? "file" : queryGenerator.entity();
+    this.entityTable = this.dataSetInfo.getEntityTableInfo(entity);
+
+    String[] totalFieldsToCount = filesQuery ? FileCountSqlGenerator.getTotalFieldsToCount() : queryGenerator.totalFieldsToCount();
     totalCountFields =
-        Arrays.stream(queryGenerator.totalFieldsToCount())
+        Arrays.stream(totalFieldsToCount)
             .map(
                 field ->
                     dataSetInfo.getColumnDefinitionByFieldName(
                         field, this.entityTable.getTableName()))
             .collect(Collectors.toList());
 
+    String[] groupedFieldsToCount = filesQuery ? FileCountSqlGenerator.getGroupedFieldsToCount() : queryGenerator.groupedFieldsToCount();
     groupedCountFields =
-        Arrays.stream(queryGenerator.groupedFieldsToCount())
+        Arrays.stream(groupedFieldsToCount)
             .map(
                 field ->
                     dataSetInfo.getColumnDefinitionByFieldName(
