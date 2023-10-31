@@ -26,6 +26,14 @@ public class QuerySqlGenerator extends SqlGenerator{
     this.count = count;
   }
 
+  @Override
+  public String getSqlString() {
+    if (Strings.isNullOrEmpty(this.querySqlForMaxRows)) {
+      generate();
+    }
+    return this.count ? this.querySql : this.querySqlForMaxRows;
+  }
+
   public String getSqlStringForMaxRows() {
     if (Strings.isNullOrEmpty(this.querySqlForMaxRows)) {
       this.querySqlForMaxRows = generateForMaxRows();
