@@ -21,7 +21,7 @@ public class QuerySqlGenerator extends SqlGenerator{
 
   private String querySqlForMaxRows;
   public QuerySqlGenerator(String body, String system, boolean count) {
-    this.body = body.toLowerCase();
+    this.body = body;
     this.system = system;
     this.count = count;
   }
@@ -77,17 +77,13 @@ public class QuerySqlGenerator extends SqlGenerator{
       whereClauses.add(systemField.getName() + " = " + systemParam);
     }
 
-    whereClauses.addAll(pathToSystem.stream().map(join -> SqlTemplate.joinCondition(join)).distinct().collect(Collectors.toList()));
-
     String whereStr = "";
     if (!whereClauses.isEmpty()) {
       whereStr = " WHERE " + String.join(" AND ", whereClauses);
     }
 
-    String joins = pathToSystem.stream().map(join -> SqlTemplate.join(join)).distinct().collect(Collectors.joining(", "));
-    if (!joins.isEmpty()) {
-      joins = ", " + joins;
-    }
+    String joins = pathToSystem.stream().map(join -> SqlTemplate.join(join)).distinct().collect(Collectors.joining(" "));
+
 
     querySql =
           "SELECT"

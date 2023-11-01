@@ -53,7 +53,7 @@ class QueryApiControllerTest {
             });
 
     var expected =
-        "SELECT DISTINCT sex FROM subject,  subject_identifier AS subject_identifier  WHERE system = 'GDC' AND  subject.id = subject_identifier.subject_id  ORDER BY sex  LIMIT 100";
+        "SELECT DISTINCT sex FROM subject LEFT JOIN subject_identifier AS subject_identifier ON subject.id = subject_identifier.subject_id WHERE system = 'GDC' ORDER BY sex  LIMIT 100";
     var result =
         mvc.perform(
                 post("/api/v1/unique-values")
