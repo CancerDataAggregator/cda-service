@@ -50,7 +50,7 @@ public class SqlTemplate {
     String limitSql = limit != null && limit > 0 ?
         String.format("LIMIT %d", limit)
         : "";
-    String offsetSql = offset != null && offset > 1 ?
+    String offsetSql = offset != null && offset > 0 ?
         String.format("OFFSET %d", offset)
         : "";
 
