@@ -12,18 +12,17 @@ Clicking on the following image will take you to the CDA Sonarqube code analysis
 Building and running locally requires JDK 11 and gradle. On a Mac, you can use [brew](https://brew.sh/)
 to install these. 
 
-```bash
-brew install openjdk@11
-brew install gradle
-```
+	brew install openjdk@11
+	brew install gradle
+
 
 After this add the path to `openjdk@11` into your login script e.g. `export PATH="/usr/local/opt/openjdk@11/bin:$PATH"`
 
 ### Build and run tests
 
-```bash
-./gradlew test
-```
+
+	./gradlew test
+
 
 The end of the test output should read something like:
 ```
@@ -33,29 +32,30 @@ BUILD SUCCESSFUL in 8s
 
 ### Run the server
 
-Running the server locally requires three environment variables. These can be set on the command line:
+We use the google cloud sql proxy to access the postgres database. Install the proxy for your system [here](https://cloud.google.com/sql/docs/postgres/sql-proxy#install). Start the cloud proxy in its own terminal (it is a long running process). You must have access to the cda database.
 
-```bash
-./gradlew bootRun
-```
+	./cloud-sql-proxy --port 5431 broad-cda-dev:us-central1:cda-prototype
+	
+Once the proxy is running, start the service locally.
 
-Accessing BigQuery requires credentials. If the credentals are stored in a file called 
-`bq-credentials.json`, you can start the service as follows:
+	./gradlew bootRunLocal
 
-```bash
-GOOGLE_APPLICATION_CREDENTIALS=bq-credentials.json ./gradlew bootRun
-```
+
+
 
 
 ### Testing the server
 
 If the `bootRun` command was successful, you should see `EXECUTING` in the output. At this point the
-server is running on port 8080 locally. The swagger page is at http://localhost:8080/api/swagger-ui.html.
+server is running on port 8080 locally. The swagger page is at 
+
+	http://localhost:8080/api/swagger-ui.html
+	
 You can test out the two endpoints using `curl`:
 
-```bash
-curl http://localhost:8080/status
-```
+
+	curl http://localhost:8080/status
+
 
 
 ### Example query
