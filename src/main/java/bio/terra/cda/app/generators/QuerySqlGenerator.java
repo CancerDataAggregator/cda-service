@@ -66,7 +66,10 @@ public class QuerySqlGenerator extends SqlGenerator{
     if (system != null && system.length() > 0) {
       String systemParam = this.parameterBuilder.addParameterValue("text",system);
       String toTable = tableName + "_identifier";
+
       if (dataSetInfo.getTableInfo(toTable) == null) {
+        // this block only executes when the table is the somatic_mutations table which doesn't have an identifier table
+        // so we use the subject_identifier table instead
         toTable = "subject_identifier";
         identifierTablePrefix = "subject";
         fk = "cda_subject_id";
