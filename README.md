@@ -46,8 +46,7 @@ Once the proxy is running, start the service locally.
 
 ### Testing the server
 
-If the `bootRun` command was successful, you should see `EXECUTING` in the output. At this point the
-server is running on port 8080 locally. The swagger page is at 
+Once the server starts you should be able to use the swagger page to execute requests. The swagger page is at 
 
 	http://localhost:8080/api/swagger-ui.html
 	
