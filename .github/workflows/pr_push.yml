@@ -78,9 +78,9 @@ jobs:
   report-to-sherlock:
     # Report new cancerdata version to Broad DevOps
     uses: broadinstitute/sherlock/.github/workflows/client-report-app-version.yaml@main
-    needs: [ cda-service-build-tag-publish ]
+    needs: [ tag-build-publish ]
     with:
-      new-version: ${{ needs.cda-service-build-tag-publish.outputs.tag }}
+      new-version: ${{ needs.tag-build-publish.outputs.tag }}
       chart-name: 'cancerdata'
     permissions:
       contents: 'read'
