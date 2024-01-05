@@ -3,6 +3,12 @@
 name: cda-service-build-tag-publish
 
 on:
+  push:
+    branches:
+      - main
+      - develop
+      - test
+    paths-ignore: ['**.md']
   pull_request:
     paths-ignore: ['**.md']
 env:
