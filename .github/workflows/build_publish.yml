@@ -3,13 +3,19 @@
 name: cda-service-build-tag-publish
 
 on:
+  push:
+    branches:
+      - main
+      - develop
+      - test
+    paths-ignore: ['**.md']
   pull_request:
     paths-ignore: ['**.md']
 env:
   SERVICE_NAME: cancerdata
   GOOGLE_PROJECT: broad-dsp-gcr-public
 jobs:
-  tag-build-push:
+  tag-build-publish:
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
@@ -75,14 +81,14 @@ jobs:
         env:
           SERVICE_VERSION: ${{ steps.tag.outputs.tag }}
 
-#  report-to-sherlock:
-#    # Report new Sam version to Broad DevOps
-#    uses: broadinstitute/sherlock/.github/workflows/client-report-app-version.yaml@main
-#    needs: [ cda-service-build-tag-publish ]
-#    with:
-#      new-version: ${{ needs.cda-service-build-tag-publish.outputs.tag }}
-#      chart-name: 'cancerdata'
-#    permissions:
-#      contents: 'read'
-#      id-token: 'write'
+  report-to-sherlock:
+    # Report new cancerdata version to Broad DevOps
+    uses: broadinstitute/sherlock/.github/workflows/client-report-app-version.yaml@main
+    needs: [ tag-build-publish ]
+    with:
+      new-version: ${{ needs.tag-build-publish.outputs.tag }}
+      chart-name: 'cancerdata'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
 #    inputs: '{ "bee-name": "${{ github.event.repository.name }}-${{ github.run_id }}-${{ matrix.terra-env }}" }'

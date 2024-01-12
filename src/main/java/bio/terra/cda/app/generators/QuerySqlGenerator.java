@@ -59,31 +59,25 @@ public class QuerySqlGenerator extends SqlGenerator{
 
     TableInfo tableInfo = dataSetInfo.getTableInfoFromField(body);
     String tableName = tableInfo.getTableName();
-    List<String> whereClauses = new ArrayList<>();
-    JoinBuilder jb = new JoinBuilder();
-    List<Join> pathToSystem = Collections.emptyList();
+    String identifierTablePrefix = tableName; // just a default - will validate below
+    String whereClause = "";
+    String fk = "";
 
     if (system != null && system.length() > 0) {
       String systemParam = this.parameterBuilder.addParameterValue("text",system);
       String toTable = tableName + "_identifier";
+
       if (dataSetInfo.getTableInfo(toTable) == null) {
+        // this block only executes when the table is the somatic_mutations table which doesn't have an identifier table
+        // so we use the subject_identifier table instead
         toTable = "subject_identifier";
+        identifierTablePrefix = "subject";
+        fk = "cda_subject_id";
+      } else {
+        fk = tableInfo.getPrimaryKeys().get(0).getName();
       }
-      pathToSystem = jb.getPath(tableName, toTable, "system", SqlUtil.JoinType.LEFT);
-
-
-      QueryField systemField =
-          queryFieldBuilder.fromPath( toTable + "_system");
-      whereClauses.add(systemField.getName() + " = " + systemParam);
+      whereClause = String.format(" WHERE %s IN (SELECT DISTINCT(%s_id) FROM %s WHERE system = %s)", fk, identifierTablePrefix, toTable, systemParam);
     }
-
-    String whereStr = "";
-    if (!whereClauses.isEmpty()) {
-      whereStr = " WHERE " + String.join(" AND ", whereClauses);
-    }
-
-    String joins = pathToSystem.stream().map(join -> SqlTemplate.join(join)).distinct().collect(Collectors.joining(" "));
-
 
     querySql =
           "SELECT"
@@ -94,8 +88,7 @@ public class QuerySqlGenerator extends SqlGenerator{
               + ") AS Count "
               + "FROM "
               + tableName
-              + joins
-              + whereStr
+              + whereClause
               + " GROUP BY "
               + queryField.getName()
               + " "
@@ -107,8 +100,7 @@ public class QuerySqlGenerator extends SqlGenerator{
               + queryField.getName()
               + " FROM "
               + tableName
-              + joins
-              + whereStr
+              + whereClause
               + " ORDER BY "
               + queryField.getName();
     return count ? querySql : querySqlForMaxRows;
