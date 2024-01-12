@@ -1,6 +1,6 @@
 # Github action to Build cda service artifact, add/promote semantic tagging
 
-name: cda-service-build-tag-publish
+name: Tag, Build, and Push Image
 
 on:
   push:
