@@ -93,15 +93,15 @@ jobs:
       id-token: 'write'
 #    inputs: '{ "bee-name": "${{ github.event.repository.name }}-${{ github.run_id }}-${{ matrix.terra-env }}" }'
 
-set-version-in-dev:
-  # Put new cda version in Broad dev environment
-  uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
-  needs: [tag-build-publish, report-to-sherlock]
-  with:
-    new-version: ${{ needs.tag-build-publish.outputs.tag }}
-    chart-name: 'cancerdata'
-    environment-name: 'dev'
-  secrets:
-    sync-git-token: ${{ secrets.BROADBOT_TOKEN }}
-  permissions:
-    id-token: 'write'
+  set-version-in-dev:
+    # Put new cda version in Broad dev environment
+    uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
+    needs: [tag-build-publish, report-to-sherlock]
+    with:
+      new-version: ${{ needs.tag-build-publish.outputs.tag }}
+      chart-name: 'cancerdata'
+      environment-name: 'dev'
+    secrets:
+      sync-git-token: ${{ secrets.BROADBOT_TOKEN }}
+    permissions:
+      id-token: 'write'
