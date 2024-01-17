@@ -230,10 +230,10 @@ public class EntitySqlGenerator extends SqlGenerator {
       columns.addAll(Arrays.asList(dataSetInfo.getTableInfo("file").getColumnDefinitions()));
     } else {
       columns.addAll(Arrays.asList(this.entityTable.getColumnDefinitions()));
-
     }
+
     return Stream.concat(
-        columns.stream()
+        columns.stream().filter(col -> !col.getName().endsWith("_id_alias"))
             .map(
                 col -> {
                     ctx.addGroupBy(col);
