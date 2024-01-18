@@ -93,7 +93,6 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-#    inputs: '{ "bee-name": "${{ github.event.repository.name }}-${{ github.run_id }}-${{ matrix.terra-env }}" }'
 
 set-version-in-dev:
   # Put new cda version in Broad dev environment
