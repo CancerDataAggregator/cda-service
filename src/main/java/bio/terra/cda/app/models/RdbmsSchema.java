@@ -17,7 +17,7 @@ public class RdbmsSchema {
     public static final String FILE_TABLE = "file";
 
     //TODO get this from app conifg
-    private static String schema_file = "schema/cda-prototype_schema.json";
+    private static String schema_file = "schema/cda_schema.json";
     public static JsonNode loadDbSchema(String fileName) throws IOException {
         ClassPathResource resource = new ClassPathResource(fileName);
         InputStream inputStream = resource.getInputStream();

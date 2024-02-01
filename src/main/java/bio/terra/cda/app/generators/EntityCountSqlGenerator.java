@@ -123,7 +123,7 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
                 .map(
                     col ->
                         String.format(
-                            totalFormatString, col.getAlias(), tableAlias, col.getAlias())),
+                            totalFormatString, replaceAliasWithId(col.getAlias()), tableAlias, replaceAliasWithId(col.getAlias()))),
             groupedCountFields.stream()
                 .map(
                     col ->
@@ -157,7 +157,11 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
                 ctx.addJoins(path);
               }
               return String.format(
-                  "%1$s.%2$s AS %3$s", col.getTableName(), col.getName(), col.getAlias());
+                  "%1$s.%2$s AS %3$s", col.getTableName(), col.getName(), replaceAliasWithId(col.getAlias()));
             });
+  }
+
+  protected String replaceAliasWithId(String integerAliasAlias) {
+    return integerAliasAlias.replace("alias", "id");
   }
 }
