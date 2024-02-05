@@ -27,11 +27,6 @@ jobs:
         restore-keys: ${{ runner.os }}-gradle
     - name: Run tests
       run: ./gradlew test --scan
-    - name: Run SonarQube scan
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew sonarqube --info
     - name: Run Coverage
       run: |
         chmod +x gradlew
