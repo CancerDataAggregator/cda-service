@@ -89,8 +89,12 @@ public class DataSetInfo {
     if (fieldName.contains(".")) {
       // it's a mapping field
       String[] parsed = fieldName.split("\\.", 2);
-      TableInfo mappingTable = getTableInfo(parsed[0]);
-      return Arrays.stream(mappingTable.getColumnDefinitions()).filter(col -> col.getName().equals(parsed[1])).findFirst().orElse(null);
+      String parsedTablename = parsed[0];
+      String parsedColname = parsed[1];
+      TableInfo mappingTable = getTableInfo(parsedTablename);
+      return Arrays.stream(mappingTable.getColumnDefinitions())
+          .filter(col -> col.getName().equals(parsedColname))
+          .findFirst().orElse(null);
     }
     return replacedFieldnames.contains(fieldName)
         ? getColumnDefinitionByFieldName(getNewFieldNameForDuplicate(fieldName, tablename))
