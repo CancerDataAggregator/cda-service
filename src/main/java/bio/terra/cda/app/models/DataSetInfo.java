@@ -89,8 +89,12 @@ public class DataSetInfo {
     if (fieldName.contains(".")) {
       // it's a mapping field
       String[] parsed = fieldName.split("\\.", 2);
-      TableInfo mappingTable = mappingTableInfoMap.get(parsed[0]);
-      return Arrays.stream(mappingTable.getColumnDefinitions()).filter(col -> col.getName().equals(parsed[1])).findFirst().orElse(null);
+      String parsedTablename = parsed[0];
+      String parsedColname = parsed[1];
+      TableInfo mappingTable = getTableInfo(parsedTablename);
+      return Arrays.stream(mappingTable.getColumnDefinitions())
+          .filter(col -> col.getName().equals(parsedColname))
+          .findFirst().orElse(null);
     }
     return replacedFieldnames.contains(fieldName)
         ? getColumnDefinitionByFieldName(getNewFieldNameForDuplicate(fieldName, tablename))
@@ -222,7 +226,6 @@ public class DataSetInfo {
       }
       TableInfo tableInfo = builder.build();
       addFieldsFromTable(tableInfo);
-      // skip partition by
       if (isMappingTable) {
         this.mappingTableInfoMap.put(tableName, tableInfo);
       } else {
@@ -248,18 +251,18 @@ public class DataSetInfo {
 
     private void addFieldMapEntry(ColumnDefinition colDef, String tableName) {
       String fieldName = colDef.getName();
-      if (fieldMap.containsKey(fieldName) || usedFields.contains(fieldName)) {
+      if (this.fieldMap.containsKey(fieldName) || this.usedFields.contains(fieldName)) {
           String alias = getNewFieldNameForDuplicate(fieldName, tableName);
           resolveFieldNameConflict(fieldName);
         colDef.setAlias(alias);
         fieldName = alias;
       }
-      fieldMap.put(fieldName, colDef);
+      this.fieldMap.put(fieldName, colDef);
     }
 
     public void resolveFieldNameConflict(String name) {
       if (this.fieldMap.containsKey(name)) {
-        usedFields.add(name);
+        this.usedFields.add(name);
         ColumnDefinition col = this.fieldMap.get(name);
         String alias = getNewFieldNameForDuplicate(name, col.getTableName());
         this.fieldMap.remove(name);
