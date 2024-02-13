@@ -1,0 +1,25 @@
+{
+  "node_type": "SUBQUERY",
+  "l": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "primary_diagnosis_condition"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "Adenomas and Adenocarcinomas"
+    }
+  },
+  "r": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "subject_identifier_system"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "GDC"
+    }
+  }
+}
