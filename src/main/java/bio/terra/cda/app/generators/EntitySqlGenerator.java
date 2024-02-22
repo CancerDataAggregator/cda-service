@@ -6,6 +6,7 @@ import bio.terra.cda.app.operators.BasicOperator;
 import bio.terra.cda.app.util.*;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.base.Strings;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -251,4 +252,16 @@ public class EntitySqlGenerator extends SqlGenerator {
             .map(View::toString)
             .collect(Collectors.joining(", ")));
   }
+
+  public JoinBuilder getJoinBuilder(){
+    return this.joinBuilder;
+  }
+
+  public String getEntityTableName(){
+    return this.entityTable.getTableName();
+  }
+  public String getEntityTableFirstPK(){
+    return this.entityTable.getPrimaryKeys().get(0).getName();
+  }
+  public TableInfo getEntityTable() { return this.entityTable; }
 }

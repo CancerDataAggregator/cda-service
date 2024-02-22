@@ -1,5 +1,6 @@
 package bio.terra.cda.app.generators;
 
+import bio.terra.cda.app.builders.JoinBuilder;
 import bio.terra.cda.app.models.ColumnDefinition;
 import bio.terra.cda.app.models.DataSetInfo;
 import bio.terra.cda.app.models.RdbmsSchema;

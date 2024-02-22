@@ -49,7 +49,7 @@ public class CountsSqlGenerator extends EntitySqlGenerator {
                     .nodeType(Query.NodeTypeEnum.SELECTVALUES)
                     .value(String.join(",", primaryKeyFields)))
             .r(QueryUtil.deSelectifyQuery(query));
-
+//TODO: EntitySQLGenerator -> Build out new structure of optimized query
     String resultsAlias = "flattened_results";
     String flattenedWith =
         String.format(
