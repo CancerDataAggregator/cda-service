@@ -1,0 +1,11 @@
+{
+  "node_type": "LIKE",
+  "l": {
+    "node_type": "column",
+    "value": "primary_disease_type"
+  },
+  "r": {
+    "node_type": "quoted",
+    "value": "Lung%"
+  }
+}

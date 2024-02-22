@@ -1,0 +1,39 @@
+{
+  "node_type": "OR",
+  "l": {
+    "node_type": "=",
+    "l": {
+      "node_type": "column",
+      "value": "treatment_anatomic_site"
+    },
+    "r": {
+      "node_type": "quoted",
+      "value": "Cervix"
+    }
+  },
+  "r": {
+    "node_type": "OR",
+    "l": {
+      "node_type": "LIKE",
+      "l": {
+        "node_type": "column",
+        "value": "primary_diagnosis_site"
+      },
+      "r": {
+        "node_type": "quoted",
+        "value": "%uter%"
+      }
+    },
+    "r": {
+      "node_type": "LIKE",
+      "l": {
+        "node_type": "column",
+        "value": "primary_diagnosis_site"
+      },
+      "r": {
+        "node_type": "quoted",
+        "value": "%cerv%"
+      }
+    }
+  }
+}
