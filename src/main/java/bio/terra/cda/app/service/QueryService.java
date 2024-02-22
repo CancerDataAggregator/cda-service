@@ -144,7 +144,7 @@ public class QueryService {
     }
   }
 
-  public String optimizeCountQuery(String sqlCount, EntitySqlGenerator generator){
+  public String optimizeCountQuery(String sqlCount, EntityCountSqlGenerator generator){
     Filter filterObj = new Filter(sqlCount, sqlCount, generator, Boolean.TRUE, "");
     if (filterObj.getProblemFlag()){
       return sqlCount;
@@ -290,44 +290,55 @@ final class Filter{
       // Use JoinPath to generate preselects
       List<Join> joinPath = this.joinBuilder.getPath(this.filterTableName, this.entityTableName, this.entityPK); // TODO: could optimize by building a better joinPath with this one
 
-      // Construct initial preselect from the filter table
-      if (joinPath.isEmpty()){
-        this.filterTableKey = this.generator.getEntityTable().getForeignKeys().first().getFromField();
-      } else {
-        this.filterTableKey = joinPath.get(0).getKey().getFromField();
-      }
-      this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
-      String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
-      this.filterPreselect = replaceKeywords(preselect_template);
 
-      // Construct Mapping Preselects
-      if (joinPath.isEmpty()) {
-        this.mappingEntityKey = this.generator.getEntityTable().getForeignKeys().first().getFields()[0];
-        this.mappingTableName = this.generator.getEntityTable().getForeignKeys().first().getDestinationTableName();
-        this.mappingFilterKey = this.generator.getEntityTable().getForeignKeys().first().getFromField();
-        this.mappingPreselectName = replaceKeywords("FILTERTABLENAME_mapping_id_preselectIDENTIFIER");
-        String mapping_preselect_template = "MAPPINGPRESELECTNAME AS( SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN( SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
-        this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
+      if (joinPath.isEmpty()){ // Filter on the entity table
+        Boolean found_alias = Boolean.FALSE;
+        for (ForeignKey fk : this.generator.getEntityTable().getForeignKeys()){
+          if (fk.getFromField().equals("integer_id_alias")) {
+            this.filterTableKey = "integer_id_alias";
+            found_alias = Boolean.TRUE;
+            this.mappingEntityKey = fk.getFields()[0];
+            this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
+            String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
+            this.filterPreselect = replaceKeywords(preselect_template);
+
+            // Construct SELECT Statement for UNION/INTESECT opertations
+            String union_intersect_template = "SELECT FILTERTABLEKEY AS MAPPINGENTITYKEY FROM FILTERPRESELECTNAME";
+            this.unionIntersect = replaceKeywords(union_intersect_template);
+            break;
+          }
+        }
+        if (!found_alias) this.problemFlag = Boolean.TRUE;
+      } else { // Filter needs to be mapped from filter table to entity table
+        this.filterTableKey = joinPath.get(0).getKey().getFromField();
+        this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
+        String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
+        this.filterPreselect = replaceKeywords(preselect_template);
+
+        // Construct Mapping Preselects
+        if (joinPath.size() == 2) { // Direct mapping table present -> construct basic mapping preselect
+          this.mappingTableName = joinPath.get(0).getKey().getDestinationTableName();
+          this.mappingEntityKey = joinPath.get(1).getKey().getFromField();
+          this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
+          this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_id_preselectIDENTIFIER");
+          String mapping_preselect_template = "MAPPINGPRESELECTNAME AS( SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN( SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
+          this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
+        } else if (joinPath.size() > 2) { // Need to apply joins to a mapping table
+          this.setJoinString(joinPath);
+          this.mappingTableName = joinPath.get(joinPath.size() - 1).getKey().getDestinationTableName();
+          this.mappingEntityKey = joinPath.get(joinPath.size() - 1).getKey().getFromField();
+          this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
+          this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_FILTERTABLENAME_id_preselectIDENTIFIER");
+          String mapping_preselect_template = "MAPPINGPRESELECTNAME AS( SELECT MAPPINGENTITYKEY FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN( SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
+          this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
+        }
+        // Construct SELECT Statement for UNION/INTESECT opertations
+        String union_intersect_template = "SELECT MAPPINGENTITYKEY  FROM MAPPINGPRESELECTNAME";
+        this.unionIntersect = replaceKeywords(union_intersect_template);
       }
-      if (joinPath.size() == 2) { // Direct mapping table present -> construct basic mapping preselect
-        this.mappingTableName = joinPath.get(0).getKey().getDestinationTableName();
-        this.mappingEntityKey = joinPath.get(1).getKey().getFromField();
-        this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
-        this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_id_preselectIDENTIFIER");
-        String mapping_preselect_template = "MAPPINGPRESELECTNAME AS( SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN( SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
-        this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
-      } else if (joinPath.size() > 2) { // Need to apply joins to a mapping table
-        this.setJoinString(joinPath);
-        this.mappingTableName = joinPath.get(joinPath.size() - 1).getKey().getDestinationTableName();
-        this.mappingEntityKey = joinPath.get(joinPath.size() - 1).getKey().getFromField();
-        this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
-        this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_FILTERTABLENAME_id_preselectIDENTIFIER");
-        String mapping_preselect_template = "MAPPINGPRESELECTNAME AS( SELECT MAPPINGENTITYKEY FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN( SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
-        this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
-      }
-      // Construct SELECT Statement for UNION/INTESECT opertations
-      String union_intersect_template = "SELECT MAPPINGENTITYKEY FROM MAPPINGPRESELECTNAME";
-      this.unionIntersect = replaceKeywords(union_intersect_template);
+
+
+
 
       this.operator = "";
       this.leftFilter = null;
@@ -378,7 +389,16 @@ final class Filter{
   public void setVariablesFromChildren(){ // Concatenate nested filter values
     if (this.leftFilter != null & this.rightFilter != null){ // Check to see that we have left and right child Filters
       this.problemFlag = (this.problemFlag | this.leftFilter.getProblemFlag() | this.rightFilter.getProblemFlag()); // If a problem occurred in any child, set problem flag to True
-      this.mappingTablePreselect = this.leftFilter.getMappingPreselect() + ", " + rightFilter.getMappingPreselect();
+      // Build out Mapping Table Preselects
+      if (this.leftFilter.getMappingPreselect().isEmpty() & this.rightFilter.getMappingPreselect().isEmpty()) {
+        this.mappingTablePreselect = "";
+      } else if (this.leftFilter.getMappingPreselect().isEmpty()) {
+        this.mappingTablePreselect = this.rightFilter.getMappingPreselect();
+      } else if (this.rightFilter.getMappingPreselect().isEmpty()){
+        this.mappingTablePreselect = this.leftFilter.getMappingPreselect();
+      } else {
+        this.mappingTablePreselect = this.leftFilter.getMappingPreselect() + ", " + rightFilter.getMappingPreselect();
+      }
       this.filterPreselect = this.leftFilter.getFilterPreselect() + ", " + rightFilter.getFilterPreselect();
       this.unionIntersect = "(" + this.leftFilter.getUnionIntersect() + " " + this.operator + " " + this.rightFilter.getUnionIntersect() + ")";
 
