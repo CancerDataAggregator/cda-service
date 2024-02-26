@@ -130,7 +130,7 @@ public class QueryService {
     String sqlQuery = SqlTemplate.jsonWrapper(generator.getSqlString());
     MapSqlParameterSource param_map = generator.getNamedParameterMap();
     if ((generator instanceof EntityCountSqlGenerator)){
-      String optimizedSqlCount = optimizeCountQuery(sqlQuery, (EntityCountSqlGenerator) generator);
+      String optimizedSqlCount = optimizeCountEndpointQuery(sqlQuery, (EntityCountSqlGenerator) generator);
       return namedParameterJdbcTemplate.query(
               optimizedSqlCount,
               param_map,
@@ -144,7 +144,7 @@ public class QueryService {
     }
   }
 
-  public String optimizeCountQuery(String sqlCount, EntityCountSqlGenerator generator){
+  public String optimizeCountEndpointQuery(String sqlCount, EntityCountSqlGenerator generator){
     Filter filterObj = new Filter(sqlCount, sqlCount, generator, Boolean.TRUE, "");
     if (filterObj.getProblemFlag()){
       return sqlCount;
@@ -224,6 +224,7 @@ final class Filter{
   private String filterPreselectName = "";
   private String joinString = "";
   private String includeCountQuery = "";
+  private String countEndpointQuery = "";
   private String unionIntersect = "";
   final String id;
 
@@ -232,7 +233,8 @@ final class Filter{
     this.id = id;
     this.orginalQuery = originalQuery;
     if (baseFilterString.contains("WHERE")){
-      extractWhereFilter();
+      String startingFilterString = this.orginalQuery.substring(this.orginalQuery.indexOf("WHERE")+5).trim();
+      this.filterQuery = paranthesisSubString(startingFilterString);
     } else {
       this.filterQuery = baseFilterString.trim();
     }
@@ -244,28 +246,7 @@ final class Filter{
     constructFilter();
     setVariablesFromChildren();
     setIncludeCountQuery();
-  }
-
-  public void extractWhereFilter(){
-    String startingFilterString = this.orginalQuery.substring(this.orginalQuery.indexOf("WHERE")+5).trim();
-    int openParenthesisCount = 1;
-    int indexCursor = 0;
-    StringBuilder whereFilter = new StringBuilder();
-    whereFilter.append('(');
-    try {
-      while (openParenthesisCount > 0) {
-        indexCursor += 1;
-        if (startingFilterString.charAt(indexCursor) == '(') {
-          openParenthesisCount += 1;
-        } else if (startingFilterString.charAt(indexCursor) == ')') {
-          openParenthesisCount -= 1;
-        }
-        whereFilter.append(startingFilterString.charAt(indexCursor));
-      }
-     this.filterQuery = whereFilter.toString();
-    } catch (Exception e){
-        this.problemFlag = Boolean.TRUE;
-      }
+    setCountEndpointQuery();
   }
 
   public void constructFilter() {
@@ -308,6 +289,7 @@ final class Filter{
             break;
           }
         }
+        // If there is no integer_id_alias, the count query will not work
         if (!found_alias) this.problemFlag = Boolean.TRUE;
       } else { // Filter needs to be mapped from filter table to entity table
         this.filterTableKey = joinPath.get(0).getKey().getFromField();
@@ -321,7 +303,7 @@ final class Filter{
           this.mappingEntityKey = joinPath.get(1).getKey().getFromField();
           this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_id_preselectIDENTIFIER");
-          String mapping_preselect_template = "MAPPINGPRESELECTNAME AS( SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN( SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
+          String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
           this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
         } else if (joinPath.size() > 2) { // Need to apply joins to a mapping table
           this.setJoinString(joinPath);
@@ -329,16 +311,13 @@ final class Filter{
           this.mappingEntityKey = joinPath.get(joinPath.size() - 1).getKey().getFromField();
           this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_FILTERTABLENAME_id_preselectIDENTIFIER");
-          String mapping_preselect_template = "MAPPINGPRESELECTNAME AS( SELECT MAPPINGENTITYKEY FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN( SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
+          String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
           this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
         }
         // Construct SELECT Statement for UNION/INTESECT opertations
         String union_intersect_template = "SELECT MAPPINGENTITYKEY  FROM MAPPINGPRESELECTNAME";
         this.unionIntersect = replaceKeywords(union_intersect_template);
       }
-
-
-
 
       this.operator = "";
       this.leftFilter = null;
@@ -350,23 +329,10 @@ final class Filter{
 
   }
   public void buildLeftRightFilters(){
-    // Parse out left filter
-    int openParenthesisCount = 1;
-    int indexCursor = 0;
-    StringBuilder leftFilterString = new StringBuilder();
-    leftFilterString.append('(');
     try {
-      while (openParenthesisCount > 0){
-        indexCursor +=1;
-        if (this.filterQuery.charAt(indexCursor) == '('){
-          openParenthesisCount +=1;
-        } else if(this.filterQuery.charAt(indexCursor) == ')') {
-          openParenthesisCount -= 1;
-        }
-        leftFilterString.append(this.filterQuery.charAt(indexCursor));
-      }
+      String leftFilterString = paranthesisSubString(this.filterQuery);
 
-      String remainingString = this.filterQuery.substring(indexCursor + 1);
+      String remainingString = this.filterQuery.substring(leftFilterString.length());
       // Determine what operator (INTERSECT/UNION) to use between left and right filters
       if (remainingString.startsWith(" AND ")){
         this.operator = " INTERSECT ";
@@ -376,19 +342,22 @@ final class Filter{
         remainingString = remainingString.replaceFirst(" OR ","");;
       } else {
         this.operator = "";
+        // If there is no AND/OR operator, set problemFlag to True
         this.problemFlag = Boolean.TRUE;
       }
       // Construct nested Filter objects for left and right filters (adding '_0' to ids for left and '_1' to ids for right filters)
-      this.leftFilter = new Filter(this.orginalQuery, leftFilterString.toString(), this.generator, Boolean.FALSE, this.id + "_0");
+      this.leftFilter = new Filter(this.orginalQuery, leftFilterString, this.generator, Boolean.FALSE, this.id + "_0");
       this.rightFilter = new Filter(this.orginalQuery, remainingString, this.generator, Boolean.FALSE, this.id + "_1");
     }catch (Exception e){
+      // If anything breaks while building the left and right filters, set problemFlag to True
       this.problemFlag = Boolean.TRUE;
     }
 
   }
   public void setVariablesFromChildren(){ // Concatenate nested filter values
     if (this.leftFilter != null & this.rightFilter != null){ // Check to see that we have left and right child Filters
-      this.problemFlag = (this.problemFlag | this.leftFilter.getProblemFlag() | this.rightFilter.getProblemFlag()); // If a problem occurred in any child, set problem flag to True
+      // Ensure root has problemFlag True if any nested child does
+      this.problemFlag = (this.problemFlag | this.leftFilter.getProblemFlag() | this.rightFilter.getProblemFlag());
       // Build out Mapping Table Preselects
       if (this.leftFilter.getMappingPreselect().isEmpty() & this.rightFilter.getMappingPreselect().isEmpty()) {
         this.mappingTablePreselect = "";
@@ -404,6 +373,7 @@ final class Filter{
 
       // Get mapping entity key for final "SELECT COUNT(DISTINCT(KEY))" statement
       this.mappingEntityKey = this.leftFilter.getMappingEntityKey();
+      // Ensure that the final id key on all the child preselects match otherwise the Union/Intersect statement will break
       if(!this.leftFilter.getMappingEntityKey().equals(this.rightFilter.getMappingEntityKey())){
         this.problemFlag = Boolean.TRUE;
       }
@@ -415,8 +385,23 @@ final class Filter{
       String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(MAPPINGENTITYKEY)) FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME);";
       this.includeCountQuery = replaceKeywords(count_template);
     } else if (this.isRoot) {
-      String count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT SELECT COUNT(DISTINCT(MAPPINGENTITYKEY)) FROM UNIONINTERSECT as count_result";
-      this.includeCountQuery = replaceKeywords(count_template);
+      if (this.mappingTablePreselect.isEmpty()){ // Filters only applied to entity table
+        String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(MAPPINGENTITYKEY)) FROM UNIONINTERSECT as count_result";
+        this.includeCountQuery = replaceKeywords(count_template);
+      } else {
+        String count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT SELECT COUNT(DISTINCT(MAPPINGENTITYKEY)) FROM UNIONINTERSECT as count_result";
+        this.includeCountQuery = replaceKeywords(count_template);
+      }
+
+    }
+  }
+  public void setCountEndpointQuery() {
+    if (this.mappingTablePreselect.isEmpty()) { // Filters only applied to entity table
+      String count_template = "WITH FULLFILTERPRESELECT ENTITYTABLENAME_preselect AS UNIONINTERSECT";
+      this.countEndpointQuery = replaceKeywords(count_template);
+    } else {
+      String count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT ENTITYTABLENAME_preselect AS UNIONINTERSECT";
+      this.countEndpointQuery = replaceKeywords(count_template);
     }
   }
   public String replaceKeywords(String template){ // Helper function for replacing constructed string variables with supplied template
@@ -433,7 +418,8 @@ final class Filter{
             .replace("MAPPINGENTITYKEY", this.mappingEntityKey)
             .replace("MAPPINGPRESELECTNAME", this.mappingPreselectName)
             .replace("FULLMAPPINGPRESELECT", this.mappingTablePreselect)
-            .replace("UNIONINTERSECT", this.unionIntersect);
+            .replace("UNIONINTERSECT", this.unionIntersect)
+            .replace("ENTITYTABLENAME", this.entityTableName);
   }
   public void setJoinString(List<Join> joinPath){ // Builds out join statements from JoinPath
     StringBuilder fullJoinString = new StringBuilder();
@@ -452,6 +438,27 @@ final class Filter{
       }
     }
     this.joinString = fullJoinString.toString();
+  }
+  public String paranthesisSubString(String startingString){ // Helper function to extract the string between the first parenthesis and it's closing one
+    int openParenthesisCount = 1;
+    int indexCursor = 0;
+    StringBuilder retString = new StringBuilder();
+    retString.append('(');
+    try {
+      while (openParenthesisCount > 0) {
+        indexCursor += 1;
+        if (startingString.charAt(indexCursor) == '(') {
+          openParenthesisCount += 1;
+        } else if (startingString.charAt(indexCursor) == ')') {
+          openParenthesisCount -= 1;
+        }
+        retString.append(startingString.charAt(indexCursor));
+      }
+      return retString.toString();
+    } catch (Exception e){
+      this.problemFlag = Boolean.TRUE;
+      return "";
+    }
   }
   public String getMappingPreselect(){
     return this.mappingTablePreselect;
