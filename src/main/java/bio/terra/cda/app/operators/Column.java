@@ -3,6 +3,7 @@ package bio.terra.cda.app.operators;
 import bio.terra.cda.app.models.QueryField;
 import bio.terra.cda.app.util.QueryContext;
 import bio.terra.cda.generated.model.Query;
+import com.google.common.base.Strings;
 
 import java.util.List;
 
@@ -14,7 +15,11 @@ public class Column extends BasicOperator {
 
     QueryField queryField = ctx.getQueryFieldBuilder().fromPath(getValue());
 
-    if (!queryField.getTableName().equals(ctx.getTable())) {
+    if (ctx.isSubQuery()) {
+      ctx.setSubQueryTable(queryField.getTableName());
+    }
+
+    if (!queryField.getTableName().equals(ctx.isSubQuery() ? ctx.getSubQueryTableInfo().getTableName() : ctx.getTable())) {
       ctx.addJoins(ctx.getJoinBuilder().getJoinsFromQueryField(ctx.getTable(), queryField));
     }
 

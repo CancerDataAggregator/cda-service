@@ -1,14 +1,28 @@
 {
   "node_type": "SUBQUERY",
   "l": {
-    "node_type": "=",
+    "node_type": "SUBQUERY",
     "l": {
-      "node_type": "column",
-      "value": "primary_diagnosis_condition"
+      "node_type": "=",
+      "l": {
+        "node_type": "column",
+        "value": "primary_diagnosis_condition"
+      },
+      "r": {
+        "node_type": "quoted",
+        "value": "Adenomas and Adenocarcinomas"
+      }
     },
     "r": {
-      "node_type": "quoted",
-      "value": "Adenomas and Adenocarcinomas"
+      "node_type": "=",
+      "l": {
+        "node_type": "column",
+        "value": "subject_identifier_system"
+      },
+      "r": {
+        "node_type": "quoted",
+        "value": "GDC"
+      }
     }
   },
   "r": {
@@ -19,7 +33,7 @@
     },
     "r": {
       "node_type": "quoted",
-      "value": "GDC"
+      "value": "PDC"
     }
   }
 }

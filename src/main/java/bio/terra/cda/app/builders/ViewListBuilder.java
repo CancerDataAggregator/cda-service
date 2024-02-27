@@ -11,10 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ViewListBuilder<V extends View, T extends ViewBuilder> {
-  @Autowired
   RdbmsSchema rdbmsSchema;
 
-  private final List<V> viewList;
+  private List<V> viewList;
   private final DataSetInfo dataSetInfo;
   private final Class<? extends ViewBuilder> viewBuilderClass;
 
@@ -23,6 +22,10 @@ public class ViewListBuilder<V extends View, T extends ViewBuilder> {
     this.viewBuilderClass = viewBuilderClass;
     this.dataSetInfo = rdbmsSchema.getDataSetInfo();
 
+    this.viewList = new ArrayList<>();
+  }
+
+  public void clearViews() {
     this.viewList = new ArrayList<>();
   }
 

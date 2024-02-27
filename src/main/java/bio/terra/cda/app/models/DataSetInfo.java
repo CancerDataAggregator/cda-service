@@ -240,7 +240,7 @@ public class DataSetInfo {
       // divide fields into those that are only foreign keys to entity tables and then the rest
       Arrays.stream(cols)
           // skip fields that are just foreign keys to entity tables
-          .filter(field -> !(table.getRelationships().stream().map(rel -> rel.getFromField()).collect(Collectors.toList())).contains(field.getName()))
+//          .filter(field -> !(table.getRelationships().stream().map(rel -> rel.getFromField()).collect(Collectors.toList())).contains(field.getName()))
           .forEach( col -> addFieldMapEntry(col, tableName));
 
 //          Map<Boolean, List<ColumnDefinition>> areMappingFields = Arrays.stream(cols)

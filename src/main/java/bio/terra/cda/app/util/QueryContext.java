@@ -9,7 +9,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class QueryContext {
-  private final String table;
+  private String table;
+
+  private String subQueryTable;
+  private boolean subQuery = false;
   private List<Select> select;
   private List<OrderBy> orderBys;
   private List<ColumnDefinition> groupBys;
@@ -23,6 +26,8 @@ public class QueryContext {
   private ViewListBuilder<? extends View, ? extends ViewBuilder> viewListBuilder;
   private TableInfo tableInfo;
 
+  private TableInfo subQueryTableInfo;
+
   private LinkedHashMap<String, Join> joins;
 
   final DataSetInfo dataSetInfo;
@@ -33,7 +38,6 @@ public class QueryContext {
     this.select = new ArrayList<>();
     this.groupBys = new ArrayList<>();
     this.orderBys = new ArrayList<>();
-    this.joins = new LinkedHashMap<>();
     this.dataSetInfo = RdbmsSchema.getDataSetInfo();
   }
 
@@ -46,6 +50,11 @@ public class QueryContext {
     return filesQuery;
   }
 
+  public QueryContext setTable(String table) {
+    this.table = table;
+    this.setTableInfo(dataSetInfo.getTableInfo(table));
+    return this;
+  }
 
   public QueryContext setTableInfo(TableInfo tableInfo) {
     this.tableInfo = tableInfo;
@@ -61,10 +70,44 @@ public class QueryContext {
     return this;
   }
 
+  public QueryContext setSubQueryTable(String subQueryTable) {
+    this.subQueryTable = subQueryTable;
+    this.setSubQueryTableInfo(dataSetInfo.getTableInfo(subQueryTable));
+    return this;
+  }
+
+  public QueryContext setSubQueryTableInfo(TableInfo subQueryTableInfo) {
+    this.subQueryTableInfo = subQueryTableInfo;
+    return this;
+  }
+
+  public TableInfo getSubQueryTableInfo() {
+    return this.subQueryTableInfo;
+  }
+
+  public QueryContext setSubQuery(boolean subQuery) {
+    this.subQuery = subQuery;
+    return this;
+  }
+
+  public QueryContext clearSubQuery() {
+    this.subQueryTable = null;
+    this.subQuery = false;
+    return this;
+  }
+
+  public boolean isSubQuery() {
+    return subQuery;
+  }
+
   public Boolean getIncludeSelect() {
     return this.includeSelect;
   }
 
+  public QueryContext setJoins(LinkedHashMap<String, Join> joins) {
+    this.joins = joins;
+    return this;
+  }
 
   public QueryContext addJoins(List<Join> joinPath) {
     joinPath.forEach(

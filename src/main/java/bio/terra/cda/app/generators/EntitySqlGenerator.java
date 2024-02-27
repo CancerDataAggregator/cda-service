@@ -27,6 +27,8 @@ public class EntitySqlGenerator extends SqlGenerator {
   QueryFieldBuilder filesQueryFieldBuilder = new  QueryFieldBuilder(true);
 
   JoinBuilder joinBuilder = new JoinBuilder();
+  private LinkedHashMap<String, Join> joins = new LinkedHashMap<>();
+
   ViewListBuilder<View, ViewBuilder> viewListBuilder = new ViewListBuilder<>(ViewBuilder.class);
   OrderByBuilder orderByBuilder = new OrderByBuilder();
 
@@ -90,22 +92,22 @@ public class EntitySqlGenerator extends SqlGenerator {
   public QueryContext buildQueryContext(
       TableInfo entityTable, boolean filesQuery, boolean subQuery) {
     return new QueryContext(entityTable.getTableName())
+        .setSubQuery(subQuery)
         .setFilesQuery(filesQuery)
         .setTableInfo(entityTable)
         .setIncludeSelect(!subQuery)
         .setQueryFieldBuilder(filesQuery ? filesQueryFieldBuilder : queryFieldBuilder)
         .setSelectBuilder(selectBuilder)
         .setJoinBuilder(joinBuilder)
+        .setJoins(joins)
         .setParameterBuilder(parameterBuilder)
         .setOrderByBuilder(orderByBuilder)
-        .setViewListBuilder(viewListBuilder);
+        .setViewListBuilder(new ViewListBuilder<>(ViewBuilder.class));
   }
 
   protected String generate() throws IllegalArgumentException {
       return sql(entityTable.getTableName(), rootQuery, false, false, false);
   }
-
-
 
   protected String sql(
       String tableOrSubClause,
@@ -114,7 +116,10 @@ public class EntitySqlGenerator extends SqlGenerator {
       boolean hasSubClause,
       boolean ignoreWith)
       throws IllegalArgumentException {
-    QueryContext ctx = buildQueryContext(this.entityTable, filesQuery, subQuery);
+
+    TableInfo currentTable = this.entityTable;
+
+    QueryContext ctx = buildQueryContext(currentTable, filesQuery, subQuery);
 
     String results = resultsQuery(query, tableOrSubClause, subQuery, ctx, hasSubClause);
 
@@ -133,7 +138,6 @@ public class EntitySqlGenerator extends SqlGenerator {
       boolean subQuery,
       QueryContext ctx,
       boolean hasSubClause) {
-    TableInfo startTable = this.entityTable;
 
     if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
       // A SUBQUERY is built differently from other queries. The FROM clause is the
@@ -141,50 +145,61 @@ public class EntitySqlGenerator extends SqlGenerator {
       // the right subtree, instead of using table. The left subtree is now the top
       // level query.
 
+      String formatted_subq = sql("", query.getR(), true, hasSubClause, true);
       return resultsQuery(
           query.getL(),
-          String.format(
-              "(%s) as %s",
-              sql(tableOrSubClause, query.getR(), true, hasSubClause, true),
-              startTable.getTableAlias(this.dataSetInfo)),
+          formatted_subq,
           subQuery,
           buildQueryContext(
-              ctx.getTableInfo(), filesQuery, subQuery), // added  supertable to get parent
+              ctx.getTableInfo(), filesQuery, subQuery),
           true);
+
     }
 
     String condition = ((BasicOperator) query).buildQuery(ctx);
+    TableInfo startTable = ctx.isSubQuery() ? ctx.getSubQueryTableInfo() : ctx.getTableInfo();
+
     String selectFields =
         subQuery
             ? ""
             : getSelect(ctx)
                 .collect(Collectors.joining(", "));
 
-    var fromClause =
-        Stream.concat(
-            hasSubClause
-                ? Stream.of(tableOrSubClause)
-                : Stream.of(
+    var fromClause = Stream.concat(
+                Stream.of(
                     String.format(
                         "%s AS %s",
-                        startTable.getTableName(),
-                        startTable.getTableAlias(this.dataSetInfo))),
-            ctx.getJoins().stream().map(SqlTemplate::join));
+                        startTable.getTableName(), startTable.getTableAlias(this.dataSetInfo))),
+                ctx.getJoins().stream().map(SqlTemplate::join));
+
+    if (hasSubClause) {
+      fromClause =
+      Stream.concat(
+          Stream.of(tableOrSubClause),
+          fromClause);
+      }
 
     String fromString = fromClause.distinct().collect(Collectors.joining(" "));
+
+    if (subQuery) {
+      // TODO test with order bys not being empty
+      String subq = SqlTemplate.regularQuery(
+              String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
+              fromString,
+              condition,
+              "");
+      ctx.addJoins(ctx.getJoinBuilder().getJoinsFromQueryField(ctx.getTable(), ctx.getQueryFieldBuilder().fromPath("subject_identifier_subject_alias")));
+      return String.format(
+          "(%s) as %s",
+          subq,
+          ctx.getSubQueryTableInfo().getTableAlias(this.dataSetInfo));
+    }
 
     String orderBys = ctx.getOrderBys().stream().map(OrderBy::toString).collect(Collectors.joining(", "));
     if (Strings.isNullOrEmpty(orderBys) && !Objects.isNull(defaultOrderBy)) {
       orderBys = defaultOrderBy.toString();
     }
     ctx.addOrderBysToGroupBys();
-    if (subQuery) {
-      return SqlTemplate.regularQuery(
-              String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
-              fromString,
-              condition,
-              orderBys);
-    }
 
     return SqlTemplate.resultsQuery(
         selectFields,
