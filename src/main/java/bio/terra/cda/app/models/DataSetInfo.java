@@ -221,7 +221,6 @@ public class DataSetInfo {
 
 
     private void addTableFromJson(String tableName, JsonNode tableNode) {
-      boolean isMappingTable = false;
       List<String> primaryKeys = Collections.emptyList();
       if (tableNode.get("alter").has("primary_keys")) {
         primaryKeys = getPrimaryKeysFromJson(tableNode.get("alter").get("primary_keys"));
@@ -231,10 +230,10 @@ public class DataSetInfo {
               .setTableName(tableName)
               .setColumnDefinitions(createColumnDefinitions(tableNode.get("columns"), tableName))
               .setPrimaryKeys(primaryKeys);
+      // now we are defining mapping tables as any table with an _ except somatic_mutation
+      boolean isMappingTable = tableName.contains("_") && !tableName.equals("somatic_mutation");
+      builder.setIsMappingTable(isMappingTable);
       if (tableNode.get("alter").has("columns")) {
-        // somatic_mutations is the only table that has column constraints but isn't actually a  mapping table
-        isMappingTable = !tableName.equals("somatic_mutation");
-        builder.setIsMappingTable(isMappingTable);
         builder.setTableRelationships(
             getRelationshipsFromJson(tableName, tableNode.get("alter").get("columns")));
       }

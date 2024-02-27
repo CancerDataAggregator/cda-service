@@ -173,6 +173,7 @@ public class QueryApiController implements QueryApi {
     List<ColumnsReturn> columns = dataSetInfo.getColumnsData();
     List<JsonNode> results =
         columns.stream()
+            .filter(columnsReturn -> !columnsReturn.getFieldName().contains("integer_id_alias"))
             .map(
                 columnsReturn -> {
                   ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
