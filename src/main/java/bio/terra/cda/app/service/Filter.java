@@ -5,13 +5,14 @@ import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.models.ColumnDefinition;
+import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.Join;
 
 import java.util.List;
 
 // Class to construct optimized count preselect SQL statement from the filters in the original count(*) wrapped query
-public class Filter{
+public class Filter {
   final Boolean isRoot;
   private String originalQuery = "";
   private String filterQuery = "";
@@ -19,7 +20,6 @@ public class Filter{
   private String operator = "";
   private Filter leftFilter = null;
   private Filter rightFilter = null;
-  private Boolean problemFlag = Boolean.FALSE;
   private String filterPreselect = "";
   final EntitySqlGenerator generator;
   private EntityCountSqlGenerator countGenerator = null;
@@ -42,17 +42,29 @@ public class Filter{
   private String unionIntersect = "";
   final String id;
 
-  public Filter(String originalQuery, String baseFilterString, EntitySqlGenerator generator, Boolean isRoot, String id){
+  /***
+   * Class to construct optimized count preselect SQL statement from the filters
+   * in the original count(*) wrapped query
+   * 
+   * @throws RuntimeException If there is problem create the filters
+   * @param baseFilterString Originally passed in as generated sql but later
+   * @param generator
+   * @param isRoot
+   * @param id
+   */
+  public Filter(String baseFilterString, EntitySqlGenerator generator, Boolean isRoot, String id) {
     this.isRoot = isRoot;
     this.id = id;
-    this.originalQuery = originalQuery;
-    if (baseFilterString.contains("WHERE")){
-      String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf("WHERE")+5).trim();
-      this.filterQuery = paranthesisSubString(startingFilterString);
+    if (this.isRoot) {
+      this.originalQuery = baseFilterString;
+      if (!this.originalQuery.contains("WHERE")) {
+        throw new RuntimeException("This query does not contain a where filter");
+      }
+      String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf("WHERE") + 5).trim();
+      this.filterQuery = parenthesisSubString(startingFilterString);
     } else {
       this.filterQuery = baseFilterString.trim();
     }
-    this.problemFlag = Boolean.FALSE;
     this.generator = generator;
     this.joinBuilder = this.generator.getJoinBuilder();
     this.entityTableName = generator.getEntityTableName();
@@ -84,12 +96,12 @@ public class Filter{
 
   public void constructFilter() {
     if (this.filterQuery.startsWith("((") && this.filterQuery.endsWith("))"))
-        this.filterQuery = this.filterQuery.substring(1, this.filterQuery.length() - 1);
-
+      this.filterQuery = this.filterQuery.substring(1, this.filterQuery.length() - 1);
+    
     if (!(this.filterQuery.contains("AND") || this.filterQuery.contains("OR"))) {
       // Get filter table name
       int tableStartIndex;
-      if (this.filterQuery.startsWith("(COALESCE(UPPER(")){
+      if (this.filterQuery.startsWith("(COALESCE(UPPER(")) {
         tableStartIndex = this.filterQuery.indexOf("COALESCE(UPPER(") + 15;
       } else {
         tableStartIndex = 1;
@@ -123,7 +135,10 @@ public class Filter{
           }
         }
         // If there is no integer_id_alias, the count query will not work
-        if (!found_alias) this.problemFlag = Boolean.TRUE;
+        if (!found_alias) {
+          throw new RuntimeException(
+              String.format("integer_id_alias not found in foreign keys of %s", this.filterTableName));
+        }
       } else { // Filter needs to be mapped from filter table to entity table
         this.filterTableKey = joinPath.get(0).getKey().getFromField();
         this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
@@ -155,36 +170,31 @@ public class Filter{
       this.operator = "";
       this.leftFilter = null;
       this.rightFilter = null;
-    }else { // Construct Nested left and right filters
+    } else { // Construct Nested left and right filters
       this.filterTableName = "";
       buildLeftRightFilters();
     }
 
   }
   public void buildLeftRightFilters(){
-    try {
-      String leftFilterString = paranthesisSubString(this.filterQuery);
+    String leftFilterString = paranthesisSubString(this.filterQuery);
 
-      String remainingString = this.filterQuery.substring(leftFilterString.length());
-      // Determine what operator (INTERSECT/UNION) to use between left and right filters
-      if (remainingString.startsWith(" AND ")){
-        this.operator = " INTERSECT ";
-        remainingString = remainingString.replaceFirst(" AND ","");
-      } else if (remainingString.startsWith(" OR ")) {
-        this.operator = " UNION ";
-        remainingString = remainingString.replaceFirst(" OR ","");;
-      } else {
-        this.operator = "";
-        // If there is no AND/OR operator, set problemFlag to True
-        this.problemFlag = Boolean.TRUE;
-      }
-      // Construct nested Filter objects for left and right filters (adding '_0' to ids for left and '_1' to ids for right filters)
-      this.leftFilter = new Filter(this.originalQuery, leftFilterString, this.generator, Boolean.FALSE, this.id + "_0");
-      this.rightFilter = new Filter(this.originalQuery, remainingString, this.generator, Boolean.FALSE, this.id + "_1");
-    }catch (Exception e){
-      // If anything breaks while building the left and right filters, set problemFlag to True
-      this.problemFlag = Boolean.TRUE;
+    String remainingString = this.filterQuery.substring(leftFilterString.length());
+    // Determine what operator (INTERSECT/UNION) to use between left and right filters
+    if (remainingString.startsWith(" AND ")){
+      this.operator = " INTERSECT ";
+      remainingString = remainingString.replaceFirst(" AND ","");
+    } else if (remainingString.startsWith(" OR ")) {
+      this.operator = " UNION ";
+      remainingString = remainingString.replaceFirst(" OR ","");;
+    } else {
+      this.operator = "";
+      throw new RuntimeException(String.format("AND/OR expected at start of : %s", remainingString));
     }
+    // Construct nested Filter objects for left and right filters (adding '_0' to ids for left and '_1' to ids for right filters)
+    this.leftFilter = new Filter(this.originalQuery, leftFilterString, this.generator, Boolean.FALSE, this.id + "_0");
+    this.rightFilter = new Filter(this.originalQuery, remainingString, this.generator, Boolean.FALSE, this.id + "_1");
+    
 
   }
   public void setVariablesFromChildren(){ // Concatenate nested filter values
@@ -196,7 +206,7 @@ public class Filter{
         this.mappingTablePreselect = "";
       } else if (this.leftFilter.getMappingPreselect().isEmpty()) {
         this.mappingTablePreselect = this.rightFilter.getMappingPreselect();
-      } else if (this.rightFilter.getMappingPreselect().isEmpty()){
+      } else if (this.rightFilter.getMappingPreselect().isEmpty()) {
         this.mappingTablePreselect = this.leftFilter.getMappingPreselect();
       } else {
         this.mappingTablePreselect = this.leftFilter.getMappingPreselect() + ", " + rightFilter.getMappingPreselect();
@@ -206,9 +216,12 @@ public class Filter{
 
       // Get mapping entity key for final "SELECT COUNT(DISTINCT(KEY))" statement
       this.mappingEntityKey = this.leftFilter.getMappingEntityKey();
-      // Ensure that the final id key on all the child preselects match otherwise the Union/Intersect statement will break
-      if(!this.leftFilter.getMappingEntityKey().equals(this.rightFilter.getMappingEntityKey())){
-        this.problemFlag = Boolean.TRUE;
+      // Ensure that the final id key on all the child preselects match otherwise the
+      // Union/Intersect statement will break
+      if (!this.leftFilter.getMappingEntityKey().equals(this.rightFilter.getMappingEntityKey())) {
+        throw new RuntimeException(
+            String.format("Mapping entity keys between left and right filters don't match: %s %s",
+                this.leftFilter.getMappingEntityKey(), this.rightFilter.getMappingEntityKey()));
       }
     }
   }
@@ -303,27 +316,23 @@ public class Filter{
     }
     this.joinString = fullJoinString.toString();
   }
-  public String paranthesisSubString(String startingString){ // Helper function to extract the string between the first parenthesis and it's closing one
-    // TODO:
+
+  public String parenthesisSubString(String startingString) { // Helper function to extract the string between the first
+                                                              // parenthesis and it's closing one
     int openParenthesisCount = 1;
     int indexCursor = 0;
     StringBuilder retString = new StringBuilder();
     retString.append('(');
-    try {
-      while (openParenthesisCount > 0) {
-        indexCursor += 1;
-        if (startingString.charAt(indexCursor) == '(') {
-          openParenthesisCount += 1;
-        } else if (startingString.charAt(indexCursor) == ')') {
-          openParenthesisCount -= 1;
-        }
-        retString.append(startingString.charAt(indexCursor));
-      }
-      return retString.toString();
-    } catch (Exception e){
-      this.problemFlag = Boolean.TRUE;
-      return "";
+    while (openParenthesisCount > 0) {
+    indexCursor += 1;
+    if (startingString.charAt(indexCursor) == '(') {
+      openParenthesisCount += 1;
+    } else if (startingString.charAt(indexCursor) == ')') {
+      openParenthesisCount -= 1;
     }
+    retString.append(startingString.charAt(indexCursor));
+    }
+    return retString.toString();
   }
   public String getMappingPreselect(){
     return this.mappingTablePreselect;

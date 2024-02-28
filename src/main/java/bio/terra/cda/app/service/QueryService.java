@@ -114,11 +114,12 @@ public class QueryService {
 
 
   public String optimizeIncludeCountQuery(String sqlCount, EntitySqlGenerator generator){
-    Filter filterObj = new Filter(sqlCount, sqlCount, generator, Boolean.TRUE, "");
-    if (filterObj.getProblemFlag()){
-      return sqlCount;
-    } else {
+    try {
+      Filter filterObj = new Filter(sqlCount, generator, Boolean.TRUE, "");
       return filterObj.getIncludeCountQuery();
+    }catch (Exception exception) {
+      logger.warn(String.format("Sql: %s, Exception: %s",sqlCount,exception.getMessage()));
+      return sqlCount;
     }
   }
 
@@ -143,10 +144,11 @@ public class QueryService {
   }
 
   public String optimizeCountEndpointQuery(String sqlCount, EntityCountSqlGenerator generator){
-    Filter filterObj = new Filter(sqlCount, sqlCount, generator, Boolean.TRUE, "");
-    if (filterObj.getProblemFlag()){
+    try {
+      Filter filterObj = new Filter(sqlCount, generator, Boolean.TRUE, "");
       return sqlCount;
-    } else {
+    } catch (Exception exception){
+      logger.warn(String.format("Sql: %s, Exception: %s",sqlCount,exception.getMessage()));
       return sqlCount;
     }
   }
