@@ -10,7 +10,7 @@ import java.util.List;
 // Class to construct optimized count preselect SQL statement from the filters in the original count(*) wrapped query
 public class Filter {
   final Boolean isRoot;
-  private String orginalQuery = "";
+  private String originalQuery = "";
   private String filterQuery = "";
   private String filterTableName = "";
   private String operator = "";
@@ -48,12 +48,12 @@ public class Filter {
     this.isRoot = isRoot;
     this.id = id;
     if (this.isRoot) {
-      this.orginalQuery = baseFilterString;
-      if (!this.orginalQuery.contains("WHERE")) {
+      this.originalQuery = baseFilterString;
+      if (!this.originalQuery.contains("WHERE")) {
         throw new RuntimeException("This query does not contain a where filter");
       }
-      String startingFilterString = this.orginalQuery.substring(this.orginalQuery.indexOf("WHERE") + 5).trim();
-      this.filterQuery = paranthesisSubString(startingFilterString);
+      String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf("WHERE") + 5).trim();
+      this.filterQuery = parenthesisSubString(startingFilterString);
     } else {
       this.filterQuery = baseFilterString.trim();
     }
@@ -162,7 +162,7 @@ public class Filter {
   }
 
   public void buildLeftRightFilters() {
-    String leftFilterString = paranthesisSubString(this.filterQuery);
+    String leftFilterString = parenthesisSubString(this.filterQuery);
 
     String remainingString = this.filterQuery.substring(leftFilterString.length());
     // Determine what operator (INTERSECT/UNION) to use between left and right
@@ -280,7 +280,7 @@ public class Filter {
     this.joinString = fullJoinString.toString();
   }
 
-  public String paranthesisSubString(String startingString) { // Helper function to extract the string between the first
+  public String parenthesisSubString(String startingString) { // Helper function to extract the string between the first
                                                               // parenthesis and it's closing one
     int openParenthesisCount = 1;
     int indexCursor = 0;
