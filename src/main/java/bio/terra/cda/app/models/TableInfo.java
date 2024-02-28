@@ -46,7 +46,7 @@ public class TableInfo {
     return tableName;
   }
 
-  public boolean isMapppingTable() {
+  public boolean isMappingTable() {
     return this.isMappingTable;
   }
 
