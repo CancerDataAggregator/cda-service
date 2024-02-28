@@ -75,7 +75,7 @@ public class DataSetInfo {
         .map(
             entry ->
                 ColumnsReturnBuilder.of(
-                    entry.getValue().getTableName(),
+                    entry.getValue().getEndpointName(),
                     entry.getKey(),
                     entry.getValue().getDescription(),
                     entry.getValue().getType(),
@@ -157,6 +157,8 @@ public class DataSetInfo {
       this.usedEntityFields = new HashSet<>();
       this.usedMappingFields = new HashSet<>();
       this.knownAliases = new HashMap<>();
+      // we have to jump through a lot of hoops for associated_project fields to look like they are on the entity tables
+      this.usedEntityFields.add("associated_project");
     }
 
     public DataSetInfoBuilder setDbSchema(JsonNode dbSchema) {
@@ -248,19 +250,49 @@ public class DataSetInfo {
 
     private void addFieldsFromTable(TableInfo table) {
       String tableName = table.getTableName();
-      Map<String, ColumnDefinition> fieldMap = table.isMappingTable() ? mappingFieldMap : entityFieldMap;
-      Set<String> usedFields = table.isMappingTable() ? usedMappingFields : usedEntityFields;
       ColumnDefinition[] cols = table.getColumnDefinitions();
-      List<String>  fromFields = table.getRelationships().stream().map(TableRelationship::getFromField).collect(Collectors.toList());
-      // divide fields into those that are only foreign keys to entity tables and then the rest
-      Arrays.stream(cols)
-          // skip fields that are just foreign keys to entity tables
-          .filter(field -> !(table.getRelationships().stream().map(rel -> rel.getFromField()).collect(Collectors.toList())).contains(field.getName()))
-          .forEach( col -> addFieldMapEntry(col, tableName, fieldMap, usedFields));
+      final boolean externalFields = !table.isMappingTable();
+
+      if (tableName.contains("associated_project")) {
+        Map<Boolean, List<ColumnDefinition>> partitionedList =
+            Arrays.stream(cols)
+                .collect(
+                    Collectors.partitioningBy(c -> c.getName().contains("associated_project")));
+        partitionedList.get(true).forEach(col -> addExternalFieldMapEntry(col, tableName));
+        partitionedList.get(false).forEach(col -> addInternalFieldMapEntry(col, tableName));
+      } else {
+        // skip fields that are just foreign keys to entity tables
+        Arrays.stream(cols)
+            .filter(
+                field ->
+                    !(table.getRelationships().stream()
+                            .map(rel -> rel.getFromField())
+                            .collect(Collectors.toList()))
+                        .contains(field.getName()))
+            .forEach(
+                col -> {
+                    if (externalFields) {
+                        addExternalFieldMapEntry(col, tableName);
+                    } else {
+                        addInternalFieldMapEntry(col, tableName);
+                    }
+                });
+      }
+    }
+
+    private void addExternalFieldMapEntry(ColumnDefinition colDef, String tableName) {
+      addFieldMapEntry(colDef, tableName, entityFieldMap, usedEntityFields);
+    }
+
+    private void addInternalFieldMapEntry(ColumnDefinition colDef, String tableName) {
+      addFieldMapEntry(colDef, tableName, mappingFieldMap, usedMappingFields);
     }
 
     private void addFieldMapEntry(ColumnDefinition colDef, String tableName, Map<String, ColumnDefinition> fieldMap, Set<String> usedFields) {
       String fieldName = colDef.getName();
+      if (tableName.contains("_associated_project") && fieldName.equals("associated_project")) {
+        tableName = tableName.substring(0, tableName.indexOf("_associated_project"));
+      }
       if (fieldMap.containsKey(fieldName) || usedFields.contains(fieldName)) {
           String alias = getNewFieldNameForDuplicate(fieldName, tableName);
           resolveFieldNameConflict(fieldName, fieldMap, usedFields);
