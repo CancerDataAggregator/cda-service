@@ -160,4 +160,10 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
                   "%1$s.%2$s AS %3$s", col.getTableName(), col.getName(), col.getAlias());
             });
   }
+  public List<ColumnDefinition> getTotalCountFields(){
+    return this.totalCountFields;
+  }
+  public List<ColumnDefinition> getGroupedCountFields(){
+    return this.groupedCountFields;
+  }
 }
