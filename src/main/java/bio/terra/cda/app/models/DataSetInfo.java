@@ -241,9 +241,12 @@ public class DataSetInfo {
       }
       TableInfo tableInfo = builder.build();
       addFieldsFromTable(tableInfo);
-      if (isMappingTable) {
+
+      // somatic_mutation table both an entity table and mapping table
+      if (isMappingTable || tableName.equals("somatic_mutation")) {
         this.mappingTableInfoMap.put(tableName, tableInfo);
-      } else {
+      }
+      if (!isMappingTable) {
         this.entityTableInfoMap.put(tableName, tableInfo);
       }
     }
