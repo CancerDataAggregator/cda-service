@@ -10,6 +10,7 @@ import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.Join;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 // Class to construct optimized count preselect SQL statement from the filters in the original count(*) wrapped query
 public class Filter {
@@ -71,29 +72,12 @@ public class Filter {
     this.entityPK = generator.getEntityTableFirstPK();
     constructFilter();
     setVariablesFromChildren();
-    setIncludeCountQuery();
-  }
-  public Filter(String baseFilterString, EntityCountSqlGenerator generator, Boolean isRoot, String id){
-    this.isRoot = isRoot;
-    this.id = id;
-    if (this.isRoot) {
-      this.originalQuery = baseFilterString;
-      if (!this.originalQuery.contains("WHERE")) {
-        throw new RuntimeException("This query does not contain a where filter");
-      }
-      String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf("WHERE") + 5).trim();
-      this.filterQuery = parenthesisSubString(startingFilterString);
+    if (this.generator instanceof EntityCountSqlGenerator) {
+      this.countGenerator = (EntityCountSqlGenerator) this.generator;
+      setCountEndpointQuery();
     } else {
-      this.filterQuery = baseFilterString.trim();
+      setIncludeCountQuery();
     }
-    this.generator = generator;
-    this.countGenerator = generator;
-    this.joinBuilder = this.generator.getJoinBuilder();
-    this.entityTableName = generator.getEntityTableName();
-    this.entityPK = generator.getEntityTableFirstPK();
-    constructFilter();
-    setVariablesFromChildren();
-    setCountEndpointQuery();
   }
 
   public void constructFilter() {
@@ -218,11 +202,11 @@ public class Filter {
       this.mappingEntityKey = this.leftFilter.getMappingEntityKey();
       // Ensure that the final id key on all the child preselects match otherwise the
       // Union/Intersect statement will break
-      if (!this.leftFilter.getMappingEntityKey().equals(this.rightFilter.getMappingEntityKey())) {
-        throw new RuntimeException(
-            String.format("Mapping entity keys between left and right filters don't match: %s %s",
-                this.leftFilter.getMappingEntityKey(), this.rightFilter.getMappingEntityKey()));
-      }
+//      if (!this.leftFilter.getMappingEntityKey().equals(this.rightFilter.getMappingEntityKey())) {
+//        throw new RuntimeException(
+//            String.format("Mapping entity keys between left and right filters don't match: %s %s",
+//                this.leftFilter.getMappingEntityKey(), this.rightFilter.getMappingEntityKey()));
+//      }
     }
   }
   public void setIncludeCountQuery(){
@@ -241,7 +225,6 @@ public class Filter {
       if (this.mappingTablePreselect.isEmpty()){ // Filters only applied to entity table
         String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(MAPPINGENTITYKEY)) FROM UNIONINTERSECT as count_result";
         this.includeCountQuery = replaceKeywords(count_template);
-        System.out.print("");
       } else {
         String count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT SELECT COUNT(DISTINCT(MAPPINGENTITYKEY)) FROM UNIONINTERSECT as count_result";
         this.includeCountQuery = replaceKeywords(count_template);
@@ -253,30 +236,48 @@ public class Filter {
     if (!this.isRoot){
       return;
     }
+    String count_template = "";
     if (this.mappingTablePreselect.isEmpty()) { // Filters only applied to entity table
-      String count_template = "WITH FULLFILTERPRESELECT ENTITYTABLENAME_preselect AS UNIONINTERSECT";
-      this.countEndpointQuery = replaceKeywords(count_template);
+      count_template = "WITH FULLFILTERPRESELECT ENTITYTABLENAME_preselect AS UNIONINTERSECT";
     } else {
-      String count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT, ENTITYTABLENAME_preselect_ids AS UNIONINTERSECT, FILECOUNTPRESELECT";
-//      if (!entityTableName.equals("file")){
-//        List<Join> joinPath = this.joinBuilder.getPath(this.entityTableName, "file", this.mappingEntityKey); // TODO: could optimize by building a better joinPath with this one
-//        if (joinPath.size() == 2){
-//          this.mappingFileTableName = joinPath.get(0).getKey().getDestinationTableName();
-//          this.mappingFileEntityKey = joinPath.get(0).getKey().getFields()[0];
-//          String file_count_template = "ENTITYTABLENAME_file_alias AS (SELECT file_mapping.MAPPINGFILEENTITYKEY FROM MAPPINGFILETABLENAME file_mapping, ENTITYTABLENAME_preselect entity_preselect WHERE file_mapping.MAPPINGFILEENTITYKEY = entity_preselect.MAPPINGENTITYKEY)";
-//          this.fileCountPreselect = replaceKeywords(file_count_template);
-//        }
-//
-//      }
-      String entity_preselect_template = "ENTITYTABLENAME AS (SELECT DISTINCT ENTITYTABLENAME.integer_id_preselect AS MAPPINGENTITYKEY, ";
-      for (ColumnDefinition countField : this.countGenerator.getTotalCountFields()){
-        String count_field_preselect = countField.getName();
-
-      }
-//      this.countGenerator.getTotalCountFields();
-      this.countEndpointQuery = replaceKeywords(count_template);
-      System.out.print("");
+      count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT, ENTITYTABLENAME_preselect_ids AS UNIONINTERSECT, FILECOUNTPRESELECT";
     }
+    String entity_preselect_template = "ENTITYTABLENAME AS (ENTITYSELECT FROMCLAUSE WHERECLAUSE),";
+    StringBuilder entitySelect = new StringBuilder("SELECT DISTINCT ENTITYTABLENAME.integer_id_preselect AS MAPPINGENTITYKEY");
+    StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
+    StringBuilder whereClause = new StringBuilder("WHERE MAPPINGENTITYKEY IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
+    List<ColumnDefinition> allCountFields = this.countGenerator.getTotalCountFields();
+    allCountFields.addAll(this.countGenerator.getGroupedCountFields());
+    for (ColumnDefinition countField : allCountFields) {
+      String count_field_select_template = ", FIELDNAME";
+      String fieldName = countField.getName();
+      String fieldTableName = countField.getTableName();
+      if (this.entityTableName != "file" && !fieldTableName.contains("file")){ //TODO check expected behavior with file endpoint
+        continue;
+      }
+      if (!fieldTableName.equals(this.entityTableName)) {
+        count_field_select_template = ", FIELDTABLENAME.FIELDNAME";
+        //TODO NEED JOIN PATH
+        String where_clause_template = "AND MAPPINGENTITYKEY = FIELDTABLENAME.FIELDNAME";
+        if (!fromTables.toString().contains(fieldTableName)) {
+          fromTables.append(", ").append(fieldTableName);
+          whereClause.append(where_clause_template
+                  .replace("FIELDTABLENAME",fieldTableName)
+                  .replace("FIELDNAME",fieldName));
+        }
+      }
+      entitySelect.append(count_field_select_template
+              .replace("FIELDTABLENAME",fieldTableName)
+              .replace("FIELDNAME",fieldName));
+    }
+    String entity_preselect = entity_preselect_template
+            .replace("ENTITYSELECT", entitySelect.toString())
+            .replace("FROMTABLES", fromTables.toString())
+            .replace("WHERECLAUSE", whereClause.toString());
+    entity_preselect = replaceKeywords(entity_preselect_template);
+    this.countEndpointQuery = replaceKeywords(count_template);
+    System.out.print("");
+
   }
   public String replaceKeywords(String template){ // Helper function for replacing constructed string variables with supplied template
     return template
