@@ -9,6 +9,8 @@ import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.Join;
 
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -80,10 +82,39 @@ public class Filter {
     }
   }
 
+  public String trimExtraneousParentheses(String query) {
+    if(query.startsWith("(") && query.endsWith(")")){
+      //Determine if the opening and closing parens match with each other...
+      CharacterIterator it = new StringCharacterIterator(query);
+      it.next();
+      int count = 1;
+      while (it.current() != CharacterIterator.DONE) {
+        if(it.current() == '(')
+          count++;
+        if(it.current() == ')') {
+          count--;
+          //this case occurs when the opening paren has been matched before we
+          //get to the end. E.g.: "((a =4)) OR (b=10)"
+          if(count == 0 && (it.getIndex() < (query.length()-1)))
+            return query;
+        }
+        it.next();
+      }
+      //This case means that the opening paren matches the closing paren,
+      //E.g.: "(((a=4) OR (b=10)))". We recurse to continue stripping off
+      //these extraneous parens
+      if(count == 0)
+        return trimExtraneousParentheses(query.substring(1, query.length()-1));
+    }
+    //If we don't have opening and closing parens, there isn't anything to trim
+    return query;
+  }
+
   public void constructFilter() {
-    if (this.filterQuery.startsWith("((") && this.filterQuery.endsWith("))"))
-      this.filterQuery = this.filterQuery.substring(1, this.filterQuery.length() - 1);
-    
+
+//    if (this.filterQuery.startsWith("((") && this.filterQuery.endsWith("))"))
+//      this.filterQuery = this.filterQuery.substring(1, this.filterQuery.length() - 1);
+
     if (!(this.filterQuery.contains("AND") || this.filterQuery.contains("OR"))) {
       // Get filter table name
       int tableStartIndex;
@@ -159,6 +190,7 @@ public class Filter {
       this.leftFilter = null;
       this.rightFilter = null;
     } else { // Construct Nested left and right filters
+      this.filterQuery = trimExtraneousParentheses(this.filterQuery);
       this.filterTableName = "";
       buildLeftRightFilters();
     }
