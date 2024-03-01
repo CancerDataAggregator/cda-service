@@ -358,22 +358,20 @@ public class Filter {
   }
 
   public String parenthesisSubString(String startingString) { // Helper function to extract the string between the first
-                                                              // parenthesis and it's closing one
+    // parenthesis and it's closing one
     int openParenthesisCount = 1;
     int indexCursor = 0;
-    StringBuilder retString = new StringBuilder();
-    retString.append('(');
     while (openParenthesisCount > 0) {
-    indexCursor += 1;
-    if (startingString.charAt(indexCursor) == '(') {
-      openParenthesisCount += 1;
-    } else if (startingString.charAt(indexCursor) == ')') {
-      openParenthesisCount -= 1;
+      indexCursor += 1;
+      if (startingString.charAt(indexCursor) == '(') {
+        openParenthesisCount += 1;
+      } else if (startingString.charAt(indexCursor) == ')') {
+        openParenthesisCount -= 1;
+      }
     }
-    retString.append(startingString.charAt(indexCursor));
-    }
-    return retString.toString();
+    return startingString.substring(0, indexCursor+1);
   }
+
   public String getMappingPreselect(){
     return this.mappingTablePreselect;
   }
