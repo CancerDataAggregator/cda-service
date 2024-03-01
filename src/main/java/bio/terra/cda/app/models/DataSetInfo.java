@@ -23,22 +23,28 @@ public class DataSetInfo {
 
   private final Map<String, TableInfo> mappingTableInfoMap;
 
-  private final Map<String, ColumnDefinition> fieldMap;
+  private final Map<String, ColumnDefinition> entityTableFieldMap;
+  private final Map<String, ColumnDefinition> mappingTableFieldMap;
 
   private final Map<String, String> knownAliases;
 
-  private final Set<String> replacedFieldnames;
+  private final Set<String> replacedEntityFieldnames;
+  private final Set<String> replacedMappingFieldnames;
 
   private DataSetInfo(
       Map<String, TableInfo> entityTableInfoMap,
       Map<String, TableInfo> mappingTableInfoMap,
-      Map<String, ColumnDefinition> fieldMap,  //don't add FKs
-      Set<String> replacedFieldnames,
+      Map<String, ColumnDefinition> entityTableFieldMap,
+      Map<String, ColumnDefinition> mappingTableFieldMap,
+      Set<String> replacedEntityFieldnames,
+      Set<String> replacedMappingFieldnames,
       Map<String, String> knownAliases) {
     this.entityTableInfoMap = entityTableInfoMap;
     this.mappingTableInfoMap = mappingTableInfoMap;
-    this.fieldMap = fieldMap;
-    this.replacedFieldnames = replacedFieldnames;
+    this.entityTableFieldMap = entityTableFieldMap;
+    this.mappingTableFieldMap  = mappingTableFieldMap;
+    this.replacedEntityFieldnames = replacedEntityFieldnames;
+    this.replacedMappingFieldnames = replacedMappingFieldnames;
     this.knownAliases = knownAliases;
   }
 
@@ -65,11 +71,11 @@ public class DataSetInfo {
   }
 
   public List<ColumnsReturn> getColumnsData() {
-    return this.fieldMap.entrySet().stream()
+    return this.entityTableFieldMap.entrySet().stream()
         .map(
             entry ->
                 ColumnsReturnBuilder.of(
-                    entry.getValue().getTableName(),
+                    entry.getValue().getEndpointName(),
                     entry.getKey(),
                     entry.getValue().getDescription(),
                     entry.getValue().getType(),
@@ -82,24 +88,32 @@ public class DataSetInfo {
   }
 
   public ColumnDefinition getColumnDefinitionByFieldName(String fieldName) {
-    return this.fieldMap.get(fieldName);
+    if (this.entityTableFieldMap.containsKey(fieldName)) {
+      return this.entityTableFieldMap.get(fieldName);
+    } else {
+      return this.mappingTableFieldMap.get(fieldName);
+    }
   }
 
   public ColumnDefinition getColumnDefinitionByFieldName(String fieldName, String tablename) {
     if (fieldName.contains(".")) {
       // it's a mapping field
       String[] parsed = fieldName.split("\\.", 2);
-      TableInfo mappingTable = mappingTableInfoMap.get(parsed[0]);
-      return Arrays.stream(mappingTable.getColumnDefinitions()).filter(col -> col.getName().equals(parsed[1])).findFirst().orElse(null);
+      String parsedTablename = parsed[0];
+      String parsedColname = parsed[1];
+      TableInfo mappingTable = getTableInfo(parsedTablename);
+      return Arrays.stream(mappingTable.getColumnDefinitions())
+          .filter(col -> col.getName().equals(parsedColname))
+          .findFirst().orElse(null);
     }
-    return replacedFieldnames.contains(fieldName)
+    return replacedEntityFieldnames.contains(fieldName) || replacedMappingFieldnames.contains(fieldName)
         ? getColumnDefinitionByFieldName(getNewFieldNameForDuplicate(fieldName, tablename))
         : getColumnDefinitionByFieldName(fieldName);
 
   }
 
   public TableInfo getTableInfoFromField(String fieldName) {
-    ColumnDefinition col = this.fieldMap.get(fieldName);
+    ColumnDefinition col = this.getColumnDefinitionByFieldName(fieldName);
     if (Objects.isNull(col)) {
       return null;
     }
@@ -128,19 +142,23 @@ public class DataSetInfo {
     private final Map<String, TableInfo> entityTableInfoMap;
 
     private final Map<String, TableInfo> mappingTableInfoMap;
-    private final Map<String, ColumnDefinition> fieldMap;
+    private final Map<String, ColumnDefinition> entityFieldMap;
 
-    private final Map<String, ColumnDefinition> internalFieldsMap;
-    private final Set<String> usedFields;
+    private final Map<String, ColumnDefinition> mappingFieldMap;
+    private final Set<String> usedEntityFields;
+    private final Set<String> usedMappingFields;
     private final Map<String, String> knownAliases;
 
     public DataSetInfoBuilder() {
       this.entityTableInfoMap = new HashMap<>();
       this.mappingTableInfoMap = new HashMap<>();
-      this.fieldMap = new ConcurrentHashMap<>();
-      this.internalFieldsMap = new ConcurrentHashMap<>();
-      this.usedFields = new HashSet<>();
+      this.entityFieldMap = new ConcurrentHashMap<>();
+      this.mappingFieldMap = new ConcurrentHashMap<>();
+      this.usedEntityFields = new HashSet<>();
+      this.usedMappingFields = new HashSet<>();
       this.knownAliases = new HashMap<>();
+      // we have to jump through a lot of hoops for associated_project fields to look like they are on the entity tables
+      this.usedEntityFields.add("associated_project");
     }
 
     public DataSetInfoBuilder setDbSchema(JsonNode dbSchema) {
@@ -166,8 +184,10 @@ public class DataSetInfo {
       return new DataSetInfo(
           entityTableInfoMap,
           mappingTableInfoMap,
-          Collections.unmodifiableMap(new HashMap<>(fieldMap)),
-          usedFields,
+          Collections.unmodifiableMap(new HashMap<>(entityFieldMap)),
+          Collections.unmodifiableMap(new HashMap<>(mappingFieldMap)),
+          usedEntityFields,
+          usedMappingFields,
           knownAliases);
     }
 
@@ -203,7 +223,6 @@ public class DataSetInfo {
 
 
     private void addTableFromJson(String tableName, JsonNode tableNode) {
-      boolean isMappingTable = false;
       List<String> primaryKeys = Collections.emptyList();
       if (tableNode.get("alter").has("primary_keys")) {
         primaryKeys = getPrimaryKeysFromJson(tableNode.get("alter").get("primary_keys"));
@@ -213,19 +232,21 @@ public class DataSetInfo {
               .setTableName(tableName)
               .setColumnDefinitions(createColumnDefinitions(tableNode.get("columns"), tableName))
               .setPrimaryKeys(primaryKeys);
+      // now we are defining mapping tables as any table with an _ except somatic_mutation
+      boolean isMappingTable = tableName.contains("_") && !tableName.equals("somatic_mutation");
+      builder.setIsMappingTable(isMappingTable);
       if (tableNode.get("alter").has("columns")) {
-        // somatic_mutations is the only table that has column constraints but isn't actually a  mapping table
-        isMappingTable = !tableName.equals("somatic_mutations");
-        builder.setIsMappingTable(isMappingTable);
         builder.setTableRelationships(
             getRelationshipsFromJson(tableName, tableNode.get("alter").get("columns")));
       }
       TableInfo tableInfo = builder.build();
       addFieldsFromTable(tableInfo);
-      // skip partition by
-      if (isMappingTable) {
+
+      // somatic_mutation table both an entity table and mapping table
+      if (isMappingTable || tableName.equals("somatic_mutation")) {
         this.mappingTableInfoMap.put(tableName, tableInfo);
-      } else {
+      }
+      if (!isMappingTable) {
         this.entityTableInfoMap.put(tableName, tableInfo);
       }
     }
@@ -233,37 +254,64 @@ public class DataSetInfo {
     private void addFieldsFromTable(TableInfo table) {
       String tableName = table.getTableName();
       ColumnDefinition[] cols = table.getColumnDefinitions();
-      List<String>  fromFields = table.getRelationships().stream().map(TableRelationship::getFromField).collect(Collectors.toList());
-      // divide fields into those that are only foreign keys to entity tables and then the rest
-      Arrays.stream(cols)
-          // skip fields that are just foreign keys to entity tables
-          .filter(field -> !(table.getRelationships().stream().map(rel -> rel.getFromField()).collect(Collectors.toList())).contains(field.getName()))
-          .forEach( col -> addFieldMapEntry(col, tableName));
+      final boolean externalFields = !table.isMappingTable();
 
-//          Map<Boolean, List<ColumnDefinition>> areMappingFields = Arrays.stream(cols)
-//          .collect(Collectors.partitioningBy(col -> fromFields.contains(col.getName())));
-//      areMappingFields.get(Boolean.TRUE).forEach( col -> addFieldMapEntry(col, tableName,  internalFieldsMap));
-//      areMappingFields.get(Boolean.FALSE).forEach( col -> addFieldMapEntry(col, tableName,  fieldMap));
+      if (tableName.contains("associated_project")) {
+        Map<Boolean, List<ColumnDefinition>> partitionedList =
+            Arrays.stream(cols)
+                .collect(
+                    Collectors.partitioningBy(c -> c.getName().contains("associated_project")));
+        partitionedList.get(true).forEach(col -> addExternalFieldMapEntry(col, tableName));
+        partitionedList.get(false).forEach(col -> addInternalFieldMapEntry(col, tableName));
+      } else {
+        // skip fields that are just foreign keys to entity tables
+        Arrays.stream(cols)
+            .filter(
+                field ->
+                    !(table.getRelationships().stream()
+                            .map(rel -> rel.getFromField())
+                            .collect(Collectors.toList()))
+                        .contains(field.getName()))
+            .forEach(
+                col -> {
+                    if (externalFields) {
+                        addExternalFieldMapEntry(col, tableName);
+                    } else {
+                        addInternalFieldMapEntry(col, tableName);
+                    }
+                });
+      }
     }
 
-    private void addFieldMapEntry(ColumnDefinition colDef, String tableName) {
+    private void addExternalFieldMapEntry(ColumnDefinition colDef, String tableName) {
+      addFieldMapEntry(colDef, tableName, entityFieldMap, usedEntityFields);
+    }
+
+    private void addInternalFieldMapEntry(ColumnDefinition colDef, String tableName) {
+      addFieldMapEntry(colDef, tableName, mappingFieldMap, usedMappingFields);
+    }
+
+    private void addFieldMapEntry(ColumnDefinition colDef, String tableName, Map<String, ColumnDefinition> fieldMap, Set<String> usedFields) {
       String fieldName = colDef.getName();
+      if (tableName.contains("_associated_project") && fieldName.equals("associated_project")) {
+        tableName = tableName.substring(0, tableName.indexOf("_associated_project"));
+      }
       if (fieldMap.containsKey(fieldName) || usedFields.contains(fieldName)) {
           String alias = getNewFieldNameForDuplicate(fieldName, tableName);
-          resolveFieldNameConflict(fieldName);
+          resolveFieldNameConflict(fieldName, fieldMap, usedFields);
         colDef.setAlias(alias);
         fieldName = alias;
       }
       fieldMap.put(fieldName, colDef);
     }
 
-    public void resolveFieldNameConflict(String name) {
-      if (this.fieldMap.containsKey(name)) {
+    public void resolveFieldNameConflict(String name, Map<String, ColumnDefinition> fieldMap, Set<String> usedFields) {
+      if (fieldMap.containsKey(name)) {
         usedFields.add(name);
-        ColumnDefinition col = this.fieldMap.get(name);
+        ColumnDefinition col = fieldMap.get(name);
         String alias = getNewFieldNameForDuplicate(name, col.getTableName());
-        this.fieldMap.remove(name);
-        this.fieldMap.put(alias, col);
+        fieldMap.remove(name);
+        fieldMap.put(alias, col);
         col.setAlias(alias);
       }
     }

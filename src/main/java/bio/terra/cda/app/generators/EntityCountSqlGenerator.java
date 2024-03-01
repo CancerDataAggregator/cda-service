@@ -107,7 +107,7 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
 
 
   protected String getCountSelects(String tableAlias) {
-    String totalFormatString = "(SELECT COUNT(DISTINCT %s) from %s) as %s";
+    String totalFormatString = "(SELECT COUNT(DISTINCT %1$s) from %2$s) as %1$s";
     String groupedFormatString =
         "(SELECT array_agg(json_%1$s) from %1$s_count) as %1$s";
 
@@ -120,16 +120,9 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
     }
     return Stream.concat(
         totalCountFields.stream()
-                .map(
-                    col ->
-                        String.format(
-                            totalFormatString, col.getAlias(), tableAlias, col.getAlias())),
-            groupedCountFields.stream()
-                .map(
-                    col ->
-                        String.format(
-                            groupedFormatString,
-                            col.getAlias())))
+                .map(col -> String.format(totalFormatString, replaceAliasWithId(col.getAlias()), tableAlias)),
+        groupedCountFields.stream()
+                .map(col -> String.format(groupedFormatString, col.getAlias())))
         .collect(Collectors.joining(", "));
   }
 
@@ -157,8 +150,12 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
                 ctx.addJoins(path);
               }
               return String.format(
-                  "%1$s.%2$s AS %3$s", col.getTableName(), col.getName(), col.getAlias());
+                  "%1$s.%2$s AS %3$s", col.getTableName(), col.getName(), replaceAliasWithId(col.getAlias()));
             });
+  }
+
+  protected String replaceAliasWithId(String integerAliasAlias) {
+    return integerAliasAlias.replace("alias", "id");
   }
   public List<ColumnDefinition> getTotalCountFields(){
     return this.totalCountFields;

@@ -36,6 +36,9 @@
   "value": "off"
  },
  {
+  "schema_name": "public"
+ },
+ {
   "schema": "public",
   "type_name": "system_data",
   "properties": {
@@ -44,10 +47,6 @@
    "value": "text"
   },
   "base_type": null
- },
- {
-  "name": "default_tablespace",
-  "value": "''"
  },
  {
   "name": "default_table_access_method",
@@ -131,6 +130,16 @@
     "default": null,
     "check": null,
     "comment": "The method used to confirm the subjects malignant diagnosis."
+   },
+   {
+    "name": "integer_id_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
@@ -155,8 +164,103 @@
  {
   "columns": [
    {
-    "name": "diagnosis_id",
-    "type": "text",
+    "name": "diagnosis_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "diagnosis_data_source_pkey",
+     "columns": [
+      "diagnosis_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "diagnosis_alias",
+     "constraint_name": "diagnosis_data_source_diagnosis_alias_fkey",
+     "references": {
+      "table": "diagnosis",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "diagnosis_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "diagnosis_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -201,15 +305,15 @@
   "alter": {
    "columns": [
     {
-     "name": "diagnosis_id",
-     "constraint_name": "diagnosis_identifier_diagnosis_id_fkey",
+     "name": "diagnosis_alias",
+     "constraint_name": "diagnosis_identifier_diagnosis_alias_fkey",
      "references": {
       "table": "diagnosis",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -225,8 +329,8 @@
  {
   "columns": [
    {
-    "name": "diagnosis_id",
-    "type": "text",
+    "name": "diagnosis_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -235,8 +339,8 @@
     "check": null
    },
    {
-    "name": "treatment_id",
-    "type": "text",
+    "name": "treatment_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -249,27 +353,27 @@
   "alter": {
    "columns": [
     {
-     "name": "diagnosis_id",
-     "constraint_name": "diagnosis_treatment_diagnosis_id_fkey",
+     "name": "diagnosis_alias",
+     "constraint_name": "diagnosis_treatment_diagnosis_alias_fkey",
      "references": {
       "table": "diagnosis",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     },
     {
-     "name": "treatment_id",
-     "constraint_name": "diagnosis_treatment_treatment_id_fkey",
+     "name": "treatment_alias",
+     "constraint_name": "diagnosis_treatment_treatment_alias_fkey",
      "references": {
       "table": "treatment",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -421,7 +525,7 @@
     "size": null,
     "references": null,
     "unique": false,
-    "nullable": true,
+    "nullable": false,
     "default": null,
     "check": null
    }
@@ -491,6 +595,101 @@
   "tablespace": null,
   "schema": "public",
   "table_name": "file_associated_project"
+ },
+ {
+  "columns": [
+   {
+    "name": "file_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "file_data_source_pkey",
+     "columns": [
+      "file_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "file_alias",
+     "constraint_name": "file_data_source_file_alias_fkey",
+     "references": {
+      "table": "file",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "file_data_source"
  },
  {
   "columns": [
@@ -756,8 +955,8 @@
  {
   "columns": [
    {
-    "name": "researchsubject_id",
-    "type": "text",
+    "name": "researchsubject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -766,8 +965,103 @@
     "check": null
    },
    {
-    "name": "diagnosis_id",
-    "type": "text",
+    "name": "researchsubject_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "researchsubject_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "researchsubject_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "researchsubject_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "researchsubject_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "researchsubject_data_source_pkey",
+     "columns": [
+      "researchsubject_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "researchsubject_alias",
+     "constraint_name": "researchsubject_data_source_researchsubject_alias_fkey",
+     "references": {
+      "table": "researchsubject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "researchsubject_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "researchsubject_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -780,27 +1074,27 @@
   "alter": {
    "columns": [
     {
-     "name": "diagnosis_id",
-     "constraint_name": "researchsubject_diagnosis_diagnosis_id_fkey",
+     "name": "diagnosis_alias",
+     "constraint_name": "researchsubject_diagnosis_diagnosis_alias_fkey",
      "references": {
       "table": "diagnosis",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     },
     {
-     "name": "researchsubject_id",
-     "constraint_name": "researchsubject_diagnosis_researchsubject_id_fkey",
+     "name": "researchsubject_alias",
+     "constraint_name": "researchsubject_diagnosis_researchsubject_alias_fkey",
      "references": {
       "table": "researchsubject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -815,8 +1109,8 @@
  {
   "columns": [
    {
-    "name": "researchsubject_id",
-    "type": "text",
+    "name": "researchsubject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -861,15 +1155,15 @@
   "alter": {
    "columns": [
     {
-     "name": "researchsubject_id",
-     "constraint_name": "researchsubject_identifier_researchsubject_id_fkey",
+     "name": "researchsubject_alias",
+     "constraint_name": "rs_identifier_rs_alias_fkey",
      "references": {
       "table": "researchsubject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -944,8 +1238,8 @@
  {
   "columns": [
    {
-    "name": "researchsubject_id",
-    "type": "text",
+    "name": "researchsubject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -954,8 +1248,8 @@
     "check": null
    },
    {
-    "name": "treatment_id",
-    "type": "text",
+    "name": "treatment_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -968,27 +1262,27 @@
   "alter": {
    "columns": [
     {
-     "name": "researchsubject_id",
-     "constraint_name": "researchsubject_treatment_researchsubject_id_fkey",
+     "name": "researchsubject_alias",
+     "constraint_name": "researchsubject_treatment_researchsubject_alias_fkey",
      "references": {
       "table": "researchsubject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     },
     {
-     "name": "treatment_id",
-     "constraint_name": "researchsubject_treatment_treatment_id_fkey",
+     "name": "treatment_alias",
+     "constraint_name": "researchsubject_treatment_treatment_alias_fkey",
      "references": {
       "table": "treatment",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -2929,7 +3223,7 @@
     "size": null,
     "references": null,
     "unique": false,
-    "nullable": true,
+    "nullable": false,
     "default": null,
     "check": null
    }
@@ -2952,6 +3246,101 @@
   "schema": "public",
   "table_name": "specimen",
   "comment": "Any material taken as a sample from a biological entity (living or dead), or from a physical object or the environment. Specimens are usually collected as an example of their kind, often for use in some investigation."
+ },
+ {
+  "columns": [
+   {
+    "name": "specimen_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "specimen_data_source_pkey",
+     "columns": [
+      "specimen_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "specimen_alias",
+     "constraint_name": "specimen_data_source_specimen_alias_fkey",
+     "references": {
+      "table": "specimen",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "specimen_data_source"
  },
  {
   "columns": [
@@ -3127,7 +3516,7 @@
     "size": null,
     "references": null,
     "unique": false,
-    "nullable": true,
+    "nullable": false,
     "default": null,
     "check": null
    }
@@ -3154,8 +3543,8 @@
  {
   "columns": [
    {
-    "name": "subject_id",
-    "type": "text",
+    "name": "subject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -3178,15 +3567,15 @@
   "alter": {
    "columns": [
     {
-     "name": "subject_id",
-     "constraint_name": "subject_associated_project_subject_id_fkey",
+     "name": "subject_alias",
+     "constraint_name": "subject_associated_project_subject_alias_fkey",
      "references": {
       "table": "subject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -3201,8 +3590,103 @@
  {
   "columns": [
    {
-    "name": "subject_id",
-    "type": "text",
+    "name": "subject_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "subject_data_source_pkey",
+     "columns": [
+      "subject_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "subject_alias",
+     "constraint_name": "subject_data_source_subject_alias_fkey",
+     "references": {
+      "table": "subject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "subject_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "subject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -3247,15 +3731,15 @@
   "alter": {
    "columns": [
     {
-     "name": "subject_id",
-     "constraint_name": "subject_identifier_subject_id_fkey",
+     "name": "subject_alias",
+     "constraint_name": "subject_identifier_subject_alias_fkey",
      "references": {
       "table": "subject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -3438,6 +3922,16 @@
     "default": null,
     "check": null,
     "comment": "The number of treatment cycles the subject received."
+   },
+   {
+    "name": "integer_id_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
@@ -3462,8 +3956,103 @@
  {
   "columns": [
    {
-    "name": "treatment_id",
-    "type": "text",
+    "name": "treatment_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "treatment_data_source_pkey",
+     "columns": [
+      "treatment_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "treatment_alias",
+     "constraint_name": "treatment_data_source_treatment_alias_fkey",
+     "references": {
+      "table": "treatment",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "treatment_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "treatment_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -3508,15 +4097,15 @@
   "alter": {
    "columns": [
     {
-     "name": "treatment_id",
-     "constraint_name": "treatment_identifier_treatment_id_fkey",
+     "name": "treatment_alias",
+     "constraint_name": "treatment_identifier_treatment_alias_fkey",
      "references": {
       "table": "treatment",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]

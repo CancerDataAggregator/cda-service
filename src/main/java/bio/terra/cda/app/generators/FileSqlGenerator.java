@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @EntityGeneratorData(entity = "file", hasFiles = true, defaultOrderBy = "file_id",
-    aggregatedFields = {"file_identifier_system", "file_associated_project_associated_project"},
+    aggregatedFields = {"file_identifier_system", "file_associated_project"},
     aggregatedFieldsSelectString = {
         "json_agg(distinct (file_identifier.system, file_identifier.field_name, file_identifier.value)::system_data) as file_identifier",
         "json_agg(distinct file_associated_project.associated_project) AS file_associated_project"})
@@ -26,7 +26,7 @@ public class FileSqlGenerator extends EntitySqlGenerator {
     DataSetInfo dsinfo = RdbmsSchema.getDataSetInfo();
     newmap.put(dsinfo.getColumnDefinitionByFieldName("file_identifier_system"),
         "json_agg(distinct (file_identifier.system, file_identifier.field_name, file_identifier.value)::system_data) as file_identifier");
-    newmap.put(dsinfo.getColumnDefinitionByFieldName("file_associated_project_associated_project"),
+    newmap.put(dsinfo.getColumnDefinitionByFieldName("file_associated_project"),
         "json_agg(distinct file_associated_project.associated_project) AS file_associated_project");
     return newmap;
   }

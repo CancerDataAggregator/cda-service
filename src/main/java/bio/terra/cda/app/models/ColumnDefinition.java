@@ -57,6 +57,13 @@ public class ColumnDefinition {
     return tableName;
   }
 
+  public String getEndpointName() {
+    if (tableName.contains("_") && !tableName.equals("somatic_mutation")) {
+      return tableName.split("_")[0];
+    } else {
+      return tableName;
+    }
+  }
   public void setTableName(String tableName) {
     this.tableName = tableName;
   }
