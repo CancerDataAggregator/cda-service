@@ -335,7 +335,7 @@ public class Filter {
 
   public void setEntityTableCountPreselect(){
     String entity_preselect_template = "ENTITYTABLENAME_preselect AS (ENTITYSELECT FROMTABLES WHERECLAUSE)";
-    StringBuilder entitySelect = new StringBuilder("SELECT DISTINCT ENTITYTABLENAME.integer_id_preselect AS MAPPINGENTITYKEY");
+    StringBuilder entitySelect = new StringBuilder("SELECT DISTINCT ENTITYTABLENAME.integer_id_alias AS MAPPINGENTITYKEY");
     StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
     StringBuilder whereClause = new StringBuilder("WHERE MAPPINGENTITYKEY IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
     ArrayList<ColumnDefinition> allCountFields = new ArrayList<>();
