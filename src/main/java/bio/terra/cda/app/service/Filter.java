@@ -8,7 +8,10 @@ import bio.terra.cda.app.models.ColumnDefinition;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.Join;
+import bio.terra.cda.generated.model.Query;
 
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -58,10 +61,11 @@ public class Filter {
     this.id = id;
     if (this.isRoot) {
       this.originalQuery = baseFilterString;
-      if (!this.originalQuery.contains("WHERE")) {
+      String WHERE = Query.NodeTypeEnum.WHERE.getValue();
+      if (!this.originalQuery.contains(WHERE)) {
         throw new RuntimeException("This query does not contain a where filter");
       }
-      String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf("WHERE") + 5).trim();
+      String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf(WHERE) + WHERE.length()).trim();
       this.filterQuery = parenthesisSubString(startingFilterString);
     } else {
       this.filterQuery = baseFilterString.trim();
@@ -80,15 +84,47 @@ public class Filter {
     }
   }
 
+  public String trimExtraneousParentheses(String query) {
+    if(query.startsWith("(") && query.endsWith(")")){
+      //Determine if the opening and closing parens match with each other...
+      CharacterIterator it = new StringCharacterIterator(query);
+      it.next();
+      int count = 1;
+      while (it.current() != CharacterIterator.DONE) {
+        if(it.current() == '(')
+          count++;
+        if(it.current() == ')') {
+          count--;
+          //this case occurs when the opening paren has been matched before we
+          //get to the end. E.g.: "((a =4)) OR (b=10)"
+          if(count == 0 && (it.getIndex() < (query.length()-1)))
+            return query;
+        }
+        it.next();
+      }
+      //This case means that the opening paren matches the closing paren,
+      //E.g.: "(((a=4) OR (b=10)))". We recurse to continue stripping off
+      //these extraneous parens
+      if(count == 0)
+        return trimExtraneousParentheses(query.substring(1, query.length()-1));
+    }
+    //If we don't have opening and closing parens, there isn't anything to trim
+    return query;
+  }
+
   public void constructFilter() {
-    if (this.filterQuery.startsWith("((") && this.filterQuery.endsWith("))"))
-      this.filterQuery = this.filterQuery.substring(1, this.filterQuery.length() - 1);
-    
-    if (!(this.filterQuery.contains("AND") || this.filterQuery.contains("OR"))) {
+
+//    if (this.filterQuery.startsWith("((") && this.filterQuery.endsWith("))"))
+//      this.filterQuery = this.filterQuery.substring(1, this.filterQuery.length() - 1);
+
+    String AND = Query.NodeTypeEnum.AND.getValue();
+    String OR = Query.NodeTypeEnum.OR.getValue();
+    if (!(this.filterQuery.contains(AND) || this.filterQuery.contains(OR))) {
       // Get filter table name
       int tableStartIndex;
       if (this.filterQuery.startsWith("(COALESCE(UPPER(")) {
-        tableStartIndex = this.filterQuery.indexOf("COALESCE(UPPER(") + 15;
+        String search = "COALESCE(UPPER(";
+        tableStartIndex = this.filterQuery.indexOf(search) + search.length();
       } else {
         tableStartIndex = 1;
       }
@@ -116,7 +152,7 @@ public class Filter {
             String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
             this.filterPreselect = replaceKeywords(preselect_template);
 
-            // Construct SELECT Statement for UNION/INTESECT opertations
+            // Construct SELECT Statement for UNION/INTERSECT operations
             String union_intersect_template = "SELECT FILTERTABLEKEY AS MAPPINGENTITYKEY FROM FILTERPRESELECTNAME";
             this.unionIntersect = replaceKeywords(union_intersect_template);
             break;
@@ -159,6 +195,7 @@ public class Filter {
       this.leftFilter = null;
       this.rightFilter = null;
     } else { // Construct Nested left and right filters
+      this.filterQuery = trimExtraneousParentheses(this.filterQuery);
       this.filterTableName = "";
       buildLeftRightFilters();
     }
@@ -169,12 +206,15 @@ public class Filter {
 
     String remainingString = this.filterQuery.substring(leftFilterString.length());
     // Determine what operator (INTERSECT/UNION) to use between left and right filters
-    if (remainingString.startsWith(" AND ")){
+    String SPACED_AND = " " + Query.NodeTypeEnum.AND.getValue() + " ";
+    String SPACED_OR = " " + Query.NodeTypeEnum.OR.getValue() + " ";
+
+    if (remainingString.startsWith(SPACED_AND)){
       this.operator = " INTERSECT ";
-      remainingString = remainingString.replaceFirst(" AND ","");
-    } else if (remainingString.startsWith(" OR ")) {
+      remainingString = remainingString.replaceFirst(SPACED_AND,"");
+    } else if (remainingString.startsWith(SPACED_OR)) {
       this.operator = " UNION ";
-      remainingString = remainingString.replaceFirst(" OR ","");;
+      remainingString = remainingString.replaceFirst(SPACED_OR,"");;
     } else {
       this.operator = "";
       throw new RuntimeException(String.format("AND/OR expected at start of : %s", remainingString));
@@ -276,7 +316,6 @@ public class Filter {
             .replace("WHERECLAUSE", whereClause.toString());
     entity_preselect = replaceKeywords(entity_preselect_template);
     this.countEndpointQuery = replaceKeywords(count_template);
-    System.out.print("");
 
   }
   public String replaceKeywords(String template){ // Helper function for replacing constructed string variables with supplied template
@@ -319,22 +358,20 @@ public class Filter {
   }
 
   public String parenthesisSubString(String startingString) { // Helper function to extract the string between the first
-                                                              // parenthesis and it's closing one
+    // parenthesis and it's closing one
     int openParenthesisCount = 1;
     int indexCursor = 0;
-    StringBuilder retString = new StringBuilder();
-    retString.append('(');
     while (openParenthesisCount > 0) {
-    indexCursor += 1;
-    if (startingString.charAt(indexCursor) == '(') {
-      openParenthesisCount += 1;
-    } else if (startingString.charAt(indexCursor) == ')') {
-      openParenthesisCount -= 1;
+      indexCursor += 1;
+      if (startingString.charAt(indexCursor) == '(') {
+        openParenthesisCount += 1;
+      } else if (startingString.charAt(indexCursor) == ')') {
+        openParenthesisCount -= 1;
+      }
     }
-    retString.append(startingString.charAt(indexCursor));
-    }
-    return retString.toString();
+    return startingString.substring(0, indexCursor+1);
   }
+
   public String getMappingPreselect(){
     return this.mappingTablePreselect;
   }
