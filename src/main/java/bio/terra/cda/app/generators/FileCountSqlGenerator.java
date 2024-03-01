@@ -7,7 +7,6 @@ import bio.terra.cda.generated.model.Query;
 import java.util.Arrays;
 import java.util.Optional;
 
-
 public class FileCountSqlGenerator {
 
   public static String[] getTotalFieldsToCount() {

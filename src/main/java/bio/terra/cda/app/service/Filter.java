@@ -3,14 +3,13 @@ package bio.terra.cda.app.service;
 import bio.terra.cda.app.builders.JoinBuilder;
 import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
-import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.models.ColumnDefinition;
-import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.Join;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Objects;
 
 // Class to construct optimized count preselect SQL statement from the filters in the original count(*) wrapped query
 public class Filter {
@@ -37,7 +36,10 @@ public class Filter {
   private String joinString = "";
   private String mappingFileTableName = "";
   private String mappingFileEntityKey = "";
-  private String fileCountPreselect = "";
+  private String mappingFileMappingKey = "";
+  private String entityTableCountPreselect = "";
+  private String countPreselect = "";
+  private String countSelect = "";
   private String includeCountQuery = "";
   private String countEndpointQuery = "";
   private String unionIntersect = "";
@@ -238,43 +240,14 @@ public class Filter {
     }
     String count_template = "";
     if (this.mappingTablePreselect.isEmpty()) { // Filters only applied to entity table
-      count_template = "WITH FULLFILTERPRESELECT ENTITYTABLENAME_preselect AS UNIONINTERSECT";
+      count_template = "WITH FULLFILTERPRESELECT ENTITYTABLENAME_preselect AS UNIONINTERSECT, ENTITYTABLECOUNTPRESELECT, COUNTPRESELECT, COUNTSELECT";
     } else {
-      count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT, ENTITYTABLENAME_preselect_ids AS UNIONINTERSECT, FILECOUNTPRESELECT";
+      count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT, ENTITYTABLENAME_preselect_ids AS UNIONINTERSECT, ENTITYTABLECOUNTPRESELECT, COUNTPRESELECT COUNTSELECT";
     }
-    String entity_preselect_template = "ENTITYTABLENAME AS (ENTITYSELECT FROMCLAUSE WHERECLAUSE),";
-    StringBuilder entitySelect = new StringBuilder("SELECT DISTINCT ENTITYTABLENAME.integer_id_preselect AS MAPPINGENTITYKEY");
-    StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
-    StringBuilder whereClause = new StringBuilder("WHERE MAPPINGENTITYKEY IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
-    List<ColumnDefinition> allCountFields = this.countGenerator.getTotalCountFields();
-    allCountFields.addAll(this.countGenerator.getGroupedCountFields());
-    for (ColumnDefinition countField : allCountFields) {
-      String count_field_select_template = ", FIELDNAME";
-      String fieldName = countField.getName();
-      String fieldTableName = countField.getTableName();
-      if (this.entityTableName != "file" && !fieldTableName.contains("file")){ //TODO check expected behavior with file endpoint
-        continue;
-      }
-      if (!fieldTableName.equals(this.entityTableName)) {
-        count_field_select_template = ", FIELDTABLENAME.FIELDNAME";
-        //TODO NEED JOIN PATH
-        String where_clause_template = "AND MAPPINGENTITYKEY = FIELDTABLENAME.FIELDNAME";
-        if (!fromTables.toString().contains(fieldTableName)) {
-          fromTables.append(", ").append(fieldTableName);
-          whereClause.append(where_clause_template
-                  .replace("FIELDTABLENAME",fieldTableName)
-                  .replace("FIELDNAME",fieldName));
-        }
-      }
-      entitySelect.append(count_field_select_template
-              .replace("FIELDTABLENAME",fieldTableName)
-              .replace("FIELDNAME",fieldName));
-    }
-    String entity_preselect = entity_preselect_template
-            .replace("ENTITYSELECT", entitySelect.toString())
-            .replace("FROMTABLES", fromTables.toString())
-            .replace("WHERECLAUSE", whereClause.toString());
-    entity_preselect = replaceKeywords(entity_preselect_template);
+    setEntityTableCountPreselect();
+    setCountPreselectAndSelect();
+
+
     this.countEndpointQuery = replaceKeywords(count_template);
     System.out.print("");
 
@@ -297,7 +270,10 @@ public class Filter {
             .replace("ENTITYTABLENAME", this.entityTableName)
             .replace("MAPPINGFILETABLENAME", this.mappingFileTableName)
             .replace("MAPPINGFILEENTITYKEY", this.mappingFileEntityKey)
-            .replace("FILECOUNTPRESELECT", this.fileCountPreselect);
+            .replace("ENTITYTABLECOUNTPRESELECT", this.entityTableCountPreselect)
+            .replace("MAPPINGFILEMAPPINGKEY", this.mappingFileMappingKey)
+            .replace("COUNTPRESELECT", this.countPreselect)
+            .replace("COUNTSELECT", this.countSelect);
   }
   public void setJoinString(List<Join> joinPath){ // Builds out join statements from JoinPath
     StringBuilder fullJoinString = new StringBuilder();
@@ -316,6 +292,105 @@ public class Filter {
       }
     }
     this.joinString = fullJoinString.toString();
+  }
+
+  public void setEntityTableCountPreselect(){
+    String entity_preselect_template = "ENTITYTABLENAME_preselect AS (ENTITYSELECT FROMTABLES WHERECLAUSE)";
+    StringBuilder entitySelect = new StringBuilder("SELECT DISTINCT ENTITYTABLENAME.integer_id_preselect AS MAPPINGENTITYKEY");
+    StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
+    StringBuilder whereClause = new StringBuilder("WHERE MAPPINGENTITYKEY IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
+    ArrayList<ColumnDefinition> allCountFields = new ArrayList<>();
+    allCountFields.addAll(this.countGenerator.getTotalCountFields());
+    allCountFields.addAll(this.countGenerator.getGroupedCountFields());
+    for (ColumnDefinition countField : allCountFields) {
+      String count_field_select_template = ", FIELDNAME";
+      String fieldName = countField.getName();
+      String fieldTableName = countField.getTableName();
+      if (!this.entityTableName.equals("file") && fieldTableName.contains("file")){ //TODO check expected behavior with file endpoint
+        continue;
+      }
+      if (!fieldTableName.equals(this.entityTableName)) {
+        count_field_select_template = ", FIELDTABLENAME.FIELDNAME";
+        List<Join> joinPath = this.joinBuilder.getPath(this.entityTableName, fieldTableName, this.mappingEntityKey);
+        if (joinPath.size() != 1) {
+          throw new RuntimeException(String.format("No direct path from %s to %s for entity_preselect construction", this.entityTableName, fieldTableName));
+        }
+        String fieldTableJoinKey = joinPath.get(0).getKey().getFields()[0];
+        String where_clause_template = "AND MAPPINGENTITYKEY = FIELDTABLENAME.FIELDTABLEJOINKEY";
+        if (!fromTables.toString().contains(fieldTableName)) {
+          fromTables.append(", ").append(fieldTableName);
+          whereClause.append(where_clause_template
+                  .replace("FIELDTABLENAME",fieldTableName)
+                  .replace("FIELDTABLEJOINKEY",fieldTableJoinKey));
+        }
+      }
+      entitySelect.append(count_field_select_template
+              .replace("FIELDTABLENAME",fieldTableName)
+              .replace("FIELDNAME",fieldName));
+    }
+    this.entityTableCountPreselect = entity_preselect_template
+            .replace("ENTITYSELECT", entitySelect.toString())
+            .replace("FROMTABLES", fromTables.toString())
+            .replace("WHERECLAUSE", whereClause.toString());
+    this.entityTableCountPreselect = replaceKeywords(this.entityTableCountPreselect);
+  }
+
+  public void setCountPreselectAndSelect(){
+    StringBuilder count_preselect = new StringBuilder();
+    StringBuilder count_select = new StringBuilder("SELECT ");
+
+    for (ColumnDefinition totalCountField : this.countGenerator.getTotalCountFields()){
+
+      if (!this.entityTableName.equals(totalCountField.getTableName())){
+        List<Join> joinPath = this.joinBuilder.getPath(totalCountField.getTableName(), this.entityTableName, this.mappingEntityKey); // TODO: could optimize by building a better joinPath with this one
+        if (joinPath.size() == 3){
+          this.mappingFileTableName = joinPath.get(1).getKey().getDestinationTableName();
+          this.mappingFileEntityKey = joinPath.get(2).getKey().getFromField();
+          this.mappingFileMappingKey = joinPath.get(0).getKey().getFromField();
+          String field_preselect = "ENTITYTABLENAME_file_alias AS (SELECT file_mapping.MAPPINGFILEMAPPINGKEY FROM MAPPINGFILETABLENAME file_mapping, ENTITYTABLENAME_preselect entity_preselect WHERE file_mapping.MAPPINGFILEENTITYKEY = entity_preselect.MAPPINGENTITYKEY),";
+          count_preselect.append(replaceKeywords(field_preselect));
+          String field_select = "(SELECT COUNT(DISTINCT(file_mapping.TOTALCOUNTFIELDNAME)) FROM ENTITYTABLENAME_file_alias file_preselect, TOTALCOUNTFIELDTABLENAME file_mapping WHERE file_mapping.MAPPINGFILEMAPPINGKEY = file_preselect.MAPPINGFILEMAPPINGKEY) AS file_id,";
+          field_select = field_select
+                  .replace("TOTALCOUNTFIELDNAME", totalCountField.getName())
+                  .replace("TOTALCOUNTFIELDTABLENAME", totalCountField.getTableName());
+          count_select.append(replaceKeywords(field_select));
+        }//TODO determine what happens if joinpath not 3
+      } else {
+        String field_select = "(SELECT COUNT(TOTALCOUNTFIELDNAME) FROM ENTITYTABLENAME_preselect) AS ENTITYTABLENAME_id,";
+        field_select = field_select
+                .replace("TOTALCOUNTFIELDNAME", totalCountField.getName());
+        count_select.append(replaceKeywords(field_select));
+      }
+    }
+    for (ColumnDefinition groupedCountField : this.countGenerator.getGroupedCountFields()){
+      String field_preselect = "";
+      String field_select = "";
+      if (this.entityTableName.equals(groupedCountField.getTableName())){
+        field_preselect = "GROUPEDCOUNTFIELDNAME_count AS (SELECT row_to_json(subquery) AS json_GROUPEDCOUNTFIELDNAME FROM (SELECT GROUPEDCOUNTFIELDNAME, COUNT(MAPPINGENTITYKEY) AS count FROM ENTITYTABLENAME_preselect GROUP BY GROUPEDCOUNTFIELDNAME) AS subquery),";
+        field_select = "(SELECT array_agg(json_GROUPEDCOUNTFIELDNAME) FROM GROUPEDCOUNTFIELDNAME_count) AS GROUPEDCOUNTFIELDNAME,";
+      } else {
+        field_preselect = "GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME_count AS (SELECT row_to_json(subquery) AS json_GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME FROM (SELECT GROUPEDCOUNTFIELDNAME, COUNT(MAPPINGENTITYKEY) AS count FROM ENTITYTABLENAME_preselect GROUP BY GROUPEDCOUNTFIELDNAME) AS subquery),";
+        field_select = "(SELECT array_agg(json_GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME) FROM GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME_count) AS GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME,";
+      }
+      field_preselect = field_preselect
+              .replace("GROUPEDCOUNTFIELDNAME", groupedCountField.getName())
+              .replace("GROUPEDCOUNTFIELDTABLENAME", groupedCountField.getTableName());
+      count_preselect.append(replaceKeywords(field_preselect));
+
+      field_select = field_select
+              .replace("GROUPEDCOUNTFIELDNAME", groupedCountField.getName())
+              .replace("GROUPEDCOUNTFIELDTABLENAME", groupedCountField.getTableName());
+      count_select.append(replaceKeywords(field_select));
+    }
+    this.countPreselect = count_preselect.toString();
+    if (this.countPreselect.endsWith(",")){
+      this.countPreselect = this.countPreselect.substring(0, this.countPreselect.length() - 1);
+    }
+    this.countSelect = count_select.toString();
+    if (this.countSelect.endsWith(",")){
+      this.countSelect = this.countSelect.substring(0, this.countSelect.length() - 1) + ";";
+    }
+    System.out.print("");
   }
 
   public String parenthesisSubString(String startingString) { // Helper function to extract the string between the first
