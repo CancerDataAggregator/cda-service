@@ -8,6 +8,7 @@ import bio.terra.cda.app.models.ColumnDefinition;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.models.ForeignKey;
 import bio.terra.cda.app.models.Join;
+import bio.terra.cda.generated.model.Query;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
@@ -60,10 +61,11 @@ public class Filter {
     this.id = id;
     if (this.isRoot) {
       this.originalQuery = baseFilterString;
-      if (!this.originalQuery.contains("WHERE")) {
+      String WHERE = Query.NodeTypeEnum.WHERE.getValue();
+      if (!this.originalQuery.contains(WHERE)) {
         throw new RuntimeException("This query does not contain a where filter");
       }
-      String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf("WHERE") + 5).trim();
+      String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf(WHERE) + WHERE.length()).trim();
       this.filterQuery = parenthesisSubString(startingFilterString);
     } else {
       this.filterQuery = baseFilterString.trim();
@@ -115,11 +117,14 @@ public class Filter {
 //    if (this.filterQuery.startsWith("((") && this.filterQuery.endsWith("))"))
 //      this.filterQuery = this.filterQuery.substring(1, this.filterQuery.length() - 1);
 
-    if (!(this.filterQuery.contains("AND") || this.filterQuery.contains("OR"))) {
+    String AND = Query.NodeTypeEnum.AND.getValue();
+    String OR = Query.NodeTypeEnum.OR.getValue();
+    if (!(this.filterQuery.contains(AND) || this.filterQuery.contains(OR))) {
       // Get filter table name
       int tableStartIndex;
       if (this.filterQuery.startsWith("(COALESCE(UPPER(")) {
-        tableStartIndex = this.filterQuery.indexOf("COALESCE(UPPER(") + 15;
+        String search = "COALESCE(UPPER(";
+        tableStartIndex = this.filterQuery.indexOf(search) + search.length();
       } else {
         tableStartIndex = 1;
       }
@@ -147,7 +152,7 @@ public class Filter {
             String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
             this.filterPreselect = replaceKeywords(preselect_template);
 
-            // Construct SELECT Statement for UNION/INTESECT opertations
+            // Construct SELECT Statement for UNION/INTERSECT operations
             String union_intersect_template = "SELECT FILTERTABLEKEY AS MAPPINGENTITYKEY FROM FILTERPRESELECTNAME";
             this.unionIntersect = replaceKeywords(union_intersect_template);
             break;
@@ -201,12 +206,15 @@ public class Filter {
 
     String remainingString = this.filterQuery.substring(leftFilterString.length());
     // Determine what operator (INTERSECT/UNION) to use between left and right filters
-    if (remainingString.startsWith(" AND ")){
+    String SPACED_AND = " " + Query.NodeTypeEnum.AND.getValue() + " ";
+    String SPACED_OR = " " + Query.NodeTypeEnum.OR.getValue() + " ";
+
+    if (remainingString.startsWith(SPACED_AND)){
       this.operator = " INTERSECT ";
-      remainingString = remainingString.replaceFirst(" AND ","");
-    } else if (remainingString.startsWith(" OR ")) {
+      remainingString = remainingString.replaceFirst(SPACED_AND,"");
+    } else if (remainingString.startsWith(SPACED_OR)) {
       this.operator = " UNION ";
-      remainingString = remainingString.replaceFirst(" OR ","");;
+      remainingString = remainingString.replaceFirst(SPACED_OR,"");;
     } else {
       this.operator = "";
       throw new RuntimeException(String.format("AND/OR expected at start of : %s", remainingString));
@@ -308,7 +316,6 @@ public class Filter {
             .replace("WHERECLAUSE", whereClause.toString());
     entity_preselect = replaceKeywords(entity_preselect_template);
     this.countEndpointQuery = replaceKeywords(count_template);
-    System.out.print("");
 
   }
   public String replaceKeywords(String template){ // Helper function for replacing constructed string variables with supplied template
