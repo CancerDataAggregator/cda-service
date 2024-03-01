@@ -146,7 +146,7 @@ public class QueryService {
   public String optimizeCountEndpointQuery(String sqlCount, EntityCountSqlGenerator generator){
     try {
       Filter filterObj = new Filter(sqlCount, generator, Boolean.TRUE, "");
-      return sqlCount;
+      return filterObj.getCountEndpointQuery();
     } catch (Exception exception){
       logger.warn(String.format("Sql: %s, Exception: %s",sqlCount,exception.getMessage()));
       return sqlCount;

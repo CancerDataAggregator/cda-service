@@ -280,9 +280,9 @@ public class Filter {
     }
     String count_template = "";
     if (this.mappingTablePreselect.isEmpty()) { // Filters only applied to entity table
-      count_template = "WITH FULLFILTERPRESELECT ENTITYTABLENAME_preselect AS UNIONINTERSECT, ENTITYTABLECOUNTPRESELECT, COUNTPRESELECT, COUNTSELECT";
+      count_template = "SELECT row_to_json(json) FROM (WITH FULLFILTERPRESELECT ENTITYTABLENAME_preselect AS UNIONINTERSECT, ENTITYTABLECOUNTPRESELECT, COUNTPRESELECT COUNTSELECT) as json";
     } else {
-      count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT, ENTITYTABLENAME_preselect_ids AS UNIONINTERSECT, ENTITYTABLECOUNTPRESELECT, COUNTPRESELECT COUNTSELECT";
+      count_template = "SELECT row_to_json(json) FROM (WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT, ENTITYTABLENAME_preselect_ids AS UNIONINTERSECT, ENTITYTABLECOUNTPRESELECT, COUNTPRESELECT COUNTSELECT) as json";
     }
     setEntityTableCountPreselect();
     setCountPreselectAndSelect();
@@ -337,7 +337,7 @@ public class Filter {
     String entity_preselect_template = "ENTITYTABLENAME_preselect AS (ENTITYSELECT FROMTABLES WHERECLAUSE)";
     StringBuilder entitySelect = new StringBuilder("SELECT DISTINCT ENTITYTABLENAME.integer_id_alias AS MAPPINGENTITYKEY");
     StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
-    StringBuilder whereClause = new StringBuilder("WHERE MAPPINGENTITYKEY IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
+    StringBuilder whereClause = new StringBuilder("WHERE integer_id_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
     ArrayList<ColumnDefinition> allCountFields = new ArrayList<>();
     allCountFields.addAll(this.countGenerator.getTotalCountFields());
     allCountFields.addAll(this.countGenerator.getGroupedCountFields());
@@ -355,7 +355,7 @@ public class Filter {
           throw new RuntimeException(String.format("No direct path from %s to %s for entity_preselect construction", this.entityTableName, fieldTableName));
         }
         String fieldTableJoinKey = joinPath.get(0).getKey().getFields()[0];
-        String where_clause_template = "AND MAPPINGENTITYKEY = FIELDTABLENAME.FIELDTABLEJOINKEY";
+        String where_clause_template = "AND integer_id_alias = FIELDTABLENAME.FIELDTABLEJOINKEY";
         if (!fromTables.toString().contains(fieldTableName)) {
           fromTables.append(", ").append(fieldTableName);
           whereClause.append(where_clause_template
@@ -427,7 +427,7 @@ public class Filter {
     }
     this.countSelect = count_select.toString();
     if (this.countSelect.endsWith(",")){
-      this.countSelect = this.countSelect.substring(0, this.countSelect.length() - 1) + ";";
+      this.countSelect = this.countSelect.substring(0, this.countSelect.length() - 1);
     }
     System.out.print("");
   }
