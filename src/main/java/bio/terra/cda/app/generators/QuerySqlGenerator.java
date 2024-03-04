@@ -74,9 +74,10 @@ public class QuerySqlGenerator extends SqlGenerator{
         identifierTablePrefix = "subject";
         fk = "cda_subject_id";
       } else {
-        fk = tableInfo.getPrimaryKeys().get(0).getName();
+        final String finalToTable = toTable;
+        fk = tableInfo.getForeignKeys().stream().filter(foreignKey -> foreignKey.getDestinationTableName().equals(finalToTable)).map(ForeignKey::getFromField).findFirst().get();
       }
-      whereClause = String.format(" WHERE %s IN (SELECT DISTINCT(%s_id) FROM %s WHERE system = %s)", fk, identifierTablePrefix, toTable, systemParam);
+      whereClause = String.format(" WHERE %s IN (SELECT DISTINCT(%s_alias) FROM %s WHERE system = %s)", fk, identifierTablePrefix, toTable, systemParam);
     }
 
     querySql =
