@@ -120,8 +120,10 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
     }
     return Stream.concat(
         totalCountFields.stream()
+                .filter(Objects::nonNull)
                 .map(col -> String.format(totalFormatString, replaceAliasWithId(col.getAlias()), tableAlias)),
         groupedCountFields.stream()
+                .filter(Objects::nonNull)
                 .map(col -> String.format(groupedFormatString, col.getAlias())))
         .collect(Collectors.joining(", "));
   }
@@ -139,6 +141,7 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
     }
 
     return Stream.concat(totalFields.stream(), this.groupedCountFields.stream())
+        .filter (Objects::nonNull)
         .map(
             col -> {
               // if we need to find a path to the attribute
