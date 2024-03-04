@@ -57,16 +57,19 @@ class QueryApiControllerTest {
               return result;
             });
 
-    var expected = "SELECT DISTINCT sex FROM subject WHERE id IN (SELECT DISTINCT(subject_id) FROM subject_identifier WHERE system = 'GDC') ORDER BY sex  LIMIT 100";
-    var result = mvc.perform(
-        post("/api/v1/unique-values")
-            .param("system", system)
-            .param("count", String.valueOf(count))
-            .contentType(MediaType.valueOf("text/plain"))
-            .content(body)
-            .accept(MediaType.APPLICATION_JSON))
-        .andReturn();
-    var response = objectMapper.readValue(result.getResponse().getContentAsString(), PagedResponseData.class);
+    var expected =
+        "SELECT DISTINCT sex FROM subject WHERE integer_id_alias IN (SELECT DISTINCT(subject_alias) FROM subject_identifier WHERE system = 'GDC') ORDER BY sex  LIMIT 100";
+    var result =
+        mvc.perform(
+                post("/api/v1/unique-values")
+                    .param("system", system)
+                    .param("count", String.valueOf(count))
+                    .contentType(MediaType.valueOf("text/plain"))
+                    .content(body)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andReturn();
+    var response =
+        objectMapper.readValue(result.getResponse().getContentAsString(), PagedResponseData.class);
 
     assertThat(response.getQuerySql(), equalTo(expected));
   }
