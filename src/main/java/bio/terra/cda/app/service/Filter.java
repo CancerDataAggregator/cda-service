@@ -118,15 +118,12 @@ public class Filter {
 
   public void constructFilter() {
 
-//    if (this.filterQuery.startsWith("((") && this.filterQuery.endsWith("))"))
-//      this.filterQuery = this.filterQuery.substring(1, this.filterQuery.length() - 1);
-
     String AND = Query.NodeTypeEnum.AND.getValue();
     String OR = Query.NodeTypeEnum.OR.getValue();
     if (!(this.filterQuery.contains(AND) || this.filterQuery.contains(OR))) {
       // Get filter table name
       int tableStartIndex;
-      if (this.filterQuery.startsWith("(COALESCE(UPPER(")) {
+      if (this.filterQuery.startsWith("(COALESCE(UPPER(") || this.filterQuery.startsWith("COALESCE(UPPER(")) {
         String search = "COALESCE(UPPER(";
         tableStartIndex = this.filterQuery.indexOf(search) + search.length();
       } else {
