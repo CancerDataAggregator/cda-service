@@ -142,6 +142,11 @@ public class QueryService {
               new JsonNodeRowMapper(objectMapper));
     }
   }
+  public String getReadableOptimizedCountQuery(SqlGenerator generator) {
+    String sqlQuery = SqlTemplate.jsonWrapper(generator.getSqlString());
+    String optimizedQuery = optimizeCountEndpointQuery(sqlQuery, (EntityCountSqlGenerator) generator);
+    return generator.getReadableQuerySqlArg(optimizedQuery);
+  }
 
   public String optimizeCountEndpointQuery(String sqlCount, EntityCountSqlGenerator generator){
     try {
