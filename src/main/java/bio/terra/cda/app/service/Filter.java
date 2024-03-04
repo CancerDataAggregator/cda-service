@@ -77,6 +77,8 @@ public class Filter {
     this.joinBuilder = this.generator.getJoinBuilder();
     this.entityTableName = generator.getEntityTableName();
     this.entityPK = generator.getEntityTableFirstPK();
+    if(this.entityPK.trim().isEmpty())
+      throw new RuntimeException("The entity table " + this.entityTableName + " does not contain a primary key.");
     constructFilter();
     setVariablesFromChildren();
     if (this.generator instanceof EntityCountSqlGenerator) {
@@ -427,14 +429,13 @@ public class Filter {
     if (this.countSelect.endsWith(",")){
       this.countSelect = this.countSelect.substring(0, this.countSelect.length() - 1);
     }
-    System.out.print("");
   }
 
   public String parenthesisSubString(String startingString) { // Helper function to extract the string between the first
     // parenthesis and it's closing one
     int openParenthesisCount = 1;
     int indexCursor = 0;
-    while (openParenthesisCount > 0) {
+    while (openParenthesisCount > 0 && (indexCursor+1) < startingString.length()) {
       indexCursor += 1;
       if (startingString.charAt(indexCursor) == '(') {
         openParenthesisCount += 1;

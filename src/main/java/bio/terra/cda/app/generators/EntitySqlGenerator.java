@@ -261,7 +261,8 @@ public class EntitySqlGenerator extends SqlGenerator {
     return this.entityTable.getTableName();
   }
   public String getEntityTableFirstPK(){
-    return this.entityTable.getPrimaryKeys().get(0).getName();
+    List<ColumnDefinition> pkcols = this.entityTable.getPrimaryKeys();
+    return pkcols.isEmpty() ? "" : this.entityTable.getPrimaryKeys().get(0).getName();
   }
   public TableInfo getEntityTable() { return this.entityTable; }
 }
