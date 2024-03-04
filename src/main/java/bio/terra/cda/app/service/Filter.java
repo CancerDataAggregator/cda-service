@@ -76,6 +76,8 @@ public class Filter {
     this.joinBuilder = this.generator.getJoinBuilder();
     this.entityTableName = generator.getEntityTableName();
     this.entityPK = generator.getEntityTableFirstPK();
+    if(this.entityPK.trim().isEmpty())
+      throw new RuntimeException("The entity table " + this.entityTableName + " does not contain a primary key.");
     constructFilter();
     setVariablesFromChildren();
     if (this.generator instanceof EntityCountSqlGenerator) {
