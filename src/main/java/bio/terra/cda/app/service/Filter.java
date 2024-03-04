@@ -21,8 +21,8 @@ public class Filter {
   private String filterQuery = "";
   private String filterTableName = "";
   private String operator = "";
-  private Filter leftFilter = null;
-  private Filter rightFilter = null;
+  private ChildFilter leftFilter = null;
+  private ChildFilter rightFilter = null;
   private String filterPreselect = "";
   final EntitySqlGenerator generator;
   private EntityCountSqlGenerator countGenerator = null;
@@ -55,11 +55,12 @@ public class Filter {
    * @throws RuntimeException If there is problem create the filters
    * @param baseFilterString Originally passed in as generated sql but later
    * @param generator
-   * @param isRoot
    * @param id
    */
-  public Filter(String baseFilterString, EntitySqlGenerator generator, Boolean isRoot, String id) {
-    this.isRoot = isRoot;
+  public Filter(String baseFilterString, EntitySqlGenerator generator, String id) {
+//    this.isRoot = isRoot;
+    this.isRoot = !(this instanceof ChildFilter);
+
     this.id = id;
     if (this.isRoot) {
       this.originalQuery = baseFilterString;
@@ -222,8 +223,8 @@ public class Filter {
       throw new RuntimeException(String.format("AND/OR expected at start of : %s", remainingString));
     }
     // Construct nested Filter objects for left and right filters (adding '_0' to ids for left and '_1' to ids for right filters)
-    this.leftFilter = new Filter(leftFilterString, this.generator, Boolean.FALSE, this.id + "_0");
-    this.rightFilter = new Filter(remainingString, this.generator, Boolean.FALSE, this.id + "_1");
+    this.leftFilter = new ChildFilter(leftFilterString, this.generator, this.id + "_0");
+    this.rightFilter = new ChildFilter(remainingString, this.generator, this.id + "_1");
   }
   public void setVariablesFromChildren(){ // Concatenate nested filter values
     if (this.leftFilter != null & this.rightFilter != null){ // Check to see that we have left and right child Filters
@@ -244,11 +245,11 @@ public class Filter {
       this.mappingEntityKey = this.leftFilter.getMappingEntityKey();
       // Ensure that the final id key on all the child preselects match otherwise the
       // Union/Intersect statement will break
-//      if (!this.leftFilter.getMappingEntityKey().equals(this.rightFilter.getMappingEntityKey())) {
-//        throw new RuntimeException(
-//            String.format("Mapping entity keys between left and right filters don't match: %s %s",
-//                this.leftFilter.getMappingEntityKey(), this.rightFilter.getMappingEntityKey()));
-//      }
+      if (!this.leftFilter.getMappingEntityKey().equals(this.rightFilter.getMappingEntityKey())) {
+        throw new RuntimeException(
+            String.format("Mapping entity keys between left and right filters don't match: %s %s",
+                this.leftFilter.getMappingEntityKey(), this.rightFilter.getMappingEntityKey()));
+      }
     }
   }
   public void setIncludeCountQuery(){
@@ -286,10 +287,7 @@ public class Filter {
     }
     setEntityTableCountPreselect();
     setCountPreselectAndSelect();
-
-
     this.countEndpointQuery = replaceKeywords(count_template);
-
   }
   public String replaceKeywords(String template){ // Helper function for replacing constructed string variables with supplied template
     return template
