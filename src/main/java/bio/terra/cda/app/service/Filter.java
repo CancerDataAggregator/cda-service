@@ -123,6 +123,8 @@ public class Filter {
     if (!(this.filterQuery.contains(AND) || this.filterQuery.contains(OR))) {
       // Get filter table name
       int tableStartIndex;
+      //Sample coalesce statement...
+      //COALESCE(UPPER(subject.sex)) <- want to extract "subject" here as the filter table
       if (this.filterQuery.startsWith("(COALESCE(UPPER(") || this.filterQuery.startsWith("COALESCE(UPPER(")) {
         String search = "COALESCE(UPPER(";
         tableStartIndex = this.filterQuery.indexOf(search) + search.length();
