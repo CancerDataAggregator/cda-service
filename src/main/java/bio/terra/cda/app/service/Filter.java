@@ -287,7 +287,6 @@ public class Filter {
     setEntityTableCountPreselect();
     setCountPreselectAndSelect();
 
-
     this.countEndpointQuery = replaceKeywords(count_template);
 
   }
@@ -429,14 +428,13 @@ public class Filter {
     if (this.countSelect.endsWith(",")){
       this.countSelect = this.countSelect.substring(0, this.countSelect.length() - 1);
     }
-    System.out.print("");
   }
 
   public String parenthesisSubString(String startingString) { // Helper function to extract the string between the first
     // parenthesis and it's closing one
     int openParenthesisCount = 1;
     int indexCursor = 0;
-    while (openParenthesisCount > 0) {
+    while (openParenthesisCount > 0 && (indexCursor+1) < startingString.length()) {
       indexCursor += 1;
       if (startingString.charAt(indexCursor) == '(') {
         openParenthesisCount += 1;

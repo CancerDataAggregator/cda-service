@@ -112,6 +112,12 @@ public class IncludeCountOptimizationTest {
     String actual = filter.parenthesisSubString(q);
 
     assertThat("\"" + actual + "\" not the same as \"" + expected + "\"", actual.equals(expected));
+
+
+    q = " Country='Mexico'";
+    expected = " Country='Mexico'";
+    actual = filter.parenthesisSubString(q);
+    assertThat("\"" + actual + "\" not the same as \"" + expected + "\"", actual.equals(expected));
   }
   @Test
   void TestParenthesisCleanup() {
