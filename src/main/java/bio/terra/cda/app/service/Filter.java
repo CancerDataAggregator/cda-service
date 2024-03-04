@@ -12,23 +12,22 @@ import java.util.ArrayList;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.List;
-import java.util.Objects;
 
 // Class to construct optimized count preselect SQL statement from the filters in the original count(*) wrapped query
 public class Filter {
-  final Boolean isRoot;
+  protected Boolean isRoot;
   private String originalQuery = "";
   private String filterQuery = "";
   private String filterTableName = "";
   private String operator = "";
-  private ChildFilter leftFilter = null;
-  private ChildFilter rightFilter = null;
+  private Filter leftFilter = null;
+  private Filter rightFilter = null;
   private String filterPreselect = "";
-  final EntitySqlGenerator generator;
+  EntitySqlGenerator generator;
   private EntityCountSqlGenerator countGenerator = null;
-  final private JoinBuilder joinBuilder;
-  final private String entityTableName;
-  final private String entityPK;
+  private JoinBuilder joinBuilder;
+  private String entityTableName;
+  private String entityPK;
   private String mappingTableName = "";
   private String filterTableKey = "";
   private String mappingEntityKey = "";
@@ -46,7 +45,7 @@ public class Filter {
   private String includeCountQuery = "";
   private String countEndpointQuery = "";
   private String unionIntersect = "";
-  final String id;
+  protected String id;
 
   /***
    * Class to construct optimized count preselect SQL statement from the filters
@@ -55,24 +54,28 @@ public class Filter {
    * @throws RuntimeException If there is problem create the filters
    * @param baseFilterString Originally passed in as generated sql but later
    * @param generator
-   * @param id
+   *
    */
-  public Filter(String baseFilterString, EntitySqlGenerator generator, String id) {
-//    this.isRoot = isRoot;
-    this.isRoot = !(this instanceof ChildFilter);
-
-    this.id = id;
-    if (this.isRoot) {
-      this.originalQuery = baseFilterString;
-      String WHERE = Query.NodeTypeEnum.WHERE.getValue();
-      if (!this.originalQuery.contains(WHERE)) {
-        throw new RuntimeException("This query does not contain a where filter");
-      }
-      String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf(WHERE) + WHERE.length()).trim();
-      this.filterQuery = parenthesisSubString(startingFilterString);
-    } else {
-      this.filterQuery = baseFilterString.trim();
+  public Filter(String baseFilterString, EntitySqlGenerator generator) {
+    this.isRoot = Boolean.TRUE;
+    this.id = "";
+    this.originalQuery = baseFilterString;
+    String WHERE = Query.NodeTypeEnum.WHERE.getValue();
+    if (!this.originalQuery.contains(WHERE)) {
+      throw new RuntimeException("This query does not contain a where filter");
     }
+    String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf(WHERE) + WHERE.length()).trim();
+    this.filterQuery = parenthesisSubString(startingFilterString);
+    buildFilter(generator);
+  }
+  protected Filter(String baseFilterString, EntitySqlGenerator generator, String id) {
+    this.isRoot = Boolean.FALSE;
+    this.id = id;
+    this.filterQuery = baseFilterString.trim();
+    buildFilter(generator);
+  }
+
+  public void buildFilter(EntitySqlGenerator generator){
     this.generator = generator;
     this.joinBuilder = this.generator.getJoinBuilder();
     this.entityTableName = generator.getEntityTableName();
@@ -225,8 +228,8 @@ public class Filter {
       throw new RuntimeException(String.format("AND/OR expected at start of : %s", remainingString));
     }
     // Construct nested Filter objects for left and right filters (adding '_0' to ids for left and '_1' to ids for right filters)
-    this.leftFilter = new ChildFilter(leftFilterString, this.generator, this.id + "_0");
-    this.rightFilter = new ChildFilter(remainingString, this.generator, this.id + "_1");
+    this.leftFilter = new Filter(leftFilterString, this.generator, this.id + "_0");
+    this.rightFilter = new Filter(remainingString, this.generator, this.id + "_1");
   }
   public void setVariablesFromChildren(){ // Concatenate nested filter values
     if (this.leftFilter != null & this.rightFilter != null){ // Check to see that we have left and right child Filters

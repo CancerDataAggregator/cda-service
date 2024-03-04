@@ -1,12 +1,9 @@
 package bio.terra.cda.app.service;
 
-import bio.terra.cda.app.builders.JoinBuilder;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
-import bio.terra.cda.app.models.ForeignKey;
-import bio.terra.cda.app.models.Join;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.generated.model.SystemStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -115,7 +112,7 @@ public class QueryService {
 
   public String optimizeIncludeCountQuery(String sqlCount, EntitySqlGenerator generator){
     try {
-      Filter filterObj = new Filter(sqlCount, generator, "");
+      Filter filterObj = new Filter(sqlCount, generator);
       return filterObj.getIncludeCountQuery();
     }catch (Exception exception) {
       logger.warn(String.format("Sql: %s, Exception: %s",sqlCount,exception.getMessage()));
@@ -150,7 +147,7 @@ public class QueryService {
 
   public String optimizeCountEndpointQuery(String sqlCount, EntityCountSqlGenerator generator){
     try {
-      Filter filterObj = new Filter(sqlCount, generator, "");
+      Filter filterObj = new Filter(sqlCount, generator);
       return filterObj.getCountEndpointQuery();
     } catch (Exception exception){
       logger.warn(String.format("Sql: %s, Exception: %s",sqlCount,exception.getMessage()));
