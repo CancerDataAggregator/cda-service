@@ -52,23 +52,14 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
   protected String sql(
       String tableOrSubClause,
       Query query,
-      boolean subQuery,
-      boolean hasSubClause,
       boolean ignoreWith) {
     String viewSql =
         super.sql(
-            tableOrSubClause, QueryUtil.deSelectifyQuery(query), subQuery, hasSubClause, true);
+            tableOrSubClause, QueryUtil.deSelectifyQuery(query), true);
     String tableAlias = "flattened_result";
     this.viewListBuilder.addView(new ManualView(String.format("%s as (%s)", tableAlias, viewSql)));
     addGroupedCountViews(tableAlias);
-//    String withStatement = "";
-//    if (this.viewListBuilder.hasAny() && !ignoreWith) {
-//      withStatement = String.format("%s, %s as (%s)", getWithStatement(), tableAlias, viewSql);
-//    } else {
-//      withStatement = String.format("WITH %s as (%s)", tableAlias, viewSql);
-//    }
-
-    return subQuery ? viewSql : String.format("%s select %s", getWithStatement(), getCountSelects(tableAlias));
+    return String.format("%s select %s", getWithStatement(), getCountSelects(tableAlias));
   }
 
   protected void addGroupedCountViews(String tableAlias) {

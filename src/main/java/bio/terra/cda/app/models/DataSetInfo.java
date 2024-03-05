@@ -263,21 +263,20 @@ public class DataSetInfo {
         partitionedList.get(true).forEach(col -> addExternalFieldMapEntry(col, tableName));
         partitionedList.get(false).forEach(col -> addInternalFieldMapEntry(col, tableName));
       } else {
-        // skip fields that are just foreign keys to entity tables
         Arrays.stream(cols)
             .filter(
                 field ->
-                    !(table.getRelationships().stream()
-                            .map(rel -> rel.getFromField())
-                            .collect(Collectors.toList()))
-                        .contains(field.getName()))
+                   !(table.getRelationships().stream()
+                       .map(rel -> rel.getFromField())
+                       .collect(Collectors.toList()))
+                       .contains(field.getName()))
             .forEach(
                 col -> {
-                    if (externalFields) {
-                        addExternalFieldMapEntry(col, tableName);
-                    } else {
-                        addInternalFieldMapEntry(col, tableName);
-                    }
+                  if (externalFields) {
+                    addExternalFieldMapEntry(col, tableName);
+                  } else {
+                    addInternalFieldMapEntry(col, tableName);
+                  }
                 });
       }
     }
