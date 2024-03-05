@@ -1,11 +1,15 @@
 package bio.terra.cda.app.models;
 
 import bio.terra.cda.app.service.TablePrecedenceComparator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class TableInfo {
+  private static final Logger logger = LoggerFactory.getLogger(TableInfo.class);
+
   private final String tableName;
   private final ColumnDefinition[] columnDefinitions;
   private final List<TableRelationship> relationships;
@@ -39,7 +43,10 @@ public class TableInfo {
   }
 
   public void addForeignKey(ForeignKey foreignKey) {
-    this.foreignKeys.add(foreignKey);
+    boolean success = this.foreignKeys.add(foreignKey);
+    if (!success) {
+      logger.warn("Failed to add foreign key: " + foreignKey);
+    }
   }
 
   public String getTableName() {

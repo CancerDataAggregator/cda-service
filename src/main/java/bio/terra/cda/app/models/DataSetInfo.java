@@ -179,7 +179,6 @@ public class DataSetInfo {
 
     public DataSetInfo build() {
       connectForeignKeys();
-//      entityTableInfoMap.putAll(mappingTableInfoMap);
       // get rid of the synchronized field map because after this point it should be read only. so also make it unmodifyable
       return new DataSetInfo(
           entityTableInfoMap,
