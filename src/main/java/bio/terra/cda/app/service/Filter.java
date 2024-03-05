@@ -286,7 +286,7 @@ public class Filter {
     }
     String count_template = "";
     if (this.mappingTablePreselect.isEmpty()) { // Filters only applied to entity table
-      count_template = "SELECT row_to_json(json) FROM (WITH FULLFILTERPRESELECT ENTITYTABLENAME_preselect AS UNIONINTERSECT, ENTITYTABLECOUNTPRESELECT, COUNTPRESELECT COUNTSELECT) as json";
+      count_template = "SELECT row_to_json(json) FROM (WITH FULLFILTERPRESELECT, ENTITYTABLENAME_preselect_ids AS (UNIONINTERSECT), ENTITYTABLECOUNTPRESELECT, COUNTPRESELECT COUNTSELECT) as json";
     } else {
       count_template = "SELECT row_to_json(json) FROM (WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT, ENTITYTABLENAME_preselect_ids AS UNIONINTERSECT, ENTITYTABLECOUNTPRESELECT, COUNTPRESELECT COUNTSELECT) as json";
     }
