@@ -1,5 +1,8 @@
 package bio.terra.cda.app.models;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class ForeignKey {
   private String fromTableName;
   private String fromField;
@@ -48,4 +51,18 @@ public class ForeignKey {
     this.fields = fields;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ForeignKey that = (ForeignKey) o;
+    return Objects.equals(fromTableName, that.fromTableName) && Objects.equals(fromField, that.fromField) && Objects.equals(destinationTableName, that.destinationTableName) && Arrays.equals(fields, that.fields);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = Objects.hash(fromTableName, fromField, destinationTableName);
+    result = 31 * result + Arrays.hashCode(fields);
+    return result;
+  }
 }
