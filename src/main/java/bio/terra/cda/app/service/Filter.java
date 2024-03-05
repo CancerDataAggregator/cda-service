@@ -351,7 +351,7 @@ public class Filter {
 
   public void setCountPreselectAndSelect(){
     StringBuilder count_preselect = new StringBuilder();
-    StringBuilder count_select = new StringBuilder("SELECT ");
+    StringBuilder count_select = new StringBuilder("SELECT (SELECT COUNT(*) FROM ENTITYTABLENAME_preselect) as total_count,");
 
     for (ColumnDefinition totalCountField : this.countGenerator.getTotalCountFields()){
 
@@ -369,7 +369,7 @@ public class Filter {
                   .replace("TOTALCOUNTFIELDTABLENAME", totalCountField.getTableName());
           count_select.append(replaceKeywords(field_select));
         }//TODO determine what happens if joinpath not 3
-      } else {
+      } else if (!totalCountField.getName().equals("id")) {
         String field_select = "(SELECT COUNT(TOTALCOUNTFIELDNAME) FROM ENTITYTABLENAME_preselect) AS ENTITYTABLENAME_id,";
         field_select = field_select
                 .replace("TOTALCOUNTFIELDNAME", totalCountField.getName());
@@ -380,7 +380,7 @@ public class Filter {
       String field_preselect = "";
       String field_select = "";
       if (this.entityTableName.equals(groupedCountField.getTableName())){
-        field_preselect = "GROUPEDCOUNTFIELDNAME_count AS (SELECT row_to_json(subquery) AS json_GROUPEDCOUNTFIELDNAME FROM (SELECT GROUPEDCOUNTFIELDNAME, COUNT(MAPPINGENTITYKEY) AS count FROM ENTITYTABLENAME_preselect GROUP BY GROUPEDCOUNTFIELDNAME) AS subquery),";
+        field_preselect = "GROUPEDCOUNTFIELDNAME_count AS (SELECT row_to_json(subquery) AS json_GROUPEDCOUNTFIELDNAME FROM (SELECT GROUPEDCOUNTFIELDNAME, COUNT(*) AS count FROM ENTITYTABLENAME_preselect GROUP BY GROUPEDCOUNTFIELDNAME) AS subquery),";
         field_select = "(SELECT array_agg(json_GROUPEDCOUNTFIELDNAME) FROM GROUPEDCOUNTFIELDNAME_count) AS GROUPEDCOUNTFIELDNAME,";
       } else {
         field_preselect = "GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME_count AS (SELECT row_to_json(subquery) AS json_GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME FROM (SELECT GROUPEDCOUNTFIELDNAME, COUNT(MAPPINGENTITYKEY) AS count FROM ENTITYTABLENAME_preselect GROUP BY GROUPEDCOUNTFIELDNAME) AS subquery),";
@@ -396,11 +396,11 @@ public class Filter {
               .replace("GROUPEDCOUNTFIELDTABLENAME", groupedCountField.getTableName());
       count_select.append(replaceKeywords(field_select));
     }
-    this.countPreselect = count_preselect.toString();
+    this.countPreselect = replaceKeywords(count_preselect.toString());
     if (this.countPreselect.endsWith(",")){
       this.countPreselect = this.countPreselect.substring(0, this.countPreselect.length() - 1);
     }
-    this.countSelect = count_select.toString();
+    this.countSelect = replaceKeywords(count_select.toString());
     if (this.countSelect.endsWith(",")){
       this.countSelect = this.countSelect.substring(0, this.countSelect.length() - 1);
     }
