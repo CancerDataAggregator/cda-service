@@ -20,8 +20,6 @@ public class CountsSqlGenerator extends EntitySqlGenerator {
   protected String sql(
       String tableOrSubClause,
       Query query,
-      boolean subQuery,
-      boolean hasSubClause,
       boolean ignoreWith) {
     List<String> primaryKeyFields = new ArrayList<>();
 
@@ -56,7 +54,7 @@ public class CountsSqlGenerator extends EntitySqlGenerator {
             "%s as (%s)",
             resultsAlias,
             new EntitySqlGenerator(newQuery, false, this.parameterBuilder, this.viewListBuilder)
-                .sql(this.entityTable.getTableName(), newQuery, false, false, true));
+                .sql(this.entityTable.getTableName(), newQuery, true));
     String withStatement = String.format("WITH %s", flattenedWith);
 
     if (this.viewListBuilder.hasAny() && !ignoreWith) {

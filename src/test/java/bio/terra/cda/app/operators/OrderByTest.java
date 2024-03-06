@@ -22,7 +22,7 @@ public class OrderByTest {
 
     EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
-    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
+    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false);
 
     IllegalArgumentException exception =
         assertThrows(
@@ -37,7 +37,7 @@ public class OrderByTest {
 
     EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
-    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
+    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false);
     String sqlStr = query.buildQuery(ctx);
 
     assertEquals(3, ctx.getOrderBys().size());

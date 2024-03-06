@@ -52,23 +52,14 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
   protected String sql(
       String tableOrSubClause,
       Query query,
-      boolean subQuery,
-      boolean hasSubClause,
       boolean ignoreWith) {
     String viewSql =
         super.sql(
-            tableOrSubClause, QueryUtil.deSelectifyQuery(query), subQuery, hasSubClause, true);
+            tableOrSubClause, QueryUtil.deSelectifyQuery(query), true).replace("SELECT", "SELECT DISTINCT");
     String tableAlias = "flattened_result";
     this.viewListBuilder.addView(new ManualView(String.format("%s as (%s)", tableAlias, viewSql)));
     addGroupedCountViews(tableAlias);
-//    String withStatement = "";
-//    if (this.viewListBuilder.hasAny() && !ignoreWith) {
-//      withStatement = String.format("%s, %s as (%s)", getWithStatement(), tableAlias, viewSql);
-//    } else {
-//      withStatement = String.format("WITH %s as (%s)", tableAlias, viewSql);
-//    }
-
-    return subQuery ? viewSql : String.format("%s select %s", getWithStatement(), getCountSelects(tableAlias));
+    return String.format("%s select %s", getWithStatement(), getCountSelects(tableAlias));
   }
 
   protected void addGroupedCountViews(String tableAlias) {
@@ -80,9 +71,8 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
     String fieldName = col.getAlias();
 
     String groupedCountInnerView = String.format(
-        "(select %1$s as %1$s, count(distinct %2$s) as count from %3$s group by %1$s)",
+        "(select %1$s as %1$s, count(*) as count from %2$s group by %1$s)",
         fieldName,
-        this.entityTable.getPrimaryKeysAlias().get(0),
         fromTableAlias);
 
     String viewNameFormatString = "%s_count";
@@ -107,6 +97,7 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
 
 
   protected String getCountSelects(String tableAlias) {
+    String totalResultsString = String.format("(SELECT COUNT(*) from %1$s) as total_rows", tableAlias);
     String totalFormatString = "(SELECT COUNT(DISTINCT %1$s) from %2$s) as %1$s";
     String groupedFormatString =
         "(SELECT array_agg(json_%1$s) from %1$s_count) as %1$s";
@@ -118,13 +109,15 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
         totalFields.add(getSecondaryEntity());
         }
     }
-    return Stream.concat(
-        totalCountFields.stream()
-                .filter(Objects::nonNull)
-                .map(col -> String.format(totalFormatString, replaceAliasWithId(col.getAlias()), tableAlias)),
-        groupedCountFields.stream()
-                .filter(Objects::nonNull)
-                .map(col -> String.format(groupedFormatString, col.getAlias())))
+    return Stream.concat(Stream.of(totalResultsString),
+        Stream.concat(
+          totalCountFields.stream()
+              .filter(Objects::nonNull)
+              .filter(col -> !col.getName().equals("id"))
+              .map(col -> String.format(totalFormatString, replaceAliasWithId(col.getAlias()), tableAlias)),
+          groupedCountFields.stream()
+              .filter(Objects::nonNull)
+              .map(col -> String.format(groupedFormatString, col.getAlias()))))
         .collect(Collectors.joining(", "));
   }
 
