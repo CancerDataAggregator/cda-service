@@ -40,6 +40,7 @@ public class Filter {
   private String mappingFileTableName = "";
   private String mappingFileEntityKey = "";
   private String mappingFileMappingKey = "";
+  private String commonAlias = "";
   private String entityTableCountPreselect = "";
   private String countPreselect = "";
   private String countSelect = "";
@@ -87,6 +88,7 @@ public class Filter {
         throw new RuntimeException("The entity table " + this.entityTableName + " does not contain a primary key or relationship key.");
       }
     }
+    setCommonAlias();
     constructFilter();
     setVariablesFromChildren();
     if (this.generator instanceof EntityCountSqlGenerator) {
@@ -125,28 +127,21 @@ public class Filter {
       List<Join> joinPath = this.joinBuilder.getPath(this.filterTableName, this.entityTableName, this.entityPK); // TODO: could optimize by building a better joinPath with this one
 
 
-      if (joinPath.isEmpty()){ // Filter on the entity table
-        Boolean found_alias = Boolean.FALSE;
-        for (ForeignKey fk : this.generator.getEntityTable().getForeignKeys()){
-          if (fk.getFromField().equals("integer_id_alias")) {
-            this.filterTableKey = "integer_id_alias";
-            found_alias = Boolean.TRUE;
-            this.mappingEntityKey = fk.getFields()[0];
-            this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
-            String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
-            this.filterPreselect = replaceKeywords(preselect_template);
+      if (joinPath.size() <= 1){ // Filter on the entity table
+        if (this.filterTableName.equals("somatic_mutation")) {
+          this.filterTableKey = "cda_subject_alias";
+        } else {
+          this.filterTableKey = "integer_id_alias";
+        }
+        this.mappingEntityKey = this.commonAlias;
+        this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
+        String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
+        this.filterPreselect = replaceKeywords(preselect_template);
 
-            // Construct SELECT Statement for UNION/INTERSECT operations
-            String union_intersect_template = "SELECT FILTERTABLEKEY AS MAPPINGENTITYKEY FROM FILTERPRESELECTNAME";
-            this.unionIntersect = replaceKeywords(union_intersect_template);
-            break;
-          }
-        }
-        // If there is no integer_id_alias, the count query will not work
-        if (!found_alias) {
-          throw new RuntimeException(
-              String.format("integer_id_alias not found in foreign keys of %s", this.filterTableName));
-        }
+        // Construct SELECT Statement for UNION/INTERSECT operations
+        String union_intersect_template = "SELECT FILTERTABLEKEY AS MAPPINGENTITYKEY FROM FILTERPRESELECTNAME";
+        this.unionIntersect = replaceKeywords(union_intersect_template);
+
       } else { // Filter needs to be mapped from filter table to entity table
         this.filterTableKey = joinPath.get(0).getKey().getFromField();
         this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
@@ -154,6 +149,13 @@ public class Filter {
         this.filterPreselect = replaceKeywords(preselect_template);
 
         // Construct Mapping Preselects
+//        if (joinPath.size() == 1) {
+//          this.mappingTableName = joinPath.get(0).getKey().getDestinationTableName();
+//          this.mappingEntityKey = joinPath.get(1).getKey().getFromField();
+//          this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
+//          this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_id_preselectIDENTIFIER");
+//          String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
+//          this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
         if (joinPath.size() == 2) { // Direct mapping table present -> construct basic mapping preselect
           this.mappingTableName = joinPath.get(0).getKey().getDestinationTableName();
           this.mappingEntityKey = joinPath.get(1).getKey().getFromField();
@@ -311,6 +313,24 @@ public class Filter {
     }
     this.joinString = fullJoinString.toString();
   }
+  public void setCommonAlias(){
+    Boolean found_alias = Boolean.FALSE;
+    for (ForeignKey fk : this.generator.getEntityTable().getForeignKeys()){
+      if (fk.getFromField().equals("integer_id_alias")) {
+        found_alias = Boolean.TRUE;
+        if (fk.getDestinationTableName().equals("somatic_mutation")) {
+          continue;
+        }
+        this.commonAlias = fk.getFields()[0];
+        break;
+      }
+    }
+    // If there is no integer_id_alias, the count query will not work
+    if (!found_alias) {
+      throw new RuntimeException(
+              String.format("integer_id_alias not found in foreign keys of %s", this.entityTableName));
+    }
+  }
 
   public void setEntityTableCountPreselect(){
     String entity_preselect_template = "ENTITYTABLENAME_preselect AS (ENTITYSELECT FROMTABLES WHERECLAUSE)";
@@ -354,8 +374,14 @@ public class Filter {
   }
 
   public void setCountPreselectAndSelect(){
+    String countMethod = "";
+    if (this.entityTableName.equals("somatic_mutation")) {
+      countMethod = "COUNT(*)";
+    } else {
+      countMethod = String.format("COUNT(DISTINCT %s)", this.commonAlias);
+    }
     StringBuilder count_preselect = new StringBuilder();
-    StringBuilder count_select = new StringBuilder("SELECT (SELECT COUNT(*) FROM ENTITYTABLENAME_preselect) as total_count,");
+    StringBuilder count_select = new StringBuilder("SELECT (SELECT COUNTMETHOD FROM ENTITYTABLENAME_preselect) as total_count,");
 
     for (ColumnDefinition totalCountField : this.countGenerator.getTotalCountFields()){
 
@@ -374,7 +400,7 @@ public class Filter {
           count_select.append(replaceKeywords(field_select));
         }//TODO determine what happens if joinpath not 3
       } else if (!totalCountField.getName().equals("id")) {
-        String field_select = "(SELECT COUNT(TOTALCOUNTFIELDNAME) FROM ENTITYTABLENAME_preselect) AS ENTITYTABLENAME_id,";
+        String field_select = "(SELECT COUNTMETHOD FROM ENTITYTABLENAME_preselect) AS ENTITYTABLENAME_id,";
         field_select = field_select
                 .replace("TOTALCOUNTFIELDNAME", totalCountField.getName());
         count_select.append(replaceKeywords(field_select));
@@ -384,10 +410,10 @@ public class Filter {
       String field_preselect = "";
       String field_select = "";
       if (this.entityTableName.equals(groupedCountField.getTableName())){
-        field_preselect = "GROUPEDCOUNTFIELDNAME_count AS (SELECT row_to_json(subquery) AS json_GROUPEDCOUNTFIELDNAME FROM (SELECT GROUPEDCOUNTFIELDNAME, COUNT(*) AS count FROM ENTITYTABLENAME_preselect GROUP BY GROUPEDCOUNTFIELDNAME) AS subquery),";
+        field_preselect = "GROUPEDCOUNTFIELDNAME_count AS (SELECT row_to_json(subquery) AS json_GROUPEDCOUNTFIELDNAME FROM (SELECT GROUPEDCOUNTFIELDNAME, COUNTMETHOD AS count FROM ENTITYTABLENAME_preselect GROUP BY GROUPEDCOUNTFIELDNAME) AS subquery),";
         field_select = "(SELECT array_agg(json_GROUPEDCOUNTFIELDNAME) FROM GROUPEDCOUNTFIELDNAME_count) AS GROUPEDCOUNTFIELDNAME,";
       } else {
-        field_preselect = "GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME_count AS (SELECT row_to_json(subquery) AS json_GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME FROM (SELECT GROUPEDCOUNTFIELDNAME, COUNT(MAPPINGENTITYKEY) AS count FROM ENTITYTABLENAME_preselect GROUP BY GROUPEDCOUNTFIELDNAME) AS subquery),";
+        field_preselect = "GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME_count AS (SELECT row_to_json(subquery) AS json_GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME FROM (SELECT GROUPEDCOUNTFIELDNAME, COUNTMETHOD AS count FROM ENTITYTABLENAME_preselect GROUP BY GROUPEDCOUNTFIELDNAME) AS subquery),";
         field_select = "(SELECT array_agg(json_GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME) FROM GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME_count) AS GROUPEDCOUNTFIELDTABLENAME_GROUPEDCOUNTFIELDNAME,";
       }
       field_preselect = field_preselect
@@ -400,11 +426,11 @@ public class Filter {
               .replace("GROUPEDCOUNTFIELDTABLENAME", groupedCountField.getTableName());
       count_select.append(replaceKeywords(field_select));
     }
-    this.countPreselect = replaceKeywords(count_preselect.toString());
+    this.countPreselect = replaceKeywords(count_preselect.toString().replace("COUNTMETHOD", countMethod));
     if (this.countPreselect.endsWith(",")){
       this.countPreselect = this.countPreselect.substring(0, this.countPreselect.length() - 1);
     }
-    this.countSelect = replaceKeywords(count_select.toString());
+    this.countSelect = replaceKeywords(count_select.toString().replace("COUNTMETHOD", countMethod));
     if (this.countSelect.endsWith(",")){
       this.countSelect = this.countSelect.substring(0, this.countSelect.length() - 1);
     }
