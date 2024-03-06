@@ -126,14 +126,14 @@ public class Filter {
       // Use JoinPath to generate preselects
       List<Join> joinPath = this.joinBuilder.getPath(this.filterTableName, this.entityTableName, this.entityPK); // TODO: could optimize by building a better joinPath with this one
 
-
+      this.mappingEntityKey = this.commonAlias;
       if (joinPath.size() <= 1){ // Filter on the entity table
         if (this.filterTableName.equals("somatic_mutation")) {
           this.filterTableKey = "cda_subject_alias";
         } else {
           this.filterTableKey = "integer_id_alias";
         }
-        this.mappingEntityKey = this.commonAlias;
+
         this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
         String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
         this.filterPreselect = replaceKeywords(preselect_template);
@@ -148,9 +148,9 @@ public class Filter {
         String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
         this.filterPreselect = replaceKeywords(preselect_template);
 
+        // Construct Mapping Preselects
         if (joinPath.size() == 2) { // Direct mapping table present -> construct basic mapping preselect
           this.mappingTableName = joinPath.get(0).getKey().getDestinationTableName();
-          this.mappingEntityKey = joinPath.get(1).getKey().getFromField();
           this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_id_preselectIDENTIFIER");
           String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
@@ -158,7 +158,6 @@ public class Filter {
         } else if (joinPath.size() > 2) { // Need to apply joins to a mapping table
           this.setJoinString(joinPath);
           this.mappingTableName = joinPath.get(joinPath.size() - 1).getKey().getDestinationTableName();
-          this.mappingEntityKey = joinPath.get(joinPath.size() - 1).getKey().getFromField();
           this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_FILTERTABLENAME_id_preselectIDENTIFIER");
           String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
@@ -306,29 +305,40 @@ public class Filter {
     this.joinString = fullJoinString.toString();
   }
   public void setCommonAlias(){
-    Boolean found_alias = Boolean.FALSE;
-    for (ForeignKey fk : this.generator.getEntityTable().getForeignKeys()){
-      if (fk.getFromField().equals("integer_id_alias")) {
-        found_alias = Boolean.TRUE;
-        if (fk.getDestinationTableName().equals("somatic_mutation")) {
-          continue;
+    if (this.entityTableName.equals("somatic_mutation")) {
+      this.commonAlias = "cda_subject_alias";
+    } else {
+      boolean found_alias = Boolean.FALSE;
+      for (ForeignKey fk : this.generator.getEntityTable().getForeignKeys()) {
+        if (fk.getFromField().equals("integer_id_alias")) {
+          found_alias = Boolean.TRUE;
+          if (fk.getDestinationTableName().equals("somatic_mutation")) {
+            continue;
+          }
+          this.commonAlias = fk.getFields()[0];
+          break;
         }
-        this.commonAlias = fk.getFields()[0];
-        break;
       }
-    }
-    // If there is no integer_id_alias, the count query will not work
-    if (!found_alias) {
-      throw new RuntimeException(
-              String.format("integer_id_alias not found in foreign keys of %s", this.entityTableName));
+      // If there is no integer_id_alias, the count query will not work
+      if (!found_alias) {
+        throw new RuntimeException(
+                String.format("integer_id_alias not found in foreign keys of %s", this.entityTableName));
+      }
     }
   }
 
   public void setEntityTableCountPreselect(){
     String entity_preselect_template = "ENTITYTABLENAME_preselect AS (ENTITYSELECT FROMTABLES WHERECLAUSE)";
-    StringBuilder entitySelect = new StringBuilder("SELECT DISTINCT ENTITYTABLENAME.integer_id_alias AS MAPPINGENTITYKEY");
+    StringBuilder entitySelect = new StringBuilder();
     StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
-    StringBuilder whereClause = new StringBuilder("WHERE integer_id_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
+    StringBuilder whereClause = new StringBuilder();
+    if (this.entityTableName.equals("somatic_mutation")){
+      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.cda_subject_alias");
+      whereClause.append("WHERE cda_subject_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
+    } else {
+      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.integer_id_alias AS MAPPINGENTITYKEY");
+      whereClause.append("WHERE integer_id_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
+    }
     ArrayList<ColumnDefinition> allCountFields = new ArrayList<>();
     allCountFields.addAll(this.countGenerator.getTotalCountFields());
     allCountFields.addAll(this.countGenerator.getGroupedCountFields());
