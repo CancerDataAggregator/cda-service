@@ -129,7 +129,7 @@ public class Filter {
       this.mappingEntityKey = this.commonAlias;
       if (joinPath.size() <= 1){ // Filter on the entity table
         if (this.filterTableName.equals("somatic_mutation")) {
-          this.filterTableKey = "cda_subject_alias";
+          this.filterTableKey = "cda_subject_alias"; // TODO revert when column name gets updated to subject_alias
         } else {
           this.filterTableKey = "integer_id_alias";
         }
@@ -148,9 +148,11 @@ public class Filter {
         String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
         this.filterPreselect = replaceKeywords(preselect_template);
 
+
         // Construct Mapping Preselects
         if (joinPath.size() == 2) { // Direct mapping table present -> construct basic mapping preselect
           this.mappingTableName = joinPath.get(0).getKey().getDestinationTableName();
+          // TODO Add check that commonAlias exists in joined tables/mapping table
           this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_id_preselectIDENTIFIER");
           String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
@@ -274,7 +276,7 @@ public class Filter {
             .replace("JOINSTRING", this.joinString)
             .replace("MAPPINGTABLENAME", this.mappingTableName)
             .replace("MAPPINGFILTERKEY", this.mappingFilterKey)
-            .replace("MAPPINGENTITYKEY", this.mappingEntityKey)
+            .replace("MAPPINGENTITYKEY", this.mappingEntityKey) // TODO replace uses of mappingEntityKey w/commonAlias
             .replace("MAPPINGPRESELECTNAME", this.mappingPreselectName)
             .replace("FULLMAPPINGPRESELECT", this.mappingTablePreselect)
             .replace("UNIONINTERSECT", this.unionIntersect)
@@ -301,12 +303,13 @@ public class Filter {
                 .replace("FROMTABLENAME", fromTableName)
                 .replace("FROMFIELD", fromField));
       }
+      // TODO Add Check to stop of commonAlias present in destinationTable
     }
     this.joinString = fullJoinString.toString();
   }
   public void setCommonAlias(){
     if (this.entityTableName.equals("somatic_mutation")) {
-      this.commonAlias = "cda_subject_alias";
+      this.commonAlias = "cda_subject_alias"; // TODO revert when column name gets updated to subject_alias
     } else {
       boolean found_alias = Boolean.FALSE;
       for (ForeignKey fk : this.generator.getEntityTable().getForeignKeys()) {
@@ -333,8 +336,8 @@ public class Filter {
     StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
     StringBuilder whereClause = new StringBuilder();
     if (this.entityTableName.equals("somatic_mutation")){
-      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.cda_subject_alias");
-      whereClause.append("WHERE cda_subject_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
+      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.cda_subject_alias"); // TODO revert when column name gets updated to subject_alias
+      whereClause.append("WHERE cda_subject_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)"); // TODO revert when column name gets updated to subject_alias
     } else {
       entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.integer_id_alias AS MAPPINGENTITYKEY");
       whereClause.append("WHERE integer_id_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
