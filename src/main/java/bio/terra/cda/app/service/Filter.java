@@ -148,14 +148,6 @@ public class Filter {
         String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
         this.filterPreselect = replaceKeywords(preselect_template);
 
-        // Construct Mapping Preselects
-//        if (joinPath.size() == 1) {
-//          this.mappingTableName = joinPath.get(0).getKey().getDestinationTableName();
-//          this.mappingEntityKey = joinPath.get(1).getKey().getFromField();
-//          this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
-//          this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_id_preselectIDENTIFIER");
-//          String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
-//          this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
         if (joinPath.size() == 2) { // Direct mapping table present -> construct basic mapping preselect
           this.mappingTableName = joinPath.get(0).getKey().getDestinationTableName();
           this.mappingEntityKey = joinPath.get(1).getKey().getFromField();
@@ -386,7 +378,7 @@ public class Filter {
     for (ColumnDefinition totalCountField : this.countGenerator.getTotalCountFields()){
 
       if (!this.entityTableName.equals(totalCountField.getTableName())){
-        List<Join> joinPath = this.joinBuilder.getPath(totalCountField.getTableName(), this.entityTableName, this.mappingEntityKey); // TODO: could optimize by building a better joinPath with this one
+        List<Join> joinPath = this.joinBuilder.getPath(totalCountField.getTableName(), this.entityTableName, this.mappingEntityKey);
         if (joinPath.size() == 3){
           this.mappingFileTableName = joinPath.get(1).getKey().getDestinationTableName();
           this.mappingFileEntityKey = joinPath.get(2).getKey().getFromField();
@@ -398,7 +390,7 @@ public class Filter {
                   .replace("TOTALCOUNTFIELDNAME", totalCountField.getName())
                   .replace("TOTALCOUNTFIELDTABLENAME", totalCountField.getTableName());
           count_select.append(replaceKeywords(field_select));
-        }//TODO determine what happens if joinpath not 3
+        } // TODO determine what happens if joinpath not 3
       } else if (!totalCountField.getName().equals("id")) {
         String field_select = "(SELECT COUNTMETHOD FROM ENTITYTABLENAME_preselect) AS ENTITYTABLENAME_id,";
         field_select = field_select
