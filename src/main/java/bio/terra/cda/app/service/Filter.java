@@ -392,6 +392,14 @@ public class Filter {
 
       if (!this.entityTableName.equals(totalCountField.getTableName())){
         List<Join> joinPath = this.joinBuilder.getPath(totalCountField.getTableName(), this.entityTableName, this.mappingEntityKey);
+        if (joinPath.size() == 1){
+          this.mappingFileTableName = joinPath.get(0).getKey().getFromTableName();
+          String field_select = "(SELECT COUNT(DISTINCT(TOTALCOUNTFIELDNAME)) FROM TOTALCOUNTFIELDTABLENAME WHERE MAPPINGENTITYKEY IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect)) AS file_id,";
+          field_select = field_select
+                  .replace("TOTALCOUNTFIELDNAME", totalCountField.getName())
+                  .replace("TOTALCOUNTFIELDTABLENAME", totalCountField.getTableName());
+          count_select.append(replaceKeywords(field_select));
+        }
         if (joinPath.size() == 3){
           this.mappingFileTableName = joinPath.get(1).getKey().getDestinationTableName();
           this.mappingFileEntityKey = joinPath.get(2).getKey().getFromField();
