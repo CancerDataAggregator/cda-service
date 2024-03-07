@@ -1,18 +1,18 @@
 package bio.terra.cda.app.service;
 
+import bio.terra.cda.app.models.*;
 import bio.terra.cda.app.service.FilterUtils;
 import bio.terra.cda.app.builders.JoinBuilder;
 import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
-import bio.terra.cda.app.models.ColumnDefinition;
-import bio.terra.cda.app.models.ForeignKey;
-import bio.terra.cda.app.models.Join;
 import bio.terra.cda.generated.model.Query;
 
 import java.util.ArrayList;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 // Class to construct optimized count preselect SQL statement from the filters in the original count(*) wrapped query
 public class Filter {
@@ -24,7 +24,8 @@ public class Filter {
   private Filter leftFilter = null;
   private Filter rightFilter = null;
   private String filterPreselect = "";
-  EntitySqlGenerator generator;
+  private EntitySqlGenerator generator;
+  private DataSetInfo dataSetInfo;
   private EntityCountSqlGenerator countGenerator = null;
   private JoinBuilder joinBuilder;
   private String entityTableName;
@@ -79,6 +80,7 @@ public class Filter {
 
   public void buildFilter(EntitySqlGenerator generator){
     this.generator = generator;
+    this.dataSetInfo = this.generator.getDataSetInfo();
     this.joinBuilder = this.generator.getJoinBuilder();
     this.entityTableName = generator.getEntityTableName();
 
@@ -134,7 +136,7 @@ public class Filter {
       this.mappingEntityKey = this.commonAlias;
       if (joinPath.size() <= 1){ // Filter on the entity table
         if (this.filterTableName.equals("somatic_mutation")) {
-          this.filterTableKey = "subject_alias"; // TODO revert when column name gets updated to subject_alias
+          this.filterTableKey = "subject_alias";
         } else {
           this.filterTableKey = "integer_id_alias";
         }
@@ -157,7 +159,13 @@ public class Filter {
         // Construct Mapping Preselects
         if (joinPath.size() == 2) { // Direct mapping table present -> construct basic mapping preselect
           this.mappingTableName = joinPath.get(0).getKey().getDestinationTableName();
-          // TODO Add check that commonAlias exists in joined tables/mapping table
+          List<String> mappingTableColumnNames = Arrays.stream(this.dataSetInfo
+                          .getTableInfo(this.mappingTableName)
+                          .getColumnDefinitions())
+                  .sequential().map(ColumnDefinition::getName).collect(Collectors.toList());
+          if (!mappingTableColumnNames.contains(commonAlias)){
+            throw new RuntimeException(String.format("Common alias '%s' not found in joinPath from %s table", this.commonAlias, this.filterTableName));
+          }
           this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_id_preselectIDENTIFIER");
           String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
@@ -295,6 +303,7 @@ public class Filter {
   }
   public void setJoinString(List<Join> joinPath){ // Builds out join statements from JoinPath
     StringBuilder fullJoinString = new StringBuilder();
+    boolean isCommonAliasFound = Boolean.FALSE;
     for (Join join : joinPath) {
       if (join != joinPath.get(joinPath.size() - 1)) { // Don't need final path since it will always be entity table since we have a mapping table before it
         String join_template = " INNER JOIN DESTINATIONTABLENAME AS DESTINATIONTABLENAME ON FROMTABLENAME.FROMFIELD = DESTINATIONTABLENAME.DESTINATIONFIELD";
@@ -308,7 +317,18 @@ public class Filter {
                 .replace("FROMTABLENAME", fromTableName)
                 .replace("FROMFIELD", fromField));
       }
-      // TODO Add Check to stop of commonAlias present in destinationTable
+      List<String> joinTableColumnNames = Arrays.stream(this.dataSetInfo
+                              .getTableInfo(join.getKey()
+                              .getDestinationTableName())
+                              .getColumnDefinitions())
+                              .sequential().map(ColumnDefinition::getName).collect(Collectors.toList());
+      if (joinTableColumnNames.contains(commonAlias)){
+        isCommonAliasFound = Boolean.TRUE;
+        break;
+      }
+    }
+    if (!isCommonAliasFound){
+      throw new RuntimeException(String.format("Common alias '%s' not found in joinPath from %s table", this.commonAlias, this.filterTableName));
     }
     this.joinString = fullJoinString.toString();
   }
@@ -319,8 +339,8 @@ public class Filter {
     StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
     StringBuilder whereClause = new StringBuilder();
     if (this.entityTableName.equals("somatic_mutation")){
-      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.subject_alias"); // TODO revert when column name gets updated to subject_alias
-      whereClause.append("WHERE subject_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)"); // TODO revert when column name gets updated to subject_alias
+      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.subject_alias");
+      whereClause.append("WHERE subject_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
     } else {
       entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.integer_id_alias AS MAPPINGENTITYKEY");
       whereClause.append("WHERE integer_id_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
@@ -394,7 +414,7 @@ public class Filter {
                   .replace("TOTALCOUNTFIELDNAME", totalCountField.getName())
                   .replace("TOTALCOUNTFIELDTABLENAME", totalCountField.getTableName());
           count_select.append(replaceKeywords(field_select));
-        } // TODO determine what happens if joinpath not 3
+        } // TODO determine what happens if joinpath not 3 or 1
       } else if (!totalCountField.getName().equals("id")) {
         String field_select = "(SELECT COUNTMETHOD FROM ENTITYTABLENAME_preselect) AS ENTITYTABLENAME_id,";
         field_select = field_select
