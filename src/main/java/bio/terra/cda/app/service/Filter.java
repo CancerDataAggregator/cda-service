@@ -81,14 +81,19 @@ public class Filter {
     this.generator = generator;
     this.joinBuilder = this.generator.getJoinBuilder();
     this.entityTableName = generator.getEntityTableName();
-    this.entityPK = generator.getEntityTableFirstPK();
-    if (this.entityPK.trim().isEmpty()) {
-      this.entityPK = generator.getRelationshipFirstK();
-      if (this.entityPK.trim().isEmpty()) {
-        throw new RuntimeException("The entity table " + this.entityTableName + " does not contain a primary key or relationship key.");
-      }
+
+    if (this.entityTableName.equals("somatic_mutation")) {
+      this.entityPK = "subject_alias";
+      this.commonAlias = "subject_alias";
+    } else {
+      this.entityPK = generator.getEntityTableFirstPK();
+      this.commonAlias = String.format("%s_alias", this.entityTableName);
     }
-    setCommonAlias();
+    if (this.entityPK.trim().isEmpty()) {
+      throw new RuntimeException("The entity table " + this.entityTableName + " does not contain a primary key or relationship key.");
+    }
+
+
     constructFilter();
     setVariablesFromChildren();
     if (this.generator instanceof EntityCountSqlGenerator) {
@@ -129,7 +134,7 @@ public class Filter {
       this.mappingEntityKey = this.commonAlias;
       if (joinPath.size() <= 1){ // Filter on the entity table
         if (this.filterTableName.equals("somatic_mutation")) {
-          this.filterTableKey = "cda_subject_alias"; // TODO revert when column name gets updated to subject_alias
+          this.filterTableKey = "subject_alias"; // TODO revert when column name gets updated to subject_alias
         } else {
           this.filterTableKey = "integer_id_alias";
         }
@@ -307,28 +312,6 @@ public class Filter {
     }
     this.joinString = fullJoinString.toString();
   }
-  public void setCommonAlias(){
-    if (this.entityTableName.equals("somatic_mutation")) {
-      this.commonAlias = "cda_subject_alias"; // TODO revert when column name gets updated to subject_alias
-    } else {
-      boolean found_alias = Boolean.FALSE;
-      for (ForeignKey fk : this.generator.getEntityTable().getForeignKeys()) {
-        if (fk.getFromField().equals("integer_id_alias")) {
-          found_alias = Boolean.TRUE;
-          if (fk.getDestinationTableName().equals("somatic_mutation")) {
-            continue;
-          }
-          this.commonAlias = fk.getFields()[0];
-          break;
-        }
-      }
-      // If there is no integer_id_alias, the count query will not work
-      if (!found_alias) {
-        throw new RuntimeException(
-                String.format("integer_id_alias not found in foreign keys of %s", this.entityTableName));
-      }
-    }
-  }
 
   public void setEntityTableCountPreselect(){
     String entity_preselect_template = "ENTITYTABLENAME_preselect AS (ENTITYSELECT FROMTABLES WHERECLAUSE)";
@@ -336,8 +319,8 @@ public class Filter {
     StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
     StringBuilder whereClause = new StringBuilder();
     if (this.entityTableName.equals("somatic_mutation")){
-      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.cda_subject_alias"); // TODO revert when column name gets updated to subject_alias
-      whereClause.append("WHERE cda_subject_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)"); // TODO revert when column name gets updated to subject_alias
+      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.subject_alias"); // TODO revert when column name gets updated to subject_alias
+      whereClause.append("WHERE subject_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)"); // TODO revert when column name gets updated to subject_alias
     } else {
       entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.integer_id_alias AS MAPPINGENTITYKEY");
       whereClause.append("WHERE integer_id_alias IN (SELECT MAPPINGENTITYKEY FROM ENTITYTABLENAME_preselect_ids)");
