@@ -131,7 +131,7 @@ public class Filter {
       this.filterQuery = this.filterQuery.replace(this.filterTableName +".", "");
 
       // Use JoinPath to generate preselects
-      List<Join> joinPath = this.joinBuilder.getPath(this.filterTableName, this.entityTableName, this.entityPK); // TODO: could optimize by building a better joinPath with this one
+      List<Join> joinPath = this.joinBuilder.getPath(this.filterTableName, this.entityTableName, this.entityPK);
 
       this.mappingEntityKey = this.commonAlias;
       if (joinPath.size() <= 1){ // Filter on the entity table
@@ -175,7 +175,12 @@ public class Filter {
           this.mappingTableName = joinPath.get(joinPath.size() - 1).getKey().getDestinationTableName();
           this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_FILTERTABLENAME_id_preselectIDENTIFIER");
-          String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
+          String mapping_preselect_template = "";
+          if (this.filterTableName.equals("somatic_mutation")){
+            mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE subject.MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
+          } else {
+            mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT MAPPINGENTITYKEY FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
+          }
           this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
         }
         // Construct SELECT Statement for UNION/INTESECT opertations
@@ -352,7 +357,7 @@ public class Filter {
       String count_field_select_template = ", FIELDNAME";
       String fieldName = countField.getName();
       String fieldTableName = countField.getTableName();
-      if (!this.entityTableName.equals("file") && fieldTableName.contains("file")){ //TODO check expected behavior with file endpoint
+      if (!this.entityTableName.equals("file") && fieldTableName.contains("file")){
         continue;
       }
       if (!fieldTableName.equals(this.entityTableName)) {
@@ -414,7 +419,7 @@ public class Filter {
                   .replace("TOTALCOUNTFIELDNAME", totalCountField.getName())
                   .replace("TOTALCOUNTFIELDTABLENAME", totalCountField.getTableName());
           count_select.append(replaceKeywords(field_select));
-        } // TODO determine what happens if joinpath not 3 or 1
+        } // TODO determine what happens if joinpath not 3 or 1 ANSWER: Does not happen in current schema
       } else if (!totalCountField.getName().equals("id")) {
         String field_select = "(SELECT COUNTMETHOD FROM ENTITYTABLENAME_preselect) AS ENTITYTABLENAME_id,";
         field_select = field_select

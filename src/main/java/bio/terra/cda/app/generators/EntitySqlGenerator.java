@@ -224,8 +224,12 @@ public class EntitySqlGenerator extends SqlGenerator {
     return this.entityTable.getTableName();
   }
   public String getEntityTableFirstPK(){
-    List<ColumnDefinition> pkcols = this.entityTable.getPrimaryKeys();
-    return pkcols.isEmpty() ? "" : this.entityTable.getPrimaryKeys().get(0).getName();
+    List<String> pkcols = this.entityTable.getPrimaryKeys().stream().map(ColumnDefinition::getName).collect(Collectors.toList());
+    if (pkcols.contains("integer_id_alias")){
+      return "integer_id_alias";
+    } else {
+      return pkcols.isEmpty() ? "" : pkcols.get(0);
+    }
   }
   public DataSetInfo getDataSetInfo(){
     return this.dataSetInfo;

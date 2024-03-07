@@ -3094,32 +3094,8 @@
   "alter": {
    "columns": [
     {
-     "name": "cda_subject_id",
-     "constraint_name": "somatic_mutation_cda_subject_id_fkey",
-     "references": {
-      "table": "subject",
-      "schema": "public",
-      "on_delete": null,
-      "on_update": null,
-      "deferrable_initially": null,
-      "column": "id"
-     }
-    },
-    {
-     "name": "cda_subject_alias",
-     "constraint_name": "somatic_mutation_cda_subject_integer_id_alias_fkey",
-     "references": {
-      "table": "subject",
-      "schema": "public",
-      "on_delete": null,
-      "on_update": null,
-      "deferrable_initially": null,
-      "column": "integer_id_alias"
-     }
-    },
-    {
      "name": "subject_alias",
-     "constraint_name": "somatic_mutation_cda_subject_integer_id_alias_fkey",
+     "constraint_name": "somatic_mutation_subject_integer_id_alias_fkey",
      "references": {
       "table": "subject",
       "schema": "public",
