@@ -255,29 +255,38 @@ public class DataSetInfo {
       ColumnDefinition[] cols = table.getColumnDefinitions();
       final boolean externalFields = !table.isMappingTable();
 
-      if (tableName.contains("associated_project")) {
+      // some tables have both internal and external columns, so we need to add the columns to the correct maps
+      if (tableName.contains("associated_project") || tableName.equals("somatic_mutation")) {
         Map<Boolean, List<ColumnDefinition>> partitionedList =
             Arrays.stream(cols)
                 .collect(
-                    Collectors.partitioningBy(c -> c.getName().contains("associated_project")));
+                    Collectors.partitioningBy(c -> c.getName().contains("associated_project") || !c.getName().endsWith("_alias")));
         partitionedList.get(true).forEach(col -> addExternalFieldMapEntry(col, tableName));
         partitionedList.get(false).forEach(col -> addInternalFieldMapEntry(col, tableName));
       } else {
-        // skip fields that are just foreign keys to entity tables
         Arrays.stream(cols)
+            // the following filter is a hack that has evolved first as we moved to using mapping tables (this was
+            // necessary because we used to have field names like "subject_id" which would conflict with the resolution
+            // of subject.id being aliased as "subject_id")
+            // then when we moved to using field names like "subject_alias" in the mapping tables, we wanted to be able to
+            // use a text substitution of "alias" -> "id" when returning results so we wouldn't be exposing internal
+            // names in count endpoint results. if we don't remove these relationships here we end up with field names like
+            // "subject_identifier_subject_alias" which when we substitute "alias" -> "id" becomes "subject_identifier_subject_id"
+            // which we don't want to expose to the user.
+            // this needs to be redesigned so that it is not so brittle in the future
             .filter(
                 field ->
-                    !(table.getRelationships().stream()
-                            .map(rel -> rel.getFromField())
-                            .collect(Collectors.toList()))
-                        .contains(field.getName()))
+                   !(table.getRelationships().stream()
+                       .map(rel -> rel.getFromField())
+                       .collect(Collectors.toList()))
+                       .contains(field.getName()))
             .forEach(
                 col -> {
-                    if (externalFields) {
-                        addExternalFieldMapEntry(col, tableName);
-                    } else {
-                        addInternalFieldMapEntry(col, tableName);
-                    }
+                  if (externalFields) {
+                    addExternalFieldMapEntry(col, tableName);
+                  } else {
+                    addInternalFieldMapEntry(col, tableName);
+                  }
                 });
       }
     }

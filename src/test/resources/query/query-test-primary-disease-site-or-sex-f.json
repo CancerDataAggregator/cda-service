@@ -1,0 +1,25 @@
+{
+    "node_type": "OR",
+    "l": {
+        "node_type": "LIKE",
+        "l": {
+            "node_type": "column",
+            "value": "sex"
+        },
+        "r": {
+            "node_type": "quoted",
+            "value": "%F%"
+        }
+    },
+    "r": {
+        "node_type": "LIKE",
+        "l": {
+            "node_type": "column",
+            "value": "primary_diagnosis_site"
+        },
+        "r": {
+            "node_type": "quoted",
+            "value": "%cerv%"
+        }
+    }
+}

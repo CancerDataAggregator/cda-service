@@ -5,13 +5,13 @@ import java.io.IOException;
 
 @CountQueryGenerator(
     entity = "somatic_mutation",
-    totalFieldsToCount = {"cda_subject_id"},
+    totalFieldsToCount = {"subject_alias"},
     groupedFieldsToCount = {
-      "project_short_name",
-      "NCBI_Build",
-      "Chromosome",
-      "Variant_Type",
-      "One_Consequence"
+      "chromosome",
+      "primary_site",
+      "variant_classification",
+      "variant_type",
+      "mutation_status"
     })
 public class MutationCountSqlGenerator extends EntityCountSqlGenerator {
   public MutationCountSqlGenerator(Query rootQuery) {

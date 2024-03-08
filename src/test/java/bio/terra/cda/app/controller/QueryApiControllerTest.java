@@ -28,15 +28,20 @@ import java.util.List;
 @WebMvcTest
 class QueryApiControllerTest {
 
-  @Autowired private MockMvc mvc;
+  @Autowired
+  private MockMvc mvc;
 
-  @Autowired private ObjectMapper objectMapper;
+  @Autowired
+  private ObjectMapper objectMapper;
 
-  @MockBean private QueryService queryService;
+  @MockBean
+  private QueryService queryService;
 
-  @MockBean private ApplicationConfiguration appConfig;
+  @MockBean
+  private ApplicationConfiguration appConfig;
 
-  @MockBean private RdbmsSchema rdbmsSchema;
+  @MockBean
+  private RdbmsSchema rdbmsSchema;
 
   @Test
   void uniqueValuesTest() throws Exception {

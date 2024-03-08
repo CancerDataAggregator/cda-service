@@ -1,6 +1,7 @@
 package bio.terra.cda.app.service;
 
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
+import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.util.SqlTemplate;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +37,7 @@ public class QueryService {
 
   @Autowired
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+  private SqlGenerator generator;
 
   @Autowired
   public QueryService(ObjectMapper objectMapper) {
@@ -83,17 +86,73 @@ public class QueryService {
   }
 
   public Long getTotalRowCount(SqlGenerator generator) {
-    return namedParameterJdbcTemplate.queryForObject(
-        SqlTemplate.countWrapper(generator.getSqlStringForMaxRows()),
-        generator.getNamedParameterMap(), Long.class);
+    String sqlCount = SqlTemplate.countWrapper(generator.getSqlStringForMaxRows());
+    MapSqlParameterSource param_map = generator.getNamedParameterMap();
+    if ((generator instanceof EntitySqlGenerator)){
+      String optimizedSqlCount = optimizeIncludeCountQuery(sqlCount, (EntitySqlGenerator) generator);
+      return namedParameterJdbcTemplate.queryForObject(
+              optimizedSqlCount,
+              param_map,
+              Long.class);
+    }
+    else{
+      return namedParameterJdbcTemplate.queryForObject(
+              sqlCount,
+              param_map,
+              Long.class);
+    }
+  }
+  public Long getTotalRowCountOG(SqlGenerator generator) {
+      return namedParameterJdbcTemplate.queryForObject(
+              SqlTemplate.countWrapper(generator.getSqlStringForMaxRows()),
+              generator.getNamedParameterMap(),
+              Long.class);
   }
 
+
+  public String optimizeIncludeCountQuery(String sqlCount, EntitySqlGenerator generator){
+    try {
+      Filter filterObj = new Filter(sqlCount, generator);
+      return filterObj.getIncludeCountQuery();
+    }catch (Exception exception) {
+      logger.warn(String.format("Sql: %s, Exception: %s",sqlCount,exception.getMessage()));
+      return sqlCount;
+    }
+  }
+
+
+
   public List<JsonNode> generateAndRunQuery(SqlGenerator generator) {
-    return namedParameterJdbcTemplate.query(
-        SqlTemplate.jsonWrapper(generator.getSqlString()),
-        generator.getNamedParameterMap(),
-        new JsonNodeRowMapper(objectMapper)
-    );
+    String sqlQuery = SqlTemplate.jsonWrapper(generator.getSqlString());
+    MapSqlParameterSource param_map = generator.getNamedParameterMap();
+    if ((generator instanceof EntityCountSqlGenerator)){
+      String optimizedSqlCount = optimizeCountEndpointQuery(sqlQuery, (EntityCountSqlGenerator) generator);
+      return namedParameterJdbcTemplate.query(
+              optimizedSqlCount,
+              param_map,
+              new JsonNodeRowMapper(objectMapper));
+    }
+    else{
+      return namedParameterJdbcTemplate.query(
+              sqlQuery,
+              param_map,
+              new JsonNodeRowMapper(objectMapper));
+    }
+  }
+  public String getReadableOptimizedCountQuery(SqlGenerator generator) {
+    String sqlQuery = SqlTemplate.jsonWrapper(generator.getSqlString());
+    String optimizedQuery = optimizeCountEndpointQuery(sqlQuery, (EntityCountSqlGenerator) generator);
+    return generator.getReadableQuerySqlArg(optimizedQuery);
+  }
+
+  public String optimizeCountEndpointQuery(String sqlCount, EntityCountSqlGenerator generator){
+    try {
+      Filter filterObj = new Filter(sqlCount, generator);
+      return filterObj.getCountEndpointQuery();
+    } catch (Exception exception){
+      logger.warn(String.format("Sql: %s, Exception: %s",sqlCount,exception.getMessage()));
+      return sqlCount;
+    }
   }
 
   public List<JsonNode> generateAndRunPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
@@ -142,3 +201,4 @@ public class QueryService {
   }
 
 }
+

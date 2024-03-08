@@ -6,6 +6,7 @@ import bio.terra.cda.app.operators.BasicOperator;
 import bio.terra.cda.app.util.*;
 import bio.terra.cda.generated.model.Query;
 import com.google.common.base.Strings;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,7 +21,6 @@ public class EntitySqlGenerator extends SqlGenerator {
   final boolean filesQuery;
 
   Map<ColumnDefinition, String> aggregatedFieldsAndSelectString = new LinkedHashMap<>();
-  boolean modularEntity;
   SelectBuilder selectBuilder = new SelectBuilder();
   QueryFieldBuilder queryFieldBuilder = new QueryFieldBuilder(false);
 
@@ -88,11 +88,11 @@ public class EntitySqlGenerator extends SqlGenerator {
   }
 
   public QueryContext buildQueryContext(
-      TableInfo entityTable, boolean filesQuery, boolean subQuery) {
+      TableInfo entityTable, boolean filesQuery) {
     return new QueryContext(entityTable.getTableName())
         .setFilesQuery(filesQuery)
         .setTableInfo(entityTable)
-        .setIncludeSelect(!subQuery)
+        .setIncludeSelect(true)
         .setQueryFieldBuilder(filesQuery ? filesQueryFieldBuilder : queryFieldBuilder)
         .setSelectBuilder(selectBuilder)
         .setJoinBuilder(joinBuilder)
@@ -102,21 +102,19 @@ public class EntitySqlGenerator extends SqlGenerator {
   }
 
   protected String generate() throws IllegalArgumentException {
-      return sql(entityTable.getTableName(), rootQuery, false, false, false);
+      return sql(entityTable.getTableName(), rootQuery, false);
   }
 
 
 
   protected String sql(
-      String tableOrSubClause,
+      String table,
       Query query,
-      boolean subQuery,
-      boolean hasSubClause,
       boolean ignoreWith)
       throws IllegalArgumentException {
-    QueryContext ctx = buildQueryContext(this.entityTable, filesQuery, subQuery);
+    QueryContext ctx = buildQueryContext(this.entityTable, filesQuery);
 
-    String results = resultsQuery(query, tableOrSubClause, subQuery, ctx, hasSubClause);
+    String results = resultsQuery(query, ctx);
 
     String withStatement = "";
     if (this.viewListBuilder.hasAny() && !ignoreWith) {
@@ -129,42 +127,15 @@ public class EntitySqlGenerator extends SqlGenerator {
 
   protected String resultsQuery(
       Query query,
-      String tableOrSubClause,
-      boolean subQuery,
-      QueryContext ctx,
-      boolean hasSubClause) {
+      QueryContext ctx) {
     TableInfo startTable = this.entityTable;
 
-    if (query.getNodeType() == Query.NodeTypeEnum.SUBQUERY) {
-      // A SUBQUERY is built differently from other queries. The FROM clause is the
-      // SQL version of
-      // the right subtree, instead of using table. The left subtree is now the top
-      // level query.
-
-      return resultsQuery(
-          query.getL(),
-          String.format(
-              "(%s) as %s",
-              sql(tableOrSubClause, query.getR(), true, hasSubClause, true),
-              startTable.getTableAlias(this.dataSetInfo)),
-          subQuery,
-          buildQueryContext(
-              ctx.getTableInfo(), filesQuery, subQuery), // added  supertable to get parent
-          true);
-    }
-
     String condition = ((BasicOperator) query).buildQuery(ctx);
-    String selectFields =
-        subQuery
-            ? ""
-            : getSelect(ctx)
-                .collect(Collectors.joining(", "));
+    String selectFields = getSelect(ctx).collect(Collectors.joining(", "));
 
     var fromClause =
         Stream.concat(
-            hasSubClause
-                ? Stream.of(tableOrSubClause)
-                : Stream.of(
+            Stream.of(
                     String.format(
                         "%s AS %s",
                         startTable.getTableName(),
@@ -178,13 +149,6 @@ public class EntitySqlGenerator extends SqlGenerator {
       orderBys = defaultOrderBy.toString();
     }
     ctx.addOrderBysToGroupBys();
-    if (subQuery) {
-      return SqlTemplate.regularQuery(
-              String.format("%s.*", startTable.getTableAlias(this.dataSetInfo)),
-              fromString,
-              condition,
-              orderBys);
-    }
 
     return SqlTemplate.resultsQuery(
         selectFields,
@@ -251,4 +215,24 @@ public class EntitySqlGenerator extends SqlGenerator {
             .map(View::toString)
             .collect(Collectors.joining(", ")));
   }
+
+  public JoinBuilder getJoinBuilder(){
+    return this.joinBuilder;
+  }
+
+  public String getEntityTableName(){
+    return this.entityTable.getTableName();
+  }
+  public String getEntityTableFirstPK(){
+    List<String> pkcols = this.entityTable.getPrimaryKeys().stream().map(ColumnDefinition::getName).collect(Collectors.toList());
+    if (pkcols.contains("integer_id_alias")){
+      return "integer_id_alias";
+    } else {
+      return pkcols.isEmpty() ? "" : pkcols.get(0);
+    }
+  }
+  public DataSetInfo getDataSetInfo(){
+    return this.dataSetInfo;
+  }
+  public TableInfo getEntityTable() { return this.entityTable; }
 }

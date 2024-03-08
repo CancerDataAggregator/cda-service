@@ -3078,26 +3078,24 @@
     "nullable": false,
     "default": null,
     "check": null
+   },
+   {
+    "name": "subject_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
   "alter": {
    "columns": [
     {
-     "name": "cda_subject_id",
-     "constraint_name": "somatic_mutation_cda_subject_id_fkey",
-     "references": {
-      "table": "subject",
-      "schema": "public",
-      "on_delete": null,
-      "on_update": null,
-      "deferrable_initially": null,
-      "column": "id"
-     }
-    },
-    {
-     "name": "cda_subject_alias",
-     "constraint_name": "somatic_mutation_cda_subject_integer_id_alias_fkey",
+     "name": "subject_alias",
+     "constraint_name": "somatic_mutation_subject_integer_id_alias_fkey",
      "references": {
       "table": "subject",
       "schema": "public",

@@ -80,7 +80,12 @@ public class QueryApiController implements QueryApi {
       EntitySqlGenerator sqlGenerator) {
     long start = System.currentTimeMillis();
     List<JsonNode> result = queryService.generateAndRunQuery(sqlGenerator);
-    String readableSql = sqlGenerator.getReadableQuerySql();
+    String readableSql = "";
+    if (sqlGenerator instanceof EntityCountSqlGenerator) {
+      readableSql = queryService.getReadableOptimizedCountQuery(sqlGenerator);
+    } else {
+      readableSql = sqlGenerator.getReadableQuerySql();
+    }
     queryService.logQuery(System.currentTimeMillis()-start, readableSql, result, Optional.empty());
     return new QueryResponseData()
             .querySql(readableSql)
