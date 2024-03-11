@@ -156,12 +156,23 @@ public class QueryService {
   }
 
   public List<JsonNode> generateAndRunPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
+    String sqlQuery = SqlTemplate.jsonWrapper(SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit));
+    MapSqlParameterSource param_map =  generator.getNamedParameterMap();
+    String optimizedPagedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
     return namedParameterJdbcTemplate.query(
-        SqlTemplate.jsonWrapper(
-            SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit)),
-        generator.getNamedParameterMap(),
+        optimizedPagedQuery,
+        param_map,
         new JsonNodeRowMapper(objectMapper)
     );
+  }
+  public String optimizePagedQuery(String sqlQuery, EntitySqlGenerator generator){
+    try {
+      Filter filterObj = new Filter(sqlQuery, generator);
+      return filterObj.getFilePagedPreselectQuery();
+    }catch (Exception exception) {
+      logger.warn(String.format("Sql: %s, Exception: %s",sqlQuery,exception.getMessage()));
+      return sqlQuery;
+    }
   }
 
   public List<JsonNode> runPagedQuery(String sqlStr, Integer offset, Integer limit) {
