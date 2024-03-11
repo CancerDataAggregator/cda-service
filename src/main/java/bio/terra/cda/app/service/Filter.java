@@ -136,6 +136,8 @@ public class Filter {
       if (joinPath.size() <= 1){ // Filter on the entity table
         if (this.filterTableName.equals("somatic_mutation")) {
           this.filterTableKey = "subject_alias";
+        } else if (this.filterTableName.endsWith("_data_source")) {
+          this.filterTableKey = this.commonAlias;
         } else {
           this.filterTableKey = "integer_id_alias";
         }
@@ -239,11 +241,11 @@ public class Filter {
     if (this.isRoot && this.leftFilter == null && this.rightFilter == null){
       // Don't need to add mapping table preselect statements and union/intersect statements if the query isn't nested
       if (this.entityTableName.equals(this.filterTableName)){
-        String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(FILTERTABLEKEY)) FROM FILTERPRESELECTNAME;";
+        String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(FILTERTABLEKEY)) FROM FILTERPRESELECTNAME";
         this.includeCountQuery = replaceKeywords(count_template);
       } else {
 
-        String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME);";
+        String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME)";
         this.includeCountQuery = replaceKeywords(count_template);
       }
 
