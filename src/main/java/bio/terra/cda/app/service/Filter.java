@@ -137,7 +137,7 @@ public class Filter {
         if (this.filterTableName.equals("somatic_mutation")) {
           this.filterTableKey = "subject_alias";
         } else if (this.filterTableName.endsWith("_data_source")) {
-          this.filterTableKey = this.commonAlias;
+          this.filterTableKey = String.format("%s_alias", this.filterTableName.replace("_data_source", ""));
         } else {
           this.filterTableKey = "integer_id_alias";
         }
@@ -155,7 +155,11 @@ public class Filter {
         this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
         String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
         this.filterPreselect = replaceKeywords(preselect_template);
-
+        if (this.filterTableName.endsWith("_data_source")){
+          this.mappingFilterKey = joinPath.get(0).getKey().getFromField();
+        } else {
+          this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
+        }
 
         // Construct Mapping Preselects
         if (joinPath.size() == 2) { // Direct mapping table present -> construct basic mapping preselect
@@ -167,18 +171,18 @@ public class Filter {
           if (!mappingTableColumnNames.contains(commonAlias)){
             throw new RuntimeException(String.format("Common alias '%s' not found in joinPath from %s table", this.commonAlias, this.filterTableName));
           }
-          this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_id_preselectIDENTIFIER");
           String mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
           this.mappingTablePreselect = replaceKeywords(mapping_preselect_template);
         } else if (joinPath.size() > 2) { // Need to apply joins to a mapping table
           this.setJoinString(joinPath);
           this.mappingTableName = joinPath.get(joinPath.size() - 1).getKey().getDestinationTableName();
-          this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_FILTERTABLENAME_id_preselectIDENTIFIER");
           String mapping_preselect_template = "";
           if (this.filterTableName.equals("somatic_mutation")){
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE subject.MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
+          } else if (this.filterTableName.endsWith("_data_source")){
+            mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE FILTERTABLENAME.MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
           } else {
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
           }
@@ -240,21 +244,21 @@ public class Filter {
   public void setIncludeCountQuery(){
     if (this.isRoot && this.leftFilter == null && this.rightFilter == null){
       // Don't need to add mapping table preselect statements and union/intersect statements if the query isn't nested
-      if (this.entityTableName.equals(this.filterTableName)){
+      if (this.entityTableName.equals(this.filterTableName) || this.filterTableName.endsWith("_data_source")){
         String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(FILTERTABLEKEY)) FROM FILTERPRESELECTNAME";
         this.includeCountQuery = replaceKeywords(count_template);
       } else {
-
-        String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME)";
-        this.includeCountQuery = replaceKeywords(count_template);
+          String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME)";
+          this.includeCountQuery = replaceKeywords(count_template);
       }
+
 
     } else if (this.isRoot) {
       if (this.mappingTablePreselect.isEmpty()){ // Filters only applied to entity table
-        String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM UNIONINTERSECT as count_result";
+        String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM (UNIONINTERSECT) as count_result";
         this.includeCountQuery = replaceKeywords(count_template);
       } else {
-        String count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM UNIONINTERSECT as count_result";
+        String count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM (UNIONINTERSECT) as count_result";
         this.includeCountQuery = replaceKeywords(count_template);
       }
 
