@@ -288,13 +288,13 @@ requires = ["setuptools", "wheel"]  # PEP 508 specifications.
 			pyprojectTomlTemplate += line + "\n"
 		}
 
-		for( line  in new File("./build/generated-client/requirements.txt")){
+		for( line in new File( System.getenv().get('PWD') + "/build/generated-client/requirements.txt" ) ) {
 					String[] parts = line.split("[><=]")
 					String op = "="
 			pyprojectTomlTemplate += "${parts[0].trim()} ${op} \"${parts[parts.length - 1].trim()}\" \n"
 		}
 
-		new File("./build/generated-client/pyproject.toml").write(pyprojectTomlTemplate)
+		new File( System.getenv().get('PWD') + "/build/generated-client/pyproject.toml" ).write( pyprojectTomlTemplate )
 		println pyprojectTomlTemplate
 	}
 }
