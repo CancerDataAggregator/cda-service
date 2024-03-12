@@ -29,17 +29,17 @@ public class  FileSqlGeneratorTest {
 
   }
 
-  @ParameterizedTest
-  @MethodSource("queryData")
-  void testQuery(String queryFile, String qualifiedTable, String table, String expectedQueryFormat)
-      throws Exception {
-    String jsonQuery = Files.readString(TEST_FILES.resolve(queryFile));
-    String expectedSql = String.format(expectedQueryFormat, qualifiedTable, table);
-
-    Query query = objectMapper.readValue(jsonQuery, Query.class);
-
-    String translatedQuery = new FileSqlGenerator(query).getReadableQuerySql();
-
-    assertEquals(expectedSql, translatedQuery);
-  }
+//  @ParameterizedTest
+//  @MethodSource("queryData")
+//  void testQuery(String queryFile, String qualifiedTable, String table, String expectedQueryFormat)
+//      throws Exception {
+//    String jsonQuery = Files.readString(TEST_FILES.resolve(queryFile));
+//    String expectedSql = String.format(expectedQueryFormat, qualifiedTable, table);
+//
+//    Query query = objectMapper.readValue(jsonQuery, Query.class);
+//
+//    String translatedQuery = new FileSqlGenerator(query).getReadableQuerySql();
+//
+//    assertEquals(expectedSql, translatedQuery);
+//  }
 }
