@@ -41,8 +41,7 @@ public class MetaApiController implements MetaApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<SystemStatus> serviceStatus() {
-    //TODO actually validate systems
-    return ResponseEntity.ok(new SystemStatus());
+    return ResponseEntity.ok(queryService.postgresCheck());
   }
 
   // For now, the dataset description is hardcoded. In the future, it will probably be read from a
