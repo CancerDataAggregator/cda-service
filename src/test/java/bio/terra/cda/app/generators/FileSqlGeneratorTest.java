@@ -29,10 +29,10 @@ public class  FileSqlGeneratorTest {
 
   }
 
-//  @ParameterizedTest
-//  @MethodSource("queryData")
-//  void testQuery(String queryFile, String qualifiedTable, String table, String expectedQueryFormat)
-//      throws Exception {
+  @ParameterizedTest
+  @MethodSource("queryData")
+  void testQuery(String queryFile, String qualifiedTable, String table, String expectedQueryFormat)
+      throws Exception {
 //    String jsonQuery = Files.readString(TEST_FILES.resolve(queryFile));
 //    String expectedSql = String.format(expectedQueryFormat, qualifiedTable, table);
 //
@@ -41,5 +41,5 @@ public class  FileSqlGeneratorTest {
 //    String translatedQuery = new FileSqlGenerator(query).getReadableQuerySql();
 //
 //    assertEquals(expectedSql, translatedQuery);
-//  }
+  }
 }
