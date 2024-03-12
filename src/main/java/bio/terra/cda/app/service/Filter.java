@@ -332,14 +332,18 @@ public class Filter {
       this.filePagedPreselectQuery = this.originalQuery;
       return;
     }
-    String file_alias_key = "integer_id_alias";
+    String file_alias_key = "file.integer_id_alias";
     String originalJoinString = this.originalQuery.substring(this.originalQuery.indexOf(replaceKeywords("FROM ENTITYTABLENAME AS ENTITYTABLENAME")), this.originalQuery.indexOf("WHERE"));
     if (!this.entityTableName.equals("file") && originalJoinString.contains("file AS file")){
 
       String fileTableJoinString = originalJoinString.substring(
               originalJoinString.indexOf("JOIN file AS file ON"),
               originalJoinString.indexOf(" = file.integer_id_alias") + " = file.integer_id_alias".length());
-      if (!fileTableJoinString.isEmpty()) {
+      String selectClause = this.originalReplaceFilterQuery.substring(
+              this.originalReplaceFilterQuery.indexOf(replaceKeywords("SELECT ENTITYTABLENAME")),
+              this.originalReplaceFilterQuery.indexOf(replaceKeywords("FROM ENTITYTABLENAME"))
+      );
+      if (!fileTableJoinString.isEmpty() && !selectClause.contains("file.")) {
         file_alias_key = fileTableJoinString.substring(
                 fileTableJoinString.indexOf("JOIN file AS file ON ") + "JOIN file AS file ON ".length(),
                 fileTableJoinString.indexOf(" = file.integer_id_alias"));
