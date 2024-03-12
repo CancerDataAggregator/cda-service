@@ -75,10 +75,6 @@ public class Filter {
     }
     String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf(WHERE) + WHERE.length()).trim();
     this.filterQuery = FilterUtils.parenthesisSubString(startingFilterString);
-//    String originalJoinString = this.originalQuery.substring(this.originalQuery.indexOf(replaceKeywords("FROM ENTITYTABLENAME AS ENTITYTABLENAME"), this.originalQuery.indexOf(WHERE)));
-//    if (originalJoinString.contains("JOIN")){
-//      this.originalReplaceJoinFilterQuery = this.originalQuery.replace(this.filterQuery, "(FILEREPLACEMENTFILTER)");
-//    }
     this.originalReplaceFilterQuery = this.originalQuery.replace(this.filterQuery, "(FILEREPLACEMENTFILTER)");
     buildFilter(generator);
   }
@@ -292,8 +288,13 @@ public class Filter {
         String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(FILTERTABLEKEY)) FROM FILTERPRESELECTNAME";
         this.includeCountQuery = replaceKeywords(count_template);
       } else {
+        if (this.mappingTablePreselect.isEmpty()) {
           String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME)";
           this.includeCountQuery = replaceKeywords(count_template);
+        } else {
+          String count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT SELECT COUNT(DISTINCT(FILTERTABLEKEY)) FROM MAPPINGTABLENAME WHERE FILTERTABLEKEY IN (SELECT COMMONALIAS FROM MAPPINGPRESELECTNAME)";
+          this.includeCountQuery = replaceKeywords(count_template);
+        }
       }
 
 
@@ -331,34 +332,34 @@ public class Filter {
       this.filePagedPreselectQuery = this.originalQuery;
       return;
     }
-    Boolean use_file_alias = Boolean.FALSE;
-    if (!this.entityTableName.equals("file")){
-      String fileTableJoinString = replaceKeywords("JOIN file AS file ON file_ENTITYTABLENAME.file_alias = file.integer_id_alias");
-      if (this.originalReplaceFilterQuery.contains("LEFT " + fileTableJoinString)){
-        use_file_alias = Boolean.TRUE;
-        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("LEFT " + fileTableJoinString, "");
-      } else if (this.originalReplaceFilterQuery.contains("INNER " + fileTableJoinString)){
-        use_file_alias = Boolean.TRUE;
-        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("INNER " + fileTableJoinString, "");
-      } else if (this.originalReplaceFilterQuery.contains("RIGHT " + fileTableJoinString)){
-        use_file_alias = Boolean.TRUE;
-        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("RIGHT " + fileTableJoinString, "");
-      } else if (this.originalReplaceFilterQuery.contains("FULL " + fileTableJoinString)){
-        use_file_alias = Boolean.TRUE;
-        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("FULL " + fileTableJoinString, "");
-      } else if (this.originalReplaceFilterQuery.contains(fileTableJoinString)){
-        use_file_alias = Boolean.TRUE;
-        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace(fileTableJoinString, "");
+    String file_alias_key = "integer_id_alias";
+    String originalJoinString = this.originalQuery.substring(this.originalQuery.indexOf(replaceKeywords("FROM ENTITYTABLENAME AS ENTITYTABLENAME")), this.originalQuery.indexOf("WHERE"));
+    if (!this.entityTableName.equals("file") && originalJoinString.contains("file AS file")){
+
+      String fileTableJoinString = originalJoinString.substring(
+              originalJoinString.indexOf("JOIN file AS file ON"),
+              originalJoinString.indexOf(" = file.integer_id_alias") + " = file.integer_id_alias".length());
+      if (!fileTableJoinString.isEmpty()) {
+        file_alias_key = fileTableJoinString.substring(
+                fileTableJoinString.indexOf("JOIN file AS file ON ") + "JOIN file AS file ON ".length(),
+                fileTableJoinString.indexOf(" = file.integer_id_alias"));
+        if (this.originalReplaceFilterQuery.contains("LEFT " + fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("LEFT " + fileTableJoinString, "");
+        } else if (this.originalReplaceFilterQuery.contains("INNER " + fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("INNER " + fileTableJoinString, "");
+        } else if (this.originalReplaceFilterQuery.contains("RIGHT " + fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("RIGHT " + fileTableJoinString, "");
+        } else if (this.originalReplaceFilterQuery.contains("FULL " + fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("FULL " + fileTableJoinString, "");
+        } else if (this.originalReplaceFilterQuery.contains(fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace(fileTableJoinString, "");
+        }
       }
     }
     String preselect_template = "WITH file_alias_preselect AS MATERIALIZED (SELECT integer_id_alias FROM file WHERE FILEFILTERS)";
     this.fileFilterPreselect = replaceKeywords(preselect_template);
-    String where_preselect = "";
-    if (use_file_alias){
-      where_preselect = replaceKeywords("file_ENTITYTABLENAME.file_alias IN (SELECT integer_id_alias FROM file_alias_preselect)");
-    } else {
-      where_preselect = "file.integer_id_alias IN (SELECT integer_id_alias FROM file_alias_preselect)";
-    }
+    String where_preselect = file_alias_key + " IN (SELECT integer_id_alias FROM file_alias_preselect)";
+
     if (this.getNonFileFilters().isEmpty()) {
       this.fileReplacementFilter = where_preselect;
     } else {
