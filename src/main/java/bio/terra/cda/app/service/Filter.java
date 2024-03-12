@@ -134,7 +134,7 @@ public class Filter {
       }
       this.filterTableName = this.filterQuery.substring(tableStartIndex, tableEndIndex);
       //Add optimization for File Paged Query
-      if (this.filterTableName.equals("subject")){ // TODO: replace with file
+      if (this.filterTableName.equals("file")){
         this.fileFilters = this.filterQuery;
       } else {
         this.nonFileFilters = this.filterQuery;
@@ -322,15 +322,15 @@ public class Filter {
     if (this.fileFilters.isEmpty()){
       this.filePagedPreselectQuery = this.originalQuery;
     }
-    String preselect_template = "WITH subject_alias_preselect AS MATERIALIZED (SELECT integer_id_alias FROM subject WHERE FILEFILTERS)"; //TODO change to file
+    String preselect_template = "WITH file_alias_preselect AS MATERIALIZED (SELECT integer_id_alias FROM file WHERE FILEFILTERS)";
     this.fileFilterPreselect = replaceKeywords(preselect_template);
     if (this.getNonFileFilters().isEmpty()) {
-      this.fileReplacementFilter = "subject.integer_id_alias IN (SELECT integer_id_alias FROM subject_alias_preselect)"; //TODO change to file
+      this.fileReplacementFilter = "file.integer_id_alias IN (SELECT integer_id_alias FROM file_alias_preselect)";
     } else {
       if (this.andFileFilter) {
-        this.fileReplacementFilter = "subject.integer_id_alias IN (SELECT integer_id_alias FROM subject_alias_preselect) AND " + this.nonFileFilters;
+        this.fileReplacementFilter = "file.integer_id_alias IN (SELECT integer_id_alias FROM file_alias_preselect) AND " + this.nonFileFilters;
       } else {
-        this.fileReplacementFilter = "subject.integer_id_alias IN (SELECT integer_id_alias FROM subject_alias_preselect) OR " + this.nonFileFilters;
+        this.fileReplacementFilter = "file.integer_id_alias IN (SELECT integer_id_alias FROM file_alias_preselect) OR " + this.nonFileFilters;
       }
     }
     this.filePagedPreselectQuery = this.fileFilterPreselect + " " + replaceKeywords(this.originalReplaceFilterQuery);

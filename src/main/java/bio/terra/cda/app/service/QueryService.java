@@ -175,6 +175,12 @@ public class QueryService {
     }
   }
 
+  public String getReadableOptimizedPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
+    String sqlQuery = SqlTemplate.jsonWrapper(SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit));
+    String optimizedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
+    return generator.getReadableQuerySqlArg(optimizedQuery);
+  }
+
   public List<JsonNode> runPagedQuery(String sqlStr, Integer offset, Integer limit) {
     return this.runQuery(SqlTemplate.addPagingFields(sqlStr, offset, limit));
   }
