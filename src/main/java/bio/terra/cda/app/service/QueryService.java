@@ -3,6 +3,7 @@ package bio.terra.cda.app.service;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
+import bio.terra.cda.app.generators.QuerySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.generated.model.SystemStatus;
@@ -170,7 +171,12 @@ public class QueryService {
   }
   public String getReadableOptimizedCountQuery(SqlGenerator generator) {
     String sqlQuery = SqlTemplate.jsonWrapper(generator.getSqlString());
-    String optimizedQuery = optimizeCountEndpointQuery(sqlQuery, (EntityCountSqlGenerator) generator);
+    String optimizedQuery = "";
+    if (generator instanceof EntityCountSqlGenerator){
+      optimizedQuery = optimizeCountEndpointQuery(sqlQuery, (EntityCountSqlGenerator) generator);
+    } else {
+      optimizedQuery = sqlQuery;
+    }
     return generator.getReadableQuerySqlArg(optimizedQuery);
   }
 
@@ -187,7 +193,12 @@ public class QueryService {
   public List<JsonNode> generateAndRunPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
     String sqlQuery = SqlTemplate.jsonWrapper(SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit));
     MapSqlParameterSource param_map =  generator.getNamedParameterMap();
-    String optimizedPagedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
+    String optimizedPagedQuery = "";
+    if (generator instanceof EntitySqlGenerator){
+      optimizedPagedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
+    } else {
+      optimizedPagedQuery = sqlQuery;
+    }
     return namedParameterJdbcTemplate.query(
         optimizedPagedQuery,
         param_map,
@@ -207,8 +218,13 @@ public class QueryService {
 
   public String getReadableOptimizedPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
     String sqlQuery = SqlTemplate.jsonWrapper(SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit));
-    String optimizedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
-    return generator.getReadableQuerySqlArg(optimizedQuery);
+    String optimizedPagedQuery = "";
+    if (generator instanceof EntitySqlGenerator){
+      optimizedPagedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
+    } else {
+      optimizedPagedQuery = sqlQuery;
+    }
+    return generator.getReadableQuerySqlArg(optimizedPagedQuery);
   }
 
   public List<JsonNode> runPagedQuery(String sqlStr, Integer offset, Integer limit) {
