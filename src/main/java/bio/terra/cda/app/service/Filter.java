@@ -68,12 +68,17 @@ public class Filter {
     this.andFileFilter = Boolean.FALSE;
     this.id = "";
     this.originalQuery = baseFilterString;
+
     String WHERE = Query.NodeTypeEnum.WHERE.getValue();
     if (!this.originalQuery.contains(WHERE)) {
       throw new RuntimeException("This query does not contain a where filter");
     }
     String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf(WHERE) + WHERE.length()).trim();
     this.filterQuery = FilterUtils.parenthesisSubString(startingFilterString);
+//    String originalJoinString = this.originalQuery.substring(this.originalQuery.indexOf(replaceKeywords("FROM ENTITYTABLENAME AS ENTITYTABLENAME"), this.originalQuery.indexOf(WHERE)));
+//    if (originalJoinString.contains("JOIN")){
+//      this.originalReplaceJoinFilterQuery = this.originalQuery.replace(this.filterQuery, "(FILEREPLACEMENTFILTER)");
+//    }
     this.originalReplaceFilterQuery = this.originalQuery.replace(this.filterQuery, "(FILEREPLACEMENTFILTER)");
     buildFilter(generator);
   }
@@ -89,6 +94,7 @@ public class Filter {
     this.dataSetInfo = this.generator.getDataSetInfo();
     this.joinBuilder = this.generator.getJoinBuilder();
     this.entityTableName = generator.getEntityTableName();
+
 
     if (this.entityTableName.equals("somatic_mutation")) {
       this.entityPK = "subject_alias";
@@ -151,7 +157,9 @@ public class Filter {
           this.filterTableKey = "subject_alias";
         } else if (this.filterTableName.endsWith("_data_source")) {
           this.filterTableKey = String.format("%s_alias", this.filterTableName.replace("_data_source", ""));
-        } else {
+        } else if (this.filterTableName.endsWith("_associated_project")){
+          this.filterTableKey = String.format("%s_alias", this.filterTableName.replace("_associated_project", ""));
+        }else {
           this.filterTableKey = "integer_id_alias";
         }
 
@@ -168,7 +176,7 @@ public class Filter {
         this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
         String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
         this.filterPreselect = replaceKeywords(preselect_template);
-        if (this.filterTableName.endsWith("_data_source")){
+        if (this.filterTableName.endsWith("_data_source") || this.filterTableName.endsWith("_associated_project")){
           this.mappingFilterKey = joinPath.get(0).getKey().getFromField();
         } else {
           this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
@@ -194,7 +202,7 @@ public class Filter {
           String mapping_preselect_template = "";
           if (this.filterTableName.equals("somatic_mutation")){
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE subject.MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
-          } else if (this.filterTableName.endsWith("_data_source")){
+          } else if (this.filterTableName.endsWith("_data_source") || this.filterTableName.endsWith("_associated_project")){
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE FILTERTABLENAME.MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
           } else {
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
@@ -259,9 +267,9 @@ public class Filter {
         this.fileFilters = this.rightFilter.getFileFilters();
       } else if (this.rightFilter.getFileFilters().isEmpty()) {
         this.fileFilters = this.leftFilter.getFileFilters();
-        this.andFileFilter = Boolean.TRUE; //TODO check my logic on this
+        this.andFileFilter = Boolean.TRUE;
       } else {
-        this.andFileFilter = Boolean.TRUE; //TODO check my logic on this
+        this.andFileFilter = Boolean.TRUE;
         this.fileFilters = this.leftFilter.getFileFilters() + " " + this.operator + " " + rightFilter.getFileFilters();
         this.fileFilters = this.fileFilters.replace("INTERSECT","AND").replace("UNION", "OR");
       }
@@ -280,7 +288,7 @@ public class Filter {
   public void setIncludeCountQuery(){
     if (this.isRoot && this.leftFilter == null && this.rightFilter == null){
       // Don't need to add mapping table preselect statements and union/intersect statements if the query isn't nested
-      if (this.entityTableName.equals(this.filterTableName) || this.filterTableName.endsWith("_data_source")){
+      if (this.entityTableName.equals(this.filterTableName) || this.filterTableName.endsWith("_data_source") || this.filterTableName.endsWith("_associated_project")){
         String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(FILTERTABLEKEY)) FROM FILTERPRESELECTNAME";
         this.includeCountQuery = replaceKeywords(count_template);
       } else {
@@ -321,19 +329,47 @@ public class Filter {
     }
     if (this.fileFilters.isEmpty()){
       this.filePagedPreselectQuery = this.originalQuery;
+      return;
+    }
+    Boolean use_file_alias = Boolean.FALSE;
+    if (!this.entityTableName.equals("file")){
+      String fileTableJoinString = replaceKeywords("JOIN file AS file ON file_ENTITYTABLENAME.file_alias = file.integer_id_alias");
+      if (this.originalReplaceFilterQuery.contains("LEFT " + fileTableJoinString)){
+        use_file_alias = Boolean.TRUE;
+        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("LEFT " + fileTableJoinString, "");
+      } else if (this.originalReplaceFilterQuery.contains("INNER " + fileTableJoinString)){
+        use_file_alias = Boolean.TRUE;
+        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("INNER " + fileTableJoinString, "");
+      } else if (this.originalReplaceFilterQuery.contains("RIGHT " + fileTableJoinString)){
+        use_file_alias = Boolean.TRUE;
+        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("RIGHT " + fileTableJoinString, "");
+      } else if (this.originalReplaceFilterQuery.contains("FULL " + fileTableJoinString)){
+        use_file_alias = Boolean.TRUE;
+        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("FULL " + fileTableJoinString, "");
+      } else if (this.originalReplaceFilterQuery.contains(fileTableJoinString)){
+        use_file_alias = Boolean.TRUE;
+        this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace(fileTableJoinString, "");
+      }
     }
     String preselect_template = "WITH file_alias_preselect AS MATERIALIZED (SELECT integer_id_alias FROM file WHERE FILEFILTERS)";
     this.fileFilterPreselect = replaceKeywords(preselect_template);
+    String where_preselect = "";
+    if (use_file_alias){
+      where_preselect = replaceKeywords("file_ENTITYTABLENAME.file_alias IN (SELECT integer_id_alias FROM file_alias_preselect)");
+    } else {
+      where_preselect = "file.integer_id_alias IN (SELECT integer_id_alias FROM file_alias_preselect)";
+    }
     if (this.getNonFileFilters().isEmpty()) {
-      this.fileReplacementFilter = "file.integer_id_alias IN (SELECT integer_id_alias FROM file_alias_preselect)";
+      this.fileReplacementFilter = where_preselect;
     } else {
       if (this.andFileFilter) {
-        this.fileReplacementFilter = "file.integer_id_alias IN (SELECT integer_id_alias FROM file_alias_preselect) AND " + this.nonFileFilters;
+        this.fileReplacementFilter = where_preselect + " AND " + this.nonFileFilters;
       } else {
-        this.fileReplacementFilter = "file.integer_id_alias IN (SELECT integer_id_alias FROM file_alias_preselect) OR " + this.nonFileFilters;
+        this.fileReplacementFilter = where_preselect + " OR " + this.nonFileFilters;
       }
     }
-    this.filePagedPreselectQuery = this.fileFilterPreselect + " " + replaceKeywords(this.originalReplaceFilterQuery);
+    this.filePagedPreselectQuery = replaceKeywords(this.fileFilterPreselect + " " + this.originalReplaceFilterQuery);
+
   }
   public String replaceKeywords(String template){ // Helper function for replacing constructed string variables with supplied template
     return template

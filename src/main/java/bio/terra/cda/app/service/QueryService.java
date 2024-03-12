@@ -169,6 +169,7 @@ public class QueryService {
     try {
       Filter filterObj = new Filter(sqlQuery, generator);
       return filterObj.getFilePagedPreselectQuery();
+//      return sqlQuery;
     }catch (Exception exception) {
       logger.warn(String.format("Sql: %s, Exception: %s",sqlQuery,exception.getMessage()));
       return sqlQuery;
