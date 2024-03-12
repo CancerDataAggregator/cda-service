@@ -1,15 +1,12 @@
 package bio.terra.cda.app.service;
 
 import bio.terra.cda.app.models.*;
-import bio.terra.cda.app.service.FilterUtils;
 import bio.terra.cda.app.builders.JoinBuilder;
 import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.generated.model.Query;
 
 import java.util.ArrayList;
-import java.text.CharacterIterator;
-import java.text.StringCharacterIterator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,10 +41,18 @@ public class Filter {
   private String entityTableCountPreselect = "";
   private String countPreselect = "";
   private String countSelect = "";
-  private String includeCountQuery = "";
-  private String countEndpointQuery = "";
   private String unionIntersect = "";
   protected String id;
+  private Boolean andFileFilter;
+  private String fileFilters = "";
+  private String nonFileFilters = "";
+  private String fileFilterPreselect = "";
+  private String originalReplaceFilterQuery = "";
+  private String fileReplacementFilter = "";
+  private String includeCountQuery = "";
+  private String countEndpointQuery = "";
+  private String filePagedPreselectQuery = "";
+
 
   /***
    * Class to construct optimized count preselect SQL statement from the filters
@@ -60,14 +65,17 @@ public class Filter {
    */
   public Filter(String baseFilterString, EntitySqlGenerator generator) {
     this.isRoot = Boolean.TRUE;
+    this.andFileFilter = Boolean.FALSE;
     this.id = "";
     this.originalQuery = baseFilterString;
+
     String WHERE = Query.NodeTypeEnum.WHERE.getValue();
     if (!this.originalQuery.contains(WHERE)) {
       throw new RuntimeException("This query does not contain a where filter");
     }
     String startingFilterString = this.originalQuery.substring(this.originalQuery.indexOf(WHERE) + WHERE.length()).trim();
     this.filterQuery = FilterUtils.parenthesisSubString(startingFilterString);
+    this.originalReplaceFilterQuery = this.originalQuery.replace(this.filterQuery, "(FILEREPLACEMENTFILTER)");
     buildFilter(generator);
   }
   protected Filter(String baseFilterString, EntitySqlGenerator generator, String id) {
@@ -82,6 +90,7 @@ public class Filter {
     this.dataSetInfo = this.generator.getDataSetInfo();
     this.joinBuilder = this.generator.getJoinBuilder();
     this.entityTableName = generator.getEntityTableName();
+
 
     if (this.entityTableName.equals("somatic_mutation")) {
       this.entityPK = "subject_alias";
@@ -102,6 +111,7 @@ public class Filter {
       setCountEndpointQuery();
     } else {
       setIncludeCountQuery();
+      setFilePagedPreselectQuery();
     }
   }
 
@@ -125,7 +135,12 @@ public class Filter {
         throw new RuntimeException("tableEndIndex <= 0"); // TODO: what if no "."
       }
       this.filterTableName = this.filterQuery.substring(tableStartIndex, tableEndIndex);
-
+      //Add optimization for File Paged Query
+      if (this.filterTableName.equals("file")){
+        this.fileFilters = this.filterQuery;
+      } else {
+        this.nonFileFilters = this.filterQuery;
+      }
       // Remove filter table name from filter query
       this.filterQuery = this.filterQuery.replace(this.filterTableName +".", "");
 
@@ -138,7 +153,9 @@ public class Filter {
           this.filterTableKey = "subject_alias";
         } else if (this.filterTableName.endsWith("_data_source")) {
           this.filterTableKey = String.format("%s_alias", this.filterTableName.replace("_data_source", ""));
-        } else {
+        } else if (this.filterTableName.endsWith("_associated_project")){
+          this.filterTableKey = String.format("%s_alias", this.filterTableName.replace("_associated_project", ""));
+        }else {
           this.filterTableKey = "integer_id_alias";
         }
 
@@ -155,7 +172,7 @@ public class Filter {
         this.filterPreselectName = replaceKeywords("FILTERTABLENAME_id_preselectIDENTIFIER");
         String preselect_template = "FILTERPRESELECTNAME AS (SELECT FILTERTABLEKEY FROM FILTERTABLENAME WHERE FILTERQUERY)";
         this.filterPreselect = replaceKeywords(preselect_template);
-        if (this.filterTableName.endsWith("_data_source")){
+        if (this.filterTableName.endsWith("_data_source") || this.filterTableName.endsWith("_associated_project")){
           this.mappingFilterKey = joinPath.get(0).getKey().getFromField();
         } else {
           this.mappingFilterKey = joinPath.get(0).getKey().getFields()[0];
@@ -181,7 +198,7 @@ public class Filter {
           String mapping_preselect_template = "";
           if (this.filterTableName.equals("somatic_mutation")){
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE subject.MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
-          } else if (this.filterTableName.endsWith("_data_source")){
+          } else if (this.filterTableName.endsWith("_data_source") || this.filterTableName.endsWith("_associated_project")){
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE FILTERTABLENAME.MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
           } else {
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
@@ -239,17 +256,45 @@ public class Filter {
       }
       this.filterPreselect = this.leftFilter.getFilterPreselect() + ", " + rightFilter.getFilterPreselect();
       this.unionIntersect = "(" + this.leftFilter.getUnionIntersect() + " " + this.operator + " " + this.rightFilter.getUnionIntersect() + ")";
+      //File Paged Query Optimization
+      if (this.leftFilter.getFileFilters().isEmpty() & this.rightFilter.getFileFilters().isEmpty()) {
+        this.fileFilters = "";
+      } else if (this.leftFilter.getFileFilters().isEmpty()) {
+        this.fileFilters = this.rightFilter.getFileFilters();
+      } else if (this.rightFilter.getFileFilters().isEmpty()) {
+        this.fileFilters = this.leftFilter.getFileFilters();
+        this.andFileFilter = Boolean.TRUE;
+      } else {
+        this.andFileFilter = Boolean.TRUE;
+        this.fileFilters = this.leftFilter.getFileFilters() + " " + this.operator + " " + rightFilter.getFileFilters();
+        this.fileFilters = this.fileFilters.replace("INTERSECT","AND").replace("UNION", "OR");
+      }
+      if (this.leftFilter.getNonFileFilters().isEmpty() & this.rightFilter.getNonFileFilters().isEmpty()) {
+        this.nonFileFilters = "";
+      } else if (this.leftFilter.getNonFileFilters().isEmpty()) {
+        this.nonFileFilters = this.rightFilter.getNonFileFilters();
+      } else if (this.rightFilter.getNonFileFilters().isEmpty()) {
+        this.nonFileFilters = this.leftFilter.getNonFileFilters();
+      } else {
+        this.nonFileFilters = this.leftFilter.getNonFileFilters() + " " + this.operator + " " + rightFilter.getNonFileFilters();
+        this.nonFileFilters = this.fileFilters.replace("INTERSECT","AND").replace("UNION", "OR");
+      }
     }
   }
   public void setIncludeCountQuery(){
     if (this.isRoot && this.leftFilter == null && this.rightFilter == null){
       // Don't need to add mapping table preselect statements and union/intersect statements if the query isn't nested
-      if (this.entityTableName.equals(this.filterTableName) || this.filterTableName.endsWith("_data_source")){
+      if (this.entityTableName.equals(this.filterTableName) || this.filterTableName.endsWith("_data_source") || this.filterTableName.endsWith("_associated_project")){
         String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(FILTERTABLEKEY)) FROM FILTERPRESELECTNAME";
         this.includeCountQuery = replaceKeywords(count_template);
       } else {
+        if (this.mappingTablePreselect.isEmpty()) {
           String count_template = "WITH FULLFILTERPRESELECT SELECT COUNT(DISTINCT(COMMONALIAS)) FROM MAPPINGTABLENAME WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME)";
           this.includeCountQuery = replaceKeywords(count_template);
+        } else {
+          String count_template = "WITH FULLFILTERPRESELECT, FULLMAPPINGPRESELECT SELECT COUNT(DISTINCT(FILTERTABLEKEY)) FROM MAPPINGTABLENAME WHERE FILTERTABLEKEY IN (SELECT COMMONALIAS FROM MAPPINGPRESELECTNAME)";
+          this.includeCountQuery = replaceKeywords(count_template);
+        }
       }
 
 
@@ -278,6 +323,55 @@ public class Filter {
     setCountPreselectAndSelect();
     this.countEndpointQuery = replaceKeywords(count_template);
   }
+
+  public void setFilePagedPreselectQuery(){
+    if (!this.isRoot){
+      return;
+    }
+    if (this.fileFilters.isEmpty()){
+      this.filePagedPreselectQuery = this.originalQuery;
+      return;
+    }
+    String file_alias_key = "integer_id_alias";
+    String originalJoinString = this.originalQuery.substring(this.originalQuery.indexOf(replaceKeywords("FROM ENTITYTABLENAME AS ENTITYTABLENAME")), this.originalQuery.indexOf("WHERE"));
+    if (!this.entityTableName.equals("file") && originalJoinString.contains("file AS file")){
+
+      String fileTableJoinString = originalJoinString.substring(
+              originalJoinString.indexOf("JOIN file AS file ON"),
+              originalJoinString.indexOf(" = file.integer_id_alias") + " = file.integer_id_alias".length());
+      if (!fileTableJoinString.isEmpty()) {
+        file_alias_key = fileTableJoinString.substring(
+                fileTableJoinString.indexOf("JOIN file AS file ON ") + "JOIN file AS file ON ".length(),
+                fileTableJoinString.indexOf(" = file.integer_id_alias"));
+        if (this.originalReplaceFilterQuery.contains("LEFT " + fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("LEFT " + fileTableJoinString, "");
+        } else if (this.originalReplaceFilterQuery.contains("INNER " + fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("INNER " + fileTableJoinString, "");
+        } else if (this.originalReplaceFilterQuery.contains("RIGHT " + fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("RIGHT " + fileTableJoinString, "");
+        } else if (this.originalReplaceFilterQuery.contains("FULL " + fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace("FULL " + fileTableJoinString, "");
+        } else if (this.originalReplaceFilterQuery.contains(fileTableJoinString)) {
+          this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace(fileTableJoinString, "");
+        }
+      }
+    }
+    String preselect_template = "WITH file_alias_preselect AS MATERIALIZED (SELECT integer_id_alias FROM file WHERE FILEFILTERS)";
+    this.fileFilterPreselect = replaceKeywords(preselect_template);
+    String where_preselect = file_alias_key + " IN (SELECT integer_id_alias FROM file_alias_preselect)";
+
+    if (this.getNonFileFilters().isEmpty()) {
+      this.fileReplacementFilter = where_preselect;
+    } else {
+      if (this.andFileFilter) {
+        this.fileReplacementFilter = where_preselect + " AND " + this.nonFileFilters;
+      } else {
+        this.fileReplacementFilter = where_preselect + " OR " + this.nonFileFilters;
+      }
+    }
+    this.filePagedPreselectQuery = replaceKeywords(this.fileFilterPreselect + " " + this.originalReplaceFilterQuery);
+
+  }
   public String replaceKeywords(String template){ // Helper function for replacing constructed string variables with supplied template
     return template
             .replace("IDENTIFIER", this.id)
@@ -299,7 +393,9 @@ public class Filter {
             .replace("ENTITYTABLECOUNTPRESELECT", this.entityTableCountPreselect)
             .replace("MAPPINGFILEMAPPINGKEY", this.mappingFileMappingKey)
             .replace("COUNTPRESELECT", this.countPreselect)
-            .replace("COUNTSELECT", this.countSelect);
+            .replace("COUNTSELECT", this.countSelect)
+            .replace("FILEFILTERS", this.fileFilters)
+            .replace("FILEREPLACEMENTFILTER", this.fileReplacementFilter);
   }
   public void setJoinString(List<Join> joinPath){ // Builds out join statements from JoinPath
     StringBuilder fullJoinString = new StringBuilder();
@@ -469,4 +565,7 @@ public class Filter {
   public String getCountEndpointQuery(){
     return this.countEndpointQuery;
   }
+  public String getFileFilters() {return this.fileFilters;}
+  public String getNonFileFilters() {return this.nonFileFilters;}
+  public String getFilePagedPreselectQuery() {return this.filePagedPreselectQuery;}
 }

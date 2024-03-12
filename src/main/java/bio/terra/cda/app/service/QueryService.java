@@ -185,12 +185,30 @@ public class QueryService {
   }
 
   public List<JsonNode> generateAndRunPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
+    String sqlQuery = SqlTemplate.jsonWrapper(SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit));
+    MapSqlParameterSource param_map =  generator.getNamedParameterMap();
+    String optimizedPagedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
     return namedParameterJdbcTemplate.query(
-        SqlTemplate.jsonWrapper(
-            SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit)),
-        generator.getNamedParameterMap(),
+        optimizedPagedQuery,
+        param_map,
         new JsonNodeRowMapper(objectMapper)
     );
+  }
+  public String optimizePagedQuery(String sqlQuery, EntitySqlGenerator generator){
+    try {
+      Filter filterObj = new Filter(sqlQuery, generator);
+      return filterObj.getFilePagedPreselectQuery();
+//      return sqlQuery;
+    }catch (Exception exception) {
+      logger.warn(String.format("Sql: %s, Exception: %s",sqlQuery,exception.getMessage()));
+      return sqlQuery;
+    }
+  }
+
+  public String getReadableOptimizedPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
+    String sqlQuery = SqlTemplate.jsonWrapper(SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit));
+    String optimizedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
+    return generator.getReadableQuerySqlArg(optimizedQuery);
   }
 
   public List<JsonNode> runPagedQuery(String sqlStr, Integer offset, Integer limit) {

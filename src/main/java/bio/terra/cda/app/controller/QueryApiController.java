@@ -104,7 +104,8 @@ public class QueryApiController implements QueryApi {
     }
     List<JsonNode> result = queryService.generateAndRunPagedQuery(sqlGenerator, offset, limit);
 
-    String readableSql = sqlGenerator.getReadableQuerySql(offset, limit);
+//    String readableSql = sqlGenerator.getReadableQuerySql(offset, limit);
+    String readableSql = queryService.getReadableOptimizedPagedQuery(sqlGenerator, offset,limit);
     queryService.logQuery(System.currentTimeMillis()-start, readableSql, result, countDuration);
     return
         response
