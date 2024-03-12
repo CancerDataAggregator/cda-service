@@ -6,6 +6,7 @@ import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.generated.model.SystemStatus;
+import bio.terra.cda.generated.model.SystemStatusSystemsValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,6 +62,34 @@ public class QueryService {
     GDC,
     PDC
   }
+
+  public SystemStatus postgresCheck() {
+    SystemStatusSystemsValue pgSystemStatus = new SystemStatusSystemsValue();
+    boolean success = false;
+    try {
+      Integer activeConnections = jdbcTemplate
+          .query("SELECT count(*) FROM pg_stat_activity WHERE state = 'active'", rs -> {
+            return rs.next() ? rs.getInt(1) : 0;
+          });
+      success = activeConnections > 0;
+    } catch (Exception e) {
+      logger.error("Status check failed ", e);
+    }
+    if (success) {
+      pgSystemStatus.ok(true).addMessagesItem("everything is fine");
+    } else {
+
+      pgSystemStatus
+          .ok(false)
+          .addMessagesItem("Postgres Status check has indicated the database is currently unreachable from the Service API");
+    }
+    systemStatus
+        .ok(pgSystemStatus.getOk())
+        .putSystemsItem("PostgresStatus", pgSystemStatus);
+
+    return systemStatus;
+  }
+
 
   /**
    * Traverse the json data and collect the number of systems data present in resultsCount.
