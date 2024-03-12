@@ -277,7 +277,7 @@ public class Filter {
         this.nonFileFilters = this.leftFilter.getNonFileFilters();
       } else {
         this.nonFileFilters = this.leftFilter.getNonFileFilters() + " " + this.operator + " " + rightFilter.getNonFileFilters();
-        this.nonFileFilters = this.fileFilters.replace("INTERSECT","AND").replace("UNION", "OR");
+        this.nonFileFilters = "(" + this.nonFileFilters.replace("INTERSECT","AND").replace("UNION", "OR") + ")";
       }
     }
   }
