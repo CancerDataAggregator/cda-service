@@ -78,23 +78,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/DatasetDescription"
 
-  /api/v1/bulk-data:
-    get:
-      summary: Return all data in CDA
-      description: Return all data in CDA
-      operationId: bulkData
-      tags:
-        - query
-      parameters:
-        - $ref: "#/components/parameters/Table"
-        - $ref: "#/components/parameters/IncludeResultsCount"
-        - $ref: "#/components/parameters/ResultOffset"
-        - $ref: "#/components/parameters/ResultLimit"
-      responses:
-        200:
-          $ref: "#/components/responses/PagedResponse"
-
-
   /api/v1/boolean-query:
     post:
       summary: Execute boolean query

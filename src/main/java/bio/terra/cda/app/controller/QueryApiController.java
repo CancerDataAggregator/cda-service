@@ -134,22 +134,6 @@ public class QueryApiController implements QueryApi {
 
   }
 
-  // region Global Queries
-  @TrackExecutionTime
-  @Override
-  public ResponseEntity<PagedResponseData> bulkData(
-      @Valid String table, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
-    logger.info("executing bulkData query");
-    assert(RdbmsSchema.getDataSetInfo().getTableInfo(table) != null);
-    String querySql = "SELECT * FROM " + table;
-    List<JsonNode> result = queryService.runPagedQuery(querySql, offset, limit);
-    return new ResponseEntity<>(
-        new PagedResponseData()
-            .querySql(querySql)
-            .result(Collections.unmodifiableList(result)),
-        HttpStatus.OK);
-  }
-
   @TrackExecutionTime
   @Override
   public ResponseEntity<PagedResponseData> booleanQuery(
