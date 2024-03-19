@@ -78,35 +78,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/DatasetDescription"
 
-  /api/v1/boolean-query:
-    post:
-      summary: Execute boolean query
-      description: |
-        Execute a query composed of conditions on columns combined with boolean operators. The
-        generated SQL query is returned in the response.
-      operationId: booleanQuery
-      tags:
-        - query
-
-      parameters:
-        - $ref: "#/components/parameters/DryRun"
-        - $ref: "#/components/parameters/IncludeResultsCount"
-        - $ref: "#/components/parameters/ResultOffset"
-        - $ref: "#/components/parameters/ResultLimit"
-
-
-      requestBody:
-        description: The boolean query
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Query"
-
-      responses:
-        200:
-          $ref: "#/components/responses/PagedResponse"
-
   /api/v1/subjects:
     post:
       summary: Execute Subject query
