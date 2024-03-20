@@ -48,17 +48,20 @@ public class MetaApiController implements MetaApi {
   // table
   private DatasetDescription createDescription() {
     var dateOfRelease =
-        OffsetDateTime.of(LocalDate.of(2022, 6, 28), LocalTime.MIN, ZoneOffset.UTC).toString();
+        OffsetDateTime.of(LocalDate.of(2024, 3, 21), LocalTime.MIN, ZoneOffset.UTC).toString();
+    Model m = new Model();
+    m.setVersion("1.0");
+    m.setDate(dateOfRelease);
     return new DatasetDescription()
         .addDatasetsItem(
             new DatasetInfo()
                 .version(applicationConfiguration.getVersion())
-                .source("IDC, PDC and GDC")
+                .source("IDC, PDC, GDC and CDS")
                 .date(dateOfRelease))
-        .cdaVersion("MVP")
+        .cdaVersion("4.0")
         .notes("CDA MVP release")
         .releaseDate(dateOfRelease)
-        .cdaModel(new Model());
+        .cdaModel(m);
   }
 
   @Override
