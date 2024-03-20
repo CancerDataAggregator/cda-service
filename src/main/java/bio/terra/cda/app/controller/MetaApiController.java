@@ -22,7 +22,10 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import org.apache.http.Header;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -63,12 +66,12 @@ public class MetaApiController implements MetaApi {
 
   @Override
   public ResponseEntity<List<DatasetDescription>> allReleaseNotes() {
-    return ResponseEntity.ok(Collections.singletonList(createDescription()));
+    return ResponseEntity.ok().headers(HeaderUtils.getNoCacheResponseHeader()).body(Collections.singletonList(createDescription()));
   }
 
   @Override
   public ResponseEntity<DatasetDescription> latestReleaseNotes() {
-    return ResponseEntity.ok(createDescription());
+    return ResponseEntity.ok().headers(HeaderUtils.getNoCacheResponseHeader()).body(createDescription());
   }
 
 }

@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import org.apache.http.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,7 +144,7 @@ public class QueryApiController implements QueryApi {
     }
     PagedResponseData response = handleRequest(false, new QuerySqlGenerator(body, system, count), includeCount, offset, limit);
     checkAndSetNextUrl(response,"unique-values", offset, limit);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
 
   @TrackExecutionTime
@@ -171,7 +172,7 @@ public class QueryApiController implements QueryApi {
     ColumnsResponseData queryResponseData = new ColumnsResponseData();
     queryResponseData.result(Collections.unmodifiableList(results));
 
-    return new ResponseEntity<>(queryResponseData, HttpStatus.OK);
+    return new ResponseEntity<>(queryResponseData, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
 
   @TrackExecutionTime
@@ -180,6 +181,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun) {
     return new ResponseEntity<>(
         handleRequest(dryRun, new CountsSqlGenerator(body)),
+        HeaderUtils.getNoCacheResponseHeader(),
         HttpStatus.OK);
   }
 
@@ -190,7 +192,7 @@ public class QueryApiController implements QueryApi {
         @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
     PagedResponseData response = handleRequest(dryRun, new FileSqlGenerator(body), includeCount, offset, limit);
     checkAndSetNextUrl(response,"files", offset, limit);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
     }
 
     @TrackExecutionTime
@@ -199,6 +201,7 @@ public class QueryApiController implements QueryApi {
         @Valid Query body, @Valid Boolean dryRun) {
       return new ResponseEntity<>(
           handleRequest(dryRun, new SubjectCountSqlGenerator(body, true)),
+          HeaderUtils.getNoCacheResponseHeader(),
           HttpStatus.OK);
     }
     // endregion
@@ -210,7 +213,7 @@ public class QueryApiController implements QueryApi {
         @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
       PagedResponseData response = handleRequest(dryRun, new SubjectSqlGenerator(body, false), includeCount, offset, limit);
       checkAndSetNextUrl(response,"subjects", offset, limit);
-      return new ResponseEntity<>(response, HttpStatus.OK);
+      return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
     }
 
     @TrackExecutionTime
@@ -220,7 +223,7 @@ public class QueryApiController implements QueryApi {
     PagedResponseData response =
         handleRequest(dryRun, new SubjectSqlGenerator(body, true), includeCount, offset, limit);
         checkAndSetNextUrl(response,"subjects/files", offset, limit);
-      return new ResponseEntity<>(response, HttpStatus.OK);
+      return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
     }
 
   @TrackExecutionTime
@@ -229,6 +232,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun) {
     return new ResponseEntity<>(
         handleRequest(dryRun, new SubjectCountSqlGenerator(body, false)),
+        HeaderUtils.getNoCacheResponseHeader(),
         HttpStatus.OK);
   }
 
@@ -237,7 +241,8 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> subjectFileCountsQuery(
       @Valid Query body, @Valid Boolean dryRun) {
     return new ResponseEntity<>(
-        handleRequest(dryRun, new SubjectCountSqlGenerator(body, true)), HttpStatus.OK);
+        handleRequest(dryRun, new SubjectCountSqlGenerator(body, true)),
+        HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
   // endregion
 
@@ -250,7 +255,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
     PagedResponseData response = handleRequest(dryRun, new ResearchSubjectSqlGenerator(body, false), includeCount, offset, limit);
     checkAndSetNextUrl(response,"researchsubjects", offset, limit);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
 
   @TrackExecutionTime
@@ -259,7 +264,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
     PagedResponseData response = handleRequest(dryRun, new ResearchSubjectSqlGenerator(body, true), includeCount, offset, limit);
     checkAndSetNextUrl(response,"researchsubjects/files", offset, limit);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
 
   @TrackExecutionTime
@@ -267,7 +272,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> researchSubjectCountsQuery(
       @Valid Query body, @Valid Boolean dryRun) {
     return new ResponseEntity<>(
-        handleRequest(dryRun, new ResearchSubjectCountSqlGenerator(body)),
+        handleRequest(dryRun, new ResearchSubjectCountSqlGenerator(body)), HeaderUtils.getNoCacheResponseHeader(),
         HttpStatus.OK);
   }
 
@@ -276,7 +281,8 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> researchSubjectFileCountsQuery(
       @Valid Query body, @Valid Boolean dryRun) {
     return new ResponseEntity<>(
-        handleRequest(dryRun, new ResearchSubjectCountSqlGenerator(body, true)), HttpStatus.OK);
+        handleRequest(dryRun, new ResearchSubjectCountSqlGenerator(body, true)),
+        HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
   // endregion
 
@@ -287,7 +293,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
     PagedResponseData response = handleRequest(dryRun, new SpecimenSqlGenerator(body, false), includeCount, offset, limit);
     checkAndSetNextUrl(response,"specimen", offset, limit);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
 
   @TrackExecutionTime
@@ -296,7 +302,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
     PagedResponseData response = handleRequest(dryRun, new SpecimenSqlGenerator(body, true), includeCount, offset, limit);
     checkAndSetNextUrl(response,"specimen/files", offset, limit);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
 
   @TrackExecutionTime
@@ -304,7 +310,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> specimenCountsQuery(
       @Valid Query body, @Valid Boolean dryRun) {
     return new ResponseEntity<>(
-        handleRequest(dryRun, new SpecimenCountSqlGenerator(body)),
+        handleRequest(dryRun, new SpecimenCountSqlGenerator(body)), HeaderUtils.getNoCacheResponseHeader(),
         HttpStatus.OK);
   }
 
@@ -314,6 +320,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun) {
     return new ResponseEntity<>(
         handleRequest(dryRun, new SpecimenCountSqlGenerator(body, true)),
+        HeaderUtils.getNoCacheResponseHeader(),
         HttpStatus.OK);
   }
   // endregion
@@ -325,7 +332,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
     PagedResponseData response = handleRequest(dryRun, new DiagnosisSqlGenerator(body), includeCount, offset, limit);
     checkAndSetNextUrl(response,"diagnosis", offset, limit);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
 
   @TrackExecutionTime
@@ -333,7 +340,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> diagnosisCountsQuery(
       @Valid Query body, @Valid Boolean dryRun) {
     return  new ResponseEntity<>(
-        handleRequest(dryRun, new DiagnosisCountSqlGenerator(body)),
+        handleRequest(dryRun, new DiagnosisCountSqlGenerator(body)), HeaderUtils.getNoCacheResponseHeader(),
         HttpStatus.OK);
   }
   // endregion
@@ -345,7 +352,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
     PagedResponseData response = handleRequest(dryRun, new TreatmentSqlGenerator(body), includeCount, offset, limit);
     checkAndSetNextUrl(response,"treatments", offset, limit);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
 
   @TrackExecutionTime
@@ -353,7 +360,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> treatmentCountsQuery(
       @Valid Query body, @Valid Boolean dryRun) {
     return new ResponseEntity<>(
-        handleRequest(dryRun, new TreatmentCountSqlGenerator(body)),
+        handleRequest(dryRun, new TreatmentCountSqlGenerator(body)), HeaderUtils.getNoCacheResponseHeader(),
         HttpStatus.OK);
   }
   // endregion
@@ -365,7 +372,7 @@ public class QueryApiController implements QueryApi {
       @Valid Query body, @Valid Boolean dryRun, @Valid Boolean includeCount, @Valid Integer offset, @Valid Integer limit) {
     PagedResponseData response = handleRequest(dryRun, new MutationSqlGenerator(body), includeCount, offset, limit);
     checkAndSetNextUrl(response,"treatments", offset, limit);
-    return new ResponseEntity<>(response, HttpStatus.OK);
+    return new ResponseEntity<>(response, HeaderUtils.getNoCacheResponseHeader(), HttpStatus.OK);
   }
 
   @TrackExecutionTime
@@ -373,7 +380,7 @@ public class QueryApiController implements QueryApi {
   public ResponseEntity<QueryResponseData> mutationCountsQuery(
       @Valid Query body, @Valid Boolean dryRun) {
     return new ResponseEntity<>(
-        handleRequest(dryRun, new MutationCountSqlGenerator(body)),
+        handleRequest(dryRun, new MutationCountSqlGenerator(body)), HeaderUtils.getNoCacheResponseHeader(),
         HttpStatus.OK);
   }
   // endregion
