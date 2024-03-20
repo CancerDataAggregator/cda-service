@@ -44,7 +44,7 @@ public class MetaApiController implements MetaApi {
   @TrackExecutionTime
   @Override
   public ResponseEntity<SystemStatus> serviceStatus() {
-    return ResponseEntity.ok(queryService.postgresCheck());
+    return ResponseEntity.ok().headers(HeaderUtils.getNoCacheResponseHeader()).body(queryService.postgresCheck());
   }
 
   // For now, the dataset description is hardcoded. In the future, it will probably be read from a
