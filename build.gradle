@@ -1,5 +1,6 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
+
 buildscript {
 	repositories {
 		mavenCentral()
