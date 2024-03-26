@@ -25,6 +25,9 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+
 @Component
 @CacheConfig(cacheNames = "system-status")
 public class QueryService {
@@ -84,9 +87,16 @@ public class QueryService {
           .ok(false)
           .addMessagesItem("Postgres Status check has indicated the database is currently unreachable from the Service API");
     }
+    int mb = 1024 * 1024;
+    MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+    long xmx = memoryBean.getHeapMemoryUsage().getMax() / mb;
+    long xms = memoryBean.getHeapMemoryUsage().getInit() / mb;
+    SystemStatusSystemsValue javaMem = new SystemStatusSystemsValue();
+    javaMem.addMessagesItem(String.format("XMX: %d, XMS: %d", xmx, xms));
     systemStatus
         .ok(pgSystemStatus.getOk())
-        .putSystemsItem("PostgresStatus", pgSystemStatus);
+        .putSystemsItem("PostgresStatus", pgSystemStatus)
+        .putSystemsItem("JavaMemory", javaMem);
 
     return systemStatus;
   }
