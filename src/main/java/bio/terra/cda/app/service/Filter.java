@@ -261,6 +261,9 @@ public class Filter {
         this.fileFilters = "";
       } else if (this.leftFilter.getFileFilters().isEmpty()) {
         this.fileFilters = this.rightFilter.getFileFilters();
+        if (this.rightFilter.operator.isEmpty()) {
+          this.andFileFilter = Boolean.TRUE;
+        }
       } else if (this.rightFilter.getFileFilters().isEmpty()) {
         this.fileFilters = this.leftFilter.getFileFilters();
         this.andFileFilter = Boolean.TRUE;
