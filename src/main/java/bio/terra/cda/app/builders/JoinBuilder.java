@@ -96,7 +96,7 @@ public class JoinBuilder {
 
   protected ForeignKey getMatchingMappingFK(ForeignKey key, String toTable, String toFieldname) {
     TableInfo destTable = dataSetInfo.getTableInfo(key.getDestinationTableName());
-    if (destTable.isMapppingTable()) {
+    if (destTable.isMappingTable()) {
       // remove the FK that got us to this mapping table
       return
           destTable.getForeignKeys().stream()

@@ -67,6 +67,6 @@ public class GlobalExceptionHandler {
       errorReport =
           new ErrorReport().message(ex.getMessage()).statusCode(statusCode.value()).causes(causes);
     }
-    return new ResponseEntity<>(errorReport, statusCode);
+    return new ResponseEntity<>(errorReport, HeaderUtils.getNoCacheResponseHeader(), statusCode);
   }
 }

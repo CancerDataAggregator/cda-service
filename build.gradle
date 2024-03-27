@@ -1,11 +1,12 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
+
 buildscript {
 	repositories {
 		mavenCentral()
 	}
 	dependencies {
-		classpath("org.springframework.boot:spring-boot-gradle-plugin:2.7.4.RELEASE")
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:2.7.18")
 		classpath("com.google.guava:guava:30.1.1-jre")
 	}
 	configurations.all {
@@ -18,7 +19,7 @@ buildscript {
 plugins {
 	id 'java'
 	id 'idea'
-	id 'org.springframework.boot' version '2.7.4'
+	id 'org.springframework.boot' version '2.7.18'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'com.google.cloud.tools.jib' version '2.8.0'
 	id 'org.openapi.generator' version '6.0.1'
@@ -63,6 +64,8 @@ dependencies {
 	// These dependencies are required to load the logback config file.
 	implementation group: 'org.codehaus.groovy', name: 'groovy', version: '3.0.7'
 	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-logging', version: '1.2.8.RELEASE'
+	implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.13'
+	implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.2.13'
 
 	// These are temporary until the including library catches up with these vulnerability fixes
 	implementation group: 'org.yaml', name: 'snakeyaml', version: '1.33'
@@ -273,13 +276,13 @@ requires = ["setuptools", "wheel"]  # PEP 508 specifications.
 			pyprojectTomlTemplate += line + "\n"
 		}
 
-		for( line  in new File("./build/generated-client/requirements.txt")){
+		for( line in new File( System.getenv().get('PWD') + "/build/generated-client/requirements.txt" ) ) {
 					String[] parts = line.split("[><=]")
 					String op = "="
 			pyprojectTomlTemplate += "${parts[0].trim()} ${op} \"${parts[parts.length - 1].trim()}\" \n"
 		}
 
-		new File("./build/generated-client/pyproject.toml").write(pyprojectTomlTemplate)
+		new File( System.getenv().get('PWD') + "/build/generated-client/pyproject.toml" ).write( pyprojectTomlTemplate )
 		println pyprojectTomlTemplate
 	}
 }

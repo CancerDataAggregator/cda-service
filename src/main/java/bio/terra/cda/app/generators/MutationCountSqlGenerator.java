@@ -4,14 +4,14 @@ import bio.terra.cda.generated.model.Query;
 import java.io.IOException;
 
 @CountQueryGenerator(
-    entity = "mutation",
-    totalFieldsToCount = {"id"},
+    entity = "somatic_mutation",
+    totalFieldsToCount = {"subject_alias"},
     groupedFieldsToCount = {
-      "project_short_name",
-      "NCBI_Build",
-      "Chromosome",
-      "Variant_Type",
-      "One_Consequence"
+      "chromosome",
+      "primary_site",
+      "variant_classification",
+      "variant_type",
+      "mutation_status"
     })
 public class MutationCountSqlGenerator extends EntityCountSqlGenerator {
   public MutationCountSqlGenerator(Query rootQuery) {

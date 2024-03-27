@@ -7,11 +7,10 @@ import bio.terra.cda.generated.model.Query;
 import java.util.Arrays;
 import java.util.Optional;
 
-
 public class FileCountSqlGenerator {
 
   public static String[] getTotalFieldsToCount() {
-    return Arrays.asList("file_id").toArray(new String[0]);
+    return Arrays.asList("id").toArray(new String[0]);
   }
 
   public static String[] getGroupedFieldsToCount() {

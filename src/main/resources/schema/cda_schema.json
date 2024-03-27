@@ -130,6 +130,16 @@
     "default": null,
     "check": null,
     "comment": "The method used to confirm the subjects malignant diagnosis."
+   },
+   {
+    "name": "integer_id_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
@@ -154,8 +164,103 @@
  {
   "columns": [
    {
-    "name": "diagnosis_id",
-    "type": "text",
+    "name": "diagnosis_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "diagnosis_data_source_pkey",
+     "columns": [
+      "diagnosis_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "diagnosis_alias",
+     "constraint_name": "diagnosis_data_source_diagnosis_alias_fkey",
+     "references": {
+      "table": "diagnosis",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "diagnosis_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "diagnosis_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -198,28 +303,17 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "diagnosis_identifier_pkey",
-     "columns": [
-      "diagnosis_id",
-      "system",
-      "field_name",
-      "value"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "diagnosis_id",
-     "constraint_name": "diagnosis_identifier_diagnosis_id_fkey",
+     "name": "diagnosis_alias",
+     "constraint_name": "diagnosis_identifier_diagnosis_alias_fkey",
      "references": {
       "table": "diagnosis",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -235,8 +329,8 @@
  {
   "columns": [
    {
-    "name": "diagnosis_id",
-    "type": "text",
+    "name": "diagnosis_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -245,8 +339,8 @@
     "check": null
    },
    {
-    "name": "treatment_id",
-    "type": "text",
+    "name": "treatment_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -257,38 +351,29 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "diagnosis_treatment_pkey",
-     "columns": [
-      "diagnosis_id",
-      "treatment_id"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "diagnosis_id",
-     "constraint_name": "diagnosis_treatment_diagnosis_id_fkey",
+     "name": "diagnosis_alias",
+     "constraint_name": "diagnosis_treatment_diagnosis_alias_fkey",
      "references": {
       "table": "diagnosis",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     },
     {
-     "name": "treatment_id",
-     "constraint_name": "diagnosis_treatment_treatment_id_fkey",
+     "name": "treatment_alias",
+     "constraint_name": "diagnosis_treatment_treatment_alias_fkey",
      "references": {
       "table": "treatment",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -433,6 +518,16 @@
     "default": null,
     "check": null,
     "comment": "The logical identifier of the series or grouping of imaging files in the system of record which the file is a part of."
+   },
+   {
+    "name": "integer_id_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
@@ -457,8 +552,8 @@
  {
   "columns": [
    {
-    "name": "file_id",
-    "type": "text",
+    "name": "file_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -479,26 +574,17 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "file_associated_project_pkey",
-     "columns": [
-      "file_id",
-      "associated_project"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "file_id",
-     "constraint_name": "file_associated_project_file_id_fkey",
+     "name": "file_alias",
+     "constraint_name": "file_associated_project_file_alias_fkey",
      "references": {
       "table": "file",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -508,14 +594,108 @@
   "partitioned_by": [],
   "tablespace": null,
   "schema": "public",
-  "table_name": "file_associated_project",
-  "comment": "A reference to the Project(s) of which this File is a member. The associated_project may be embedded using the $ref definition or may be a reference to the id for the Project - or a URI expressed as a string to an existing entity."
+  "table_name": "file_associated_project"
  },
  {
   "columns": [
    {
-    "name": "file_id",
-    "type": "text",
+    "name": "file_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "file_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "file_data_source_pkey",
+     "columns": [
+      "file_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "file_alias",
+     "constraint_name": "file_data_source_file_alias_fkey",
+     "references": {
+      "table": "file",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "file_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "file_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -531,8 +711,7 @@
     "unique": false,
     "nullable": false,
     "default": null,
-    "check": null,
-    "comment": "The system or namespace that defines the identifier."
+    "check": null
    },
    {
     "name": "field_name",
@@ -552,34 +731,22 @@
     "unique": false,
     "nullable": false,
     "default": null,
-    "check": null,
-    "comment": "The value of the identifier, as defined by the system."
+    "check": null
    }
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "file_identifier_pkey",
-     "columns": [
-      "file_id",
-      "system",
-      "field_name",
-      "value"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "file_id",
-     "constraint_name": "file_identifier_file_id_fkey",
+     "name": "file_alias",
+     "constraint_name": "file_identifier_file_alias_fkey",
      "references": {
       "table": "file",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -589,14 +756,13 @@
   "partitioned_by": [],
   "tablespace": null,
   "schema": "public",
-  "table_name": "file_identifier",
-  "comment": "A business identifier or accession number for a File, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier)."
+  "table_name": "file_identifier"
  },
  {
   "columns": [
    {
-    "name": "file_id",
-    "type": "text",
+    "name": "file_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -605,8 +771,8 @@
     "check": null
    },
    {
-    "name": "specimen_id",
-    "type": "text",
+    "name": "specimen_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -617,38 +783,29 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "file_specimen_pkey",
-     "columns": [
-      "file_id",
-      "specimen_id"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "file_id",
-     "constraint_name": "file_specimen_file_id_fkey",
+     "name": "file_alias",
+     "constraint_name": "file_specimen_file_alias_fkey",
      "references": {
       "table": "file",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     },
     {
-     "name": "specimen_id",
-     "constraint_name": "file_specimen_specimen_id_fkey",
+     "name": "specimen_alias",
+     "constraint_name": "file_specimen_specimen_alias_fkey",
      "references": {
       "table": "specimen",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -663,8 +820,8 @@
  {
   "columns": [
    {
-    "name": "file_id",
-    "type": "text",
+    "name": "file_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -673,8 +830,8 @@
     "check": null
    },
    {
-    "name": "subject_id",
-    "type": "text",
+    "name": "subject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -685,38 +842,29 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "file_subject_pkey",
-     "columns": [
-      "file_id",
-      "subject_id"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "file_id",
-     "constraint_name": "file_subject_file_id_fkey",
+     "name": "file_alias",
+     "constraint_name": "file_subject_file_alias_fkey",
      "references": {
       "table": "file",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     },
     {
-     "name": "subject_id",
-     "constraint_name": "file_subject_subject_id_fkey",
+     "name": "subject_alias",
+     "constraint_name": "file_subject_subject_alias_fkey",
      "references": {
       "table": "subject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -773,6 +921,16 @@
     "default": null,
     "check": null,
     "comment": "The text term used to describe the primary site of disease, as categorized by the World Health Organizations (WHO) International Classification of Diseases for Oncology (ICD-O). This categorization groups cases into general categories. This attribute represents the primary site of disease that qualified the subject for inclusion on the ResearchProject."
+   },
+   {
+    "name": "integer_id_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
@@ -797,8 +955,8 @@
  {
   "columns": [
    {
-    "name": "researchsubject_id",
-    "type": "text",
+    "name": "researchsubject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -807,8 +965,48 @@
     "check": null
    },
    {
-    "name": "diagnosis_id",
-    "type": "text",
+    "name": "researchsubject_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "researchsubject_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "researchsubject_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "researchsubject_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "researchsubject_from_icdc",
+    "type": "boolean",
     "size": null,
     "references": null,
     "unique": false,
@@ -821,36 +1019,82 @@
   "alter": {
    "primary_keys": [
     {
-     "constraint_name": "researchsubject_diagnosis_pkey",
+     "constraint_name": "researchsubject_data_source_pkey",
      "columns": [
-      "researchsubject_id",
-      "diagnosis_id"
+      "researchsubject_alias"
      ]
     }
    ],
    "columns": [
     {
-     "name": "diagnosis_id",
-     "constraint_name": "researchsubject_diagnosis_diagnosis_id_fkey",
-     "references": {
-      "table": "diagnosis",
-      "schema": "public",
-      "on_delete": null,
-      "on_update": null,
-      "deferrable_initially": null,
-      "column": "id"
-     }
-    },
-    {
-     "name": "researchsubject_id",
-     "constraint_name": "researchsubject_diagnosis_researchsubject_id_fkey",
+     "name": "researchsubject_alias",
+     "constraint_name": "researchsubject_data_source_researchsubject_alias_fkey",
      "references": {
       "table": "researchsubject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "researchsubject_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "researchsubject_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "diagnosis_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "columns": [
+    {
+     "name": "diagnosis_alias",
+     "constraint_name": "researchsubject_diagnosis_diagnosis_alias_fkey",
+     "references": {
+      "table": "diagnosis",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    },
+    {
+     "name": "researchsubject_alias",
+     "constraint_name": "researchsubject_diagnosis_researchsubject_alias_fkey",
+     "references": {
+      "table": "researchsubject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -865,8 +1109,8 @@
  {
   "columns": [
    {
-    "name": "researchsubject_id",
-    "type": "text",
+    "name": "researchsubject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -909,28 +1153,17 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "researchsubject_identifier_pkey",
-     "columns": [
-      "researchsubject_id",
-      "system",
-      "field_name",
-      "value"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "researchsubject_id",
-     "constraint_name": "researchsubject_identifier_researchsubject_id_fkey",
+     "name": "researchsubject_alias",
+     "constraint_name": "rs_identifier_rs_alias_fkey",
      "references": {
       "table": "researchsubject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -946,8 +1179,8 @@
  {
   "columns": [
    {
-    "name": "researchsubject_id",
-    "type": "text",
+    "name": "researchsubject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -956,8 +1189,8 @@
     "check": null
    },
    {
-    "name": "specimen_id",
-    "type": "text",
+    "name": "specimen_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -968,38 +1201,29 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "researchsubject_specimen_pkey",
-     "columns": [
-      "researchsubject_id",
-      "specimen_id"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "researchsubject_id",
-     "constraint_name": "researchsubject_specimen_researchsubject_id_fkey",
+     "name": "researchsubject_alias",
+     "constraint_name": "researchsubject_specimen_researchsubject_alias_fkey",
      "references": {
       "table": "researchsubject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     },
     {
-     "name": "specimen_id",
-     "constraint_name": "researchsubject_specimen_specimen_id_fkey",
+     "name": "specimen_alias",
+     "constraint_name": "researchsubject_specimen_specimen_alias_fkey",
      "references": {
       "table": "specimen",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -1014,8 +1238,8 @@
  {
   "columns": [
    {
-    "name": "researchsubject_id",
-    "type": "text",
+    "name": "researchsubject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -1024,8 +1248,8 @@
     "check": null
    },
    {
-    "name": "treatment_id",
-    "type": "text",
+    "name": "treatment_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -1036,38 +1260,29 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "researchsubject_treatment_pkey",
-     "columns": [
-      "researchsubject_id",
-      "treatment_id"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "researchsubject_id",
-     "constraint_name": "researchsubject_treatment_researchsubject_id_fkey",
+     "name": "researchsubject_alias",
+     "constraint_name": "researchsubject_treatment_researchsubject_alias_fkey",
      "references": {
       "table": "researchsubject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     },
     {
-     "name": "treatment_id",
-     "constraint_name": "researchsubject_treatment_treatment_id_fkey",
+     "name": "treatment_alias",
+     "constraint_name": "researchsubject_treatment_treatment_alias_fkey",
      "references": {
       "table": "treatment",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -2853,21 +3068,41 @@
     "default": null,
     "check": null,
     "comment": "TCGA aliquot barcode for the normal control, eg TCGA-12-1089-01A-01D-0517-01]"
+   },
+   {
+    "name": "cda_subject_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
   "alter": {
    "columns": [
     {
-     "name": "cda_subject_id",
-     "constraint_name": "somatic_mutation_cda_subject_id_fkey",
+     "name": "subject_alias",
+     "constraint_name": "somatic_mutation_subject_integer_id_alias_fkey",
      "references": {
       "table": "subject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -2979,6 +3214,16 @@
     "default": null,
     "check": null,
     "comment": "The Patient/ResearchSubject, or Biologically Derived Materal (e.g. a cell line, tissue culture, organoid) from which the specimen was directly or indirectly derived."
+   },
+   {
+    "name": "integer_id_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
@@ -3003,8 +3248,103 @@
  {
   "columns": [
    {
-    "name": "specimen_id",
-    "type": "text",
+    "name": "specimen_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "specimen_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "specimen_data_source_pkey",
+     "columns": [
+      "specimen_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "specimen_alias",
+     "constraint_name": "specimen_data_source_specimen_alias_fkey",
+     "references": {
+      "table": "specimen",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "specimen_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "specimen_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -3020,8 +3360,7 @@
     "unique": false,
     "nullable": false,
     "default": null,
-    "check": null,
-    "comment": "The system or namespace that defines the identifier."
+    "check": null
    },
    {
     "name": "field_name",
@@ -3041,34 +3380,22 @@
     "unique": false,
     "nullable": false,
     "default": null,
-    "check": null,
-    "comment": "The value of the identifier, as defined by the system."
+    "check": null
    }
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "specimen_identifier_pkey",
-     "columns": [
-      "specimen_id",
-      "system",
-      "field_name",
-      "value"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "specimen_id",
-     "constraint_name": "specimen_identifier_specimen_id_fkey",
+     "name": "specimen_alias",
+     "constraint_name": "specimen_identifier_specimen_alias_fkey",
      "references": {
       "table": "specimen",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -3078,8 +3405,7 @@
   "partitioned_by": [],
   "tablespace": null,
   "schema": "public",
-  "table_name": "specimen_identifier",
-  "comment": "A business identifier or accession number for a Specimen, typically as provided by an external system or authority, that persists across implementing systems (i.e. a logical identifier)."
+  "table_name": "specimen_identifier"
  },
  {
   "columns": [
@@ -3181,6 +3507,16 @@
     "default": null,
     "check": null,
     "comment": "Coded value indicating the circumstance or condition that results in the death of the subject."
+   },
+   {
+    "name": "integer_id_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
@@ -3205,8 +3541,8 @@
  {
   "columns": [
    {
-    "name": "subject_id",
-    "type": "text",
+    "name": "subject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -3227,26 +3563,17 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "subject_associated_project_pkey",
-     "columns": [
-      "subject_id",
-      "associated_project"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "subject_id",
-     "constraint_name": "subject_associated_project_subject_id_fkey",
+     "name": "subject_alias",
+     "constraint_name": "subject_associated_project_subject_alias_fkey",
      "references": {
       "table": "subject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -3261,8 +3588,103 @@
  {
   "columns": [
    {
-    "name": "subject_id",
-    "type": "text",
+    "name": "subject_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "subject_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "subject_data_source_pkey",
+     "columns": [
+      "subject_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "subject_alias",
+     "constraint_name": "subject_data_source_subject_alias_fkey",
+     "references": {
+      "table": "subject",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "subject_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "subject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -3305,28 +3727,17 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "subject_identifier_pkey",
-     "columns": [
-      "subject_id",
-      "system",
-      "field_name",
-      "value"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "subject_id",
-     "constraint_name": "subject_identifier_subject_id_fkey",
+     "name": "subject_alias",
+     "constraint_name": "subject_identifier_subject_alias_fkey",
      "references": {
       "table": "subject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -3342,8 +3753,8 @@
  {
   "columns": [
    {
-    "name": "subject_id",
-    "type": "text",
+    "name": "subject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -3352,8 +3763,8 @@
     "check": null
    },
    {
-    "name": "researchsubject_id",
-    "type": "text",
+    "name": "researchsubject_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -3364,38 +3775,29 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "subject_researchsubject_pkey",
-     "columns": [
-      "subject_id",
-      "researchsubject_id"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "researchsubject_id",
-     "constraint_name": "subject_researchsubject_researchsubject_id_fkey",
+     "name": "researchsubject_alias",
+     "constraint_name": "subject_researchsubject_researchsubject_alias_fkey",
      "references": {
       "table": "researchsubject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     },
     {
-     "name": "subject_id",
-     "constraint_name": "subject_researchsubject_subject_id_fkey",
+     "name": "subject_alias",
+     "constraint_name": "subject_researchsubject_subject_alias_fkey",
      "references": {
       "table": "subject",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]
@@ -3518,6 +3920,16 @@
     "default": null,
     "check": null,
     "comment": "The number of treatment cycles the subject received."
+   },
+   {
+    "name": "integer_id_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
    }
   ],
   "primary_key": [],
@@ -3542,8 +3954,103 @@
  {
   "columns": [
    {
-    "name": "treatment_id",
-    "type": "text",
+    "name": "treatment_alias",
+    "type": "bigint",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_gdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_pdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_idc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_cds",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   },
+   {
+    "name": "treatment_from_icdc",
+    "type": "boolean",
+    "size": null,
+    "references": null,
+    "unique": false,
+    "nullable": false,
+    "default": null,
+    "check": null
+   }
+  ],
+  "primary_key": [],
+  "alter": {
+   "primary_keys": [
+    {
+     "constraint_name": "treatment_data_source_pkey",
+     "columns": [
+      "treatment_alias"
+     ]
+    }
+   ],
+   "columns": [
+    {
+     "name": "treatment_alias",
+     "constraint_name": "treatment_data_source_treatment_alias_fkey",
+     "references": {
+      "table": "treatment",
+      "schema": "public",
+      "on_delete": null,
+      "on_update": null,
+      "deferrable_initially": null,
+      "column": "integer_id_alias"
+     }
+    }
+   ]
+  },
+  "checks": [],
+  "index": [],
+  "partitioned_by": [],
+  "tablespace": null,
+  "schema": "public",
+  "table_name": "treatment_data_source"
+ },
+ {
+  "columns": [
+   {
+    "name": "treatment_alias",
+    "type": "bigint",
     "size": null,
     "references": null,
     "unique": false,
@@ -3586,28 +4093,17 @@
   ],
   "primary_key": [],
   "alter": {
-   "primary_keys": [
-    {
-     "constraint_name": "treatment_identifier_pkey",
-     "columns": [
-      "treatment_id",
-      "system",
-      "field_name",
-      "value"
-     ]
-    }
-   ],
    "columns": [
     {
-     "name": "treatment_id",
-     "constraint_name": "treatment_identifier_treatment_id_fkey",
+     "name": "treatment_alias",
+     "constraint_name": "treatment_identifier_treatment_alias_fkey",
      "references": {
       "table": "treatment",
       "schema": "public",
       "on_delete": null,
       "on_update": null,
       "deferrable_initially": null,
-      "column": "id"
+      "column": "integer_id_alias"
      }
     }
    ]

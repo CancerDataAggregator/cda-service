@@ -21,7 +21,7 @@ public class SelectTest {
 
     EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
-    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
+    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false);
 
     IllegalArgumentException exception =
         assertThrows(
@@ -37,16 +37,12 @@ public class SelectTest {
 
     EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
-    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
+    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false);
 
     query.buildQuery(ctx);
 
     assertEquals(2, ctx.getJoins().size());
     assertEquals(3, ctx.getSelect().size());
 
-//    if (ctx.getSelect().stream()
-//        .noneMatch(partition -> partition.toString().equals("research_subject_id"))) {
-//      fail();
-//    }
   }
 }
