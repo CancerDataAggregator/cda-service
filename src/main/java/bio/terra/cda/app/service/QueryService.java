@@ -3,7 +3,6 @@ package bio.terra.cda.app.service;
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
 import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
-import bio.terra.cda.app.generators.QuerySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.generated.model.SystemStatus;
@@ -218,7 +217,7 @@ public class QueryService {
   public String optimizePagedQuery(String sqlQuery, EntitySqlGenerator generator){
     try {
       Filter filterObj = new Filter(sqlQuery, generator);
-      return filterObj.getFilePagedPreselectQuery();
+      return filterObj.getPagedPreselectQuery();
 //      return sqlQuery;
     }catch (Exception exception) {
       logger.warn(String.format("Sql: %s, Exception: %s",sqlQuery,exception.getMessage()));
