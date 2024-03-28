@@ -328,7 +328,7 @@ public class Filter {
     String originalSelectString = this.originalQuery
                                   .substring(0, this.originalQuery
                                       .indexOf(replaceKeywords("FROM ENTITYTABLENAME AS ENTITYTABLENAME")));
-    List<String> joinList = List.of(originalJoinString.split("(?=(LEFT|INNER|RIGHT|FULL)\\sJOIN)"));
+    List<String> joinList = List.of(originalJoinString.split("(?=(LEFT|INNER|RIGHT|FULL)\\s+JOIN)"));
     for (String joinString : joinList){
       String search = "JOIN";
       if (!joinString.contains(search)) continue;
