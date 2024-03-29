@@ -2,6 +2,10 @@ package bio.terra.cda.app.service;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class FilterUtils{
     public static String trimExtraneousParentheses(String query) {
@@ -46,4 +50,12 @@ public class FilterUtils{
         }
         return startingString.substring(0, indexCursor+1);
     }
+    public static void addUniqueMatchesToSet(String stringToSearch, String regex, Set<String> set){
+        Pattern pattern = Pattern.compile(regex);
+        Matcher m = pattern.matcher(stringToSearch);
+        while (m.find()) {
+            set.add(m.group(1));
+        }
+    }
+
 }
