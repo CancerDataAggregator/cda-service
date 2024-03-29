@@ -6,9 +6,8 @@ import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.generated.model.Query;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.util.stream.Collectors;
 
 // Class to construct optimized count preselect SQL statement from the filters in the original count(*) wrapped query
@@ -328,14 +327,34 @@ public class Filter {
     String originalSelectString = this.originalQuery
                                   .substring(0, this.originalQuery
                                       .indexOf(replaceKeywords("FROM ENTITYTABLENAME AS ENTITYTABLENAME")));
+    // Get list of individual Joins
     List<String> joinList = List.of(originalJoinString.split("(?=(LEFT|INNER|RIGHT|FULL)\\s+JOIN)"));
+    // Get list of unique tables in the select clause
+    String tableRegex = "\\s(\\w+)[.]\\w";
+    Set<String> selectTables = new HashSet<>();
+    FilterUtils.addUniqueMatchesToSet(originalSelectString, tableRegex, selectTables);
+    // Build out all tables required to build joins to all select clause tables (excluding the entity table)
+    Set<String> necessaryTables = new HashSet<>();
+    for (String selectTable : selectTables){
+      if (selectTable.equals(this.entityTableName)) continue;
+      List<Join> joinPath = this.joinBuilder.getPath(selectTable, this.entityTableName, this.entityPK);
+      for (Join join : joinPath){
+        necessaryTables.add(join.getKey().getFromTableName());
+      }
+    }
     for (String joinString : joinList){
       String search = "JOIN";
       if (!joinString.contains(search)) continue;
-      int tableStartIndex = joinString.indexOf(search) + search.length();
-      int tableEndIndex = joinString.indexOf("AS");
-      String joinTableName = joinString.substring(tableStartIndex, tableEndIndex).trim();
-      if (!originalSelectString.contains(joinTableName)){
+      boolean needed = Boolean.FALSE;
+      // Check if any required tables appear in the current join
+      for (String necessaryTable : necessaryTables){
+        if (joinString.matches(String.format(".*\\s%s[.].*",necessaryTable))){
+          needed = Boolean.TRUE;
+          break;
+        }
+      }
+      // Remove the join if no required tables were found
+      if (!needed){
         this.originalReplaceFilterQuery = this.originalReplaceFilterQuery.replace(joinString,"");
       }
     }
