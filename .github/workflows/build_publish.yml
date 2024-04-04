@@ -31,7 +31,7 @@ jobs:
         env:
           DEFAULT_BUMP: patch
           GITHUB_TOKEN: ${{ secrets.BROADBOT_TOKEN }}
-          RELEASE_BRANCHES: master
+          RELEASE_BRANCHES: develop
           WITH_V: true
 
       - name: debug outputs
