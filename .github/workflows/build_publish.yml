@@ -31,7 +31,7 @@ jobs:
         env:
           DEFAULT_BUMP: patch
           GITHUB_TOKEN: ${{ secrets.BROADBOT_TOKEN }}
-          RELEASE_BRANCHES: master
+          RELEASE_BRANCHES: develop
           WITH_V: true
 
       - name: debug outputs
@@ -95,6 +95,7 @@ jobs:
 #    inputs: '{ "bee-name": "${{ github.event.repository.name }}-${{ github.run_id }}-${{ matrix.terra-env }}" }'
 
   set-version-in-dev:
+    if: ${{ github.event_name != 'pull_request' }}
     # Put new cda version in Broad dev environment
     uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
     needs: [tag-build-publish, report-to-sherlock]
