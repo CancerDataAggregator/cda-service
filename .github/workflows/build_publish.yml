@@ -94,16 +94,16 @@ jobs:
       contents: 'read'
       id-token: 'write'
 
-set-version-in-dev:
-  if: ${{ github.event_name != 'pull_request' }}
-  # Put new cda version in Broad dev environment
-  uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
-  needs: [tag-build-publish, report-to-sherlock]
-  with:
-    new-version: ${{ needs.tag-build-publish.outputs.tag }}
-    chart-name: 'cancerdata'
-    environment-name: 'dev'
-  secrets:
-    sync-git-token: ${{ secrets.BROADBOT_TOKEN }}
-  permissions:
-    id-token: 'write'
+  set-version-in-dev:
+    if: ${{ github.event_name != 'pull_request' }}
+    # Put new cda version in Broad dev environment
+    uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
+    needs: [tag-build-publish, report-to-sherlock]
+    with:
+      new-version: ${{ needs.tag-build-publish.outputs.tag }}
+      chart-name: 'cancerdata'
+      environment-name: 'dev'
+    secrets:
+      sync-git-token: ${{ secrets.BROADBOT_TOKEN }}
+    permissions:
+      id-token: 'write'
