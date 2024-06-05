@@ -86,13 +86,9 @@ public class Filter {
     this.entityTableName = generator.getEntityTableName();
 
 
-    if (this.entityTableName.equals("somatic_mutation")) {
-      this.entityPK = "subject_alias";
-      this.commonAlias = "subject_alias";
-    } else {
-      this.entityPK = generator.getEntityTableFirstPK();
-      this.commonAlias = String.format("%s_alias", this.entityTableName);
-    }
+    this.entityPK = generator.getEntityTableFirstPK();
+    this.commonAlias = String.format("%s_alias", this.entityTableName);
+
     if (this.entityPK.trim().isEmpty()) {
       throw new RuntimeException("The entity table " + this.entityTableName + " does not contain a primary key or relationship key.");
     }
@@ -137,9 +133,8 @@ public class Filter {
 
 
       if (joinPath.size() <= 1){ // Filter on the entity table
-        if (this.filterTableName.equals("somatic_mutation")) {
-          this.filterTableKey = "subject_alias";
-        } else if (this.filterTableName.endsWith("_data_source")) {
+
+        if (this.filterTableName.endsWith("_data_source")) {
           this.filterTableKey = String.format("%s_alias", this.filterTableName.replace("_data_source", ""));
         } else if (this.filterTableName.endsWith("_associated_project")){
           this.filterTableKey = String.format("%s_alias", this.filterTableName.replace("_associated_project", ""));
@@ -184,9 +179,7 @@ public class Filter {
           this.mappingTableName = joinPath.get(joinPath.size() - 1).getKey().getDestinationTableName();
           this.mappingPreselectName = replaceKeywords("MAPPINGTABLENAME_FILTERTABLENAME_id_preselectIDENTIFIER");
           String mapping_preselect_template = "";
-          if (this.filterTableName.equals("somatic_mutation")){
-            mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE subject.MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
-          } else if (this.filterTableName.endsWith("_data_source") || this.filterTableName.endsWith("_associated_project")){
+          if (this.filterTableName.endsWith("_data_source") || this.filterTableName.endsWith("_associated_project")){
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE FILTERTABLENAME.MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
           } else {
             mapping_preselect_template = "MAPPINGPRESELECTNAME AS (SELECT COMMONALIAS FROM FILTERTABLENAME AS FILTERTABLENAME JOINSTRING WHERE MAPPINGFILTERKEY IN (SELECT FILTERTABLEKEY FROM FILTERPRESELECTNAME))";
@@ -423,13 +416,9 @@ public class Filter {
     StringBuilder entitySelect = new StringBuilder();
     StringBuilder fromTables = new StringBuilder("FROM ENTITYTABLENAME");
     StringBuilder whereClause = new StringBuilder();
-    if (this.entityTableName.equals("somatic_mutation")){
-      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.subject_alias");
-      whereClause.append("WHERE subject_alias IN (SELECT COMMONALIAS FROM ENTITYTABLENAME_preselect_ids)");
-    } else {
-      entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.integer_id_alias AS COMMONALIAS");
-      whereClause.append("WHERE integer_id_alias IN (SELECT COMMONALIAS FROM ENTITYTABLENAME_preselect_ids)");
-    }
+    entitySelect.append("SELECT DISTINCT ENTITYTABLENAME.integer_id_alias AS COMMONALIAS");
+    whereClause.append("WHERE integer_id_alias IN (SELECT COMMONALIAS FROM ENTITYTABLENAME_preselect_ids)");
+//    }
     ArrayList<ColumnDefinition> allCountFields = new ArrayList<>();
     allCountFields.addAll(this.countGenerator.getTotalCountFields());
     allCountFields.addAll(this.countGenerator.getGroupedCountFields());
@@ -468,11 +457,7 @@ public class Filter {
 
   public void setCountPreselectAndSelect(){
     String countMethod = "";
-    if (this.entityTableName.equals("somatic_mutation")) {
-      countMethod = "COUNT(*)";
-    } else {
-      countMethod = String.format("COUNT(DISTINCT %s)", this.commonAlias);
-    }
+    countMethod = String.format("COUNT(DISTINCT %s)", this.commonAlias);
     StringBuilder count_preselect = new StringBuilder();
     StringBuilder count_select = new StringBuilder("SELECT (SELECT COUNTMETHOD FROM ENTITYTABLENAME_preselect) as total_count,");
 
