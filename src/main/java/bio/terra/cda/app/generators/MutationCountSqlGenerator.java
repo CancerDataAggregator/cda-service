@@ -11,7 +11,8 @@ import java.io.IOException;
       "primary_site",
       "variant_class",
       "variant_type",
-      "mutation_status"
+      "mutation_status",
+      "one_consequence"
     })
 public class MutationCountSqlGenerator extends EntityCountSqlGenerator {
   public MutationCountSqlGenerator(Query rootQuery) {
