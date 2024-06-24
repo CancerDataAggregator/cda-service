@@ -3,7 +3,7 @@ package bio.terra.cda.app.generators;
 import bio.terra.cda.generated.model.Query;
 
 // TODO - case_barcode may need to be altered
-@EntityGeneratorData(entity = "mutation", hasFiles = false, defaultOrderBy = "mutation_integer_id_alias",
+@EntityGeneratorData(entity = "mutation", hasFiles = false, defaultOrderBy = "mutation_id",
     aggregatedFields = {},
     aggregatedFieldsSelectString = {})
 public class MutationSqlGenerator extends EntitySqlGenerator {
