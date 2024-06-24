@@ -52,23 +52,14 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
   protected String sql(
       String tableOrSubClause,
       Query query,
-      boolean subQuery,
-      boolean hasSubClause,
       boolean ignoreWith) {
     String viewSql =
         super.sql(
-            tableOrSubClause, QueryUtil.deSelectifyQuery(query), subQuery, hasSubClause, true);
+            tableOrSubClause, QueryUtil.deSelectifyQuery(query), true).replace("SELECT", "SELECT DISTINCT");
     String tableAlias = "flattened_result";
     this.viewListBuilder.addView(new ManualView(String.format("%s as (%s)", tableAlias, viewSql)));
     addGroupedCountViews(tableAlias);
-//    String withStatement = "";
-//    if (this.viewListBuilder.hasAny() && !ignoreWith) {
-//      withStatement = String.format("%s, %s as (%s)", getWithStatement(), tableAlias, viewSql);
-//    } else {
-//      withStatement = String.format("WITH %s as (%s)", tableAlias, viewSql);
-//    }
-
-    return subQuery ? viewSql : String.format("%s select %s", getWithStatement(), getCountSelects(tableAlias));
+    return String.format("%s select %s", getWithStatement(), getCountSelects(tableAlias));
   }
 
   protected void addGroupedCountViews(String tableAlias) {
@@ -78,12 +69,20 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
 
   protected void addEachGroupedCountView(ColumnDefinition col, String fromTableAlias) {
     String fieldName = col.getAlias();
+    String groupedCountInnerView = "";
+    if (this.entityTable.getTableName().equals("somatic_mutation")){
+      groupedCountInnerView = String.format(
+              "(select %1$s as %1$s, count(*) as count from %2$s group by %1$s)",
+              fieldName,
+              fromTableAlias);
+    } else {
+      groupedCountInnerView = String.format(
+              "(select %1$s as %1$s, count(distinct %2$s) as count from %3$s group by %1$s)",
+              fieldName,
+              this.entityTable.getPrimaryKeysAlias().get(0),
+              fromTableAlias);
+    }
 
-    String groupedCountInnerView = String.format(
-        "(select %1$s as %1$s, count(distinct %2$s) as count from %3$s group by %1$s)",
-        fieldName,
-        this.entityTable.getPrimaryKeysAlias().get(0),
-        fromTableAlias);
 
     String viewNameFormatString = "%s_count";
     String viewSelectFormatString =  "json_%s";
@@ -105,9 +104,18 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
     return null;
   }
 
-
+  protected String getTotalFormatString(){
+    String totalFormatString = "";
+    if (this.entityTable.getTableName().equals("somatic_mutation")){
+      totalFormatString = "(SELECT COUNT(*) from %2$s) as %1$s";
+    } else {
+      totalFormatString = "(SELECT COUNT(DISTINCT %1$s) from %2$s) as %1$s";
+    }
+    return totalFormatString;
+  }
   protected String getCountSelects(String tableAlias) {
-    String totalFormatString = "(SELECT COUNT(DISTINCT %s) from %s) as %s";
+    String totalFormatString = getTotalFormatString();
+
     String groupedFormatString =
         "(SELECT array_agg(json_%1$s) from %1$s_count) as %1$s";
 
@@ -118,19 +126,15 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
         totalFields.add(getSecondaryEntity());
         }
     }
-    return Stream.concat(
-        totalCountFields.stream()
-                .map(
-                    col ->
-                        String.format(
-                            totalFormatString, col.getAlias(), tableAlias, col.getAlias())),
-            groupedCountFields.stream()
-                .map(
-                    col ->
-                        String.format(
-                            groupedFormatString,
-                            col.getAlias())))
+    String test = Stream.concat(
+          totalCountFields.stream()
+              .filter(Objects::nonNull)
+              .map(col -> String.format(totalFormatString, replaceAliasWithId(col.getAlias()), tableAlias)),
+          groupedCountFields.stream()
+              .filter(Objects::nonNull)
+              .map(col -> String.format(groupedFormatString, col.getAlias())))
         .collect(Collectors.joining(", "));
+    return test;
   }
 
 
@@ -146,6 +150,7 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
     }
 
     return Stream.concat(totalFields.stream(), this.groupedCountFields.stream())
+        .filter (Objects::nonNull)
         .map(
             col -> {
               // if we need to find a path to the attribute
@@ -157,7 +162,17 @@ public class EntityCountSqlGenerator extends EntitySqlGenerator {
                 ctx.addJoins(path);
               }
               return String.format(
-                  "%1$s.%2$s AS %3$s", col.getTableName(), col.getName(), col.getAlias());
+                  "%1$s.%2$s AS %3$s", col.getTableName(), col.getName(), replaceAliasWithId(col.getAlias()));
             });
+  }
+
+  protected String replaceAliasWithId(String integerAliasAlias) {
+    return integerAliasAlias.replace("alias", "id");
+  }
+  public List<ColumnDefinition> getTotalCountFields(){
+    return this.totalCountFields;
+  }
+  public List<ColumnDefinition> getGroupedCountFields(){
+    return this.groupedCountFields;
   }
 }
