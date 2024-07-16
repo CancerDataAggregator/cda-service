@@ -33,15 +33,17 @@ public class ParameterBuilder {
       this.parameterValueMap.addValue(parameterName, value, Types.ARRAY);
     } else if (type.equals("text")) {
       this.parameterValueMap.addValue(parameterName, value);
-    } else if (type.equals("integer")) {
+    } else if (type.equals("integer"))  {
       this.parameterValueMap.addValue(parameterName, value, Types.INTEGER);
+    } else if (type.equals("bigint"))  {
+      this.parameterValueMap.addValue(parameterName, value, Types.BIGINT);
     } else if (type.equals("float")) {
       this.parameterValueMap.addValue(parameterName, value, Types.FLOAT);
     } else if (type.equals("boolean")) {
       this.parameterValueMap.addValue(parameterName, value, Types.BOOLEAN);
     } else {
-      logger.error("Unknown type: {}. Trying to add anyway", type);
-      this.parameterValueMap.addValue(parameterName, value);
+      logger.error("Unknown type: {}", type);
+      throw new RuntimeException("Unknown type: " + type);
     }
     return String.format(":%s", parameterName);
   }
