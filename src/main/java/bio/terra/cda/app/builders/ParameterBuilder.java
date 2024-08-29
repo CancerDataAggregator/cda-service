@@ -6,9 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;import org.springframework.jdbc.core.SqlParameterValue;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.util.StringUtils;
+import org.yaml.snakeyaml.util.ArrayUtils;
 
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,7 +52,9 @@ public class ParameterBuilder {
 
   public String substituteForReadableString(String sqlStr) {
     String result = sqlStr;
-    for (String key : getParameterValueMap().getParameterNames()) {
+    List<String> reversed_parameters = Arrays.asList(getParameterValueMap().getParameterNames());
+    Collections.reverse(reversed_parameters);
+    for (String key : reversed_parameters) {
       String keyformat = String.format(":%s", key);
       Object value = parameterValueMap.getValue(key);
       int type = parameterValueMap.getSqlType(key);
