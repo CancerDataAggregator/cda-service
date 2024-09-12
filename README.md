@@ -111,6 +111,39 @@ Curl line
 curl -X POST "http://localhost:8080/api/v1/boolean-query/v0" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"node_type\":\"AND\",\"l\":{\"node_type\":\"AND\",\"l\":{\"node_type\":\">=\",\"l\":{\"node_type\":\"column\",\"value\":\"Diagnosis.age_at_diagnosis\"},\"r\":{\"node_type\":\"unquoted\",\"value\":\"50\"}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"Specimen.associated_project\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"TCGA-OV\"}}},\"r\":{\"node_type\":\"=\",\"l\":{\"node_type\":\"column\",\"value\":\"Diagnosis.tumor_stage\"},\"r\":{\"node_type\":\"quoted\",\"value\":\"Stage IIIC\"}}}"
 ```
 
+### Database Schemas
+
+Schemas to the various tables that this service can query are provided in the `resouces/schema` folder.
+These are generally just a BigQuery table schema, except there is additional information
+provided in them to allow the API to discern what the relationships are between fields
+and tables.
+
+The notable fields that are not part of BigQuery's schema and are simply used for the purposes
+of this api are as follows:
+
+| Field | Description |
+| :----: | :----: |
+| tableAlias | Defines the alias that we will define this schema by.|
+| partitionBy | The primary key of the table or nested entity. Specifies that this field will be included in the partition when the api utilizes the `row_number()` syntax. |
+| foreignKeys | A list of relationships associated with a field. This will define how the join to other schemas. |
+| countByFields | A list of the ways in which this field can be used in the count endpoints for the entity the field belongs to. The field will only be counted in the count endpoint if this is included. How it is counted is determined by the type. |
+| excludedFromSelect | A boolean to specify whether or not to include this field in its parents' select statement when calling the parent's endpoint. |
+
+#### Foreign Key
+| Field | Description |
+| :----: | :----: |
+| fields | A list of fields to include in the ON statement of the query when joining. This coincides with the type field on whether the fields are included with an AND or an OR. |
+| type | The type for the join. Can be SINGLE, COMPOSITE_OR, COMPOSITE_AND. The latter two will discern whether or not to split the fields by an AND or an OR. If there are multiple fields from the current table that are used as part of this relationship, each of those fields will contain a foreignKey reference. |
+| tableName | Table with which to complete the join. |
+| tableAlias | Alias to use for the joined table when joining. |
+
+#### Count By Field
+| Field | Description |
+| :----: | :----: |
+| field | Field with which to count in the count endpoint. Usually matches the field this belongs to, but can belong to another table if `table` is specified |
+| alias | The alias to assign the count for this field. This is what displays from the api instead of the field name. |
+| table | Used if the field we are counting is actually from another table. For instance: Counting the number of files associated with a Subject. |
+| type | The type of count this field represents. GROUPED would mean we are grouping by the field and counting the types of responses for each field. TOTAL means we are counting the total number of records based off of the field, such as the total number of Subjects or Number of Subject Files. |
 ### Generating Python Client APIs
 
 The OpenAPI YAML can be used to generate python client code. To do this, run the gradle 
