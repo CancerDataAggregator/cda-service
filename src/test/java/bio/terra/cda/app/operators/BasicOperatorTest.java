@@ -22,7 +22,7 @@ public class BasicOperatorTest {
 
     EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
-    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false, false);
+    QueryContext ctx = sqlgen.buildQueryContext(subjectTableInfo, false);
 
     IllegalArgumentException exception =
         assertThrows(
@@ -38,7 +38,7 @@ public class BasicOperatorTest {
 
     EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
-    String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false, false));
+    String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false));
 
     assertEquals("(COALESCE(UPPER(subject.id), '') = UPPER(:parameter_1))", whereClause);
   }
@@ -49,7 +49,7 @@ public class BasicOperatorTest {
     EntitySqlGenerator sqlgen = new EntitySqlGenerator(query, false);
     TableInfo subjectTableInfo = RdbmsSchema.getDataSetInfo().getTableInfo("subject");
 
-    String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false, false));
+    String whereClause = query.buildQuery(sqlgen.buildQueryContext(subjectTableInfo, false));
 
     assertEquals(
         "(((COALESCE(UPPER(diagnosis.stage), '') = UPPER(:parameter_1)) OR (COALESCE(UPPER(diagnosis.stage), '') = UPPER(:parameter_2))) AND (COALESCE(UPPER(researchsubject.primary_diagnosis_site), '') = UPPER(:parameter_3)))",

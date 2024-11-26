@@ -27,23 +27,18 @@ jobs:
         restore-keys: ${{ runner.os }}-gradle
     - name: Run tests
       run: ./gradlew test --scan
-    - name: Run SonarQube scan
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew sonarqube --info
     - name: Run Coverage
       run: |
         chmod +x gradlew
         ./gradlew jacocoTestReport
     - name: Upload Report
-      uses: 'actions/upload-artifact@v2'
+      uses: 'actions/upload-artifact@v4'
       with:
         name: report.xml
         path: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
     - name: Add coverage to PR
       id: jacoco
-      uses: madrapps/jacoco-report@v1.2
+      uses: madrapps/jacoco-report@v1.6.1
       with:
         paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
         token: ${{ secrets.GITHUB_TOKEN }}

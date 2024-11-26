@@ -33,6 +33,10 @@ public abstract class SqlGenerator {
     String sqlStr = getSqlString();
     return this.parameterBuilder.substituteForReadableString(sqlStr);
   }
+  // Added this to pass back the optimized count query with the results
+  public String getReadableQuerySqlArg(String sqlStr) {
+    return this.parameterBuilder.substituteForReadableString(sqlStr);
+  }
 
 
   public String getReadableQuerySql(Integer offset, Integer limit) {

@@ -2,18 +2,20 @@ package bio.terra.cda.app.builders;
 
 import bio.terra.cda.app.models.QueryField;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.jdbc.core.SqlParameterValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;import org.springframework.jdbc.core.SqlParameterValue;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.util.StringUtils;
+import org.yaml.snakeyaml.util.ArrayUtils;
 
 import java.sql.Types;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ParameterBuilder {
+  private static final Logger logger = LoggerFactory.getLogger(ParameterBuilder.class);
   private final MapSqlParameterSource parameterValueMap;
   private int index;
 
@@ -28,26 +30,35 @@ public class ParameterBuilder {
 
   public String addParameterValue(String type, Object value) {
     String parameterName = String.format("parameter_%s", ++index);
+
     if (value.getClass().isArray()) {
       this.parameterValueMap.addValue(parameterName, value, Types.ARRAY);
-    } else
-    if (type.equals("text")) {
+    } else if (type.equals("text")) {
       this.parameterValueMap.addValue(parameterName, value);
-    } else if (type.equals("integer")){
+    } else if (type.equals("integer"))  {
       this.parameterValueMap.addValue(parameterName, value, Types.INTEGER);
+    } else if (type.equals("bigint"))  {
+      this.parameterValueMap.addValue(parameterName, value, Types.BIGINT);
     } else if (type.equals("float")) {
       this.parameterValueMap.addValue(parameterName, value, Types.FLOAT);
+    } else if (type.equals("boolean")) {
+      this.parameterValueMap.addValue(parameterName, value, Types.BOOLEAN);
+    } else {
+      logger.error("Unknown type: {}", type);
+      throw new RuntimeException("Unknown type: " + type);
     }
     return String.format(":%s", parameterName);
   }
 
   public String substituteForReadableString(String sqlStr) {
     String result = sqlStr;
-    for (String key : getParameterValueMap().getParameterNames()) {
+    List<String> reversed_parameters = Arrays.asList(getParameterValueMap().getParameterNames());
+    Collections.reverse(reversed_parameters);
+    for (String key : reversed_parameters) {
       String keyformat = String.format(":%s", key);
       Object value = parameterValueMap.getValue(key);
       int type = parameterValueMap.getSqlType(key);
-      if (type == Types.INTEGER || type == Types.FLOAT) {
+      if (type == Types.INTEGER || type == Types.FLOAT || type == Types.BOOLEAN) {
         result = result.replace(keyformat, value.toString());
       } else if (type == Types.ARRAY) {
         List<String> valueList = Arrays.stream((Object[])value).map(x ->

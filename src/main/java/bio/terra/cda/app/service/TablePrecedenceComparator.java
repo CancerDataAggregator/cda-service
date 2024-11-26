@@ -33,6 +33,11 @@ public class TablePrecedenceComparator implements Comparator<ForeignKey> {
 
   @Override
   public int compare(ForeignKey o1, ForeignKey o2) {
-    return Integer.compare(tablePrecedenceList.indexOf(o1.getDestinationTableName()), (tablePrecedenceList.indexOf(o2.getDestinationTableName())));
+    int comp = Integer.compare(tablePrecedenceList.indexOf(o1.getDestinationTableName()), (tablePrecedenceList.indexOf(o2.getDestinationTableName())));
+    // if this returns 0 it thinks the element has already been added, so now actually check for FK equality
+    if (comp == 0) {
+      comp = o1.equals(o2) ? 0 : 1;
+    }
+    return comp;
   }
 }

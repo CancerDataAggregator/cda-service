@@ -6,7 +6,7 @@ import bio.terra.cda.generated.model.Query;
     entity = "specimen",
     totalFieldsToCount = {
         "id",
-        "file_specimen.file_id",
+        "file_specimen.file_alias",
     },
     groupedFieldsToCount = {
       "specimen_identifier_system",

@@ -7,11 +7,12 @@ import java.io.IOException;
     entity = "mutation",
     totalFieldsToCount = {"id"},
     groupedFieldsToCount = {
-      "project_short_name",
-      "NCBI_Build",
-      "Chromosome",
-      "Variant_Type",
-      "One_Consequence"
+      "chromosome",
+      "primary_site",
+      "variant_class",
+      "variant_type",
+      "mutation_status",
+      "one_consequence"
     })
 public class MutationCountSqlGenerator extends EntityCountSqlGenerator {
   public MutationCountSqlGenerator(Query rootQuery) {

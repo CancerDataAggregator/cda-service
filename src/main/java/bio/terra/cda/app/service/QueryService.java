@@ -1,10 +1,12 @@
 package bio.terra.cda.app.service;
 
 import bio.terra.cda.app.configuration.ApplicationConfiguration;
+import bio.terra.cda.app.generators.EntityCountSqlGenerator;
 import bio.terra.cda.app.generators.EntitySqlGenerator;
 import bio.terra.cda.app.generators.SqlGenerator;
 import bio.terra.cda.app.util.SqlTemplate;
 import bio.terra.cda.generated.model.SystemStatus;
+import bio.terra.cda.generated.model.SystemStatusSystemsValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,8 +20,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 
 @Component
 @CacheConfig(cacheNames = "system-status")
@@ -35,6 +41,7 @@ public class QueryService {
 
   @Autowired
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+  private SqlGenerator generator;
 
   @Autowired
   public QueryService(ObjectMapper objectMapper) {
@@ -58,6 +65,41 @@ public class QueryService {
     GDC,
     PDC
   }
+
+  public SystemStatus postgresCheck() {
+    SystemStatusSystemsValue pgSystemStatus = new SystemStatusSystemsValue();
+    boolean success = false;
+    try {
+      Integer activeConnections = jdbcTemplate
+          .query("SELECT count(*) FROM pg_stat_activity WHERE state = 'active'", rs -> {
+            return rs.next() ? rs.getInt(1) : 0;
+          });
+      success = activeConnections > 0;
+    } catch (Exception e) {
+      logger.error("Status check failed ", e);
+    }
+    if (success) {
+      pgSystemStatus.ok(true).addMessagesItem("everything is fine");
+    } else {
+
+      pgSystemStatus
+          .ok(false)
+          .addMessagesItem("Postgres Status check has indicated the database is currently unreachable from the Service API");
+    }
+    int mb = 1024 * 1024;
+    MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+    long xmx = memoryBean.getHeapMemoryUsage().getMax() / mb;
+    long xms = memoryBean.getHeapMemoryUsage().getInit() / mb;
+    SystemStatusSystemsValue javaMem = new SystemStatusSystemsValue();
+    javaMem.addMessagesItem(String.format("XMX: %d, XMS: %d", xmx, xms));
+    systemStatus
+        .ok(pgSystemStatus.getOk())
+        .putSystemsItem("PostgresStatus", pgSystemStatus)
+        .putSystemsItem("JavaMemory", javaMem);
+
+    return systemStatus;
+  }
+
 
   /**
    * Traverse the json data and collect the number of systems data present in resultsCount.
@@ -83,26 +125,115 @@ public class QueryService {
   }
 
   public Long getTotalRowCount(SqlGenerator generator) {
-    return namedParameterJdbcTemplate.queryForObject(
-        SqlTemplate.countWrapper(generator.getSqlStringForMaxRows()),
-        generator.getNamedParameterMap(), Long.class);
+    String sqlCount = SqlTemplate.countWrapper(generator.getSqlStringForMaxRows());
+    MapSqlParameterSource param_map = generator.getNamedParameterMap();
+    if ((generator instanceof EntitySqlGenerator)){
+      String optimizedSqlCount = optimizeIncludeCountQuery(sqlCount, (EntitySqlGenerator) generator);
+      return namedParameterJdbcTemplate.queryForObject(
+              optimizedSqlCount,
+              param_map,
+              Long.class);
+    }
+    else{
+      return namedParameterJdbcTemplate.queryForObject(
+              sqlCount,
+              param_map,
+              Long.class);
+    }
+  }
+  public Long getTotalRowCountOG(SqlGenerator generator) {
+      return namedParameterJdbcTemplate.queryForObject(
+              SqlTemplate.countWrapper(generator.getSqlStringForMaxRows()),
+              generator.getNamedParameterMap(),
+              Long.class);
   }
 
+
+  public String optimizeIncludeCountQuery(String sqlCount, EntitySqlGenerator generator){
+    try {
+      Filter filterObj = new Filter(sqlCount, generator);
+      return filterObj.getIncludeCountQuery();
+    }catch (Exception exception) {
+      logger.warn(String.format("Sql: %s, Exception: %s",sqlCount,exception.getMessage()));
+      return sqlCount;
+    }
+  }
+
+
+
   public List<JsonNode> generateAndRunQuery(SqlGenerator generator) {
-    return namedParameterJdbcTemplate.query(
-        SqlTemplate.jsonWrapper(generator.getSqlString()),
-        generator.getNamedParameterMap(),
-        new JsonNodeRowMapper(objectMapper)
-    );
+    String sqlQuery = SqlTemplate.jsonWrapper(generator.getSqlString());
+    MapSqlParameterSource param_map = generator.getNamedParameterMap();
+    if ((generator instanceof EntityCountSqlGenerator)){
+      String optimizedSqlCount = optimizeCountEndpointQuery(sqlQuery, (EntityCountSqlGenerator) generator);
+      return namedParameterJdbcTemplate.query(
+              optimizedSqlCount,
+              param_map,
+              new JsonNodeRowMapper(objectMapper));
+    }
+    else{
+      return namedParameterJdbcTemplate.query(
+              sqlQuery,
+              param_map,
+              new JsonNodeRowMapper(objectMapper));
+    }
+  }
+  public String getReadableOptimizedCountQuery(SqlGenerator generator) {
+    String sqlQuery = SqlTemplate.jsonWrapper(generator.getSqlString());
+    String optimizedQuery = "";
+    if (generator instanceof EntityCountSqlGenerator){
+      optimizedQuery = optimizeCountEndpointQuery(sqlQuery, (EntityCountSqlGenerator) generator);
+    } else {
+      optimizedQuery = sqlQuery;
+    }
+    return generator.getReadableQuerySqlArg(optimizedQuery);
+  }
+
+  public String optimizeCountEndpointQuery(String sqlCount, EntityCountSqlGenerator generator){
+    try {
+      Filter filterObj = new Filter(sqlCount, generator);
+      return filterObj.getCountEndpointQuery();
+    } catch (Exception exception){
+      logger.warn(String.format("Sql: %s, Exception: %s",sqlCount,exception.getMessage()));
+      return sqlCount;
+    }
   }
 
   public List<JsonNode> generateAndRunPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
+    String sqlQuery = SqlTemplate.jsonWrapper(SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit));
+    MapSqlParameterSource param_map =  generator.getNamedParameterMap();
+    String optimizedPagedQuery = "";
+    if (generator instanceof EntitySqlGenerator){
+      optimizedPagedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
+    } else {
+      optimizedPagedQuery = sqlQuery;
+    }
     return namedParameterJdbcTemplate.query(
-        SqlTemplate.jsonWrapper(
-            SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit)),
-        generator.getNamedParameterMap(),
+        optimizedPagedQuery,
+        param_map,
         new JsonNodeRowMapper(objectMapper)
     );
+  }
+  public String optimizePagedQuery(String sqlQuery, EntitySqlGenerator generator){
+    try {
+      Filter filterObj = new Filter(sqlQuery, generator);
+      return filterObj.getPagedPreselectQuery();
+//      return sqlQuery;
+    }catch (Exception exception) {
+      logger.warn(String.format("Sql: %s, Exception: %s",sqlQuery,exception.getMessage()));
+      return sqlQuery;
+    }
+  }
+
+  public String getReadableOptimizedPagedQuery(SqlGenerator generator, Integer offset, Integer limit) {
+    String sqlQuery = SqlTemplate.jsonWrapper(SqlTemplate.addPagingFields(generator.getSqlString(), offset, limit));
+    String optimizedPagedQuery = "";
+    if (generator instanceof EntitySqlGenerator){
+      optimizedPagedQuery = optimizePagedQuery(sqlQuery, (EntitySqlGenerator) generator);
+    } else {
+      optimizedPagedQuery = sqlQuery;
+    }
+    return generator.getReadableQuerySqlArg(optimizedPagedQuery);
   }
 
   public List<JsonNode> runPagedQuery(String sqlStr, Integer offset, Integer limit) {
@@ -142,3 +273,4 @@ public class QueryService {
   }
 
 }
+
