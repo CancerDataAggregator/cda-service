@@ -68,7 +68,7 @@ dependencies {
 	implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.2.13'
 
 	// These are temporary until the including library catches up with these vulnerability fixes
-	implementation group: 'org.yaml', name: 'snakeyaml', version: '1.33'
+	implementation group: 'org.yaml', name: 'snakeyaml', version: '2.0'
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.0-rc1'
 
 	// -- OpenAPI CodeGen dependencies --
